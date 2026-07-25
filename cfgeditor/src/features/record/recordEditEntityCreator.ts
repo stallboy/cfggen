@@ -1,10 +1,12 @@
 import {
     EditableEntity, Entity, PrimitiveValue,
-    EntityEdgeType, EntityEdit,
+    classifyJsonValue, EmbeddedFieldData,
+    EntityEdit,
     EntityEditField,
     EntityEditFieldOptions, EntityPosition,
     EntitySourceEdge,
     EntityType,
+    makeChildEdge,
     PrimitiveEditField,
     StructRefEditField
 } from "@/domain/entityModel.ts";
@@ -47,177 +49,16 @@ export class RecordEditEntityCreator {
                  fieldChain: (string | number)[],
                  arrayItemParam?: ArrayItemParam): EditableEntity | null {
 
-        const type: string = obj['$type'] as string;
-        if (type == null) {
-            console.error('$type missing');
+        const structural = this.resolveStructural(sItem, obj);
+        if (structural == null) {
             return null;
-        }
-        let structural: STable | SStruct;
-        if ('impls' in sItem) {
-            // sItem 是 interface：按 obj.$type 解析 impl（itemIncludeImplMap 里 impl 条目运行时是 struct）。
-            // 守卫替代 as SStruct 强转：脏 $type（impl 不存在或非 struct）时 return null，而非吃 undefined 后崩
-            const impl = this.schema.itemIncludeImplMap.get(type);
-            if (!impl || impl.type !== 'struct') {
-                console.error(`impl ${type} not found or not a struct (dirty $type?)`);
-                return null;
-            }
-            structural = impl;
-        } else {
-            structural = sItem;
         }
 
         const note: string | undefined = obj['$note'] as string | undefined;
         const fold = this.getFoldState(obj);
 
-        let hasChild: boolean = false;
-
         const editFields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
-        const sourceEdges: EntitySourceEdge[] = [];
-
-
-        for (const fieldKey in obj) {
-            if (fieldKey.startsWith("$")) {
-                continue;
-            }
-            const fieldValue: JSONValue = obj[fieldKey];
-            const ft = typeof fieldValue
-            if (ft != 'object' || fieldValue === null) {  // typeof null === 'object'，需额外排除
-                continue;
-            }
-
-            const sField = getField(structural, fieldKey);
-            if (sField == null) {
-                continue;
-            }
-
-            if (Array.isArray(fieldValue)) {  // list or map, (map is list of $entry)
-                const fArr: JSONArray = fieldValue as JSONArray;
-                const fArrLen = fArr.length
-                if (fArrLen == 0) {
-                    continue;
-                }
-                const ele = fArr[0];
-                if (typeof ele != 'object') { // list of primitive value
-                    continue;
-                }
-
-                const itemTypeId = getItemTypeId(sField.type, structural, fieldKey);
-                if (itemTypeId == undefined) {
-                    continue;
-                }
-
-                const itemType = this.schema.getStructOrInterface(itemTypeId);
-                if (itemType == null) {
-                    continue;
-                }
-
-                // list 字段 embed 分类（与 createListOrMapEditField 共用 domain.classifyListField）：
-                // embedTag / summary 都不建子 entity、不 push sourceEdge（内嵌字段也算有子节点）
-                if (classifyListField(fArr, itemType, getEmbedState(obj, fieldKey)) !== 'nodes') {
-                    hasChild = true;
-                    continue;
-                }
-
-                hasChild = true;
-                if (fold) {
-                    continue;
-                }
-
-                // list of struct/interface, or map
-                let i = 0;
-                for (const e of fArr) {
-                    const itemObj = e as JSONObject;
-                    const childId: string = `${id}-${fieldKey}[${i}]`;
-                    const arrayIndex = i;
-
-                    const chain = [...fieldChain, fieldKey]
-                    const onDeleteFunc = () => {
-                        // 锚点取父节点（id = 当前 struct，即 list 父）：被删 item 正向已消失、undo 前不存在，
-                        // 父节点两个方向都在 → 正向删除与 undo 都是 KeepStable 锚定父节点，其屏幕不动。
-                        // itemType（list 元素类型）传入 session；删到恰剩 1 时 normalizeOnDelete 自调
-                        // canBeEmbeddedCheck 判幸存元素可内嵌性（判定在 domain，不在 session/creator）
-                        this.session.deleteArrayItem(arrayIndex, chain, id, itemType);
-                    }
-
-                    let onMoveUpFunc;
-                    if (arrayIndex > 0) {
-                        onMoveUpFunc = (position: EntityPosition) => {
-                            this.session.swapArrayItem(arrayIndex, arrayIndex - 1, chain, position);
-                        }
-                    }
-
-                    let onMoveDownFunc;
-                    if (arrayIndex < fArrLen - 1) {
-                        onMoveDownFunc = (position: EntityPosition) => {
-                            this.session.swapArrayItem(arrayIndex, arrayIndex + 1, chain, position);
-                        }
-                    }
-
-
-                    const childEntity = this.createEntity(
-                        childId, itemType, itemObj,
-                        [...fieldChain, fieldKey, arrayIndex],
-                        {
-                            onDeleteFunc,
-                            onMoveUpFunc,
-                            onMoveDownFunc,
-                        }
-                    );
-                    i++;
-
-                    if (childEntity) {
-                        sourceEdges.push({
-                            sourceHandle: fieldKey,
-                            target: childEntity.id,
-                            targetHandle: '@in',
-                            type: EntityEdgeType.Normal,
-                        })
-                    }
-                }
-
-            } else { // struct or interface
-                const fieldType = this.schema.getStructOrInterface(sField.type);
-                if (fieldType == null) {
-                    continue;
-                }
-
-                // 检查是否为内嵌模式（类 1：可内嵌且父对象上 `$embed_<fieldName> !== false`）
-                const canEmbed = canBeEmbeddedCheck(fieldValue as JSONObject, fieldType);
-
-                if (canEmbed) {
-                    if (getEmbedState(obj, fieldKey) !== false) {
-                        // 内嵌模式，不创建子节点
-                        continue;
-                    }
-                    // $embed=false，展开模式，继续创建子节点
-                }
-
-                // 正常模式: 创建子节点
-                hasChild = true;
-                if (fold) {
-                    continue;
-                }
-
-                const fieldObj = fieldValue as JSONObject;
-                const childId: string = id + "-" + fieldKey;
-                const childEntity = this.createEntity(
-                    childId,
-                    fieldType,
-                    fieldObj,
-                    [...fieldChain, fieldKey],
-                    undefined,  // arrayItemParam
-                );
-                if (childEntity) {
-                    sourceEdges.push({
-                        sourceHandle: fieldKey,
-                        target: childEntity.id,
-                        targetHandle: '@in',
-                        type: EntityEdgeType.Normal,
-                    });
-                }
-            }
-        }
-
+        const {sourceEdges, hasChild} = this.createChildEntities(id, structural, obj, fieldChain, fold);
 
         const editOnUpdateValues = (changed: Record<string, unknown>, allValues: Record<string, unknown>) => {
                 this.session.updateFormValues(this.schema, allValues, fieldChain, changed);
@@ -273,6 +114,182 @@ export class RecordEditEntityCreator {
 
         this.entityMap.set(id, entity);
         return entity;
+    }
+
+    /**
+     * interface→impl 解析：sItem 是 interface 时按 obj.$type 取 impl 作为 structural；
+     * $type 缺失或脏（impl 不存在/非 struct）返回 null（守卫替代 as SStruct 强转，不吃 undefined 后崩）。
+     */
+    private resolveStructural(sItem: SItem, obj: JSONObject): STable | SStruct | null {
+        const type: string = obj['$type'] as string;
+        if (type == null) {
+            console.error('$type missing');
+            return null;
+        }
+        if ('impls' in sItem) {
+            // sItem 是 interface：itemIncludeImplMap 里 impl 条目运行时是 struct
+            const impl = this.schema.itemIncludeImplMap.get(type);
+            if (!impl || impl.type !== 'struct') {
+                console.error(`impl ${type} not found or not a struct (dirty $type?)`);
+                return null;
+            }
+            return impl;
+        }
+        return sItem;
+    }
+
+    /**
+     * 遍历 obj 建子节点 + sourceEdges（职责 b）：按 classifyJsonValue 四分类分派——
+     * 原始值/原始值数组（含空数组）不建子节点；objectList 走 list/map 分支；object 走 struct/interface 分支。
+     * 内嵌（embedTag/summary）与 fold 时只标 hasChild 不建节点。
+     */
+    private createChildEntities(id: string,
+                                structural: STable | SStruct,
+                                obj: JSONObject,
+                                fieldChain: (string | number)[],
+                                fold: boolean | undefined): { sourceEdges: EntitySourceEdge[]; hasChild: boolean } {
+        let hasChild: boolean = false;
+        const sourceEdges: EntitySourceEdge[] = [];
+
+        for (const fieldKey in obj) {
+            if (fieldKey.startsWith("$")) {
+                continue;
+            }
+            const fieldValue: JSONValue = obj[fieldKey];
+            const kind = classifyJsonValue(fieldValue);
+            if (kind === 'primitive' || kind === 'primitiveList') {
+                continue;
+            }
+
+            const sField = getField(structural, fieldKey);
+            if (sField == null) {
+                continue;
+            }
+
+            if (kind === 'objectList') {  // list or map, (map is list of $entry)
+                const fArr: JSONArray = fieldValue as JSONArray;
+
+                const itemTypeId = getItemTypeId(sField.type, structural, fieldKey);
+                if (itemTypeId == undefined) {
+                    continue;
+                }
+
+                const itemType = this.schema.getStructOrInterface(itemTypeId);
+                if (itemType == null) {
+                    continue;
+                }
+
+                // list 字段 embed 分类（与 createListOrMapEditField 共用 domain.classifyListField）：
+                // embedTag / summary 都不建子 entity、不 push sourceEdge（内嵌字段也算有子节点）
+                if (classifyListField(fArr, itemType, getEmbedState(obj, fieldKey)) !== 'nodes') {
+                    hasChild = true;
+                    continue;
+                }
+
+                hasChild = true;
+                if (fold) {
+                    continue;
+                }
+
+                // list of struct/interface, or map
+                this.createListChildEntities(id, fieldKey, fArr, itemType, fieldChain, sourceEdges);
+
+            } else { // struct or interface
+                const fieldType = this.schema.getStructOrInterface(sField.type);
+                if (fieldType == null) {
+                    continue;
+                }
+
+                // 检查是否为内嵌模式（类 1：可内嵌且父对象上 `$embed_<fieldName> !== false`）
+                const canEmbed = canBeEmbeddedCheck(fieldValue as JSONObject, fieldType);
+
+                if (canEmbed) {
+                    if (getEmbedState(obj, fieldKey) !== false) {
+                        // 内嵌模式，不创建子节点
+                        continue;
+                    }
+                    // $embed=false，展开模式，继续创建子节点
+                }
+
+                // 正常模式: 创建子节点
+                hasChild = true;
+                if (fold) {
+                    continue;
+                }
+
+                const fieldObj = fieldValue as JSONObject;
+                const childId: string = id + "-" + fieldKey;
+                const childEntity = this.createEntity(
+                    childId,
+                    fieldType,
+                    fieldObj,
+                    [...fieldChain, fieldKey],
+                    undefined,  // arrayItemParam
+                );
+                if (childEntity) {
+                    sourceEdges.push(makeChildEdge(fieldKey, childEntity.id));
+                }
+            }
+        }
+        return {sourceEdges, hasChild};
+    }
+
+    /**
+     * list/map 字段的逐元素子节点创建：每个元素挂删除/上移/下移回调（经 session，锚点取父节点），
+     * 递归 createEntity 成功后 push 父→子入边。
+     */
+    private createListChildEntities(id: string,
+                                    fieldKey: string,
+                                    fArr: JSONArray,
+                                    itemType: SStruct | SInterface,
+                                    fieldChain: (string | number)[],
+                                    sourceEdges: EntitySourceEdge[]) {
+        const fArrLen = fArr.length;
+        let i = 0;
+        for (const e of fArr) {
+            const itemObj = e as JSONObject;
+            const childId: string = `${id}-${fieldKey}[${i}]`;
+            const arrayIndex = i;
+
+            const chain = [...fieldChain, fieldKey]
+            const onDeleteFunc = () => {
+                // 锚点取父节点（id = 当前 struct，即 list 父）：被删 item 正向已消失、undo 前不存在，
+                // 父节点两个方向都在 → 正向删除与 undo 都是 KeepStable 锚定父节点，其屏幕不动。
+                // itemType（list 元素类型）传入 session；删到恰剩 1 时 normalizeOnDelete 自调
+                // canBeEmbeddedCheck 判幸存元素可内嵌性（判定在 domain，不在 session/creator）
+                this.session.deleteArrayItem(arrayIndex, chain, id, itemType);
+            }
+
+            let onMoveUpFunc;
+            if (arrayIndex > 0) {
+                onMoveUpFunc = (position: EntityPosition) => {
+                    this.session.swapArrayItem(arrayIndex, arrayIndex - 1, chain, position);
+                }
+            }
+
+            let onMoveDownFunc;
+            if (arrayIndex < fArrLen - 1) {
+                onMoveDownFunc = (position: EntityPosition) => {
+                    this.session.swapArrayItem(arrayIndex, arrayIndex + 1, chain, position);
+                }
+            }
+
+
+            const childEntity = this.createEntity(
+                childId, itemType, itemObj,
+                [...fieldChain, fieldKey, arrayIndex],
+                {
+                    onDeleteFunc,
+                    onMoveUpFunc,
+                    onMoveDownFunc,
+                }
+            );
+            i++;
+
+            if (childEntity) {
+                sourceEdges.push(makeChildEdge(fieldKey, childEntity.id));
+            }
+        }
     }
 
     makeEditFields(sItem: SItem,
@@ -561,11 +578,7 @@ export class RecordEditEntityCreator {
     private extractEmbeddedFieldData(
         fieldType: SStruct | SInterface,
         obj: JSONObject
-    ): {
-        fields: Array<{ value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string }>;
-        note?: string;
-        implName?: string
-    } | null {
+    ): EmbeddedFieldData | null {
         const result = extractEmbeddingFields(fieldType, obj);
         if (!result) {
             return null;

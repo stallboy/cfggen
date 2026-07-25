@@ -1,4 +1,4 @@
-import {BriefDescription, JSONObject} from "@/api/recordModel";
+import {BriefDescription, JSONObject, JSONValue} from "@/api/recordModel";
 import {PrimitiveType} from "@/api/schemaModel";
 import {ResInfo} from "@/domain/resInfo";
 import * as React from "react";
@@ -62,16 +62,21 @@ export interface ArrayPrimitiveEditField extends FieldBase {
 }
 
 /**
+ * 内嵌展示的单个 primitive 字段（EmbeddedFieldData.fields 与 embedding.extractEmbeddingFields 共用）
+ */
+export interface EmbeddedPrimitiveField {
+    value: PrimitiveValue;
+    type: PrimitiveType;
+    name: string;
+    comment?: string;
+}
+
+/**
  * 内嵌字段数据（包含所有相关信息）
  */
 export interface EmbeddedFieldData {
     /** 内嵌的字段列表 */
-    fields: Array<{
-        value: PrimitiveValue;
-        type: PrimitiveType;
-        name: string;
-        comment?: string;
-    }>;
+    fields: EmbeddedPrimitiveField[];
     /** 节点的备注（来自 entity.note） */
     note?: string;
     /** interface 的实现名称（非 defaultImpl 时显示） */
@@ -280,6 +285,41 @@ export enum EntityType {
     Ref,
     Ref2,
     RefIn,
+}
+
+// ============================================================================
+// JSON 字段值分类与子节点边工厂（record 只读/可编辑两个 entity creator 共用）
+// ============================================================================
+
+/**
+ * JSON 字段值四分类：原始值 / 原始值数组（含空数组）/ 对象数组 / 对象。
+ */
+export type JsonValueKind = 'primitive' | 'primitiveList' | 'objectList' | 'object';
+
+/**
+ * 字段值分类（两个 creator 遍历 obj 建子节点时的同一套 typeof 判断，单点化）：
+ * null 归 'primitive'（typeof null === 'object'，需额外排除）；
+ * 空数组无首元素可看，归 'primitiveList'（两个 creator 对空数组都不建子节点）。
+ */
+export function classifyJsonValue(v: JSONValue): JsonValueKind {
+    if (typeof v !== 'object' || v === null) {
+        return 'primitive';
+    }
+    if (Array.isArray(v)) {
+        if (v.length === 0) {
+            return 'primitiveList';
+        }
+        return typeof v[0] === 'object' ? 'objectList' : 'primitiveList';
+    }
+    return 'object';
+}
+
+/**
+ * 父→子节点的 Normal 入边工厂（两个 creator 逐字相同的 4 处 push 单点化；
+ * '@in' 字面量也先收口于此，全仓 handle 常量收口是后续批次的事）。
+ */
+export function makeChildEdge(fieldKey: string, childId: string): EntitySourceEdge {
+    return {sourceHandle: fieldKey, target: childId, targetHandle: '@in', type: EntityEdgeType.Normal};
 }
 
 // ============================================================================

@@ -1,4 +1,4 @@
-import {Entity, ReadOnlyEntity, DisplayField, EntityEdgeType, EntitySourceEdge, EntityType} from "@/domain/entityModel.ts";
+import {Entity, ReadOnlyEntity, DisplayField, classifyJsonValue, EntitySourceEdge, EntityType, makeChildEdge} from "@/domain/entityModel.ts";
 import {SField, SStruct, STable} from "@/api/schemaModel.ts";
 import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "@/api/recordModel.ts";
 import {createRefs, getLabel} from "./recordRefUtils.ts";
@@ -62,56 +62,38 @@ export class RecordEntityCreator {
             }
             fields.push(field);
 
-            const ft = typeof fieldValue
-            if (ft == 'object' && fieldValue !== null) {  // typeof null === 'object'，需额外排除
-                if (Array.isArray(fieldValue)) {  // list or map, (map is list of $entry)
-                    const fArr: JSONArray = fieldValue as JSONArray;
-                    if (fArr.length == 0) {
-                        field.value = '[]'
-                    } else {
-                        const ele = fArr[0];
-                        if (typeof ele == 'object') { // list of struct/interface, or map
-                            let i = 0;
-                            for (const e of fArr) {
-                                const fObj: JSONObject & Refs = e as JSONObject & Refs;
-                                const childId: string = `${id}-${fieldKey}[${i}]`;
-                                const childEntity = this.createRecordEntity(childId, fObj, undefined, i + 1);
-                                i++;
+            const kind = classifyJsonValue(fieldValue);
+            if (kind === 'objectList') {  // list of struct/interface, or map (map is list of $entry)
+                const fArr: JSONArray = fieldValue as JSONArray;
+                let i = 0;
+                for (const e of fArr) {
+                    const fObj: JSONObject & Refs = e as JSONObject & Refs;
+                    const childId: string = `${id}-${fieldKey}[${i}]`;
+                    const childEntity = this.createRecordEntity(childId, fObj, undefined, i + 1);
+                    i++;
 
-                                if (childEntity) {
-                                    sourceEdges.push({
-                                        sourceHandle: fieldKey,
-                                        target: childEntity.id,
-                                        targetHandle: '@in',
-                                        type: EntityEdgeType.Normal
-                                    })
-                                }
-                            }
-                            field.value = `[]*${i}`
-
-                        } else {  // list of primitive value
-                            field.value = fArr.join(',')
-                        }
-                    }
-                } else { // struct or interface
-                    const fObj: JSONObject & Refs = fieldValue as JSONObject & Refs;
-                    const childId: string = id + "-" + fieldKey;
-                    const childEntity = this.createRecordEntity(childId, fObj);
                     if (childEntity) {
-                        sourceEdges.push({
-                            sourceHandle: fieldKey,
-                            target: childEntity.id,
-                            targetHandle: '@in',
-                            type: EntityEdgeType.Normal,
-                        });
+                        sourceEdges.push(makeChildEdge(fieldKey, childEntity.id));
                     }
-                    field.value = '<>';
                 }
+                field.value = `[]*${i}`
+
+            } else if (kind === 'primitiveList') {  // list of primitive value（含空数组）
+                const fArr: JSONArray = fieldValue as JSONArray;
+                field.value = fArr.length == 0 ? '[]' : fArr.join(',')
+
+            } else if (kind === 'object') { // struct or interface
+                const fObj: JSONObject & Refs = fieldValue as JSONObject & Refs;
+                const childId: string = id + "-" + fieldKey;
+                const childEntity = this.createRecordEntity(childId, fObj);
+                if (childEntity) {
+                    sourceEdges.push(makeChildEdge(fieldKey, childEntity.id));
+                }
+                field.value = '<>';
             } else { // primitive
                 let valueStr: string = fieldValue.toString();
-                if (ft == 'boolean') {
-                    const fb = fieldValue as boolean
-                    valueStr = fb ? '✔️' : '✘';
+                if (typeof fieldValue === 'boolean') {
+                    valueStr = fieldValue ? '✔️' : '✘';
                 }
                 field.value = valueStr
             }

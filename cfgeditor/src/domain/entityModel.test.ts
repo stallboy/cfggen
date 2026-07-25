@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {Entity, isCardEntity, isEditableEntity, isReadOnlyEntity} from './entityModel'
+import {classifyJsonValue, Entity, EntityEdgeType, isCardEntity, isEditableEntity, isReadOnlyEntity, makeChildEdge} from './entityModel'
 import {makeCard, makeEditable, makeReadOnly} from '@/test/fixtures'
 
 describe('isReadOnlyEntity / isEditableEntity / isCardEntity', () => {
@@ -34,5 +34,42 @@ describe('isReadOnlyEntity / isEditableEntity / isCardEntity', () => {
             const hits = [isReadOnlyEntity(e), isEditableEntity(e), isCardEntity(e)].filter(Boolean).length
             expect(hits).toBe(1)
         }
+    })
+})
+
+describe('classifyJsonValue 四分类', () => {
+    it('原始值（string/number/boolean）→ primitive', () => {
+        expect(classifyJsonValue('x')).toBe('primitive')
+        expect(classifyJsonValue(1)).toBe('primitive')
+        expect(classifyJsonValue(true)).toBe('primitive')
+    })
+
+    it('null → primitive（typeof null === "object"，需额外排除）', () => {
+        expect(classifyJsonValue(null as never)).toBe('primitive')
+    })
+
+    it('原始值数组（含空数组）→ primitiveList', () => {
+        expect(classifyJsonValue([1, 2])).toBe('primitiveList')
+        expect(classifyJsonValue(['a'])).toBe('primitiveList')
+        expect(classifyJsonValue([])).toBe('primitiveList')
+    })
+
+    it('首元素为对象的数组 → objectList', () => {
+        expect(classifyJsonValue([{$type: 'A'}])).toBe('objectList')
+    })
+
+    it('对象 → object', () => {
+        expect(classifyJsonValue({$type: 'A'} as never)).toBe('object')
+    })
+})
+
+describe('makeChildEdge', () => {
+    it('生成父→子 Normal 入边（@in 单点化）', () => {
+        expect(makeChildEdge('weapon', 'Hero_1-weapon')).toEqual({
+            sourceHandle: 'weapon',
+            target: 'Hero_1-weapon',
+            targetHandle: '@in',
+            type: EntityEdgeType.Normal,
+        })
     })
 })

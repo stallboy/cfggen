@@ -1,7 +1,7 @@
 import {JSONArray, JSONObject} from '@/api/recordModel';
 import {isNumberType, isPrimitiveType, parseFieldTypeId, PrimitiveType, SField, SInterface, SStruct} from '@/api/schemaModel';
 import {defaultValueOfPrimitive, getImpl} from '@/domain/schema';
-import {PrimitiveValue} from "@/domain/entityModel";
+import {EmbeddedPrimitiveField, PrimitiveValue} from "@/domain/entityModel";
 
 // ============================================================================
 // 内嵌配置（原 embeddingConfig.ts）—— 内嵌规则的阈值与类型判断
@@ -92,12 +92,7 @@ export function canBeEmbeddedCheck(fieldValue: JSONObject, fieldType: SStruct | 
 }
 
 export interface EmbeddingFieldValues {
-    embeddedFields: {
-        value: PrimitiveValue;
-        type: PrimitiveType;
-        name: string;
-        comment?: string;
-    }[];
+    embeddedFields: EmbeddedPrimitiveField[];
     implNameToDisplay?: string;
 }
 
