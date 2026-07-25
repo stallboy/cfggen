@@ -17,8 +17,7 @@ import {EntityNode} from "./FlowGraph.tsx";
 import {nodeAnchor} from "./nodeAnchor.ts";
 import {useNodeNote} from "./NodeNote.tsx";
 import {NodeTitle} from "./NodeTitle.tsx";
-
-const iconButtonStyle = { borderWidth: 0, backgroundColor: 'transparent' };
+import {iconButtonStyle} from "./sharedStyles.tsx";
 
 // fold 按钮占位样式：与真实按钮同宽（paddingInline + 图标宽不变），零高度、不可见、不可点，
 // 只用于撑住 NodeTitle space-between 布局中的槽位宽度。

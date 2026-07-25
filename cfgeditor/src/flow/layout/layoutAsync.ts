@@ -57,9 +57,10 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
 /**
  * layoutAsync 的失败语义：失败一律 throw LayoutError，绝不 resolve 为 undefined。
  *
- * 原因：react-query 把 resolve 的 undefined 当成"成功但无数据"（isSuccess=true, data=undefined），
- * 既不进 retry/error 通道，也彻底打破下游 `if (data)` 守卫——表现为偶发空/旧图且零反馈。
- * throw 后 react-query 正确进入 error 态（会 retry），下游也能据 error 兜底。见 useEntityToGraph。
+ * 原因：react-query v5 下 queryFn resolve 出 undefined 会被框架判为 error
+ * （"Query data cannot be undefined"）——报错被包装成"数据缺失"，掩盖真正的布局失败原因，不利排查。
+ * 显式 throw LayoutError：错误带 code（aborted/no_children/dropped_nodes）进 error 态（会 retry），
+ * 下游也能据 error 兜底。见 useEntityToGraph。
  */
 export class LayoutError extends Error {
     readonly code: 'aborted' | 'no_children' | 'dropped_nodes';

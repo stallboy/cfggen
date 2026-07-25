@@ -2,13 +2,13 @@ import type {CSSProperties} from "react";
 import {Input, InputNumber, Select, Switch} from "antd";
 import {EntityEditField} from "@/domain/entityModel";
 import {CustomAutoComplete} from "./CustomAutoComplete.tsx";
-import {getFilter, hasAutoCompleteOptions} from "./fieldUtils.ts";
+import {getAutoCompleteOptions, getFilter} from "./fieldUtils.ts";
 
 export function primitiveControl(field: EntityEditField, style: CSSProperties) {
     const {eleType} = field;
-    const autoCompleteOptions = hasAutoCompleteOptions(field) ? field.autoCompleteOptions : undefined;
+    const autoCompleteOptions = getAutoCompleteOptions(field);
 
-    if (autoCompleteOptions?.options.length) {
+    if (autoCompleteOptions) {
         const {options, isEnum} = autoCompleteOptions;
         const filters = getFilter(options.length > 5);
 

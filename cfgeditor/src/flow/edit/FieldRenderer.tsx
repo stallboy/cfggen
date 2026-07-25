@@ -1,6 +1,6 @@
 import type {ReactNode} from "react";
 import type {NodeProps} from "@xyflow/react";
-import {EntityEdit, EntityEditField, FuncType} from "@/domain/entityModel";
+import {EntityEdit, EntityEditField} from "@/domain/entityModel";
 import type {NodeShowType} from "@/domain/storageJson";
 import type {EntityNode} from "../FlowGraph.tsx";
 import {getFieldBackgroundColor} from "../layout/colors.ts";
@@ -37,7 +37,6 @@ export function FieldRenderer({field, edit, nodeProps, nodeShow}: FieldRenderPro
                     <EmbeddedSimpleStructuralItem
                         field={field}
                         nodeProps={nodeProps}
-                        bgColor={bgColor}
                     />
                 );
             }
@@ -67,7 +66,7 @@ export function FieldRenderer({field, edit, nodeProps, nodeShow}: FieldRenderPro
                     name={field.name}
                     comment={field.comment}
                     handleOut={field.handleOut}
-                    func={field.value as FuncType}
+                    func={field.value}
                     nodeProps={nodeProps}
                     bgColor={bgColor}
                     width={width}

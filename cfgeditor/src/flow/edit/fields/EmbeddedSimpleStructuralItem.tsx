@@ -12,7 +12,6 @@ import {LabelWithTooltip} from "../shared/LabelWithTooltip.tsx";
 interface EmbeddedSimpleStructuralItemProps {
     field: StructRefEditField;
     nodeProps: NodeProps<EntityNode>;
-    bgColor?: string;
 }
 
 // 格式化单个值的显示（无组件状态依赖，提模块级，省去 useCallback 样板）

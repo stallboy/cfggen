@@ -1,14 +1,11 @@
 import {useCallback, useMemo, useState} from "react";
 import type {ReactNode} from "react";
 import {Button} from "antd";
-import {BookOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {Entity, EntityEdit} from "@/domain/entityModel";
 import {mayHaveResOrNote} from "@/domain/entityPredicates";
-import {NoteEdit, NoteEditInner, NoteShow, NoteShowInner} from "./NoteShowOrEdit.tsx";
-
-const bookIcon = <BookOutlined />;
-const iconButtonStyle = { borderWidth: 0, backgroundColor: 'transparent' };
+import {NoteEdit, NoteEditInner, NoteShow} from "./NoteShowOrEdit.tsx";
+import {bookIcon, iconButtonStyle} from "./sharedStyles.tsx";
 
 interface TempNote {
     note: string;
@@ -52,6 +49,13 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
     //   不预填任何脏内容，靠 placeholder 提示。
     const [noteDrafting, setNoteDrafting] = useState<boolean>(false);
 
+    // recordNote 三件套只算一次（原 editNoteButton/noteBlock 两个 memo 各算一遍 mayHaveResOrNote/get/长度判断）；
+    // 两个 memo 只读这组变量，"添加按钮与 noteBlock 互为非"的不变量靠单点维持、不会两处漂移。
+    const mayShowRecordNote = mayHaveResOrNote(label);
+    const recordNote = notes?.get(id) ?? '';
+    const hasRecordNote = recordNote.length > 0;
+    const recordNoteVisible = hasRecordNote || isEditNote;
+
     const onEditNote = useCallback(() => {
         setIsEditNote(true);
     }, []);
@@ -83,9 +87,8 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
     const noteEditorVisible = (editingTmp && noteDrafting) || effectiveNote.length > 0;
 
     const editNoteButton = useMemo(() => {
-        if (mayHaveResOrNote(label) && !edit) {
-            const recordNote = notes?.get(id) ?? '';
-            if (!((recordNote.length > 0) || isEditNote) && !note) {
+        if (mayShowRecordNote && !edit) {
+            if (!recordNoteVisible && !note) {
                 return <Button style={iconButtonStyle} icon={bookIcon} aria-label={t('addNote')} onClick={onEditNote} />;
             }
         }
@@ -95,19 +98,18 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
         }
 
         return null;
-    }, [notes, id, isEditNote, note, edit, label, noteEditorVisible, t, onEditNote, onEditNoteClickInEdit]);
+    }, [mayShowRecordNote, recordNoteVisible, note, edit, noteEditorVisible, t, onEditNote, onEditNoteClickInEdit]);
 
     const noteBlock = useMemo(() => {
-        if (mayHaveResOrNote(label)) {
-            const recordNote = notes?.get(id) ?? '';
-            if ((recordNote.length > 0) || isEditNote) {
+        if (mayShowRecordNote) {
+            if (recordNoteVisible) {
                 if (isEditNote) {
                     return <NoteEdit id={id} note={recordNote} setIsEdit={setIsEditNote} />;
                 } else {
-                    return <NoteShow note={recordNote} setIsEdit={setIsEditNote} />;
+                    return <NoteShow note={recordNote} onEdit={onEditNote} />;
                 }
             } else if (note) {
-                return <NoteShowInner note={note} />;
+                return <NoteShow note={note} />;
             }
         }
 
@@ -118,11 +120,11 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
                 return <NoteEditInner note={effectiveNote} updateNoteInEdit={updateNoteInEdit} />;
             }
         } else if (note) {
-            return <NoteShowInner note={note} />;
+            return <NoteShow note={note} />;
         }
 
         return null;
-    }, [label, edit, note, notes, id, isEditNote, noteEditorVisible, effectiveNote, updateNoteInEdit]);
+    }, [mayShowRecordNote, recordNoteVisible, isEditNote, recordNote, id, note, edit, noteEditorVisible, effectiveNote, onEditNote, updateNoteInEdit]);
 
     return {noteBlock, editNoteButton};
 }

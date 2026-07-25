@@ -3,10 +3,16 @@ import {Button, Flex, Form} from "antd";
 import {PlusSquareTwoTone} from "@ant-design/icons";
 import {useSyncFieldValue} from "../shared/useSyncFieldValue.ts";
 import {primitiveControl} from "../shared/primitiveControl.tsx";
-import {fieldItemStyle, getDefaultPrimitiveValue, hasAutoCompleteOptions, isArrayPrimitiveBoolOrNumber} from "../shared/fieldUtils.ts";
+import {ArrayPrimitiveEditField} from "@/domain/entityModel";
+import {fieldItemStyle, getAutoCompleteOptions, getDefaultPrimitiveValue, isArrayPrimitiveBoolOrNumber} from "../shared/fieldUtils.ts";
 import {LabelWithTooltip} from "../shared/LabelWithTooltip.tsx";
-import {AUTO_COMPLETE_ITEM_STYLE, ArrayPrimitiveFormItemProps, FILTER_EMPTY, FORM_LAYOUT} from "../shared/constants.ts";
+import {AUTO_COMPLETE_ITEM_STYLE, FORM_LAYOUT} from "../shared/constants.ts";
 import {ArrayItemExpandButton} from "./ArrayItemExpandButton.tsx";
+
+export interface ArrayPrimitiveFormItemProps {
+    field: ArrayPrimitiveEditField;
+    bgColor?: string;
+}
 
 export const ArrayOfPrimitiveFormItem = memo(function ArrayOfPrimitiveFormItem({
                                                                                     field,
@@ -16,8 +22,10 @@ export const ArrayOfPrimitiveFormItem = memo(function ArrayOfPrimitiveFormItem({
     useSyncFieldValue(form, field);
 
     const itemStyle = fieldItemStyle(bgColor);
-    const hasOptions = hasAutoCompleteOptions(field) && field.autoCompleteOptions != null;
-    const inputItemStyle = hasOptions ? AUTO_COMPLETE_ITEM_STYLE : FILTER_EMPTY;
+    // 有 autoComplete 选项时输入项固定宽度（AUTO_COMPLETE_ITEM_STYLE）；无则不展开额外 props（undefined）。
+    // （原为 FILTER_EMPTY 借位——那是 FilterOption 不是 style，靠它恰好是 {} 才不炸。）
+    const hasOptions = getAutoCompleteOptions(field) !== undefined;
+    const inputItemStyle = hasOptions ? AUTO_COMPLETE_ITEM_STYLE : undefined;
 
     return (
         <Form.Item

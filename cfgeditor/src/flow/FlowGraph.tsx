@@ -3,7 +3,7 @@ import {Button, ConfigProvider, Result} from "antd";
 import {useTranslation} from "react-i18next";
 import {Entity} from "@/domain/entityModel";
 import type {NodeShowType} from "@/domain/storageJson";
-import {memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
+import {Dispatch, memo, MouseEvent as ReactMouseEvent, ReactNode, SetStateAction, useCallback, useMemo, useState} from "react";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
 import {FlowGraphContext} from "./FlowGraphContext.ts";
@@ -48,6 +48,12 @@ const FORM_THEME = {
     },
 };
 
+// 「把回调函数存进 state」的同构样板收敛：必须套 () => fn，否则 React 会把 fn 当 functional updater 调用执行。
+// （nodeMenuFunc/nodeDoubleClickFunc/retryLayout 三处共用。）
+function useFnSetter<F>(setState: Dispatch<SetStateAction<F | undefined>>): (fn: F) => void {
+    return useCallback((fn: F) => setState(() => fn), [setState]);
+}
+
 export const FlowGraph = memo(function FlowGraph({children}: {
     children: ReactNode
 }) {
@@ -89,18 +95,9 @@ export const FlowGraph = memo(function FlowGraph({children}: {
         setMenuStyle(undefined)
     }, [setMenuStyle]);
 
-    const thisSetNodeMenuFunc = useCallback(function (func: NodeMenuFunc) {
-        setNodeMenuFunc(() => func);
-    }, [setNodeMenuFunc]);
-
-    const thisSetNodeDoubleClickFunc = useCallback(function (func: NodeDoubleClickFunc) {
-        setNodeDoubleClickFunc(() => func);
-    }, [setNodeDoubleClickFunc]);
-
-    // retryLayout 是函数——用「存回调」写法 setRetryLayout(() => fn) 避免 React 把它当 functional updater 调用。
-    const thisSetRetryLayout = useCallback(function (fn: () => void) {
-        setRetryLayout(() => fn);
-    }, [setRetryLayout]);
+    const thisSetNodeMenuFunc = useFnSetter(setNodeMenuFunc);
+    const thisSetNodeDoubleClickFunc = useFnSetter(setNodeDoubleClickFunc);
+    const thisSetRetryLayout = useFnSetter(setRetryLayout);
 
     const ctx = useMemo(() => {
         return {

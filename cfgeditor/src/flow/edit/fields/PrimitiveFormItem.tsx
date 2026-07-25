@@ -1,11 +1,15 @@
 import {memo, useMemo} from "react";
 import {Form} from "antd";
+import {PrimitiveEditField} from "@/domain/entityModel";
 import {useSyncFieldValue} from "../shared/useSyncFieldValue.ts";
 import {primitiveControl} from "../shared/primitiveControl.tsx";
 import {fieldItemStyle} from "../shared/fieldUtils.ts";
 import {LabelWithTooltip} from "../shared/LabelWithTooltip.tsx";
 
-import {PrimitiveFormItemProps} from "@/flow/edit/shared/constants.ts";
+export interface PrimitiveFormItemProps {
+    field: PrimitiveEditField;
+    bgColor?: string;
+}
 
 export const PrimitiveFormItem = memo(function PrimitiveFormItem({field, bgColor}: PrimitiveFormItemProps) {
     const form = Form.useFormInstance();

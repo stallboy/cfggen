@@ -1,6 +1,6 @@
 import {ChangeEvent, CSSProperties, memo, useCallback, useState} from "react";
 import {App, Button, Flex, Input} from "antd";
-import {BookOutlined, DeleteOutlined} from "@ant-design/icons";
+import {DeleteOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
 import {updateNote} from "@/api/apiClient.ts";
@@ -8,23 +8,23 @@ import {useMyStore, useLocationData} from "@/store/store";
 import {NoteEditResult} from "@/api/noteModel";
 import {invalidateLayoutCache, setNotesCache} from "@/services/queryKeys.ts";
 import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
+import {bookIcon, iconButtonStyle} from "./sharedStyles.tsx";
 
 // ── note 展示/编辑组件：按「是否内嵌 EntityForm 编辑表单」分两套 ──
 //
 // 独立态（只读 / card 视图，自带网络请求）：
-//   NoteShow       展示 note + 编辑按钮，点击切到 NoteEdit
-//   NoteEdit       自带 useMutation，提交即 updateNote API 落库 + 刷新 ['notes']
+//   NoteShow(onEdit)  展示 note + 编辑按钮，点击切到 NoteEdit
+//   NoteEdit          自带 useMutation，提交即 updateNote API 落库 + 刷新 ['notes']
 //
 // Inner 态（内嵌 EntityForm 编辑表单，不触网）：
-//   NoteShowInner  纯展示，无按钮
-//   NoteEditInner  onChange → updateNoteInEdit 写入编辑会话，随表单 alt+s 提交
+//   NoteShow          纯展示（不传 onEdit，无按钮）
+//   NoteEditInner     onChange → updateNoteInEdit 写入编辑会话，随表单 alt+s 提交
 //
 // 记法：「Inner」后缀 = 嵌在编辑表单里、不直接落库、随 EntityEdit 会话提交；
 //       无 Inner = 独立卡片态、自己发网络请求。
-//       调度见 useNodeNote（NodeNote.tsx）：edit 分支用 Inner 两件，非 edit 用 NoteShow / NoteEdit。
+//       调度见 useNodeNote（NodeNote.tsx）：edit 分支用 NoteEditInner + 无按钮 NoteShow，非 edit 用 NoteShow(onEdit) / NoteEdit。
 
-const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};
-const bookIcon = <BookOutlined/>;
+const noteButtonStyle: CSSProperties = {...iconButtonStyle, float: 'right'};
 
 // note 是"便利贴"语义，底色刻意用饱和暖黄显眼（区别于节点底色，提醒用户这里有批注）。
 // 原纯 yellow #FFFF00 过刺眼、colorWarningBg #fffbe6 又太淡失去提醒作用——取中间的 #ffe066（明亮金黄）。
@@ -33,24 +33,21 @@ const bookIcon = <BookOutlined/>;
 const NOTE_BG = '#ffe066';
 const NOTE_STYLE: CSSProperties = {backgroundColor: NOTE_BG, borderRadius: 8, whiteSpace: 'pre-wrap'};
 const NOTE_TEXT_AREA_STYLE: CSSProperties = {backgroundColor: NOTE_BG};
-// whiteSpace: pre-wrap 让 div（NoteShow/NoteShowInner）尊重 note 里的 \n 换行——默认 normal 会把 \n 当空白折叠，
+// whiteSpace: pre-wrap 让 div（NoteShow）尊重 note 里的 \n 换行——默认 normal 会把 \n 当空白折叠，
 // 与 TextArea（NoteEdit/NoteEditInner 按 \n 换行）表现不一致，含换行的 note 在 div 里行数错乱、与 estimateNoteRows
 // 预留高度对不上。pre-wrap 仅影响文本内联布局；NoteEdit/NoteEditInner 的 Flex 容器也用此样式作背景，TextArea 不受影响。
 
-export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
+export const NoteShow = memo(function NoteShow({note, onEdit}: {
     note: string;
-    setIsEdit: (ie: boolean) => void;
+    onEdit?: () => void;
 }) {
     const {t} = useTranslation();
-    const onEditClick = useCallback(() => {
-        setIsEdit(true);
-    }, [setIsEdit]);
 
     return <div style={{...NOTE_STYLE, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
-        {note} <Button style={noteButtonStyle}
+        {note} {onEdit && <Button style={noteButtonStyle}
                     icon={bookIcon}
                     aria-label={t('editNote')}
-                    onClick={onEditClick}/>
+                    onClick={onEdit}/>}
     </div>
 });
 
@@ -139,14 +136,6 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
     </Flex>
 
 
-});
-
-export const NoteShowInner = memo(function NoteShowInner({note}: {
-    note: string;
-}) {
-    return <div style={{...NOTE_STYLE, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
-        {note}
-    </div>
 });
 
 // 嵌入态编辑器（内嵌 EntityForm 编辑表单）：不触网，onChange → updateNoteInEdit 写入编辑会话(EntityEdit)，

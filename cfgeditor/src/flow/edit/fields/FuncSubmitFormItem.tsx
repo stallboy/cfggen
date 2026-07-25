@@ -1,13 +1,18 @@
 import {memo} from "react";
 import {Button, Form, Space, Tooltip} from "antd";
 import {useTranslation} from "react-i18next";
-import {FORM_ITEM_LAYOUT_WITHOUT_LABEL, FuncSubmitFormItemProps} from "../shared/constants.ts";
+import {FuncSubmitEditField} from "@/domain/entityModel";
+import {FORM_ITEM_LAYOUT_WITHOUT_LABEL} from "../shared/constants.ts";
+
+export interface FuncSubmitFormItemProps {
+    field: FuncSubmitEditField;
+}
 
 export const FuncSubmitFormItem = memo(function FuncSubmitFormItem({field}: FuncSubmitFormItemProps) {
     const [t] = useTranslation();
     const func = field.value;
 
-    // alt+s 提交热键已移至 EntityForm，按节点表单作用域注册（见 EntityForm），避免全局重复触发。
+    // alt+s「提交」由 CfgEditorApp 全局单点注册、直达 session.submit()（见 EntityForm 注释）；本组件只提供点击按钮入口。
     return (
         <Form.Item {...FORM_ITEM_LAYOUT_WITHOUT_LABEL}>
             <Space size={50}>

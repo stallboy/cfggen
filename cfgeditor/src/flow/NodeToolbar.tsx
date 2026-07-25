@@ -6,8 +6,7 @@ import type {NodeProps} from "@xyflow/react";
 import {EntityEdit} from "@/domain/entityModel";
 import type {EntityNode} from "./FlowGraph.tsx";
 import {nodeAnchor} from "./nodeAnchor.ts";
-
-const iconButtonStyle = { borderWidth: 0, backgroundColor: 'transparent' };
+import {iconButtonStyle} from "./sharedStyles.tsx";
 const moveUpIcon = <ArrowUpOutlined />;
 const moveDownIcon = <ArrowDownOutlined />;
 const closeIcon = <CloseOutlined />;
