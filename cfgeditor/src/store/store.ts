@@ -25,8 +25,8 @@ import {useLocation} from "react-router";
 import {ResInfo} from "@/domain/resInfo";
 import {removeAllQueryCache} from "@/services/queryClient.ts";
 
-export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef' | 'recordUnref';
-export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'recordUnref'];
+export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'recordUnref'] as const;
+export type PageType = typeof pageEnums[number];
 export type PageRecordOrRecordRef = 'record' | 'recordRef';
 
 export type StoreState = {

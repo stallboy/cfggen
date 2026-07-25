@@ -10,51 +10,43 @@ export function registerPrefKeySet(keySet: Set<string>, selfKeySet: Set<string>)
     prefSelfKeySet = selfKeySet;
 }
 
-export function getPrefInt(key: string, def: number): number {
+// 读偏好公共骨架：localStorage.getItem + falsy 短路（空串视为未设——契约见 storage.test.ts）
+// + try/catch（parse 失败返回 undefined）。5 个 getPrefX 均为其薄包装。
+function readPref<T>(key: string, parse: (v: string) => T | undefined): T | undefined {
     const v = localStorage.getItem(key);
-    if (v) {
-        const n = parseInt(v);
-        if (!isNaN(n)) {
-            return n;
-        }
+    if (!v) {
+        return undefined;
     }
-    return def;
+    try {
+        return parse(v);
+    } catch (e) {
+        console.log(e);
+        return undefined;
+    }
+}
+
+export function getPrefInt(key: string, def: number): number {
+    return readPref(key, (v) => {
+        const n = parseInt(v);
+        return isNaN(n) ? undefined : n;
+    }) ?? def;
 }
 
 export function getPrefBool(key: string, def: boolean): boolean {
-    const v = localStorage.getItem(key);
-    if (v) {
-        return v == 'true';
-    }
-    return def;
+    return readPref(key, (v) => v == 'true') ?? def;
 }
 
 export function getPrefStr(key: string, def: string): string {
-    const v = localStorage.getItem(key);
-    if (v) {
-        return v;
-    }
-    return def;
+    return readPref(key, (v) => v) ?? def;
 }
 
-export function getPrefEnumStr<T>(key: string, enums: string[]): T | undefined {
-    const v = localStorage.getItem(key);
-    if (v && enums.includes(v)) {
-        return v as T;
-    }
+export function getPrefEnumStr<T extends string>(key: string, enums: readonly T[]): T | undefined {
+    return readPref(key, (v) => enums.find((e) => e === v));
 }
 
 
 export function getPrefJson<T>(key: string, parser: (jsonStr: string) => T): T | undefined {
-    const v = localStorage.getItem(key);
-    if (v) {
-        try {
-            return parser(v);
-        } catch (e) {
-            console.log(e);
-            return undefined;
-        }
-    }
+    return readPref(key, parser);
 }
 
 
@@ -175,10 +167,3 @@ export function setPref(key: string, value: string) {
         savePrefAsyncIf(key);
     }
 }
-
-// export function removePref(key: string) {
-//     localStorage.removeItem(key);
-//     if (isTauri()) {
-//         savePrefAsyncIf(key);
-//     }
-// }

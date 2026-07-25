@@ -108,6 +108,8 @@ describe('store 路由纯逻辑', () => {
             localStorage.setItem('curPage', 'record');
             localStorage.setItem('curTableId', 'Item');
             localStorage.setItem('curId', '1001');
+            // 显式 false 隔离本用例关注点（三 key 重建）；缺失时的默认值回退有独立用例覆盖
+            localStorage.setItem('isEditMode', 'false');
             expect(getLastNavToInLocalStore()).toBe('/record/Item/1001');
         });
 
@@ -119,15 +121,20 @@ describe('store 路由纯逻辑', () => {
             expect(getLastNavToInLocalStore()).toBe('/edit/record/Item/1001');
         });
 
-        it('isEditMode=false 或缺失时不加 /edit', () => {
+        it('isEditMode=false 时不加 /edit', () => {
             localStorage.setItem('curPage', 'record');
             localStorage.setItem('curTableId', 'Item');
             localStorage.setItem('curId', '1001');
-            // 缺失 isEditMode → getPrefBool 默认 false
-            expect(getLastNavToInLocalStore()).toBe('/record/Item/1001');
-
             localStorage.setItem('isEditMode', 'false');
             expect(getLastNavToInLocalStore()).toBe('/record/Item/1001');
+        });
+
+        it('isEditMode 缺失时回退共享默认 true（与 session 默认一致）→ 加 /edit 前缀', () => {
+            localStorage.setItem('curPage', 'record');
+            localStorage.setItem('curTableId', 'Item');
+            localStorage.setItem('curId', '1001');
+            // 缺失 isEditMode → DEFAULT_IS_EDIT_MODE=true（store.ts 共享常量，与 selfPrefState 声明一致）
+            expect(getLastNavToInLocalStore()).toBe('/edit/record/Item/1001');
         });
 
         it('table 页不加 /edit（即使 isEditMode=true）', () => {
@@ -152,12 +159,14 @@ describe('store 路由纯逻辑', () => {
             localStorage.setItem('curPage', 'invalidPage');
             localStorage.setItem('curTableId', 'Item');
             localStorage.setItem('curId', '1001');
+            localStorage.setItem('isEditMode', 'false');
             expect(getLastNavToInLocalStore()).toBe('/record/Item/1001');
         });
 
         it('curPage 缺失时同样回退 record', () => {
             localStorage.setItem('curTableId', 'Item');
             localStorage.setItem('curId', '1001');
+            localStorage.setItem('isEditMode', 'false');
             expect(getLastNavToInLocalStore()).toBe('/record/Item/1001');
         });
 
@@ -169,6 +178,7 @@ describe('store 路由纯逻辑', () => {
             localStorage.setItem('curPage', 'record');
             localStorage.setItem('curTableId', 'Item');
             localStorage.setItem('curId', 'with/slash');
+            localStorage.setItem('isEditMode', 'false');
             expect(getLastNavToInLocalStore()).toBe('/record/Item/with/slash');
         });
     });
