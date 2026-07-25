@@ -13,7 +13,7 @@
 // 本文件同时收口所有「key 相关」的缓存写动词（remove/invalidate/setQueryData），调用方不碰
 // queryClient 实例；key 无关的全量操作（invalidateAllQueries / removeAllQueryCache）在 queryClient.ts。
 import {queryClient} from "./queryClient.ts";
-import {Notes, notesToMap} from "@/api/noteModel.ts";
+import {Notes} from "@/api/noteModel.ts";
 
 export const queryKeys = {
     // 启动期一次性（AppLoader）
@@ -82,7 +82,8 @@ export function refetchResInfoCache(): void {
 }
 
 /** updateNote 成功后精确写 notes 缓存：后端返回全量 notes，直接替它回答（setQueryData），
- *  省一次 GET /notes refetch。 */
+ *  省一次 GET /notes refetch。存原始 Notes——Map 转换由查询侧的 select（notesToMap）做，
+ *  这里若存 Map，select 再转一次会直接抛错。 */
 export function setNotesCache(notes: Notes): void {
-    queryClient.setQueryData(queryKeys.notes(), notesToMap(notes));
+    queryClient.setQueryData(queryKeys.notes(), notes);
 }

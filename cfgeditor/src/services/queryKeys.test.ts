@@ -40,10 +40,11 @@ describe('缓存写动词（行为契约）', () => {
         expect(queryClient.getQueryState(['layout', '/other', 'K'])?.isInvalidated).toBe(false);
     });
 
-    it('setNotesCache：notes key 下读出 notesToMap 变换结果', () => {
-        setNotesCache({notes: [{key: 'k1', note: 'n1'}]});
+    it('setNotesCache：notes key 下存原始 Notes（Map 转换由查询侧 select 做）', () => {
+        const notes = {notes: [{key: 'k1', note: 'n1'}]};
+        setNotesCache(notes);
 
-        expect(queryClient.getQueryData(queryKeys.notes())).toEqual(new Map([['k1', 'n1']]));
+        expect(queryClient.getQueryData(queryKeys.notes())).toEqual(notes);
     });
 
     it('removeEditLayoutCache 前缀 = factory 编辑态 key 前缀（跨 artifact 一致性）', () => {

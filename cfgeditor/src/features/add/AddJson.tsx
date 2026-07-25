@@ -32,7 +32,10 @@ export const AddJson = memo(function AddJson() {
         mutationFn: (json: string) =>
             addOrUpdateRecord(server, curTableId, JSON.parse(json)),
 
-
+        onMutate: () => {
+            // 发起新请求前清掉上次的陈旧结果，避免飞行中/下次打开面板时还展示旧结果
+            setResult(undefined);
+        },
         onError: (error) => {
             setResult(error);
         },
@@ -49,7 +52,12 @@ export const AddJson = memo(function AddJson() {
 
     const onShow = useCallback(() => {
         const json = form.getFieldValue('json')
-        getCurrentEditingSession()?.replaceEditingObject(JSON.parse(json));
+        try {
+            getCurrentEditingSession()?.replaceEditingObject(JSON.parse(json));
+        } catch (e) {
+            // 文本为空或 JSON 非法时给用户可见反馈，而不是让异常在事件处理器里静默抛出
+            setResult(e as Error);
+        }
     }, [form]);
 
 

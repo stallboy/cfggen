@@ -1,8 +1,7 @@
 import {memo, useState} from "react";
 import {Schema} from "@/domain/schema.ts";
 import {useTranslation} from "react-i18next";
-import {Button, CollapseProps, Tooltip} from "antd";
-import {Collapse} from "antd/lib";
+import {Button, Collapse, CollapseProps, Tooltip} from "antd";
 import {LockOutlined, SyncOutlined, UnlockOutlined} from "@ant-design/icons";
 import {SearchValue} from "./SearchValue.tsx";
 import {LastAccessed} from "./LastAccessed.tsx";
