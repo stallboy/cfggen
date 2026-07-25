@@ -20,7 +20,14 @@ import type {FormInstance} from "antd";
  */
 export function useSyncFieldValue(form: FormInstance, field: { name: string; value: unknown }) {
     useEffect(() => {
-        if (form.getFieldValue(field.name) !== field.value) {
+        const formValue = form.getFieldValue(field.name);
+        // 数组字段（如 ArrayOfPrimitiveFormItem）entityMap 每次重算都生成新数组引用，
+        // 引用比较恒为不等会让"一致的字段跳过"失效，故两边都是数组时做元素级浅比较
+        const changed = Array.isArray(formValue) && Array.isArray(field.value)
+            ? formValue.length !== field.value.length ||
+              formValue.some((v, i) => v !== (field.value as unknown[])[i])
+            : formValue !== field.value;
+        if (changed) {
             form.setFieldValue(field.name, field.value);
         }
     }, [form, field]);

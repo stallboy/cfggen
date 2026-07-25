@@ -80,9 +80,9 @@ export const TableList = memo(function ({schema}: { schema: Schema }) {
     return (
         <Select id='table'
                 showSearch={{
-                    optionFilterProp: "children",
+                    // 大小写不敏感过滤，与 IdList 行为一致（optionFilterProp 被自定义 filterOption 覆盖，故不写）
                     filterOption: (input, option) =>
-                        option?.value.includes(input) ?? false
+                        option?.value.toLowerCase().includes(input.toLowerCase()) ?? false
                 }}
                 options={options}
                 style={SELECT_STYLE}
