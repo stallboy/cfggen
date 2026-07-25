@@ -88,4 +88,19 @@ describe('includeRefTables', () => {
         const teamTargets = map.get('Team').sourceEdges.map((e: {target: string}) => e.target)
         expect(teamTargets).toContain('Guild')
     })
+
+    it('末层节点的回指边：maxOutDepth=1 时 Team→Hero 的边不丢失', () => {
+        // Hero →(fk)→ Team，Team 有外键回指 Hero；Team 是末层节点，循环退出后补画其出边
+        const hero = makeTable('Hero', [field('id', 'int'), field('teamId', 'int')], {
+            foreignKeys: [fk('fk_team', ['teamId'], 'Team', {refType: 'rPrimary'})],
+        })
+        const team = makeTable('Team', [field('id', 'int'), field('heroId', 'int')], {
+            foreignKeys: [fk('fk_hero', ['heroId'], 'Hero', {refType: 'rPrimary'})],
+        })
+        const schema = new Schema(makeRawSchema([hero, team]))
+        const map = new Map()
+        includeRefTables(map, hero, schema, false, 1, 100)
+        const teamTargets = map.get('Team').sourceEdges.map((e: {target: string}) => e.target)
+        expect(teamTargets).toContain('Hero')
+    })
 })

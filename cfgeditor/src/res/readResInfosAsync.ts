@@ -170,26 +170,33 @@ export async function readResInfosAsync() {
     }
 
     const {tauriConf} = getMyStore();
-    const result = new Map<string, ResInfo[]>();
-    const stat = new Map<string, number>();
-    const baseDir = await path.resourceDir();
-    setResourceDir(baseDir);
+    try {
+        const result = new Map<string, ResInfo[]>();
+        const stat = new Map<string, number>();
+        const baseDir = await path.resourceDir();
+        setResourceDir(baseDir);
 
-    for (const resDir of tauriConf.resDirs) {
-        let dir = resDir.dir;
-        if (dir.startsWith('.')) {
-            dir = await path.join(baseDir, dir);
+        for (const resDir of tauriConf.resDirs) {
+            let dir = resDir.dir;
+            if (dir.startsWith('.')) {
+                dir = await path.join(baseDir, dir);
+            }
+            try {
+                await processDirRecursively(dir, !!resDir.txtAsSrt, resDir.lang, result, stat);
+            } catch (reason: unknown) {
+                console.error(reason);
+            }
         }
-        try {
-            await processDirRecursively(dir, !!resDir.txtAsSrt, resDir.lang, result, stat);
-        } catch (reason: unknown) {
-            console.error(reason);
-        }
+
+        const packed = packAllTracks(result);
+        setResMap(packed);
+        // console.log(`read res file for ${packed.size} node`, packed, stat);
+        return true;
+    } catch (e) {
+        // 读失败：复位守卫放行重试（对照 readPrefAsyncOnce），避免启动期一次瞬时失败后 resMap 永久为空。
+        // re-throw 让上层感知失败；invalidateResInfos 仍负责主动失效
+        alreadyRead = false;
+        throw e;
     }
-
-    const packed = packAllTracks(result);
-    setResMap(packed);
-    // console.log(`read res file for ${packed.size} node`, packed, stat);
-    return true;
 }
 

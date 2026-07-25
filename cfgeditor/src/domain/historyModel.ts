@@ -34,7 +34,9 @@ export class History {
                 return new History(itemsCopy, itemsCopy.length - 1, map);
             }
         } else {
-            return new History([new HistoryItem(table, id)], 0, new Map<string, string>());
+            // 首条记录同样记入「每表最后打开 id」：否则冷启动第一个打开的记录 A，
+            // 切到别的表再切回时 findLastOpenId 找不到 A，只能 fallback 到 recordIds[0]
+            return new History([new HistoryItem(table, id)], 0, new Map<string, string>([[table, id]]));
         }
     }
 

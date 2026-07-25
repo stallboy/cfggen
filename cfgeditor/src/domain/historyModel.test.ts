@@ -154,12 +154,11 @@ describe('History', () => {
         })
 
         it('prev/next 透传 lastOpenIdMap（导航不清空每表记忆）', () => {
-            // 首条 addItem 走空历史分支不写 map，需再 addItem 一次 t1 才让 t1 进入 map
             const h = new History()
-                .addItem('t1', '1')    // map={}（空历史分支）
-                .addItem('t2', 'a')    // map={t2:a}
-                .addItem('t1', '2')    // map={t2:a, t1:2}，index 指向 t1/2
-                .prev()                // 回到 t2/a，map 应仍为 {t2:a, t1:2}
+                .addItem('t1', '1')    // map={t1:1}
+                .addItem('t2', 'a')    // map={t1:1, t2:a}
+                .addItem('t1', '2')    // map={t1:2, t2:a}，index 指向 t1/2
+                .prev()                // 回到 t2/a，map 应仍为 {t1:2, t2:a}
             expect(h.findLastOpenId('t1')).toBe('2')
             expect(h.findLastOpenId('t2')).toBe('a')
 
@@ -182,10 +181,10 @@ describe('History', () => {
             expect(h.findLastOpenId('other')).toBeUndefined()
         })
 
-        it('findLastOpenId：仅首条记录时不记录（无操作分支不写入 map）', () => {
-            // addItem 的空历史分支返回空 Map，不写入首条 table/id
+        it('findLastOpenId：仅首条记录时也会记录（空历史分支同样写入 map）', () => {
+            // 空历史分支也写入首条 table/id，避免冷启动第一个打开的记录切表后丢失
             const h = new History().addItem('hero', '1')
-            expect(h.findLastOpenId('hero')).toBeUndefined()
+            expect(h.findLastOpenId('hero')).toBe('1')
         })
     })
 

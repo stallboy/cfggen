@@ -16,6 +16,24 @@ function createEntity(item: SItem, id: string, entityType: EntityType = EntityTy
     };
 }
 
+function addRefEdgesToExisting(entities: Entity[], entityMap: Map<string, Entity>, schema: Schema) {
+    for (const oldEntity of entities) {
+        const item = oldEntity.userData as SItem;
+        const directRefs = schema.getAllRefTablesByItem(item);
+        for (const ref of directRefs) {
+            if (entityMap.has(ref)) {
+                oldEntity.sourceEdges.push({
+                    sourceHandle: "@out",
+                    target: ref,
+                    targetHandle: "@in",
+                    type: EntityEdgeType.Ref,
+
+                })
+            }
+        }
+    }
+}
+
 export function includeRefTables(entityMap: Map<string, Entity>, curTable: STable, schema: Schema,
                                  refIn: boolean, maxOutDepth: number, maxNode: number) {
 
@@ -86,21 +104,7 @@ export function includeRefTables(entityMap: Map<string, Entity>, curTable: STabl
             }
         }
 
-        for (const oldEntity of entityFrontier) {
-            const item = oldEntity.userData as SItem;
-            const directRefs = schema.getAllRefTablesByItem(item);
-            for (const ref of directRefs) {
-                if (entityMap.has(ref)) {
-                    oldEntity.sourceEdges.push({
-                        sourceHandle: "@out",
-                        target: ref,
-                        targetHandle: "@in",
-                        type: EntityEdgeType.Ref,
-
-                    })
-                }
-            }
-        }
+        addRefEdgesToExisting(entityFrontier, entityMap, schema);
 
         frontier = newFrontier;
         entityFrontier = newEntityFrontier;
@@ -109,5 +113,11 @@ export function includeRefTables(entityMap: Map<string, Entity>, curTable: STabl
         if (entityMap.size > maxNode) {
             break;
         }
+    }
+
+    // 循环退出后 entityFrontier 是最后一轮新建的末层节点，其出边尚未画；
+    // 补画一次（只连 entityMap 中已存在的目标，如回指边），不新建节点。depth>1 表示 while 至少跑过一轮
+    if (depth > 1) {
+        addRefEdgesToExisting(entityFrontier, entityMap, schema);
     }
 }
