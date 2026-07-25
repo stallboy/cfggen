@@ -3,17 +3,17 @@ import {Bubble, Sender, Welcome} from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
 import {OpenAIChatProvider, useXChat, XModelParams, XModelResponse, XRequest} from "@ant-design/x-sdk";
 import {Flex, Result, Spin, theme} from "antd";
-import {useState, useEffect} from "react";
+import {memo, useState, useEffect, type CSSProperties} from "react";
 
 import {useMyStore, useLocationData} from "@/store/store.ts";
 import {useIsCurTableEditable} from "./useEditable.ts";
-import {memo, useRef, type CSSProperties} from "react";
 import {Schema} from "@/domain/schema.ts";
 import {useQuery, useMutation} from "@tanstack/react-query";
 import {getPrompt, checkJson} from "@/api/apiClient.ts";
 import {CheckJsonResult} from "@/api/chatModel.ts";
 import {getCurrentEditingSession} from "@/services/editingSession.ts";
 import {queryKeys} from "@/services/queryKeys.ts";
+import {accumulateSseContent} from "./chatSse.ts";
 
 const role: BubbleListProps["role"] = {
     assistant: {
@@ -24,6 +24,13 @@ const role: BubbleListProps["role"] = {
     },
     user: {placement: "end"},
 };
+
+// AI 未配置时的兜底（baseUrl 默认非空、apiKey 默认 ''，仅校验 baseUrl 会以空 key 发 Bearer 致 401 且无引导）
+const AI_FALLBACK = {
+    baseUrl: 'https://api.x.ant.design/api/big_model_glm-4.5-flash',
+    model: 'glm-4.5-flash',
+    apiKey: 'xxx',
+} as const;
 
 export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }) {
     const {token} = theme.useToken();
@@ -76,8 +83,6 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     const editable = useIsCurTableEditable(schema);
 
     const [inputValue, setInputValue] = useState("");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const chatRef = useRef<any>(null);
 
     const {isLoading, isError, error, data: promptRes} = useQuery({
         queryKey: queryKeys.prompt(curTableId),
@@ -113,9 +118,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     // 同时校验 baseUrl 与 apiKey：默认 baseUrl 非空但 apiKey 默认为 ''，
     // 仅校验 baseUrl 会以空 key 发 Bearer 导致 401 且无引导
     const isAiSet = aiConf.baseUrl.length > 0 && aiConf.apiKey.length > 0;
-    const baseUrl = isAiSet ? aiConf.baseUrl : 'https://api.x.ant.design/api/big_model_glm-4.5-flash';
-    const model = isAiSet ? aiConf.model : 'glm-4.5-flash';
-    const apiKey = isAiSet ? aiConf.apiKey : 'xxx';
+    const {baseUrl, model, apiKey} = isAiSet ? aiConf : AI_FALLBACK;
     const {onRequest, messages, isRequesting, abort, setMessages} = useXChat({
         defaultMessages: [],
         provider: new OpenAIChatProvider({
@@ -132,45 +135,12 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
                     },
                     callbacks: {
                         onSuccess: (chunks) => {
-                            // 处理流式响应数据数组
-                            if (Array.isArray(chunks)) {
-                                let fullContent = '';
-
-                                // 累积流式内容，遇到 finish_reason 就停止
-                                for (const chunk of chunks) {
-                                    // 跳过 [DONE] 哨兵/keepalive 等非 JSON 帧，并防御非法 JSON，避免整条流处理中断
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    const raw = (chunk as any).data;
-                                    if (raw === '[DONE]' || raw == null) {
-                                        continue;
-                                    }
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    let data: any;
-                                    try {
-                                        data = JSON.parse(raw);
-                                    } catch {
-                                        continue;
-                                    }
-                                    const choices = data.choices;
-                                    if (choices && Array.isArray(choices) && choices.length > 0) {
-                                        const choice = choices[0];
-
-                                        // 累积内容
-                                        if (choice.delta?.content) {
-                                            fullContent += choice.delta.content;
-                                        }
-
-                                        // 检查是否完成
-                                        if (choice.finish_reason) {
-                                            const finalContent = fullContent.trim();
-                                            if (finalContent) {
-                                                // 验证生成的 JSON
-                                                checkJsonMutation.mutate(finalContent);
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
+                            // 流式帧累积见 chatSse.accumulateSseContent（纯函数、有单测）：
+                            // 跳过 [DONE]/keepalive/非法 JSON，累积 delta.content，遇 finish_reason 返回 trim 内容。
+                            // 仅非空返回值触发 checkJson 校验（'' 与 null 都不触发）。
+                            const finalContent = Array.isArray(chunks) ? accumulateSseContent(chunks) : null;
+                            if (finalContent) {
+                                checkJsonMutation.mutate(finalContent);
                             }
                         },
                         onError: (err) => {
@@ -290,7 +260,6 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     const chatSender = (
         <Flex vertical gap={12} style={styles.chatSend}>
             <Sender
-                ref={chatRef}
                 loading={isRequesting}
                 value={inputValue}
                 onChange={(v) => setInputValue(v)}

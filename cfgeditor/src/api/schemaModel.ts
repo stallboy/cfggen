@@ -49,7 +49,8 @@ export type FieldTypeId =
     | { kind: 'map'; key: string; value: string }
     | { kind: 'ref'; name: string };
 
-/** 解析 SField.type 字面量。map<K,V> 以首个逗号切分（与原散落实现同语义）；非容器归 'ref'。 */
+/** 解析 SField.type 字面量。map<K,V> 按逗号切分 key/value（cfggen 约束 map 的 key/value 必为
+ *  SimpleType、禁止嵌套容器，故合法 schema 内只含一个逗号，全逗号切分等价于首个逗号切分）；非容器归 'ref'。 */
 export function parseFieldTypeId(type: string): FieldTypeId {
     if (isPrimitiveType(type)) return {kind: 'primitive', name: type};
     if (type.startsWith('list<')) return {kind: 'list', item: type.slice(5, -1)};

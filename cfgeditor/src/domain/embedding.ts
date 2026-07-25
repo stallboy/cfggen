@@ -1,5 +1,5 @@
 import {JSONArray, JSONObject} from '@/api/recordModel';
-import {isNumberType, isPrimitiveType, PrimitiveType, SField, SInterface, SStruct} from '@/api/schemaModel';
+import {isNumberType, isPrimitiveType, parseFieldTypeId, PrimitiveType, SField, SInterface, SStruct} from '@/api/schemaModel';
 import {defaultValueOfPrimitive, getImpl} from '@/domain/schema';
 import {PrimitiveValue} from "@/domain/entityModel";
 
@@ -199,8 +199,8 @@ function matchEmbeddingConfig(analysis: FieldTypeAnalysis, config: EmbeddableStr
  */
 function filterEmptyListFields(fields: SField[], obj: JSONObject): SField[] {
     return fields.filter(field => {
-        // 检查是否为list类型
-        if (!field.type.startsWith('list<')) {
+        // 检查是否为list类型（走 parseFieldTypeId 单一来源）
+        if (parseFieldTypeId(field.type).kind !== 'list') {
             return true; // 非list类型，保留
         }
 

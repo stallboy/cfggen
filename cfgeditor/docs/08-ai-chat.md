@@ -45,18 +45,21 @@ apikey 存个人 pref 文件 `cfgeditorSelf.yml`（02 讲过，`prefSelfKeySet` 
 
 ## 三、流式累积，但增量 UI 未实现
 
-`stream: true` 开启，但**流式增量 UI 暂未实现**（`onUpdate` 空实现）。业务只关心最终 JSON 是否合法——在 `onSuccess` 里累积 `delta.content`：
+`stream: true` 开启，但**流式增量 UI 暂未实现**（`onUpdate` 空实现）。业务只关心最终 JSON 是否合法——`onSuccess` 把响应块数组交给 [`accumulateSseContent`](../src/features/add/chatSse.ts)（[chatSse.ts](../src/features/add/chatSse.ts) 纯函数、有单测）累积：
 
 ```
-onSuccess 收到响应块数组：
-  累积器 = ''
-  逐块处理：
-    raw = 块数据
+accumulateSseContent(响应块数组) → string | null：
+  累积器 = ''；finished = false
+  逐块处理（单帧异常一律跳过、不中断整条流）：
+    chunk 非对象 / data 形态脏     → 跳过
     raw 为 '[DONE]' 或 null       → 跳过（[DONE] 哨兵 / keepalive）
-    JSON.parse(raw) 失败          → 跳过（防御非法帧，防整条流处理中断）
+    JSON.parse(raw) 失败或得 null  → 跳过（防御非法帧，防整条流处理中断）
+    choices 缺失/空、choices[0] null → 跳过
     取首个 choice：
       delta.content 非空          → 累积器追加
-      finish_reason 非空          → trim 累积器，非空则触发 checkJsonMutation，结束循环
+      finish_reason 非空          → finished=true，结束循环
+  finished 则返回 trim 后累积器（可能空串）；否则返回 null
+onSuccess：accumulateSseContent 返回非空才触发 checkJsonMutation（'' 与 null 都不触发）
 onUpdate：空实现（流式增量 UI 未实现，完整内容由 onSuccess 统一处理）
 ```
 
@@ -125,7 +128,7 @@ AddJson 的「loadIntoForm」按钮也调 `replaceEditingObject`，但**跳过 `
 ## 一句话速记
 
 - **x-sdk 直连 OpenAI 兼容端点**：`XRequest(baseUrl, Bearer apiKey, stream)`；未配置降级到 ant.design 演示端点；apikey 存个人 pref。
-- **流式累积但增量 UI 未实现**：`onSuccess` 累积 `delta.content`，跳过 `[DONE]` / 非法 JSON 帧；`finish_reason` 时 `checkJsonMutation`。
+- **流式累积但增量 UI 未实现**：`onSuccess` 经 `accumulateSseContent`（[chatSse.ts](../src/features/add/chatSse.ts) 纯函数）累积 `delta.content`，跳过 `[DONE]` / 非法 JSON 帧；`finish_reason` 时 `checkJsonMutation`。
 - **后端双链路独立**：`/prompt`（GET，按表 schema 产 prompt+init 种子，`staleTime:∞`）/ `/checkJson`（POST，校验+修复生成 JSON）；后端不转发 LLM。
 - **回写 `replaceEditingObject`**：整体替换 + FitFull + undo，内部 `deleteRefsInPlace` 剥 `$refs`。
 - **只生成配置 JSON 不生成 schema**；schema 仅作可编辑门禁 + 后端校验来源。

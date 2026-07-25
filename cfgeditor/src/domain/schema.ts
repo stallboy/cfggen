@@ -39,15 +39,14 @@ export class Schema {
             this.itemIncludeImplMap.set(item.name, item);
         }
 
-        // 构造map entry type
+        // 构造map entry type（字段类型解析走 parseFieldTypeId 单一来源，替代手写 startsWith+substring+split）
         const mapEntryTypes = new Map<string, SStruct>();
         for (const item of this.itemIncludeImplMap.values()) {
             if (item.type != "interface") {
                 const ss = item;
                 for (const {name, type} of ss.fields) {
-                    if (type.startsWith("map<")) {
-                        const split = type.substring(4, type.length - 1).split(",");
-
+                    const ft = parseFieldTypeId(type);
+                    if (ft.kind === 'map') {
                         const entryTypeName = getMapEntryTypeName(ss, name);
                         const entryType: SStruct = {
                             name: entryTypeName,
@@ -55,11 +54,11 @@ export class Schema {
                             comment: '',
                             fields: [{
                                 name: 'key',
-                                type: split[0],
+                                type: ft.key,
                                 comment: '',
                             }, {
                                 name: 'value',
-                                type: split[1],
+                                type: ft.value,
                                 comment: '',
                             }],
                         }
@@ -85,11 +84,16 @@ export class Schema {
             }
         }
 
-        // table 被哪些表 外键连接
+        // table 被哪些表 外键连接。refTables 由上一轮 getAllRefTablesByItem(item) 填充（Nameable 上类型可选），
+        // 用守卫替代 as Set<string> 强转：脏数据下安全跳过，而非吃 undefined。
         for (const item of rawSchema.items) {
             if (item.type == 'table') {
                 const st = item;
-                const refTables = st.refTables as Set<string>;
+                const refTables = st.refTables;
+                if (!refTables) {
+                    console.error(`table ${st.name} has no refTables (dirty schema?)`);
+                    continue;
+                }
                 for (const refTable of refTables) {
                     // getSTable 返回 nullable：脏 schema（refTable 不存在）时跳过 + 打日志定位，
                     // 不再 as STable 强转吃 null、靠 ?. 静默丢反向索引条目。
@@ -136,8 +140,7 @@ export class Schema {
     getDirectDepStructsMapByItem(item: SItem): Map<string, string> {
         const depNameMap = new Map<string, string>();
         if (item.type == 'interface') {
-            const ii = item as SInterface;
-            for (const impl of ii.impls) {
+            for (const impl of item.impls) {
                 depNameMap.set(impl.id ?? impl.name, '@out');
             }
             return depNameMap;
@@ -227,14 +230,12 @@ export class Schema {
 
         const res = new Set<string>();
 
-        for (let si of allDepStructs) {
+        for (const si of allDepStructs) {
             if (si.type == 'interface') {
-                const ii = si as SInterface;
-                if (ii.enumRef) {
-                    res.add(ii.enumRef);
+                if (si.enumRef) {
+                    res.add(si.enumRef);
                 }
             } else {
-                si = si as (SStruct | STable)
                 if (si.foreignKeys) {
                     for (const fk of si.foreignKeys) {
                         res.add(fk.refTable);
@@ -266,19 +267,24 @@ export class Schema {
     defaultValueOfStructural(sStruct: SStruct | STable): JSONObject {
         const res: JSONObject = {"$type": sStruct.id ?? sStruct.name};
         for (const field of sStruct.fields) {
-            const n = field.name;
-            const t = field.type;
-            if (isPrimitiveType(t)) {
-                res[n] = defaultValueOfPrimitive(t);
-            } else if (t.startsWith('list<') || t.startsWith('map<')) {
-                // map<K,V> 在 cfggen 的 JSON 序列化里是 entry 结构体的 list（见 schemaUtil 构造 mapEntryType），
-                // 故 map 与 list 的默认值都是空数组 []。
-                res[n] = [];
-            } else {
-                const sf = this.getStructOrInterface(t);
-                if (sf) {
-                    res[n] = this.defaultValue(sf);
-                    // TODO recursive check
+            const ft = parseFieldTypeId(field.type);
+            switch (ft.kind) {
+                case 'primitive':
+                    res[field.name] = defaultValueOfPrimitive(ft.name);
+                    break;
+                case 'list':
+                case 'map':
+                    // map<K,V> 在 cfggen 的 JSON 序列化里是 entry 结构体的 list（见构造器 mapEntryTypes 填充），
+                    // 故 map 与 list 的默认值都是空数组 []。
+                    res[field.name] = [];
+                    break;
+                case 'ref': {
+                    const sf = this.getStructOrInterface(ft.name);
+                    if (sf) {
+                        res[field.name] = this.defaultValue(sf);
+                        // TODO recursive check
+                    }
+                    break;
                 }
             }
         }
