@@ -7,12 +7,57 @@ import {
     setNodeShow,
     useMyStore
 } from "@/store/store.ts";
-import {CSSProperties, memo, useMemo} from "react";
+import {CSSProperties, memo, ReactNode, useMemo} from "react";
 
 import {fixColors} from "./colorUtils.ts";
 
 const {Title} = Typography;
 const selectStyle: CSSProperties = {width: 160};
+
+// Form.List 行骨架：每行渲染 children(name) 加删除按钮，底部一个添加按钮
+export function FormRowList({name, label, addText, children}: {
+    name: string;
+    label: string;
+    addText: string;
+    children: (name: number) => ReactNode;
+}) {
+    return <Form.Item label={label}>
+        <Form.List name={name}>
+            {(fields, {add, remove}) => (
+                <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
+                    {fields.map(({key, name}) => (
+                        <Space key={key}>
+                            {children(name)}
+                            <CloseOutlined onClick={() => remove(name)}/>
+                        </Space>
+                    ))}
+
+                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
+                        {addText}
+                    </Button>
+                </div>
+            )}
+        </Form.List>
+    </Form.Item>;
+}
+
+// 关键字+颜色列表，三类配色共用，label 取与 name 同名的文案
+function KeywordColorList({name, placeholder}: {
+    name: string;
+    placeholder: string;
+}) {
+    const {t} = useTranslation();
+    return <FormRowList name={name} label={t(name)} addText={t('addColor')}>
+        {(name) => <>
+            <Form.Item name={[name, 'keyword']} noStyle>
+                <Input placeholder={placeholder}/>
+            </Form.Item>
+            <Form.Item name={[name, 'color']} noStyle>
+                <ColorPicker format="hex"/>
+            </Form.Item>
+        </>}
+    </FormRowList>;
+}
 
 export const NodeShowSetting = memo(function () {
     const {t} = useTranslation();
@@ -64,77 +109,9 @@ export const NodeShowSetting = memo(function () {
 
         <Title level={4}>{t('colorSettingTitle')}</Title>
 
-        <Form.Item label={t('nodeColorsByValue')}>
-            <Form.List name="nodeColorsByValue">
-                {(fields, {add, remove}) => (
-                    <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
-                        {fields.map(({key, name}) => (
-                            <Space key={key}>
-                                <Form.Item name={[name, 'keyword']} noStyle>
-                                    <Input placeholder="keyword"/>
-                                </Form.Item>
-                                <Form.Item name={[name, 'color']} noStyle>
-                                    <ColorPicker format="hex"/>
-                                </Form.Item>
-                                <CloseOutlined onClick={() => remove(name)}/>
-                            </Space>
-                        ))}
-
-                        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                            {t('addColor')}
-                        </Button>
-                    </div>
-                )}
-            </Form.List>
-        </Form.Item>
-
-        <Form.Item label={t('nodeColorsByLabel')}>
-            <Form.List name="nodeColorsByLabel">
-                {(fields, {add, remove}) => (
-                    <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
-                        {fields.map(({key, name}) => (
-                            <Space key={key}>
-                                <Form.Item name={[name, 'keyword']} noStyle>
-                                    <Input placeholder="keyword"/>
-                                </Form.Item>
-                                <Form.Item name={[name, 'color']} noStyle>
-                                    <ColorPicker format="hex"/>
-                                </Form.Item>
-                                <CloseOutlined onClick={() => remove(name)}/>
-                            </Space>
-                        ))}
-
-                        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                            {t('addColor')}
-                        </Button>
-                    </div>
-                )}
-            </Form.List>
-        </Form.Item>
-
-        <Form.Item label={t('fieldColorsByName')}>
-            <Form.List name="fieldColorsByName">
-                {(fields, {add, remove}) => (
-                    <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
-                        {fields.map(({key, name}) => (
-                            <Space key={key}>
-                                <Form.Item name={[name, 'keyword']} noStyle>
-                                    <Input placeholder="field"/>
-                                </Form.Item>
-                                <Form.Item name={[name, 'color']} noStyle>
-                                    <ColorPicker format="hex"/>
-                                </Form.Item>
-                                <CloseOutlined onClick={() => remove(name)}/>
-                            </Space>
-                        ))}
-
-                        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                            {t('addColor')}
-                        </Button>
-                    </div>
-                )}
-            </Form.List>
-        </Form.Item>
+        <KeywordColorList name="nodeColorsByValue" placeholder="keyword"/>
+        <KeywordColorList name="nodeColorsByLabel" placeholder="keyword"/>
+        <KeywordColorList name="fieldColorsByName" placeholder="field"/>
 
         <Title level={4}>{t('otherSetting')}</Title>
 
@@ -150,26 +127,11 @@ export const NodeShowSetting = memo(function () {
             <Switch/>
         </Form.Item>
 
-        <Form.Item label={t('refTableHides')}>
-            <Form.List name="refTableHides">
-                {(fields, {add, remove}) => (
-                    <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
-                        {fields.map(({key, name}) => (
-                            <Space key={key}>
-                                <Form.Item name={name} noStyle>
-                                    <Input placeholder="table"/>
-                                </Form.Item>
-                                <CloseOutlined onClick={() => remove(name)}/>
-                            </Space>
-                        ))}
-
-                        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                            {t('addTableHide')}
-                        </Button>
-                    </div>
-                )}
-            </Form.List>
-        </Form.Item>
+        <FormRowList name="refTableHides" label={t('refTableHides')} addText={t('addTableHide')}>
+            {(name) => <Form.Item name={name} noStyle>
+                <Input placeholder="table"/>
+            </Form.Item>}
+        </FormRowList>
 
     </Form>;
 });

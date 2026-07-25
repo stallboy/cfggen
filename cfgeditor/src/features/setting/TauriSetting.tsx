@@ -3,12 +3,12 @@ import {memo, useCallback} from "react";
 import {useTranslation} from "react-i18next";
 import {useQuery} from "@tanstack/react-query";
 import {queryKeys} from "@/services/queryKeys.ts";
-import {App, Button, Checkbox, Divider, Form, Input, Space, Typography} from "antd";
-import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
+import {App, Button, Checkbox, Divider, Form, Input, Typography} from "antd";
 import {Schema} from "@/domain/schema.ts";
 import {invalidateResInfos} from "@/res/readResInfosAsync.ts";
 import {summarizeResAsync} from "@/res/summarizeResAsync.ts";
 import {path} from "@tauri-apps/api";
+import {FormRowList} from "./NodeShowSetting.tsx";
 
 const {Title} = Typography;
 
@@ -63,32 +63,19 @@ export const TauriSetting = memo(function ({schema}: {
                 <Input placeholder="asset ref table"/>
             </Form.Item>
 
-            <Form.Item label={t('resDirs')}>
-                <Form.List name="resDirs">
-                    {(fields, {add, remove}) => (
-                        <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
-                            {fields.map(({key, name}) => (
-                                <Space key={key}>
-                                    <Form.Item name={[name, 'dir']} noStyle>
-                                        <Input placeholder="dir"/>
-                                    </Form.Item>
-                                    <Form.Item name={[name, 'txtAsSrt']} valuePropName='checked' noStyle>
-                                        <Checkbox>txtAsSrt</Checkbox>
-                                    </Form.Item>
-                                    <Form.Item name={[name, 'lang']} noStyle>
-                                        <Input placeholder="lang"/>
-                                    </Form.Item>
-                                    <CloseOutlined onClick={() => remove(name)}/>
-                                </Space>
-                            ))}
-
-                            <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                                {t('addResDir')}
-                            </Button>
-                        </div>
-                    )}
-                </Form.List>
-            </Form.Item>
+            <FormRowList name="resDirs" label={t('resDirs')} addText={t('addResDir')}>
+                {(name) => <>
+                    <Form.Item name={[name, 'dir']} noStyle>
+                        <Input placeholder="dir"/>
+                    </Form.Item>
+                    <Form.Item name={[name, 'txtAsSrt']} valuePropName='checked' noStyle>
+                        <Checkbox>txtAsSrt</Checkbox>
+                    </Form.Item>
+                    <Form.Item name={[name, 'lang']} noStyle>
+                        <Input placeholder="lang"/>
+                    </Form.Item>
+                </>}
+            </FormRowList>
             <Form.Item>
                 <Button type="primary" htmlType="submit">
                     {t('setTauriConf')}
