@@ -438,6 +438,66 @@ class CfgValueParserTest {
     }
 
     @Test
+    void parseCfgValue_nestedBlockWithRedundantOuterField() {
+        // 复现 levelmonster 结构：外层 block(waves) 的元素 struct 有兄弟 primitive 字段 startTime，
+        // 策划在每个内层 block(spawns) 行里冗余填了 startTime。
+        // 列布局：id, waveIndex, startTime, 〔空分隔列〕, pathId, monsterId
+        // 修复前：parseBlock 用 firstColIndex-1 判断嵌套边界，对 spawns 落在 startTime 上，
+        //         spawn 行冗余的 startTime 非空 -> break -> 每个 wave 只读出 1 个 spawn。
+        // 修复后：改看外层 block 首列 waveIndex，正确读出全部 spawn。
+        String cfgStr = """
+                struct LevelWave {
+                    waveIndex:int;
+                    startTime:float;
+                    spawns:list<LevelSpawn> (block=1);
+                }
+                struct LevelSpawn {
+                    pathId:int;
+                    monsterId:int;
+                }
+                table t[id] {
+                    id:int;
+                    waves:list<LevelWave> (block=1);
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+
+        // 关键：spawn 行（第4、5、7行）冗余填了 startTime
+        String csvStr = """
+                关卡ID,波次,启动时间,总时间,路径,怪物ID
+                id,waves,startTime,,pathId,monsterId
+                1,1,0.0,1,1001,2001
+                ,,1.0,1,1002,2002
+                ,,1.0,1,1003,2003
+                ,2,2.0,1,1004,2004
+                ,,2.0,1,1005,2005
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+        VTable t = cfgValue.getTable("t");
+        assertEquals(1, t.valueList().size());
+
+        VStruct record = t.valueList().getFirst();
+        VList waves = (VList) record.values().get(1);
+        assertEquals(2, waves.valueList().size(), "wave count");
+
+        VStruct wave1 = (VStruct) waves.valueList().get(0);
+        VList spawns1 = (VList) wave1.values().get(2);
+        assertEquals(3, spawns1.valueList().size(), "wave1 spawn count");
+
+        VStruct wave2 = (VStruct) waves.valueList().get(1);
+        VList spawns2 = (VList) wave2.values().get(2);
+        assertEquals(2, spawns2.valueList().size(), "wave2 spawn count");
+
+        // 断具体值，防“数量对但内容错”
+        VStruct spawn2ofWave1 = (VStruct) spawns1.valueList().get(1);
+        assertEquals(1002, ((VInt) spawn2ofWave1.values().get(0)).value());
+        assertEquals(2002, ((VInt) spawn2ofWave1.values().get(1)).value());
+    }
+
+    @Test
     void error_InterfaceCellImplNotFound() {
         String cfgStr = """
                 interface action {

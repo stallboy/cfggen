@@ -137,52 +137,55 @@ sidebar:
 
 ### 读取算法
 
-Block 的读取算法基于单元格的空值检测来确定数据块的边界：
+Block 的读取算法基于"祖先 block 首列"判断嵌套边界。解析器按 schema 预计算每个 block 字段首列对应的**祖先 block 首列集合**（即词法上包围它的所有外层 block 的首列），扫描后续行时检查这些祖先首列：
 
 ```java
-if (isPkCellAllEmpty(line)) {  // 主键所在格子为空，还是本record
-    DCell prevCell = line.get(firstColIndex - 1);
-    DCell thisCell = line.get(firstColIndex);
-
-    if (prevCell.isCellEmpty()) { // 上一格为空
-        if (thisCell.isCellEmpty()) { // 本格也为空，内部嵌套 block，忽略
-        } else { // 本格不为空 -> 属于当前 block
-            res.add(new CellsWithRowIndex(line.subList(firstColIndex, firstColIndex + colSize), row));
+// ancestors：本 block 的所有祖先 block 首列（按 schema 预计算）
+if (isPkCellAllEmpty(line)) {  // 主键全为空 => 仍属于本 record
+    // 任一祖先 block 首列非空 => 外层 block 起了新项 => 结束本 block
+    boolean newOuterItem = false;
+    for (int bc : ancestors) {
+        if (!line.get(bc).isCellEmpty()) {
+            newOuterItem = true;
+            break;
         }
-    } else { // 上一个不为空，结束当前 block
-        break;
     }
-} else { // 下一个记录，结束当前 block
-    break;
+    if (newOuterItem) break;
+
+    DCell thisCell = line.get(firstColIndex);
+    if (thisCell.isCellEmpty()) {
+        // 本格为空：更深层嵌套 block 的行，忽略，继续
+    } else {
+        // 本格不为空：属于当前 block
+        res.add(new CellsWithRowIndex(line.subList(firstColIndex, firstColIndex + colSize), row));
+    }
+} else {
+    break;  // 主键非空 => 下一个 record，结束
 }
 ```
 
 ### 嵌套支持
 
-Block 支持多层嵌套，通过空单元格作为分隔标记：
+Block 支持多层嵌套。判断一行属于"当前 block 的延续"还是"外层 block 起了新项"，看的是**外层 block 的首列**（每一项的标识列）是否非空，而不是相邻的前一列：
 
 ```
-// 示例结构：
-// 1. xxxaebbxccc
-// 2.      bb cc
-// 3.      bb
-// 4.    aebb
-// 5.      bb
+// 示例布局（外层 aebb 块，内嵌 bb 块）：
+// 1. aebb         <- 外层第1项 header（aebb 首列有值）
+// 2.     bb       <- 内层 bb 的行（aebb 首列为空，故仍属第1项）
+// 3.     bb
+// 4. aebb         <- 外层第2项 header（aebb 首列又有值 => 新的一项）
+// 5.     bb
 ```
-
-- `aeb` 是 `block=1`
-- `b` 是 `block=2`
-- `c` 是 `block=3`
 
 **嵌套规则**：
-- 每个 block 前需要有空列作为分隔标记
-- 支持多层嵌套：`aebb` 嵌套 `bb`
-- 同级 block 之间建议使用分隔列（如示例中的 `x`）
-- 当前版本不强制检测嵌套规则，需要人工保证正确性
+- 嵌套 block 的行，其外层 block 的首列（项标识）必须为空，否则会被判定为外层起了新项而结束当前 block
+- 外层 block 的其它兄弟字段（非首列）在内层 block 行中可为空、也可冗余填值，不影响边界判断
+- 支持多层嵌套：外层 block 可继续嵌套内层 block
+- 同级两个 block 字段之间建议用空分隔列隔开（当前版本不强制检测，需人工保证）
 
 ### 潜在问题
 
-如果第 4 行的 `aebb` 中，`e` 对应的 Excel 单元格为空，系统会将第 4、5 行的 `bb` 信息合并到第 1 行的 `aeb` 结构中，而不是创建新的 `aeb` 结构。
+如果某个 block 项的首列（项标识）单元格为空，解析器无法识别这是新的一项，会把后续行合并进上一个项，而不是创建新项。
 
 这可能导致意外的数据合并，下一节将介绍如何使用 `mustFill` 来避免此类问题。
 
@@ -392,12 +395,12 @@ table task[id] {
 **说明**：
 - 外层 `rewardGroups` 使用 `block=1`，每次占用 3 列（groupName + itemId + count）
 - 内层 `items` 也使用 `block=1`，嵌套在 rewardGroups 之中
-- 第2-3行：第1个 rewardGroup（基础奖励），包含 2 个 RewardItem
-- 第4行：groupName 列有值"额外奖励"，开始第2个 rewardGroup
-- 第4-5行：第2个 rewardGroup（额外奖励），包含 2 个 RewardItem
+- 第1-2行：第1个 rewardGroup（基础奖励），包含 2 个 RewardItem
+- 第3行：groupName 列有值"额外奖励"，被识别为外层起了新项，开始第2个 rewardGroup
+- 第3-4行：第2个 rewardGroup（额外奖励），包含 2 个 RewardItem
 
 **嵌套规则**：
-- 每个 block 前需要有空列或空行作为分隔标记
+- 内层 `items` 的行，外层 `rewardGroups` 的首列（`groupName`）必须为空，否则会被判定为新的一组
 - 当前版本不强制检测嵌套规则，需要人工保证正确性
 
 ### Interface 映射示例
@@ -542,5 +545,5 @@ table task...{
 
 - 在设计复杂数据结构时，提前规划表格映射方式
 - 对于递归结构，确保至少有一处使用 `pack` 打破循环
-- 使用 `mustFill` 约束关键字段，也用于设置`block`附近字段避免意外的数据合并
+- 使用 `mustFill` 约束 block 首列（项标识）等关键字段，避免因首列为空导致意外的数据合并
 - 保持表格结构的清晰性和可维护性
