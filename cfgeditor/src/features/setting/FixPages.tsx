@@ -1,5 +1,5 @@
 import {makeFixedPage, makeUnrefPage, setFixedPagesConf, useMyStore, useLocationData, isFixedRefPage} from "@/store/store.ts";
-import {memo, useCallback, useEffect} from "react";
+import {memo, useCallback, useEffect, useMemo} from "react";
 import {useTranslation} from "react-i18next";
 import {Button, Form, Input, Space} from "antd";
 import {CloseOutlined} from "@ant-design/icons";
@@ -49,27 +49,37 @@ export const FixPages = memo(function ({schema, curTable}: {
     }, [curTableId, curId, pageConf, curPage]);
 
     // 将FixedPage映射为OnePage（表单使用）
-    const pages: OnePage[] = pageConf.pages.map(p => {
+    // 用useMemo缓存，避免每次渲染生成新数组导致下面的同步effect反复重置表单、冲掉未提交编辑
+    const pages: OnePage[] = useMemo(() => pageConf.pages.map(p => {
         if (isFixedRefPage(p)) {
             return {label: p.label, table: p.table, id: p.id};
         } else {
             return {label: p.label, table: p.table};
         }
-    });
+    }), [pageConf]);
 
     const SetPages = function (values: { pages: OnePage[] }) {
-        const newPages: FixedPage[] = values.pages.map((formPage, index) => {
-            // 使用索引位置来匹配原始页面，而不是label
-            // 这样修改label后仍然能找到对应的原始页面
-            const originalPage = pageConf.pages[index];
-            if (originalPage) {
-                return {
+        // 按 (table, id) 标识找回原始页面（unref页无id，用table+类型区分），
+        // 不能按索引回配——Form.List删除行后表单索引与pageConf.pages索引会错位。
+        // 同 (table, id) 重复出现时按出现顺序依次消费匹配。
+        const remaining = [...pageConf.pages];
+        const newPages: FixedPage[] = [];
+        for (const formPage of values.pages) {
+            let index: number;
+            if (isOneRefPage(formPage)) {
+                index = remaining.findIndex(p => isFixedRefPage(p) && p.table === formPage.table && p.id === formPage.id);
+            } else {
+                index = remaining.findIndex(p => !isFixedRefPage(p) && p.table === formPage.table);
+            }
+            if (index >= 0) {
+                const originalPage = remaining[index];
+                remaining.splice(index, 1);
+                newPages.push({
                     ...originalPage,
                     label: formPage.label,
-                };
+                });
             }
-            return null;
-        }).filter((p): p is FixedPage => p !== null);
+        }
 
         // 处理重复的 label，只保留最后一个
         const uniquePages = new Map<string, FixedPage>();
