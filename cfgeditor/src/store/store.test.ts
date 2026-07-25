@@ -161,8 +161,8 @@ describe('store 路由纯逻辑', () => {
             expect(getLastNavToInLocalStore()).toBe('/record/Item/1001');
         });
 
-        it('tableId/curId 缺失时 getPrefStr 回退空串', () => {
-            expect(getLastNavToInLocalStore()).toBe('/record//');
+        it('tableId 缺失（无有效历史）时返回 undefined，调用方不跳转留首页（避免 /record// 落 PathNotFound）', () => {
+            expect(getLastNavToInLocalStore()).toBeUndefined();
         });
 
         it('id 含 / 时透传（与 navTo 一致）', () => {

@@ -546,9 +546,15 @@ export function navTo(curPage: PageType, tableId: string, id: string,
     return (curPage == 'record' && edit) ? '/edit' + url : url;
 }
 
-export function getLastNavToInLocalStore() {
+export function getLastNavToInLocalStore(): string | undefined {
     const page = getPrefEnumStr<PageType>('curPage', pageEnums);
     const tableId = getPrefStr('curTableId', '');
+    // 无有效历史（全新 localStorage）时返回 undefined：否则得到 /record// 空表地址，
+    // 路由不匹配落 * → PathNotFound，且"返回首页"又会被导回形成死循环；
+    // 调用方应不跳转，留在首页让用户选表
+    if (tableId.length == 0) {
+        return undefined;
+    }
     const id = getPrefStr('curId', '');
     const isEditMode = getPrefBool('isEditMode', false);
     return navTo(page ?? 'record', tableId, id, isEditMode);

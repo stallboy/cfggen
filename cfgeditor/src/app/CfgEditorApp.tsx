@@ -93,7 +93,11 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
 
     useEffect(() => {
         if (schema && curTableId.length == 0) {
-            navigate(getLastNavToInLocalStore());
+            // 无有效历史时返回 undefined：不跳转，留在首页让用户选表（避免 PathNotFound 死循环）
+            const lastNavTo = getLastNavToInLocalStore();
+            if (lastNavTo != undefined) {
+                navigate(lastNavTo);
+            }
         }
     }, [curTableId.length, navigate, schema]);
 

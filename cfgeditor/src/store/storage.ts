@@ -144,6 +144,10 @@ function scheduleWrite(fn: string, keySet: Set<string>) {
 function savePrefAsyncIf(changedKey: string) {
     if (prefKeySet.has(changedKey)) {
         scheduleWrite(CFGEDITOR_YML, prefKeySet);
+    } else if (prefSelfKeySet.has(changedKey)) {
+        // self 键（aiConf/query/curPage/curTableId/…）原先只等关窗 flushAllPrefsAsync 落盘，
+        // 进程被杀即丢（apiKey 在 aiConf 里）；这里复用同一个 debounce 机制即时调度写盘
+        scheduleWrite(CFGEDITOR_SELF_YML, prefSelfKeySet);
     }
 }
 
