@@ -1,4 +1,5 @@
 import {Entity, DisplayField, EntityEditField, isReadOnlyEntity, isEditableEntity, EntityEdgeType} from "@/domain/entityModel";
+import {HANDLE_IN, HANDLE_OUT, parseInHandle} from "@/domain/handleIds";
 import type {NodeShowType} from "@/domain/storageJson";
 import {getEdgeColor} from "./colors.ts";
 import {EntityEdge, EntityNode} from "../FlowGraph.tsx";
@@ -28,7 +29,7 @@ function findField(entity: Entity, name: string): DisplayField | EntityEditField
 export function fillHandles(entityMap: Map<string, Entity>) {
     for (const entity of entityMap.values()) {
         for (const {sourceHandle, target, targetHandle} of entity.sourceEdges) {
-            if (sourceHandle == '@out') {
+            if (sourceHandle == HANDLE_OUT) {
                 entity.handleOut = true;
             } else {
                 const field = findField(entity, sourceHandle);
@@ -41,17 +42,18 @@ export function fillHandles(entityMap: Map<string, Entity>) {
 
             const targetEntity = entityMap.get(target);
             if (targetEntity) {
-                if (targetHandle == '@in') {
+                if (targetHandle == HANDLE_IN) {
                     targetEntity.handleIn = true;
-                } else if (targetHandle.startsWith('@in_')) {
-                    const targetField = findField(targetEntity, targetHandle.substring(4));
+                } else {
+                    const targetFieldName = parseInHandle(targetHandle);
+                    const targetField = targetFieldName != null ? findField(targetEntity, targetFieldName) : undefined;
                     if (targetField) {
                         targetField.handleIn = true;
-                    } else {
+                    } else if (targetFieldName != null) {
                         devLog(targetHandle + " handle not found for", targetEntity);
+                    } else {
+                        devError(targetHandle + ' not found for', targetEntity);
                     }
-                } else {
-                    devError(targetHandle + ' not found for', targetEntity);
                 }
             }
         }

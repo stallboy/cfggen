@@ -6,12 +6,8 @@ import {useTranslation} from "react-i18next";
 import {setQuery, useMyStore} from "@/store/store.ts";
 import {useQuery} from "@tanstack/react-query";
 import {NavList} from "./NavList.tsx";
+import {getLastSegment} from "@/domain/strUtils.ts";
 
-
-function getLastSegment(table: string): string {
-    const seps = table.split('.');
-    return seps[seps.length - 1];
-}
 
 export const SearchValue = memo(function SearchValue() {
     const {server, query, searchMax} = useMyStore();

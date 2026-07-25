@@ -1,16 +1,15 @@
 import {SInterface, SItem, SStruct, STable} from "@/api/schemaModel.ts";
 import {ReadOnlyEntity, DisplayField, EntityEdgeType, EntityType} from "@/domain/entityModel.ts";
 import {Schema} from "@/domain/schema.ts";
+import {HANDLE_IN, HANDLE_OUT} from "@/domain/handleIds.ts";
 
 export class UserData {
     constructor(public table: string, public item: SItem) {}
 }
 
-// 统一 ID 前缀处理
+// table 页私有 id 前缀（handle 约定统一走 handleIds.ts）
 const PREFIX = {
     TABLE: 't-',
-    IN: '@in',
-    OUT: '@out'
 } as const;
 
 function eid(id: string): string {
@@ -97,9 +96,9 @@ export class TableEntityCreator {
                 frontier.push(impl);
 
                 depEntity.sourceEdges.push({
-                    sourceHandle: PREFIX.OUT,
+                    sourceHandle: HANDLE_OUT,
                     target: implEntity.id,
-                    targetHandle: PREFIX.IN,
+                    targetHandle: HANDLE_IN,
                     type: EntityEdgeType.Normal,
                 });
             });
@@ -120,7 +119,7 @@ export class TableEntityCreator {
                 oldFEntity.sourceEdges.push({
                     sourceHandle: name,
                     target: eid(type),
-                    targetHandle: PREFIX.IN,
+                    targetHandle: HANDLE_IN,
                     type: EntityEdgeType.Normal,
                 });
             }
@@ -143,9 +142,9 @@ export class TableEntityCreator {
         if (ii.enumRef) {
             this.addRefToEntityMapIf(ii.enumRef);
             entity.sourceEdges.push({
-                sourceHandle: PREFIX.OUT,
+                sourceHandle: HANDLE_OUT,
                 target: eid(ii.enumRef),
-                targetHandle: PREFIX.IN,
+                targetHandle: HANDLE_IN,
                 type: EntityEdgeType.Ref,
             });
         }

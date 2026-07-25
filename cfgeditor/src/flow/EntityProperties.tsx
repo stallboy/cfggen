@@ -7,6 +7,7 @@ import {getFieldBackgroundColor} from "./layout/colors.ts";
 import {getReadNodeWidth} from "./layout/dimensions.ts";
 import {Highlight} from "./Highlight.tsx";
 import {useMyStore} from "@/store/store";
+import {inHandleForField} from "@/domain/handleIds.ts";
 
 const {Text} = Typography;
 
@@ -75,7 +76,7 @@ export const EntityProperties = memo(function EntityProperties({fields, nodeShow
                              </Text>
                          </Flex>
 
-                         {item.handleIn && <Handle type='target' position={Position.Left} id={`@in_${item.name}`}
+                         {item.handleIn && <Handle type='target' position={Position.Left} id={inHandleForField(item.name)}
                                                    style={handleInStyle}/>}
                          {item.handleOut && <Handle type='source' position={Position.Right} id={item.name}
                                                     style={handleOutStyle}/>}

@@ -18,6 +18,7 @@ import {nodeAnchor} from "./nodeAnchor.ts";
 import {useNodeNote} from "./NodeNote.tsx";
 import {NodeTitle} from "./NodeTitle.tsx";
 import {iconButtonStyle} from "./sharedStyles.tsx";
+import {HANDLE_IN, HANDLE_OUT} from "@/domain/handleIds.ts";
 
 // fold 按钮占位样式：与真实按钮同宽（paddingInline + 图标宽不变），零高度、不可见、不可点，
 // 只用于撑住 NodeTitle space-between 布局中的槽位宽度。
@@ -124,7 +125,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         {fields && <EntityProperties fields={fields} nodeShow={nodeShow} color={color} />}
         {brief && <EntityCard entity={entity} image={firstImage} nodeShow={nodeShow} />}
         {edit && <EntityForm edit={edit} nodeProps={nodeProps} nodeShow={nodeShow} />}
-        {(handleIn && <Handle type='target' position={Position.Left} id='@in' style={handleStyle} />)}
-        {(handleOut && <Handle type='source' position={Position.Right} id='@out' style={handleStyle} />)}
+        {(handleIn && <Handle type='target' position={Position.Left} id={HANDLE_IN} style={handleStyle} />)}
+        {(handleOut && <Handle type='source' position={Position.Right} id={HANDLE_OUT} style={handleStyle} />)}
     </div>;
 });

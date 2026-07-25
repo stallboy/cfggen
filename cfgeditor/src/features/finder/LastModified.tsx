@@ -1,11 +1,7 @@
 import {memo, useMemo} from "react";
 import {Schema} from "@/domain/schema.ts";
 import {NavList} from "./NavList.tsx";
-
-function getLastSegment(table: string): string {
-    const seps = table.split('.');
-    return seps[seps.length - 1];
-}
+import {getLastSegment} from "@/domain/strUtils.ts";
 import TimeAgo from 'react-timeago'
 
 class LastModifiedItem {

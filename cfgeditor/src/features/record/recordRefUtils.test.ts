@@ -1,14 +1,15 @@
 import {describe, it, expect} from 'vitest'
-import {getLastName, getLabel, getId, createRefs, createRefEntities} from './recordRefUtils.ts'
+import {getLabel, getId, createRefs, createRefEntities} from './recordRefUtils.ts'
+import {getLastSegment} from '@/domain/strUtils.ts'
 import {Entity, EntityEdgeType, EntitySourceEdge, EntityType} from '@/domain/entityModel.ts'
 import {BriefRecord, Refs} from '@/api/recordModel.ts'
 import {Schema} from '@/domain/schema.ts'
 import {field, makeRawSchema, makeTable} from '@/test/fixtures.ts'
 
-describe('getLastName / getLabel / getId', () => {
-    it('getLastName 取最后一个 . 段', () => {
-        expect(getLastName('a.b.c')).toBe('c')
-        expect(getLastName('solo')).toBe('solo')
+describe('getLastSegment / getLabel / getId', () => {
+    it('getLastSegment 取最后一个 . 段', () => {
+        expect(getLastSegment('a.b.c')).toBe('c')
+        expect(getLastSegment('solo')).toBe('solo')
     })
 
     it('getLabel 去掉首个命名空间段', () => {

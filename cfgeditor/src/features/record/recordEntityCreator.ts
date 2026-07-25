@@ -3,6 +3,7 @@ import {SField, SStruct, STable} from "@/api/schemaModel.ts";
 import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "@/api/recordModel.ts";
 import {createRefs, getLabel} from "./recordRefUtils.ts";
 import {getField, Schema} from "@/domain/schema.ts";
+import {getNote} from "@/domain/persistedKeys.ts";
 import {findAllResInfos} from "@/res/findAllResInfos.ts";
 import {TauriConf} from "@/domain/storageJson.ts";
 import {ResInfo} from "@/domain/resInfo.ts";
@@ -29,7 +30,7 @@ export class RecordEntityCreator {
             console.error('$type missing');
             return null;
         }
-        const note: string | undefined = obj['$note'] as string | undefined;
+        const note = getNote(obj);
 
         let sItem: STable | SStruct | null = null;
         if (!type.startsWith("$")) {

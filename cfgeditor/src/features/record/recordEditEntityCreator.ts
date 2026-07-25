@@ -12,10 +12,12 @@ import {
 } from "@/domain/entityModel.ts";
 import {isPrimitiveType, parseFieldTypeId, PrimitiveType, SField, SInterface, SItem, SStruct, STable} from "@/api/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "@/api/recordModel.ts";
-import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
+import {getId, getLabel} from "./recordRefUtils.ts";
+import {getLastSegment} from "@/domain/strUtils.ts";
 import {defaultValueOfPrimitive, getField, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema.ts";
 import {EditingSession} from "@/services/editingSession.ts";
 import {canBeEmbeddedCheck, classifyListField, extractEmbeddingFields, getEmbedState} from "@/domain/embedding.ts";
+import {getFoldState, getNote} from "@/domain/persistedKeys.ts";
 import {getIdOptions} from "@/flow/edit/shared/idOptions.tsx";
 
 
@@ -54,8 +56,8 @@ export class RecordEditEntityCreator {
             return null;
         }
 
-        const note: string | undefined = obj['$note'] as string | undefined;
-        const fold = this.getFoldState(obj);
+        const note = getNote(obj);
+        const fold = getFoldState(obj);
 
         const editFields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
         const {sourceEdges, hasChild} = this.createChildEntities(id, structural, obj, fieldChain, fold);
@@ -299,7 +301,7 @@ export class RecordEditEntityCreator {
         const fields: EntityEditField[] = [];
         const type: string = obj['$type'] as string;
         if ('impls' in sItem) { // is interface
-            const implName = getLastName(type);
+            const implName = getLastSegment(type);
             const sInterface = sItem;
             const impl = getImpl(sInterface, implName);
             fields.push({
@@ -586,21 +588,13 @@ export class RecordEditEntityCreator {
 
         const {embeddedFields, implNameToDisplay} = result;
         // 获取note
-        const note = obj['$note'] as string | undefined;
+        const note = getNote(obj);
 
         return {
             fields: embeddedFields,
             note: note,
             implName: implNameToDisplay,
         };
-    }
-
-    /**
-     * 获取节点级 fold 状态：直接读 obj.$fold（持久化层，单义：折叠我自己的子节点）。
-     * undo/redo 恢复 $fold 即恢复 fold。无 obj 或无 $fold → undefined（视为未折叠）。
-     */
-    private getFoldState(obj?: JSONObject): boolean | undefined {
-        return obj?.['$fold'] as boolean | undefined;
     }
 
     getAutoCompleteOptions(structural: SStruct | STable,

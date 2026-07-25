@@ -2,11 +2,7 @@ import {memo, useMemo} from "react";
 import {Schema} from "@/domain/schema.ts";
 import {useMyStore} from "@/store/store.ts";
 import {NavList} from "./NavList.tsx";
-
-function getLastSegment(table: string): string {
-    const seps = table.split('.');
-    return seps[seps.length - 1];
-}
+import {getLastSegment} from "@/domain/strUtils.ts";
 
 class LastAccessedItem {
     constructor(public table: string,

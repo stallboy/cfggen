@@ -5,11 +5,7 @@ import {Schema} from "@/domain/schema.ts";
 import {findAllResInfos} from "@/res/findAllResInfos.ts";
 import {TauriConf} from "@/domain/storageJson.ts";
 import {ResInfo} from "@/domain/resInfo.ts";
-
-export function getLastName(id: string): string {
-    const seps = id.split('.');
-    return seps[seps.length - 1];
-}
+import {HANDLE_IN, HANDLE_OUT} from "@/domain/handleIds.ts";
 
 export function getLabel(id: string): string {
     const idx = id.indexOf('.')
@@ -47,9 +43,9 @@ export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord
     for (const {firstField, label, toId, toTable} of fieldRefs) {
         if (checkTable(toTable) && isRefIdInBriefRecords(toTable, toId, briefRecords)) {
             entity.sourceEdges.push({
-                sourceHandle: isEnityBrief ? '@out' : firstField,
+                sourceHandle: isEnityBrief ? HANDLE_OUT : firstField,
                 target: getId(toTable, toId),
-                targetHandle: '@in', // target肯定brief模式
+                targetHandle: HANDLE_IN, // target肯定brief模式
                 type: EntityEdgeType.Ref,
                 label: label,
             });

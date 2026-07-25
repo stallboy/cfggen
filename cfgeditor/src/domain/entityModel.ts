@@ -1,6 +1,7 @@
 import {BriefDescription, JSONObject, JSONValue} from "@/api/recordModel";
 import {PrimitiveType} from "@/api/schemaModel";
 import {ResInfo} from "@/domain/resInfo";
+import {HANDLE_IN} from "@/domain/handleIds";
 import * as React from "react";
 
 // ============================================================================
@@ -315,11 +316,10 @@ export function classifyJsonValue(v: JSONValue): JsonValueKind {
 }
 
 /**
- * 父→子节点的 Normal 入边工厂（两个 creator 逐字相同的 4 处 push 单点化；
- * '@in' 字面量也先收口于此，全仓 handle 常量收口是后续批次的事）。
+ * 父→子节点的 Normal 入边工厂（两个 creator 逐字相同的 4 处 push 单点化）。
  */
 export function makeChildEdge(fieldKey: string, childId: string): EntitySourceEdge {
-    return {sourceHandle: fieldKey, target: childId, targetHandle: '@in', type: EntityEdgeType.Normal};
+    return {sourceHandle: fieldKey, target: childId, targetHandle: HANDLE_IN, type: EntityEdgeType.Normal};
 }
 
 // ============================================================================

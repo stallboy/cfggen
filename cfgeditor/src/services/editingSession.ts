@@ -3,6 +3,7 @@ import {SInterface, SStruct} from "@/api/schemaModel";
 import {Schema} from "@/domain/schema";
 import {EntityPosition, EFitView, EditingObjectRes} from "@/domain/entityModel";
 import {embedKey, normalizeOnAdd, normalizeOnDelete, normalizeOnImplSwitch} from "@/domain/embedding";
+import {setFold, setNote} from "@/domain/persistedKeys";
 import type {KeyOp} from "@/domain/embedding";
 import {getCopiedObject} from "./clipboard";
 import {UndoStack} from "@/domain/undoStack";
@@ -252,13 +253,7 @@ export class EditingSession {
 
     updateNote(note: string | undefined, fieldChains: (string | number)[]): void {
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
-        // 空串/undefined 删键而非赋值（与 $fold 同约定：不留 inert 残留键）——原本无 $note 的对象
-        // "编辑再清空"后若残留 $note:'' 键，键数与 baseline 不等，脏标记永远消不掉
-        if (note === undefined || note === '') {
-            delete obj['$note'];
-        } else {
-            obj['$note'] = note;
-        }
+        setNote(obj, note);
         this.touchValueCoalesce(this.coalesceKey(fieldChains, '$note'));
         this.markDirty();
         this.notifyEditingState();
@@ -309,15 +304,11 @@ export class EditingSession {
         this.structureChange(position);
     }
 
-    /** 节点级 fold：`$fold` 单义——折叠我自己的子节点。true 写键，false 删键（不残留 inert 的 false 值）。 */
+    /** 节点级 fold：`$fold` 单义——折叠我自己的子节点。写/删键语义见 persistedKeys.setFold。 */
     updateFold(fold: boolean, fieldChains: (string | number)[], position: EntityPosition): void {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
-        if (fold) {
-            obj['$fold'] = true;
-        } else {
-            delete obj['$fold'];
-        }
+        setFold(obj, fold);
         this.structureChange(position);
     }
 

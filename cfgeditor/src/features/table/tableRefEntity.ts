@@ -1,6 +1,7 @@
 import {SItem, STable} from "@/api/schemaModel.ts";
 import {Entity, EntityEdgeType, EntityType} from "@/domain/entityModel.ts";
 import {Schema} from "@/domain/schema.ts";
+import {HANDLE_IN, HANDLE_OUT} from "@/domain/handleIds.ts";;
 
 function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): Entity {
     return {
@@ -23,9 +24,9 @@ function addRefEdgesToExisting(entities: Entity[], entityMap: Map<string, Entity
         for (const ref of directRefs) {
             if (entityMap.has(ref)) {
                 oldEntity.sourceEdges.push({
-                    sourceHandle: "@out",
+                    sourceHandle: HANDLE_OUT,
                     target: ref,
-                    targetHandle: "@in",
+                    targetHandle: HANDLE_IN,
                     type: EntityEdgeType.Ref,
 
                 })
@@ -58,9 +59,9 @@ export function includeRefTables(entityMap: Map<string, Entity>, curTable: STabl
             refInEntity = createEntity(refInTable, ref, EntityType.RefIn);
             entityMap.set(ref, refInEntity);
             refInEntity.sourceEdges.push({
-                sourceHandle: "@out",
+                sourceHandle: HANDLE_OUT,
                 target: curTable.name,
-                targetHandle: "@in",
+                targetHandle: HANDLE_IN,
                 type: EntityEdgeType.Ref,
             })
 

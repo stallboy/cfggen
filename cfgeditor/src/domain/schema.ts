@@ -1,5 +1,6 @@
 import {JSONObject} from "@/api/recordModel";
 import {PrimitiveValue} from "@/domain/entityModel";
+import {HANDLE_IN, HANDLE_OUT, inHandleForField} from "@/domain/handleIds";
 import {
     isPrimitiveType,
     parseFieldTypeId,
@@ -141,7 +142,7 @@ export class Schema {
         const depNameMap = new Map<string, string>();
         if (item.type == 'interface') {
             for (const impl of item.impls) {
-                depNameMap.set(impl.id ?? impl.name, '@out');
+                depNameMap.set(impl.id ?? impl.name, HANDLE_OUT);
             }
             return depNameMap;
         }
@@ -311,16 +312,17 @@ export class Schema {
     }
 
 
+    /** 返回 fk 目标表的入 handle id（handle 字符串约定见 handleIds.ts）。 */
     getFkTargetHandle(fk: SForeignKey): string {
         if (fk.refKeys && fk.refKeys.length > 0) {
-            return `@in_${fk.refKeys[0]}`;
+            return inHandleForField(fk.refKeys[0]);
         }
         const ref = this.getSTable(fk.refTable);
         if (ref) {
-            // 脏 schema 下 pk 可能为空数组，避免产出 "@in_undefined"，与下方缺失表一样兜底 '@in'
-            return ref.pk.length > 0 ? `@in_${ref.pk[0]}` : '@in';
+            // 脏 schema 下 pk 可能为空数组，避免产出 "@in_undefined"，与下方缺失表一样兜底节点级入 handle
+            return ref.pk.length > 0 ? inHandleForField(ref.pk[0]) : HANDLE_IN;
         }
-        return '@in';
+        return HANDLE_IN;
     }
 
     getSTableByLastName(tableLabel: string): STable | undefined {
