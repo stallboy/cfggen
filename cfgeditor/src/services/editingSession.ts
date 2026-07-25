@@ -1,5 +1,5 @@
 import {JSONArray, JSONObject, JSONValue, RecordResult} from "@/api/recordModel";
-import {parseFieldTypeId, SItem, SInterface, SStruct, STable} from "@/api/schemaModel";
+import {parseFieldTypeId, SItem, SInterface, SStruct} from "@/api/schemaModel";
 import {getField, Schema} from "@/domain/schema";
 import {EntityPosition, EFitView, EditingObjectRes} from "@/domain/entityModel";
 import {embedKey, normalizeOnAdd, normalizeOnDelete, normalizeOnImplSwitch} from "@/domain/embedding";
@@ -600,8 +600,9 @@ function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]
 }
 
 function getFieldPrimitiveTypeConverter(fieldName: string, sItem: SItem) {
-    const structural = sItem as SStruct | STable;
-    const field = getField(structural, fieldName);
+    // 字段类型转换只查 struct/table 的字段（interface 无 fields）；interface 传入视作无匹配转换
+    if (sItem.type === 'interface') return null;
+    const field = getField(sItem, fieldName);
     if (field == null) {
         return null;
     }

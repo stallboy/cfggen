@@ -251,8 +251,9 @@ function getFieldValue(obj: JSONObject, field: SField): PrimitiveValue {
 // embed 状态机（读侧分类 + 写侧归一化政策）
 // ----------------------------------------------------------------------------
 // 给「`$embed_<fieldName>` 键该怎么读、操作后该怎么写」一个家。读侧 classifyListField 是
-// doc 07 §五-b 的 4 稳态机本体；写侧 normalizeOnX 是纯决策（返回 KeyOp），由 EditingSession
-// 在 undo 括号内 apply——session 仍是唯一 mutator、creator 仍经参数注入可内嵌判定。
+// 4 稳态机本体（按数组长度 + 元素可内嵌性 + 键值分类为 embedTag / summary / nodes）；写侧
+// normalizeOnX 是纯决策（返回 KeyOp），由 EditingSession 在 undo 括号内 apply——session
+// 仍是唯一 mutator、creator 仍经参数注入可内嵌判定。
 // 不变式：键只存「当前类」的非默认值（类 1 默认收起 / 类 2 默认展开）。归一化只写 false（保持
 // 展开意图）或删键，永不写 true（true 仅来自用户显式收起 updateEmbed(true)）。
 // ============================================================================

@@ -54,7 +54,14 @@ export class RecordEditEntityCreator {
         }
         let structural: STable | SStruct;
         if ('impls' in sItem) {
-            structural = this.schema.itemIncludeImplMap.get(type) as SStruct;
+            // sItem 是 interface：按 obj.$type 解析 impl（itemIncludeImplMap 里 impl 条目运行时是 struct）。
+            // 守卫替代 as SStruct 强转：脏 $type（impl 不存在或非 struct）时 return null，而非吃 undefined 后崩
+            const impl = this.schema.itemIncludeImplMap.get(type);
+            if (!impl || impl.type !== 'struct') {
+                console.error(`impl ${type} not found or not a struct (dirty $type?)`);
+                return null;
+            }
+            structural = impl;
         } else {
             structural = sItem;
         }

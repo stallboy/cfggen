@@ -152,6 +152,21 @@ describe('History', () => {
             const h = new History().addItem('t', '1').addItem('t', '2')
             expect(h.next()).toBe(h)
         })
+
+        it('prev/next 透传 lastOpenIdMap（导航不清空每表记忆）', () => {
+            // 首条 addItem 走空历史分支不写 map，需再 addItem 一次 t1 才让 t1 进入 map
+            const h = new History()
+                .addItem('t1', '1')    // map={}（空历史分支）
+                .addItem('t2', 'a')    // map={t2:a}
+                .addItem('t1', '2')    // map={t2:a, t1:2}，index 指向 t1/2
+                .prev()                // 回到 t2/a，map 应仍为 {t2:a, t1:2}
+            expect(h.findLastOpenId('t1')).toBe('2')
+            expect(h.findLastOpenId('t2')).toBe('a')
+
+            const h2 = h.next()        // 前进到 t1/2，记忆保留
+            expect(h2.findLastOpenId('t1')).toBe('2')
+            expect(h2.findLastOpenId('t2')).toBe('a')
+        })
     })
 
     // ---------------------------------------------------------------------------

@@ -44,7 +44,8 @@ export class History {
 
     prev(): History {
         if (this.canPrev()) {
-            return new History(this.items, this.index - 1);
+            // 透传 lastOpenIdMap：prev/next 只移动导航栈游标，不清空「每表最后打开 id」的记忆
+            return new History(this.items, this.index - 1, this.lastOpenIdMap);
         } else {
             return this;
         }
@@ -56,7 +57,7 @@ export class History {
 
     next(): History {
         if (this.canNext()) {
-            return new History(this.items, this.index + 1);
+            return new History(this.items, this.index + 1, this.lastOpenIdMap);
         } else {
             return this;
         }
