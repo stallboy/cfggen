@@ -14,7 +14,7 @@ import {isTauri} from "@tauri-apps/api/core";
 import {flushAllPrefsAsync} from "./store/storage.ts";
 import {Window} from "@tauri-apps/api/window";
 import {useMyStore} from "./store/store.ts";
-import {themeService} from "./services/themeService.ts";
+import {loadTheme} from "./services/themeService.ts";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 
 
@@ -81,10 +81,10 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [currentTheme, setCurrentTheme] = useState(defaultTheme);
 
     useEffect(() => {
-        const loadTheme = async () => {
+        const applyTheme = async () => {
             if (themeConfig.themeFile) {
                 try {
-                    const theme = await themeService.loadTheme(themeConfig.themeFile);
+                    const theme = await loadTheme(themeConfig.themeFile);
                     if (theme) {
                         // 合并自定义主题和默认主题
                         setCurrentTheme({
@@ -109,7 +109,7 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
             }
         };
 
-        void loadTheme();
+        void applyTheme();
     }, [themeConfig.themeFile]);
 
     return (

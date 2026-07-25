@@ -2,17 +2,13 @@ import resso from "./resso.ts";
 import {
     AIConf,
     Convert,
-    FixedPage,
     FixedPagesConf,
-    FixedRefPage,
-    FixedUnrefPage,
     NodeShowType,
     TauriConf,
     ThemeConfig
 } from "@/domain/storageJson";
 import {
     getPrefBool,
-    getPrefEnumStr,
     getPrefInt,
     getPrefJson,
     getPrefStr,
@@ -20,14 +16,15 @@ import {
     setPref
 } from "./storage.ts";
 import {History} from "@/domain/historyModel";
-import {NEW_RECORD_ID, Schema} from "@/domain/schema";
-import {useLocation} from "react-router";
 import {ResInfo} from "@/domain/resInfo";
 import {removeAllQueryCache} from "@/services/queryClient.ts";
 
+// 导航/history 簇（navTo/useLocationData/FixedPage 工厂守卫等）拆至 navigation.ts；
+// 此处 re-export 保持既有导入方零改动
+export * from './navigation.ts';
+
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'recordUnref'] as const;
 export type PageType = typeof pageEnums[number];
-export type PageRecordOrRecordRef = 'record' | 'recordRef';
 
 export type StoreState = {
     server: string;
@@ -374,39 +371,6 @@ export function setDragPanel(value: string) {
     setPref('dragPanel', value);
 }
 
-// 类型守卫函数
-export function isFixedRefPage(page: FixedPage): page is FixedRefPage {
-    return 'id' in page;
-}
-
-export function isFixedUnrefPage(page: FixedPage): page is FixedUnrefPage {
-    return !('id' in page);
-}
-
-export function makeFixedPage(curTableId: string, curId: string): FixedRefPage {
-    const { recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow } = store;
-    return {
-        label: `${curTableId}_${curId}`,
-        table: curTableId,
-        id: curId,
-        refIn: recordRefIn,
-        refOutDepth: recordRefOutDepth,
-        maxNode: recordMaxNode,
-        nodeShow: nodeShow,
-    };
-}
-
-export function makeUnrefPage(curTableId: string): FixedUnrefPage {
-    const { recordRefOutDepth, recordMaxNode, nodeShow } = store;
-    return {
-        label: `unref:${curTableId}`,
-        table: curTableId,
-        refOutDepth: recordRefOutDepth,
-        maxNode: recordMaxNode,
-        nodeShow: nodeShow,
-    };
-}
-
 // 内置面板（非用户自定义 fixed page）：切换 pageConf 时不参与"引用了已删除页面"的校验。
 // 与 dragPanel 注释及 HeaderBar 面板菜单保持一致（'add' = AddPanel，聚合 AI/JSON）
 const BUILTIN_PANELS: readonly string[] = ['none', 'recordRef', 'finder', 'add', 'setting'];
@@ -425,14 +389,6 @@ export function setFixedPagesConf(newPageConf: FixedPagesConf) {
     store.pageConf = newPageConf;
     setPref('pageConf', Convert.fixedPagesConfToJson(newPageConf));
     // pageConf 不改当前路由的 layout 输入（固定页各自有独立 pathname → 独立 layout query），无需清缓存。
-}
-
-export function getFixedPage(pageConf: FixedPagesConf, label: string) {
-    for (const page of pageConf.pages) {
-        if (page.label == label) {
-            return page;
-        }
-    }
 }
 
 export function setServer(value: string) {
@@ -467,101 +423,15 @@ export function setThemeConfig(themeConfig: ThemeConfig) {
     setPref('themeConfig', Convert.themeConfigToJson(themeConfig));
 }
 
-export function historyCanPrev(curTableId: string, curId: string, history: History): boolean {
-    const cur = history.cur();
-    if (cur && (cur.table != curTableId || cur.id != curId)) {
-        return true;
-    }
-    return history.canPrev();
-}
-
-export function historyPrev(curPage: PageType, curTableId: string, curId: string,
-    history: History, isEditMode: boolean) {
-    let cur = history.cur();
-    if (cur && (cur.table != curTableId || cur.id != curId)) {
-        // 点击<关联数据>，<访问历史>里的链接时，不会修改访问历史。
-        // 此时，如果看的页面已经不同于历史中的当前页面，点击回退优先跳回到当前页面。
-        return navTo(curPage, cur.table, cur.id, isEditMode, false);
-    }
-
-    const newHistory = history.prev();
-    store.history = newHistory;
-    cur = newHistory.cur();
-    if (cur) {
-        return navTo(curPage, cur.table, cur.id, isEditMode, false);
-    }
-}
-
-export function historyNext(curPage: PageType, history: History, isEditMode: boolean) {
-    const newHistory = history.next();
-    store.history = newHistory;
-    const cur = newHistory.cur();
-    if (cur) {
-        return navTo(curPage, cur.table, cur.id, isEditMode, false);
-    }
-}
-
 export function setEditingState(editingCurTable: string, editingCurId: string, editingIsEdited: boolean) {
     store.editingCurTable = editingCurTable;
     store.editingCurId = editingCurId;
     store.editingIsEdited = editingIsEdited;
 }
 
-export function getLastOpenIdByTable(schema: Schema, curTableId: string): string | undefined {
-    const { history } = store;
-    const lastOpenId = history.findLastOpenId(curTableId)
-    const table = schema.getSTable(curTableId);
-    let id;
-    if (table) {
-        if (lastOpenId && schema.hasId(table, lastOpenId)) {
-            id = lastOpenId;
-        } else if (table.recordIds.length > 0) {
-            id = table.recordIds[0].id;
-        } else {
-            id = NEW_RECORD_ID;
-        }
-    }
-    return id;
-}
-
 export function setIsEditMode(isEditMode: boolean) {
     store.isEditMode = isEditMode;
     setPref('isEditMode', isEditMode ? 'true' : 'false');
-}
-
-export function navTo(curPage: PageType, tableId: string, id: string,
-    edit: boolean = false, addHistory: boolean = true) {
-    const { history } = store;
-
-    if (addHistory) {
-        const cur = history.cur();
-        if (cur == undefined || (cur.table != tableId || cur.id != id)) {
-            store.history = history.addItem(tableId, id);
-        }
-    }
-
-    setPref('curPage', curPage);
-    setPref('curTableId', tableId);
-    setPref('curId', id);
-
-    const url = `/${curPage}/${tableId}/${id}`;
-    return (curPage == 'record' && edit) ? '/edit' + url : url;
-}
-
-export function getLastNavToInLocalStore(): string | undefined {
-    const page = getPrefEnumStr<PageType>('curPage', pageEnums);
-    const tableId = getPrefStr('curTableId', '');
-    // 无有效历史（全新 localStorage）时返回 undefined：否则得到 /record// 空表地址，
-    // 路由不匹配落 * → PathNotFound，且"返回首页"又会被导回形成死循环；
-    // 调用方应不跳转，留在首页让用户选表
-    if (tableId.length == 0) {
-        return undefined;
-    }
-    const id = getPrefStr('curId', '');
-    // isEditMode 缺失时的默认与 selfPrefState 的 session 默认一致（true：编辑是产品核心路径）；
-    // 全新首装 tableId 缺失已在上方提前返回 undefined，走不到这里，所以 true 不影响首装行为
-    const isEditMode = getPrefBool('isEditMode', DEFAULT_IS_EDIT_MODE);
-    return navTo(page ?? 'record', tableId, id, isEditMode);
 }
 
 export function setResourceDir(resourceDir: string) {
@@ -570,51 +440,4 @@ export function setResourceDir(resourceDir: string) {
 
 export function setResMap(resMap: Map<string, ResInfo[]>) {
     store.resMap = resMap;
-}
-
-export function useLocationData() {
-    const location = useLocation();
-    const pathname = location.pathname;
-    const split = pathname.split('/');
-    let curPage: PageType = 'record';
-    let curTableId = '';
-    let curId = '';
-    let edit = false;
-
-    let idx = 2;
-    if (split.length > 1) {
-        if (split[1] == 'edit') {
-            edit = true;
-            if (split.length > 2 && split[2] == 'record') {
-                curPage = 'record';
-                idx = 3;
-            }
-        } else {
-            // as const 元组的 includes 不收窄类型，用 find 收窄以消掉 as PageType
-            const page = pageEnums.find((p) => p === split[1]);
-            if (page) {
-                curPage = page;
-            }
-        }
-    }
-    if (split.length > idx) {
-        curTableId = split[idx];
-        idx++;
-    }
-    if (split.length > idx) {
-        curId = split.slice(idx).join("/");
-    }
-    return { curPage, curTableId, curId, edit, pathname };
-}
-
-
-export function useCurPageRecordOrRecordRef(): { curPage: PageRecordOrRecordRef } {
-    const location = useLocation();
-    const pathname = location.pathname;
-    const split = pathname.split('/');
-    if (split.length > 1 && split[1] == 'recordRef') {
-        return { curPage: 'recordRef' };
-    } else {
-        return { curPage: 'record' };
-    }
 }

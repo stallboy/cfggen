@@ -2,7 +2,7 @@ import {memo, useState, useEffect} from "react";
 import {App, Button, Form, Input, Space, Typography} from "antd";
 import {useTranslation} from "react-i18next";
 import {useMyStore, setThemeConfig} from "@/store/store.ts";
-import {themeService} from "@/services/themeService.ts";
+import {loadTheme, themeExists as themeFileExists} from "@/services/themeService.ts";
 const {Text, Title} = Typography;
 
 export const ThemeSetting = memo(function ThemeSetting() {
@@ -19,7 +19,7 @@ export const ThemeSetting = memo(function ThemeSetting() {
         let cancelled = false;
         const checkThemeFile = async () => {
             if (themeConfig.themeFile) {
-                const exists = await themeService.themeExists(themeConfig.themeFile)
+                const exists = await themeFileExists(themeConfig.themeFile)
                     // 检查失败视为不存在（提示用户文件不可用），并兜底 unhandled rejection
                     .catch(() => false);
                 if (!cancelled) {
@@ -46,7 +46,7 @@ export const ThemeSetting = memo(function ThemeSetting() {
 
             // 如果设置了主题文件，验证文件是否存在
             if (newThemeConfig.themeFile) {
-                const exists = await themeService.themeExists(newThemeConfig.themeFile);
+                const exists = await themeFileExists(newThemeConfig.themeFile);
                 if (!exists) {
                     message.warning(t('themeFileNotFound'));
                     setThemeExists(false);
@@ -80,7 +80,7 @@ export const ThemeSetting = memo(function ThemeSetting() {
 
         setLoading(true);
         try {
-            const theme = await themeService.loadTheme(themeConfig.themeFile);
+            const theme = await loadTheme(themeConfig.themeFile);
             if (theme) {
                 message.success(t('themeFileValid'));
             } else {
