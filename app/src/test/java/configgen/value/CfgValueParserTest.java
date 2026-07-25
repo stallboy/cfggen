@@ -357,6 +357,50 @@ class CfgValueParserTest {
     }
 
     @Test
+    void parseCfgValue_blockItemFirstCellEmpty_dropsRow() {
+        // 专项覆盖 parseBlock 的 thisCell.isCellEmpty() 分支（VTableParser “本格为空，忽略”）：
+        // 单层 block 某个元素的首列（项标识）为空时，该行不作为新元素被收集——数据被丢弃，而非创建新项。
+        // 嵌套场景下该行数据会并入上一层当前项；单层场景下无上层可并入，故直接丢失（mustFill 即为防此）。
+        String cfgStr = """
+                struct RewardItem {
+                    itemId:int;
+                    count:int;
+                }
+                table t[id] {
+                    id:int;
+                    items:list<RewardItem> (block=1);
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        // 列布局：id, items.itemId(block 首列/项标识), items.count
+        // 第3个数据行 itemId 列刻意留空（仅 count=20）=> 该行应被丢弃，不创建新 item
+        String csvStr = """
+                ,,,
+                id,items.a,b
+                1,1001,5
+                ,1002,10
+                ,,20
+                ,1003,3""";
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+        VTable t = cfgValue.getTable("t");
+        assertEquals(1, t.valueList().size());
+
+        VStruct record = t.valueList().getFirst();
+        VList items = (VList) record.values().get(1);
+        // 首列空的行被丢弃：预期 3 个 item（1001/1002/1003），count=20 那行不构成 item
+        assertEquals(3, items.valueList().size(), "首列(项标识)为空的行不应创建新项");
+        VStruct item1 = (VStruct) items.valueList().get(0);
+        assertEquals(1001, ((VInt) item1.values().get(0)).value());
+        assertEquals(5, ((VInt) item1.values().get(1)).value());
+        VStruct item3 = (VStruct) items.valueList().get(2);
+        assertEquals(1003, ((VInt) item3.values().get(0)).value());
+        assertEquals(3, ((VInt) item3.values().get(1)).value());
+    }
+
+    @Test
     void parseCfgValue_nestedListBlock() {
         String cfgStr = """
                 table t[id] {
