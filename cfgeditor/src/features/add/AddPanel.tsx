@@ -3,6 +3,7 @@ import {Flex, Result, Segmented} from "antd";
 import {CodeOutlined, RobotOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {Schema} from "@/domain/schema.ts";
+import {useLocationData} from "@/store/store.ts";
 import {Chat} from "./Chat.tsx";
 import {AddJson} from "./AddJson.tsx";
 import {useIsCurTableEditable} from "./useEditable.ts";
@@ -15,6 +16,7 @@ import {useIsCurTableEditable} from "./useEditable.ts";
 export const AddPanel = memo(function AddPanel({schema}: { schema: Schema | undefined }) {
     const {t} = useTranslation();
     const editable = useIsCurTableEditable(schema);
+    const {curTableId} = useLocationData();
     const [mode, setMode] = useState<'ai' | 'json'>('ai');
 
     if (!editable) return <Result title={t('notEditable')}/>;
@@ -25,10 +27,11 @@ export const AddPanel = memo(function AddPanel({schema}: { schema: Schema | unde
                 {icon: <RobotOutlined/>, label: t('aiGenerate'), value: 'ai'},
                 {icon: <CodeOutlined/>, label: t('jsonImport'), value: 'json'},
             ]} onChange={(v) => setMode(v as 'ai' | 'json')}/>
-            {/* 两侧常驻、用 display 隐藏非活动侧，避免切换卸载 Chat 丢失 useXChat 对话 */}
+            {/* 两侧常驻、用 display 隐藏非活动侧，避免切换卸载 Chat 丢失 useXChat 对话；
+                Chat 以 curTableId 为 key：切表时重挂载，重置会话并加载新表 prompt，防止写串编辑会话 */}
             <div style={{flex: 1, minHeight: 0}}>
                 <div style={{height: '100%', display: mode === 'ai' ? 'flex' : 'none', flexDirection: 'column'}}>
-                    <Chat schema={schema}/>
+                    <Chat key={curTableId} schema={schema}/>
                 </div>
                 <div style={{height: '100%', display: mode === 'json' ? 'block' : 'none', overflow: 'auto'}}>
                     <AddJson/>

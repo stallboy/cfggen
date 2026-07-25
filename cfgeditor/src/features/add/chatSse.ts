@@ -6,7 +6,9 @@
  *    choices 缺失或为空、choices[0] 为 null（onSuccess 收到的流可能夹带 keepalive/脏帧）；
  *  - 累积 choices[0].delta.content；
  *  - 遇 finish_reason 视为完成，返回 trim 后内容（可能为空串）；
- *  - 全程未遇 finish_reason 返回 null（流未完成）。
+ *  - [DONE] 哨兵帧也视为流结束：某些 OpenAI 兼容网关只发内容帧 + [DONE]、不发 finish_reason，
+ *    不认 [DONE] 会把整段回复误判为"流未完成"。置 finished 但不 break，兼容 [DONE] 夹在中间的脏流；
+ *  - 全程未遇 finish_reason / [DONE] 返回 null（流未完成）。
  *
  *  返回 '' 与 null 都不触发后续 checkJson——调用方仅对非空返回值 mutate。
  *  抽成纯函数以便单测覆盖（原逻辑内联在 Chat.tsx 的 onSuccess 回调里无法测）。 */
@@ -20,7 +22,12 @@ export function accumulateSseContent(chunks: readonly unknown[]): string | null 
     for (const chunk of chunks) {
         if (chunk === null || typeof chunk !== 'object') continue;
         const raw = 'data' in chunk ? (chunk as { data?: unknown }).data : undefined;
-        if (raw === '[DONE]' || raw == null) continue;
+        if (raw === '[DONE]') {
+            // [DONE] 也视为流结束（部分网关不发 finish_reason）；不 break，兼容其夹在内容帧之前的脏流
+            finished = true;
+            continue;
+        }
+        if (raw == null) continue;
         if (typeof raw !== 'string') continue;
 
         let parsed: unknown;

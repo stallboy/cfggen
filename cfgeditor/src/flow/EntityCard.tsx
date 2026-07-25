@@ -44,16 +44,19 @@ function buildCardDescription(
     text: string,
     keyword?: string
 ): ReactElement | undefined {
-    if (!text) return undefined;
+    // 空 text 只省略 desc 文本部分：showCount > 0 时 Descriptions 表格仍要渲染，
+    // 不能在函数最前 return undefined 把表格连坐丢弃。
+    const showItems = showCount > 0 && descriptions;
+    if (!text && !showItems) return undefined;
 
     const content = keyword ? <Highlight text={text} keyword={keyword}/> : text;
 
-    if (showCount > 0 && descriptions) {
+    if (showItems) {
         const items = buildDescriptionItems(descriptions, showCount);
         return (
             <>
                 <Descriptions column={1} bordered size="small" items={items}/>
-                <div style={DESC_STYLE}>{content}</div>
+                {text && <div style={DESC_STYLE}>{content}</div>}
             </>
         );
     }

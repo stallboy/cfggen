@@ -172,6 +172,9 @@ function isWideCode(code: number): boolean {
     );
 }
 
+// 返回占用行数（非换行次数）：行内容累计满 charsPerRow 或遇 \n 换行 +1，
+// 末行只要有剩余内容（len > 0）也计入一行——否则末行未填满的 desc 行数低估 1 行，
+// ELK 高度少算 DESC_ROW_H，节点与相邻重叠。
 export function simpleStrRowCount(str: string, charsPerRow = 30): number {
     let len = 0;
     let row = 0;
@@ -194,7 +197,8 @@ export function simpleStrRowCount(str: string, charsPerRow = 30): number {
     } else {
         for (const ch of str) consume(ch);  // 码点迭代：代理对算 1 个码点（emoji 不再被计成 4）
     }
-    return row;
+    // 末行有剩余内容（len > 0）再补一行；空串或恰以 \n/满行结尾时 len 为 0，不补
+    return len > 0 ? row + 1 : row;
 }
 
 export function findFirstImage(assets: ResInfo[] | undefined): string | undefined {

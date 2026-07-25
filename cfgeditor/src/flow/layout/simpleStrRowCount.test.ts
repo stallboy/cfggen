@@ -2,14 +2,14 @@ import {describe, it, expect} from 'vitest'
 import {simpleStrRowCount} from './calcWidthHeight.ts'
 
 // simpleStrRowCount：card desc 占用行数估算。
-// 行数仅在「宽度累计 >= charsPerRow 换行」或「遇到 \n」时 +1（与历史行为一致，不计末尾半行）。
+// 行内容累计满 charsPerRow 或遇 \n 换行 +1，末行只要有剩余内容也计入一行（返回的是行数而非换行次数）。
 
 describe('simpleStrRowCount - ASCII（窄字符 = 1 宽）', () => {
     it('charsPerRow=30：恰好 30 个 ASCII 换行 → 1 行', () => {
         expect(simpleStrRowCount('a'.repeat(30), 30)).toBe(1)
     })
-    it('29 个 ASCII 不换行 → 0 行', () => {
-        expect(simpleStrRowCount('a'.repeat(29), 30)).toBe(0)
+    it('29 个 ASCII 不满一行 → 末行有内容仍计 1 行', () => {
+        expect(simpleStrRowCount('a'.repeat(29), 30)).toBe(1)
     })
     it('60 个 ASCII → 2 行', () => {
         expect(simpleStrRowCount('a'.repeat(60), 30)).toBe(2)
@@ -40,16 +40,16 @@ describe('simpleStrRowCount - emoji（1 grapheme = 2 宽，不再被计成 4）'
 })
 
 describe('simpleStrRowCount - 换行符', () => {
-    it('显式 \\n 增加行数', () => {
-        expect(simpleStrRowCount('a\nb', 30)).toBe(1) // 'a' + \n(row1) + 'b'
+    it('显式 \\n 换行，末行内容计入 → 2 行', () => {
+        expect(simpleStrRowCount('a\nb', 30)).toBe(2) // 'a' + \n(第 1 行) + 'b'(第 2 行)
     })
     it('多个 \\n', () => {
-        expect(simpleStrRowCount('a\nb\nc', 30)).toBe(2)
+        expect(simpleStrRowCount('a\nb\nc', 30)).toBe(3)
     })
     it('CRLF(\\r\\n) 与单 \\n 等价（Intl.Segmenter 把 \\r\\n 合并成 1 个 grapheme）', () => {
         // Segmenter 路径下 \r\n 是一个 grapheme，串为 '\r\n'；includes('\n') 兜住，与 \n 同计一行
-        expect(simpleStrRowCount('a\r\nb', 30)).toBe(1)
-        expect(simpleStrRowCount('a\r\nb\r\nc', 30)).toBe(2)
+        expect(simpleStrRowCount('a\r\nb', 30)).toBe(2)
+        expect(simpleStrRowCount('a\r\nb\r\nc', 30)).toBe(3)
         // 与纯 \n 结果一致
         expect(simpleStrRowCount('a\r\nb', 30)).toBe(simpleStrRowCount('a\nb', 30))
     })

@@ -2,10 +2,11 @@ import type {BubbleListProps} from "@ant-design/x";
 import {Bubble, Sender, Welcome} from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
 import {OpenAIChatProvider, useXChat, XModelParams, XModelResponse, XRequest} from "@ant-design/x-sdk";
-import {Flex, Result, Spin, theme} from "antd";
-import {memo, useState, useEffect, type CSSProperties} from "react";
+import {App, Flex, Result, Spin, theme} from "antd";
+import {memo, useState, useEffect, useRef, type CSSProperties} from "react";
 
 import {useMyStore, useLocationData} from "@/store/store.ts";
+import {getPrefStr} from "@/store/storage";
 import {useIsCurTableEditable} from "./useEditable.ts";
 import {Schema} from "@/domain/schema.ts";
 import {useQuery, useMutation} from "@tanstack/react-query";
@@ -83,6 +84,11 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     const editable = useIsCurTableEditable(schema);
 
     const [inputValue, setInputValue] = useState("");
+    const {notification} = App.useApp();
+
+    // 提交请求时捕获当时的 curTableId：AI 流式请求未结束时用户可能切表，
+    // 校验请求须仍以旧表发起；回调里再与实时 curTableId（navTo 写入 pref）比对，不一致则放弃写入
+    const submitTableIdRef = useRef('');
 
     const {isLoading, isError, error, data: promptRes} = useQuery({
         queryKey: queryKeys.prompt(curTableId),
@@ -92,24 +98,26 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     });
 
     const checkJsonMutation = useMutation<CheckJsonResult, Error, string>({
-        mutationFn: (raw: string) => checkJson(server, curTableId, raw),
+        mutationFn: (raw: string) => checkJson(server, submitTableIdRef.current, raw),
 
         onError: (error) => {
-            setInputValue(error.message);
+            // 不动输入框：异步回调到达时用户可能正在输入下一条消息
+            notification.error({title: `checkJson err: ${error.message}`, placement: 'topRight', duration: 4});
         },
         onSuccess: (result: CheckJsonResult) => {
+            const nowTableId = getPrefStr('curTableId', '');
+            if (submitTableIdRef.current !== nowTableId) {
+                console.warn(`checkJson: 请求期间已切表 ${submitTableIdRef.current} -> ${nowTableId}，放弃写入`);
+                return;
+            }
             if (result.resultCode == 'ok') {
-                if (curTableId == result.table) {
-                    try {
-                        getCurrentEditingSession()?.replaceEditingObject(JSON.parse(result.jsonResult));
-                    } catch (e) {
-                        setInputValue(`parse jsonResult failed: ${e}`);
-                    }
-                } else {
-                    setInputValue(`table changed! ${result.table} != ${curTableId}`);
+                try {
+                    getCurrentEditingSession()?.replaceEditingObject(JSON.parse(result.jsonResult));
+                } catch (e) {
+                    notification.error({title: `parse jsonResult failed: ${e}`, placement: 'topRight', duration: 4});
                 }
             } else {
-                setInputValue(result.jsonResult);
+                notification.error({title: result.jsonResult, placement: 'topRight', duration: 4});
             }
         },
     });
@@ -203,6 +211,8 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     const handleUserSubmit = (val: string) => {
         // 直接调用 onRequest，useXChat 会自动管理消息
         // 不需要手动更新 messages 数组
+        // 捕获提交时的表：流式请求期间切表后，checkJson 仍以旧表校验、回调比对放弃写入
+        submitTableIdRef.current = curTableId;
         onRequest({
             messages: [{ role: "user", content: val }],
         });

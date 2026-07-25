@@ -65,9 +65,9 @@ describe('calcWidthHeight', () => {
                     descriptions: [{field: 'a', value: 'first', comment: ''}, desc],
                 },
             })
-            // getDsLenAndDesc: showDsLen = 2-1 = 1（+38），desc='line1\nline2' 行数=1（+22）
-            // 40 + 48 + 38 + 22 = 148
-            expect(calcWidthHeight(e, ns)).toEqual([240, 148])
+            // getDsLenAndDesc: showDsLen = 2-1 = 1（+38），desc='line1\nline2' 行数=2（+44）
+            // 40 + 48 + 38 + 44 = 170
+            expect(calcWidthHeight(e, ns)).toEqual([240, 170])
         })
     })
 

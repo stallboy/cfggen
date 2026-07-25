@@ -22,6 +22,19 @@ describe('accumulateSseContent', () => {
         expect(accumulateSseContent(chunks)).toBe('x');
     });
 
+    it('无 finish_reason 但以 [DONE] 结束时返回已累积内容（兼容只发 [DONE] 的网关）', () => {
+        const chunks = [
+            frame({choices: [{delta: {content: ' {"a":'}}]}),
+            frame({choices: [{delta: {content: '1} '}}]}),
+            {data: '[DONE]'},
+        ];
+        expect(accumulateSseContent(chunks)).toBe('{"a":1}');
+    });
+
+    it('仅 [DONE] 无内容返回空串（调用方据此不 mutate）', () => {
+        expect(accumulateSseContent([{data: '[DONE]'}])).toBe('');
+    });
+
     it('跳过 data 为 null 的帧', () => {
         const chunks = [
             {data: null},

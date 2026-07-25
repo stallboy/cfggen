@@ -4,9 +4,9 @@ import {BookOutlined, DeleteOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
 import {updateNote} from "@/api/apiClient.ts";
-import {useMyStore} from "@/store/store";
+import {useMyStore, useLocationData} from "@/store/store";
 import {NoteEditResult} from "@/api/noteModel";
-import {setNotesCache} from "@/services/queryKeys.ts";
+import {invalidateLayoutCache, setNotesCache} from "@/services/queryKeys.ts";
 import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
 
 // ── note 展示/编辑组件：按「是否内嵌 EntityForm 编辑表单」分两套 ──
@@ -63,6 +63,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
     setIsEdit: (ie: boolean) => void;
 }) {
     const {server} = useMyStore();
+    const {pathname} = useLocationData();
     const {t} = useTranslation();
     const [newNote, setNewNote] = useState<string>(note);
     const {notification} = App.useApp();
@@ -87,6 +88,10 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
                     duration: 3
                 });
                 setNotesCache(notes);
+                // note 变长会改变 calcWidthHeight 估算的节点高度，但 layout 的 queryKey 不含 notes——
+                // 必须失效 layout 缓存重跑 ELK，否则节点渲染变高仍套旧 rect，与相邻节点重叠。
+                // 前缀 ['layout', pathname] 不带 'e' 段，编辑/浏览两桶一并失效。
+                invalidateLayoutCache(pathname);
                 setIsEdit(false);   // 仅真成功才关闭编辑器
             } else {
                 notification.warning({
