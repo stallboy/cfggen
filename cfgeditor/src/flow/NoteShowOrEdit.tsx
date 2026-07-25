@@ -6,7 +6,7 @@ import {useMutation} from "@tanstack/react-query";
 import {updateNote} from "@/api/apiClient.ts";
 import {useMyStore, useLocationData} from "@/store/store";
 import {NoteEditResult} from "@/api/noteModel";
-import {invalidateLayoutCache, setNotesCache} from "@/services/queryKeys.ts";
+import {removeLayoutCache, setNotesCache} from "@/services/queryKeys.ts";
 import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
 import {bookIcon, iconButtonStyle} from "./sharedStyles.tsx";
 
@@ -86,9 +86,10 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
                 });
                 setNotesCache(notes);
                 // note 变长会改变 calcWidthHeight 估算的节点高度，但 layout 的 queryKey 不含 notes——
-                // 必须失效 layout 缓存重跑 ELK，否则节点渲染变高仍套旧 rect，与相邻节点重叠。
-                // 前缀 ['layout', pathname] 不带 'e' 段，编辑/浏览两桶一并失效。
-                invalidateLayoutCache(pathname);
+                // 必须清 layout 缓存重跑 ELK，否则节点渲染变高仍套旧 rect，与相邻节点重叠。
+                // 用 remove 不用 invalidate：invalidate 会拿重渲前的旧 queryFn 闭包（旧 notes）refetch，
+                // 当前活动视图仍得到旧布局（见 queryKeys.ts removeLayoutCache 的契约注释）。
+                removeLayoutCache(pathname);
                 setIsEdit(false);   // 仅真成功才关闭编辑器
             } else {
                 notification.warning({

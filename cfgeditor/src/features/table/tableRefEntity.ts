@@ -1,7 +1,7 @@
 import {SItem, STable} from "@/api/schemaModel.ts";
 import {CardEntity, Entity, EntityEdgeType, EntityType} from "@/domain/entityModel.ts";
 import {Schema} from "@/domain/schema.ts";
-import {HANDLE_IN, HANDLE_OUT} from "@/domain/handleIds.ts";;
+import {HANDLE_IN, HANDLE_OUT} from "@/domain/handleIds.ts";
 
 function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): CardEntity<SItem> {
     return {

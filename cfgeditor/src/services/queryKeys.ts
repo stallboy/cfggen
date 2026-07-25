@@ -72,6 +72,14 @@ export function invalidateLayoutCache(pathname: string): void {
     })
 }
 
+/** note 变更后清该 pathname 的全部 layout 缓存（前缀：['layout', pathname]，编辑/浏览两桶一并清）。
+ *  用 remove 不用 invalidate——同 removeEditLayoutCache 的契约：invalidate 会立即用重渲前的旧
+ *  queryFn 闭包（旧 notes）refetch 并把旧布局写回缓存，当前活动视图仍得不到新布局；
+ *  remove 只删缓存，等重渲后用捕获了新 notes 的闭包自然重取。 */
+export function removeLayoutCache(pathname: string): void {
+    queryClient.removeQueries({queryKey: ['layout', pathname]});
+}
+
 /** 资源信息（resInfo）强制重扫：refetchType:'all' 连未挂载的查询也立即重取（资源目录变了要立刻反映，
  *  不能用默认 'active' 等自然刷新）。调用方：res/readResInfosAsync 的 invalidateResInfos
  *  （它还重置自己的 alreadyRead 守卫——那是 res 层职责，不在本动词内）。 */

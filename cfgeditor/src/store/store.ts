@@ -189,6 +189,21 @@ registerPrefKeySet(getPrefKeySet(), getPrefSelfKeySet());
 
 let alreadyRead = false;
 
+// JSON 型 pref key → quicktype Convert 解析表：五个 key 同一形状（getPrefJson 成功才覆盖 store），
+// 表驱动后新增 JSON 型 key 只需加一行表项，其余 key 走下方 typeof 分支
+type JsonPrefKey = 'nodeShow' | 'aiConf' | 'pageConf' | 'tauriConf' | 'themeConfig';
+const jsonPrefParsers: Record<JsonPrefKey, (jsonStr: string) => StoreState[JsonPrefKey]> = {
+    nodeShow: Convert.toNodeShowType,
+    aiConf: Convert.toAIConf,
+    pageConf: Convert.toFixedPagesConf,
+    tauriConf: Convert.toTauriConf,
+    themeConfig: Convert.toThemeConfig,
+};
+
+function isJsonPrefKey(key: string): key is JsonPrefKey {
+    return key in jsonPrefParsers;
+}
+
 export function readStoreStateOnce() {
     if (alreadyRead) {
         return;
@@ -198,56 +213,24 @@ export function readStoreStateOnce() {
     for (const k in storeState) {
         const key = k as keyof StoreState;
         const value = storeState[key]
-        switch (key) {
-            case 'nodeShow': {
-                const ns = getPrefJson<NodeShowType>('nodeShow', Convert.toNodeShowType);
-                if (ns) {
-                    store.nodeShow = ns;
-                }
-                break;
+        if (isJsonPrefKey(key)) {
+            const parsed = getPrefJson(key, jsonPrefParsers[key]);
+            if (parsed) {
+                store(key, () => parsed);
             }
-            case 'aiConf': {
-                const ac = getPrefJson<AIConf>('aiConf', Convert.toAIConf);
-                if (ac) {
-                    store.aiConf = ac;
-                }
+            continue;
+        }
+        switch (typeof value) {
+            case "boolean":
+                store(key, () => getPrefBool(key, value));
                 break;
-            }
-            case 'pageConf': {
-                const pc = getPrefJson<FixedPagesConf>('pageConf', Convert.toFixedPagesConf);
-                if (pc) {
-                    store.pageConf = pc;
-                }
+            case "number":
+                store(key, () => getPrefInt(key, value));
                 break;
-            }
-            case 'tauriConf': {
-                const tc = getPrefJson<TauriConf>('tauriConf', Convert.toTauriConf);
-                if (tc) {
-                    store.tauriConf = tc;
-                }
+            case "string":
+                store(key, () => getPrefStr(key, value));
                 break;
-            }
-            case 'themeConfig': {
-                const theme = getPrefJson<ThemeConfig>('themeConfig', Convert.toThemeConfig);
-                if (theme) {
-                    store.themeConfig = theme;
-                }
-                break;
-            }
             default:
-                switch (typeof value) {
-                    case "boolean":
-                        store(key, () => getPrefBool(key, value));
-                        break;
-                    case "number":
-                        store(key, () => getPrefInt(key, value));
-                        break;
-                    case "string":
-                        store(key, () => getPrefStr(key, value));
-                        break;
-                    default:
-                        break;
-                }
                 break;
         }
     }
@@ -274,97 +257,41 @@ export function setQuery(v: string) {
 
 // 拓扑相关 setter：不再 clearLayoutCache——这些 setting 已纳入 useEntityToGraph 的 layout
 // queryKey（topologyKeys），改值时缓存自然失效重布局。store 重新变纯状态容器（Query Key Factory）。
-export function setMaxImpl(value: number | null) {
-    if (value !== null) {
-        store.maxImpl = value;
-        setPref('maxImpl', value.toString());
-    }
+type NumPrefKey = {[K in keyof StoreState]: StoreState[K] extends number ? K : never}[keyof StoreState];
+type BoolPrefKey = {[K in keyof StoreState]: StoreState[K] extends boolean ? K : never}[keyof StoreState];
+
+// 数字 pref setter 工厂：value 为 null（输入框清空）时不动作，否则写 store + 持久化
+function numPrefSetter(key: NumPrefKey) {
+    return (value: number | null): void => {
+        if (value !== null) {
+            store[key] = value;
+            setPref(key, value.toString());
+        }
+    };
 }
 
-export function setRefIn(checked: boolean) {
-    store.refIn = checked;
-    setPref('refIn', checked ? 'true' : 'false');
+// 布尔 pref setter 工厂：写 store + 持久化为 'true'/'false'
+function boolPrefSetter(key: BoolPrefKey) {
+    return (checked: boolean): void => {
+        store[key] = checked;
+        setPref(key, checked ? 'true' : 'false');
+    };
 }
 
-export function setRefOutDepth(value: number | null) {
-    if (value !== null) {
-        store.refOutDepth = value;
-        setPref('refOutDepth', value.toString());
-    }
-}
-
-export function setMaxNode(value: number | null) {
-    if (value !== null) {
-        store.maxNode = value;
-        setPref('maxNode', value.toString());
-    }
-}
-
-export function setRecordRefIn(checked: boolean) {
-    store.recordRefIn = checked;
-    setPref('recordRefIn', checked ? 'true' : 'false');
-}
-
-export function setRecordRefInShowLinkMaxNode(value: number | null) {
-    if (value !== null) {
-        store.recordRefInShowLinkMaxNode = value;
-        setPref('recordRefInShowLinkMaxNode', value.toString());
-    }
-}
-
-export function setRecordRefOutDepth(value: number | null) {
-    if (value !== null) {
-        store.recordRefOutDepth = value;
-        setPref('recordRefOutDepth', value.toString());
-    }
-}
-
-export function setRecordMaxNode(value: number | null) {
-    if (value !== null) {
-        store.recordMaxNode = value;
-        setPref('recordMaxNode', value.toString());
-    }
-}
-
-export function setIsNextIdShow(checked: boolean) {
-    store.isNextIdShow = checked;
-    setPref('isNextIdShow', checked ? 'true' : 'false');
-}
-
-export function setRefIdsInDepth(value: number | null) {
-    if (value !== null) {
-        store.refIdsInDepth = value;
-        setPref('refIdsInDepth', value.toString());
-    }
-}
-
-export function setRefIdsOutDepth(value: number | null) {
-    if (value !== null) {
-        store.refIdsOutDepth = value;
-        setPref('refIdsOutDepth', value.toString());
-    }
-}
-
-export function setRefIdsMaxNode(value: number | null) {
-    if (value !== null) {
-        store.refIdsMaxNode = value;
-        setPref('refIdsMaxNode', value.toString());
-    }
-}
-
-export function setSearchMax(value: number | null) {
-    if (value !== null) {
-        store.searchMax = value;
-        setPref('searchMax', value.toString());
-    }
-}
-
-export function setImageSizeScale(value: number | null) {
-    if (value !== null) {
-        store.imageSizeScale = value;
-        setPref('imageSizeScale', value.toString());
-    }
-}
+export const setMaxImpl = numPrefSetter('maxImpl');
+export const setRefIn = boolPrefSetter('refIn');
+export const setRefOutDepth = numPrefSetter('refOutDepth');
+export const setMaxNode = numPrefSetter('maxNode');
+export const setRecordRefIn = boolPrefSetter('recordRefIn');
+export const setRecordRefInShowLinkMaxNode = numPrefSetter('recordRefInShowLinkMaxNode');
+export const setRecordRefOutDepth = numPrefSetter('recordRefOutDepth');
+export const setRecordMaxNode = numPrefSetter('recordMaxNode');
+export const setIsNextIdShow = boolPrefSetter('isNextIdShow');
+export const setRefIdsInDepth = numPrefSetter('refIdsInDepth');
+export const setRefIdsOutDepth = numPrefSetter('refIdsOutDepth');
+export const setRefIdsMaxNode = numPrefSetter('refIdsMaxNode');
+export const setSearchMax = numPrefSetter('searchMax');
+export const setImageSizeScale = numPrefSetter('imageSizeScale');
 
 export function setDragPanel(value: string) {
     store.dragPanel = value;
@@ -429,10 +356,7 @@ export function setEditingState(editingCurTable: string, editingCurId: string, e
     store.editingIsEdited = editingIsEdited;
 }
 
-export function setIsEditMode(isEditMode: boolean) {
-    store.isEditMode = isEditMode;
-    setPref('isEditMode', isEditMode ? 'true' : 'false');
-}
+export const setIsEditMode = boolPrefSetter('isEditMode');
 
 export function setResourceDir(resourceDir: string) {
     store.resourceDir = resourceDir;
