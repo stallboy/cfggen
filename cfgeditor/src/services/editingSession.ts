@@ -241,7 +241,13 @@ export class EditingSession {
 
     updateNote(note: string | undefined, fieldChains: (string | number)[]): void {
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
-        obj['$note'] = note as JSONValue;
+        // 空串/undefined 删键而非赋值（与 $fold 同约定：不留 inert 残留键）——原本无 $note 的对象
+        // "编辑再清空"后若残留 $note:'' 键，键数与 baseline 不等，脏标记永远消不掉
+        if (note === undefined || note === '') {
+            delete obj['$note'];
+        } else {
+            obj['$note'] = note;
+        }
         this.touchValueCoalesce(this.coalesceKey(fieldChains, '$note'));
         this.markDirty();
         this.notifyEditingState();
@@ -413,20 +419,42 @@ export class EditingSession {
 
     // ============ submit / notify ============
 
+    /** 提交发起时的 editingObject 快照：onCommitSuccess 据此判断"飞行期用户又改了内容"。 */
+    private submittedSnapshot?: JSONObject;
+
     submit(): void {
+        // mutate 是异步网络请求；存快照供 onCommitSuccess 与响应返回时的 editingObject 对比
+        this.submittedSnapshot = structuredClone(this.editingObject);
         this.mutate?.(this.editingObject);
     }
 
     /** 提交成功后重置基准（submit 异步、成败要等网络，故重基准挂在 onSuccess 而非 submit 调用时——
      *  否则提交失败会丢 undo 历史、脏标记还误报"无未保存"）。
-     *  重 originalEditingObject（脏比较归 false）+ undo.setBaseline（清栈+新基准 = 当前已提交状态）。 */
+     *  重 originalEditingObject（脏比较归 false）+ undo.setBaseline（清栈+新基准 = 当前已提交状态）。
+     *  飞行期继续编辑的处理：若当前 editingObject 与提交快照不等（请求发出后用户又改了），服务器保存的
+     *  是快照内容，故基准设为快照而非当前态——保留这些编辑的 dirty 状态，随后 refetch 的 maybeReset
+     *  与服务器数据一致即早退，飞行期编辑不被重置掉。 */
     onCommitSuccess(): void {
         // 提交后保持当前视图：重置视口语义为 NoChange。onSuccess 还会 invalidateAllQueries → record refetch
         // → recordResult 新引用触发 useMemo 重算，读到此处设的 fitView，Effect 2 走 noop 不跳视口。
         // （onCommitSuccess 本就不 emit；fitView 靠 recordResult 重取驱动的那次重渲生效，不依赖本次 bump。）
         this.fitView = EFitView.NoChange;
         this.fitViewToIdPosition = undefined;
-        this.resetBaselines();
+        const submitted = this.submittedSnapshot;
+        this.submittedSnapshot = undefined;
+        if (submitted !== undefined && !isDeeplyEqual(this.editingObject, submitted)) {
+            // 飞行期有编辑：基准 = 快照（服务器实际保存的内容），dirty 保留为 true。
+            // 取舍：undo 栈同样以快照为基准清空——飞行期编辑不可 undo 回提交前状态，简单且语义明确。
+            // 快照在 submit 时已 clone，可与 undo baseline 共享（同 resetBaselines 的共享约定）。
+            clearTimeout(this.valueCoalesceTimer);
+            this.valueCoalesceTimer = undefined;
+            this.valueCoalesceKey = undefined;
+            this.originalEditingObject = submitted;
+            this.recomputeDirty();
+            this.undoStack.setBaseline({data: submitted, undoFitView: EFitView.FitFull});
+        } else {
+            this.resetBaselines();
+        }
     }
 
     /** 把 table/id/isEdited 通知订阅者（HeaderBar 显示 unsaved）。实现由创建方注入，本类不依赖 store。 */

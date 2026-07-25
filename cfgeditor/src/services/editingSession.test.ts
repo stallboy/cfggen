@@ -85,6 +85,15 @@ describe('EditingSession 值类 vs 结构类（性能契约）', () => {
         unsub();
     });
 
+    it('updateNote 编辑再清空：删键而非留 $note:""，脏标记可消', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.updateNote('hello', []);
+        expect(s.getIsEdited()).toBe(true);
+        s.updateNote('', []); // NodeNote 清空时传 ''
+        expect('$note' in s.getEditingObject()).toBe(false); // 键被删除，无残留
+        expect(s.getIsEdited()).toBe(false); // 与 baseline 相等，脏标记消除
+    });
+
     it('结构类 addArrayItem：bump structureVersion 并通知 listeners', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         const v0 = s.getStructureVersion();
@@ -207,6 +216,28 @@ describe('EditingSession.onCommitSuccess（提交边界：重置脏基准）', (
         expect(s.getIsEdited()).toBe(false);
         s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE); // 再编辑
         expect(s.getIsEdited()).toBe(true);     // 基准未被污染，新编辑判定 dirty
+    });
+
+    it('飞行期继续编辑：基准设为提交快照，飞行期编辑保留 dirty', () => {
+        const s = new EditingSession(
+            makeRecord('t', '1', {'$type': 'Foo', items: []}),
+            {mutate: () => { /* 模拟异步请求：此处不回调 onSuccess */ }},
+        );
+        s.submit();
+        s.updateNote('in-flight', []);          // 请求发出后、响应返回前用户继续编辑
+        s.onCommitSuccess();
+        expect(s.getIsEdited()).toBe(true);     // 飞行期编辑的 dirty 保留（基准=快照，不含 note）
+        // 随后 refetch 的数据 = 服务器保存的快照内容 → maybeReset 早退，飞行期编辑不被重置
+        s.maybeReset(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        expect(s.getEditingObject()['$note']).toBe('in-flight');
+        expect(s.getIsEdited()).toBe(true);
+    });
+
+    it('飞行期无编辑：基准 = 当前态，dirty 归零（原逻辑）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}), {mutate: () => {}});
+        s.submit();
+        s.onCommitSuccess();
+        expect(s.getIsEdited()).toBe(false);
     });
 });
 
