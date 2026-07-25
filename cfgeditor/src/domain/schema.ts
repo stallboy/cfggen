@@ -256,16 +256,24 @@ export class Schema {
         return res;
     }
 
-    defaultValue(sFieldable: SStruct | SInterface): JSONObject {
+    defaultValue(sFieldable: SStruct | SInterface, visited: Set<string> = new Set()): JSONObject {
         if ('impls' in sFieldable) {
-            return this.defaultValueOfInterface(sFieldable);
+            return this.defaultValueOfInterface(sFieldable, visited);
         } else {
-            return this.defaultValueOfStructural(sFieldable);
+            return this.defaultValueOfStructural(sFieldable, visited);
         }
     }
 
-    defaultValueOfStructural(sStruct: SStruct | STable): JSONObject {
+    defaultValueOfStructural(sStruct: SStruct | STable, visited: Set<string> = new Set()): JSONObject {
         const res: JSONObject = {"$type": sStruct.id ?? sStruct.name};
+        const name = sStruct.id ?? sStruct.name;
+        // 路径式 visited（进入时加入、离开时删除）：只检测同一路径上的环（如 A 直接含 A 字段，
+        // 不经 list<> 隔断时递归会栈溢出），兄弟分支重复引用同一类型不算环。
+        // 命中环时返回只含 $type 的骨架对象，不再下钻。
+        if (visited.has(name)) {
+            return res;
+        }
+        visited.add(name);
         for (const field of sStruct.fields) {
             const ft = parseFieldTypeId(field.type);
             switch (ft.kind) {
@@ -281,17 +289,17 @@ export class Schema {
                 case 'ref': {
                     const sf = this.getStructOrInterface(ft.name);
                     if (sf) {
-                        res[field.name] = this.defaultValue(sf);
-                        // TODO recursive check
+                        res[field.name] = this.defaultValue(sf, visited);
                     }
                     break;
                 }
             }
         }
+        visited.delete(name);
         return res;
     }
 
-    defaultValueOfInterface(sInterface: SInterface): JSONObject {
+    defaultValueOfInterface(sInterface: SInterface, visited: Set<string> = new Set()): JSONObject {
         // getImpl 返回 nullable：defaultImpl 指定但找不到（脏 schema）时 fallback impls[0]；
         // 两者皆空时返回空对象避免 NPE、打日志定位（不再 as SStruct 强转吃 null）。
         const impl = (sInterface.defaultImpl ? getImpl(sInterface, sInterface.defaultImpl) : null) ?? sInterface.impls[0];
@@ -299,7 +307,7 @@ export class Schema {
             console.error(`interface ${sInterface.name} has no impl (dirty schema?)`);
             return {$type: sInterface.name};
         }
-        return this.defaultValueOfStructural(impl);
+        return this.defaultValueOfStructural(impl, visited);
     }
 
 
@@ -309,12 +317,17 @@ export class Schema {
         }
         const ref = this.getSTable(fk.refTable);
         if (ref) {
-            return `@in_${ref.pk[0]}`;
+            // 脏 schema 下 pk 可能为空数组，避免产出 "@in_undefined"，与下方缺失表一样兜底 '@in'
+            return ref.pk.length > 0 ? `@in_${ref.pk[0]}` : '@in';
         }
         return '@in';
     }
 
     getSTableByLastName(tableLabel: string): STable | undefined {
+        // 收集全部同名末尾的表：恰好 1 个才返回；>1 个属于歧义（如 a.task / b.task 并存），
+        // 命中先注册者会静默挂错表，故打日志并返回 undefined；0 个行为不变。
+        let found: STable | undefined;
+        const ambiguous: string[] = [];
         for (const item of this.itemMap.values()) {
             if (item.type == 'table') {
                 let name = item.name
@@ -323,10 +336,19 @@ export class Schema {
                     name = name.substring(i + 1);
                 }
                 if (name == tableLabel) {
-                    return item;
+                    if (found) {
+                        ambiguous.push(item.name);
+                    } else {
+                        found = item;
+                    }
                 }
             }
         }
+        if (ambiguous.length > 0) {
+            console.error(`getSTableByLastName(${tableLabel}) ambiguous: ${[found!.name, ...ambiguous].join(', ')}`);
+            return undefined;
+        }
+        return found;
     }
 
     getIdTitle(table: string, id: string): string | undefined {

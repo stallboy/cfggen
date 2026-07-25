@@ -310,6 +310,28 @@ describe('defaultValue', () => {
         const schema = new Schema(makeRawSchema([ie]))
         expect(schema.defaultValue(ie)).toEqual({$type: 'IE.A', x: 0})
     })
+
+    it('直接自引用结构不栈溢出：环处返回只含 $type 的骨架', () => {
+        // A 含类型 A 的字段（不经 list<> 隔断），递归默认值须有环检测
+        const a = makeStruct('A', [field('n', 'int'), field('self', 'A')])
+        const schema = new Schema(makeRawSchema([a]))
+        expect(schema.defaultValue(a)).toEqual({
+            $type: 'A',
+            n: 0,
+            self: {$type: 'A'},
+        })
+    })
+
+    it('兄弟分支重复引用同一类型不算环，均完整展开', () => {
+        const inner = makeStruct('Inner', [field('n', 'int')])
+        const outer = makeStruct('Outer', [field('a', 'Inner'), field('b', 'Inner')])
+        const schema = new Schema(makeRawSchema([inner, outer]))
+        expect(schema.defaultValue(outer)).toEqual({
+            $type: 'Outer',
+            a: {$type: 'Inner', n: 0},
+            b: {$type: 'Inner', n: 0},
+        })
+    })
 })
 
 // ---------------------------------------------------------------------------
@@ -326,6 +348,12 @@ describe('getFkTargetHandle', () => {
         const t = makeTable('T', [field('tid', 'int')], {pk: ['tid']})
         const schema = new Schema(makeRawSchema([t]))
         expect(schema.getFkTargetHandle(fk('f', ['k'], 'T'))).toBe('@in_tid')
+    })
+
+    it('目标表 pk 为空（脏 schema）时返回 @in，不产出 @in_undefined', () => {
+        const t = makeTable('T', [field('tid', 'int')], {pk: []})
+        const schema = new Schema(makeRawSchema([t]))
+        expect(schema.getFkTargetHandle(fk('f', ['k'], 'T'))).toBe('@in')
     })
 
     it('目标表不存在时返回 @in', () => {
@@ -350,6 +378,13 @@ describe('getSTableByLastName', () => {
     it('未匹配返回 undefined', () => {
         const schema = new Schema(makeRawSchema([]))
         expect(schema.getSTableByLastName('Nope')).toBeUndefined()
+    })
+
+    it('多个表同末尾名时视为歧义返回 undefined（不静默命中先注册者）', () => {
+        const t1 = makeTable('a.task', [field('id', 'int')])
+        const t2 = makeTable('b.task', [field('id', 'int')])
+        const schema = new Schema(makeRawSchema([t1, t2]))
+        expect(schema.getSTableByLastName('task')).toBeUndefined()
     })
 })
 
