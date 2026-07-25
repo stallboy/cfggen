@@ -10,10 +10,12 @@ import {
     useMyStore,
     useLocationData,
     isFixedRefPage,
-    isFixedUnrefPage
+    isFixedUnrefPage,
+    PageType
 } from "@/store/store";
 import {Outlet, useNavigate} from "react-router";
-import {RawSchema} from "@/api/schemaModel";
+import {RawSchema, STable} from "@/api/schemaModel";
+import {NodeShowType} from "@/domain/storageJson";
 import {fetchNotes, fetchSchema} from "@/api/apiClient.ts";
 import {notesToMap} from "@/api/noteModel";
 import {useQuery} from "@tanstack/react-query";
@@ -44,6 +46,37 @@ const fullDivStyle = {height: "100vh", width: "100vw"};
 const disabledProps = {disabled: true}
 const autoOverflow = {overflow: 'auto'}
 const fullHeight = {height: '100%'}
+
+// dragPanel 三处引用图的公共形态：<FlowGraph><RecordRef .../></FlowGraph>。
+// recordUnref 页没有 curId/refIn，按 curPage 在内部派生，调用方不再塞假值
+function RefPageInFlow({schema, notes, curTable, curTableId, curPage, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix}: {
+    schema: Schema;
+    notes: Map<string, string> | undefined;
+    curTable: STable;
+    curTableId: string;
+    curPage: PageType;
+    curId?: string;
+    refIn?: boolean;
+    refOutDepth: number;
+    maxNode: number;
+    nodeShow: NodeShowType;
+    inDragPanelAndFix: boolean;
+}) {
+    const isUnref = curPage === 'recordUnref';
+    return <FlowGraph>
+        <RecordRef schema={schema}
+                   notes={notes}
+                   curTable={curTable}
+                   curTableId={curTableId}
+                   curPage={curPage}
+                   curId={isUnref ? undefined : curId}
+                   refIn={isUnref ? false : refIn === true}
+                   refOutDepth={refOutDepth}
+                   maxNode={maxNode}
+                   nodeShow={nodeShow}
+                   inDragPanelAndFix={inDragPanelAndFix}/>
+    </FlowGraph>;
+}
 
 function onConnectServer(value: string) {
     setServer(value);
@@ -124,19 +157,10 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
     } else {
         let dragPage = null;
         if (dragPanel == 'recordRef') {
-            dragPage = <FlowGraph>
-                <RecordRef schema={schema}
-                           notes={notes}
-                           curTable={curTable}
-                           curTableId={curTableId}
-                           curPage={'recordRef'}
-                           curId={curId}
-                           refIn={recordRefIn}
-                           refOutDepth={recordRefOutDepth}
-                           maxNode={recordMaxNode}
-                           nodeShow={nodeShow}
-                           inDragPanelAndFix={false}/>
-            </FlowGraph>;
+            dragPage = <RefPageInFlow schema={schema} notes={notes} curTable={curTable} curTableId={curTableId}
+                                      curPage={'recordRef'} curId={curId} refIn={recordRefIn}
+                                      refOutDepth={recordRefOutDepth} maxNode={recordMaxNode} nodeShow={nodeShow}
+                                      inDragPanelAndFix={false}/>;
         } else if (dragPanel == 'finder') {
             dragPage = <SidePanelShell><Finder schema={schema}/></SidePanelShell>;
         } else if (dragPanel == 'add') {
@@ -151,33 +175,15 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
                 const fixedTable = schema.getSTable(fix.table);
                 if (fixedTable) {
                     if (isFixedRefPage(fix)) {  // 固定记录引用页面
-                        dragPage = <FlowGraph>
-                            <RecordRef schema={schema}
-                                       notes={notes}
-                                       curTable={fixedTable}
-                                       curTableId={fix.table}
-                                       curPage={'recordRef'}
-                                       curId={fix.id}
-                                       refIn={fix.refIn}
-                                       refOutDepth={fix.refOutDepth}
-                                       maxNode={fix.maxNode}
-                                       nodeShow={fix.nodeShow}
-                                       inDragPanelAndFix={true}/>
-                        </FlowGraph>;
+                        dragPage = <RefPageInFlow schema={schema} notes={notes} curTable={fixedTable} curTableId={fix.table}
+                                                  curPage={'recordRef'} curId={fix.id} refIn={fix.refIn}
+                                                  refOutDepth={fix.refOutDepth} maxNode={fix.maxNode} nodeShow={fix.nodeShow}
+                                                  inDragPanelAndFix={true}/>;
                     } else if (isFixedUnrefPage(fix)) {  // 固定未引用记录页面
-                        dragPage = <FlowGraph>
-                            <RecordRef schema={schema}
-                                       notes={notes}
-                                       curTable={fixedTable}
-                                       curTableId={fix.table}
-                                       curPage={'recordUnref'}
-                                       curId={undefined}  // 未引用模式，没有id
-                                       refIn={false}       // 无意义，保留字段
-                                       refOutDepth={fix.refOutDepth}
-                                       maxNode={fix.maxNode}
-                                       nodeShow={fix.nodeShow}
-                                       inDragPanelAndFix={true}/>
-                        </FlowGraph>;
+                        dragPage = <RefPageInFlow schema={schema} notes={notes} curTable={fixedTable} curTableId={fix.table}
+                                                  curPage={'recordUnref'}
+                                                  refOutDepth={fix.refOutDepth} maxNode={fix.maxNode} nodeShow={fix.nodeShow}
+                                                  inDragPanelAndFix={true}/>;
                     }
                 }
             }

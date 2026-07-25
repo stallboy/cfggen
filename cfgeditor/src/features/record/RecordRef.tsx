@@ -1,7 +1,6 @@
 import { STable } from "@/api/schemaModel.ts";
 import { Entity, EditingObjectRes, EFitView } from "@/domain/entityModel.ts";
 import { RecordRefsResult, RefId, UnreferencedRecordsResult } from "@/api/recordModel.ts";
-import { Result } from "antd";
 import { createRefEntities } from "./recordRefUtils.ts";
 import { useTranslation } from "react-i18next";
 import {Schema, SchemaTableType} from "@/domain/schema.ts";
@@ -17,6 +16,7 @@ import { fillHandles } from "@/flow/layout/entityToNodeAndEdge.ts";
 import { useCallback, useMemo, useState } from "react";
 import { useEntityToGraph } from "@/flow/useEntityToGraph.ts";
 import { EntityNode } from "@/flow/FlowGraph.tsx";
+import { QueryGate } from "@/app/QueryGate.tsx";
 
 
 export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix, isUnrefMode }: {
@@ -167,7 +167,7 @@ export function RecordRef({ schema, notes, curTable, curTableId, curPage, curId,
     const isUnrefMode = curPage === 'recordUnref';
 
     // 根据模式选择不同的API
-    const { isLoading, isError, error, data: recordRefResult } = useQuery({
+    const recordRefQuery = useQuery({
         queryKey: isUnrefMode
             ? queryKeys.unreferenced(curTableId, maxNode)
             : queryKeys.recordRef(curTableId, curId!, refOutDepth, maxNode, refIn),
@@ -183,26 +183,12 @@ export function RecordRef({ schema, notes, curTable, curTableId, curPage, curId,
     })
 
 
-    if (isLoading) {
-        return null;
-    }
-
-    if (isError) {
-        return <Result status={'error'} title={error.message} />;
-    }
-
-    if (!recordRefResult) {
-        return <Result title={'recordRef result empty'} />;
-    }
-
-    if (recordRefResult.resultCode != 'ok') {
-        return <Result status={'error'} title={recordRefResult.resultCode} />;
-    }
-
-    return <RecordRefWithResult schema={schema} notes={notes} curTable={curTable} curId={curId}
-        nodeShow={nodeShow} recordRefResult={recordRefResult}
-        inDragPanelAndFix={inDragPanelAndFix}
-        isUnrefMode={isUnrefMode} />
+    return <QueryGate query={recordRefQuery} loading={null} emptyTitle={'recordRef result empty'}>
+        {(recordRefResult) => <RecordRefWithResult schema={schema} notes={notes} curTable={curTable} curId={curId}
+            nodeShow={nodeShow} recordRefResult={recordRefResult}
+            inDragPanelAndFix={inDragPanelAndFix}
+            isUnrefMode={isUnrefMode} />}
+    </QueryGate>;
 
 }
 

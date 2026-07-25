@@ -1,6 +1,6 @@
 import {Entity, isEditableEntity, EditingObjectRes, EFitView} from "@/domain/entityModel.ts";
 import {JSONObject, RecordEditResult, RecordResult, RefId} from "@/api/recordModel.ts";
-import {App, Result} from "antd";
+import {App} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefUtils.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
@@ -22,6 +22,7 @@ import {invalidateAllQueries} from "@/services/queryClient.ts";
 import {queryKeys, removeEditLayoutCache} from "@/services/queryKeys.ts";
 import {EntityNode} from "@/flow/FlowGraph.tsx";
 import {NEW_RECORD_ID, SchemaTableType} from "@/domain/schema.ts";
+import {QueryGate} from "@/app/QueryGate.tsx";
 
 
 function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
@@ -316,7 +317,7 @@ export const Record = memo(function () {
     // 只要recordIds大于0就没有 + new 的选项
     const isNewRecord = curTable.recordIds.length == 0;
     // 对于现有记录，使用API获取数据
-    const {isLoading, isError, error, data: recordResult} = useQuery({
+    const recordQuery = useQuery({
         queryKey: queryKeys.record(curTableId, curId),
         queryFn: ({signal}) => fetchRecord(server, curTableId, curId, signal),
         enabled: !isNewRecord,
@@ -336,23 +337,9 @@ export const Record = memo(function () {
         return <RecordWithResult key={`${curTableId}-${NEW_RECORD_ID}`} recordResult={mockRecordResult}/>;
     }
 
-    if (isLoading) {
-        return;
-    }
-
-    if (isError) {
-        return <Result status={'error'} title={error.message}/>;
-    }
-
-    if (!recordResult) {
-        return <Result title={'record result empty'}/>;
-    }
-
-    if (recordResult.resultCode != 'ok') {
-        return <Result status={'error'} title={recordResult.resultCode}/>;
-    }
-
-    // key 让切 record 时 unmount 旧 RecordWithResult（session 随之销毁），编辑态/undo 栈 per-record 隔离
-    return <RecordWithResult key={`${curTableId}-${curId}`} recordResult={recordResult}/>;
+    return <QueryGate query={recordQuery} loading={null} emptyTitle={'record result empty'}>
+        {/* key 让切 record 时 unmount 旧 RecordWithResult（session 随之销毁），编辑态/undo 栈 per-record 隔离 */}
+        {(recordResult) => <RecordWithResult key={`${curTableId}-${curId}`} recordResult={recordResult}/>}
+    </QueryGate>;
 });
 

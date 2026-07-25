@@ -2,7 +2,7 @@ import type {BubbleListProps} from "@ant-design/x";
 import {Bubble, Sender, Welcome} from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
 import {OpenAIChatProvider, useXChat, XModelParams, XModelResponse, XRequest} from "@ant-design/x-sdk";
-import {App, Flex, Result, Spin, theme} from "antd";
+import {App, Flex, theme} from "antd";
 import {memo, useState, useEffect, useRef, type CSSProperties} from "react";
 
 import {useMyStore, useLocationData} from "@/store/store.ts";
@@ -15,6 +15,7 @@ import {CheckJsonResult} from "@/api/chatModel.ts";
 import {getCurrentEditingSession} from "@/services/editingSession.ts";
 import {queryKeys} from "@/services/queryKeys.ts";
 import {accumulateSseContent} from "./chatSse.ts";
+import {QueryGate} from "@/app/QueryGate.tsx";
 
 const role: BubbleListProps["role"] = {
     assistant: {
@@ -90,12 +91,13 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     // 校验请求须仍以旧表发起；回调里再与实时 curTableId（navTo 写入 pref）比对，不一致则放弃写入
     const submitTableIdRef = useRef('');
 
-    const {isLoading, isError, error, data: promptRes} = useQuery({
+    const promptQuery = useQuery({
         queryKey: queryKeys.prompt(curTableId),
         queryFn: ({signal}) => getPrompt(server, curTableId, signal),
         staleTime: Infinity,
         enabled: editable,
     });
+    const promptRes = promptQuery.data;
 
     const checkJsonMutation = useMutation<CheckJsonResult, Error, string>({
         mutationFn: (raw: string) => checkJson(server, submitTableIdRef.current, raw),
@@ -218,22 +220,6 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
         });
     };
 
-    if (isLoading) {
-        return <Spin/>;
-    }
-
-    if (isError) {
-        return <Result status={"error"} title={error.message}/>;
-    }
-
-    if (!promptRes) {
-        return <Result title={"promptResult result empty"}/>;
-    }
-
-    if (promptRes.resultCode != "ok") {
-        return <Result status={"error"} title={promptRes.resultCode}/>;
-    }
-
     const chatHeader = (
         <div style={styles.chatHeader}>
             <div style={styles.headerTitle}>AI Chat</div>
@@ -285,11 +271,11 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
         </Flex>
     );
 
-    return (<>
-        <div style={styles.chatContainer}>
+    return <QueryGate query={promptQuery} emptyTitle={'promptResult result empty'}>
+        {() => <div style={styles.chatContainer}>
             {chatHeader}
             {chatList}
             {chatSender}
-        </div>
-    </>);
+        </div>}
+    </QueryGate>;
 });

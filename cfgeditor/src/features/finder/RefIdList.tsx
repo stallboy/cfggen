@@ -1,11 +1,12 @@
 import {memo} from "react";
 import {navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef} from "@/store/store.ts";
-import {Button, Result, Spin, Table} from "antd";
+import {Button, Table} from "antd";
 import {useNavigate} from "react-router";
 import {useQuery} from "@tanstack/react-query";
 import {fetchRecordRefIds} from "@/api/apiClient.ts";
 import {queryKeys} from "@/services/queryKeys.ts";
 import {RecordRefId, RecordRefIdsResult, RefId} from "@/api/recordModel.ts";
+import {QueryGate} from "@/app/QueryGate.tsx";
 
 
 function rowKey(item: RecordRefId) {
@@ -71,7 +72,7 @@ export const RefIdList = memo(function ({lockedId}: {
     const thisTable = lockedId ? lockedId.table : curTableId;
     const thisId = lockedId ? lockedId.id : curId;
 
-    const {isLoading, isError, error, data: recordResult} = useQuery({
+    const recordQuery = useQuery({
         queryKey: queryKeys.recordRefIds(thisTable, thisId, refIdsInDepth, refIdsOutDepth, refIdsMaxNode),
         queryFn: ({signal}) =>
             fetchRecordRefIds(server, thisTable, thisId,
@@ -79,14 +80,7 @@ export const RefIdList = memo(function ({lockedId}: {
                 signal),
     })
 
-    if (isLoading) {
-        return <Spin/>;
-    } else if (isError) {
-        return <Result status={'error'} title={error.message}/>;
-    } else if (!recordResult) {
-        return <Result title={'record result empty'}/>;
-    } else if (recordResult.resultCode != 'ok') {
-        return <Result status={'error'} title={recordResult.resultCode}/>;
-    }
-    return <RefIdListResult refIdsResult={recordResult}/>;
+    return <QueryGate query={recordQuery} emptyTitle={'record result empty'}>
+        {(recordResult) => <RefIdListResult refIdsResult={recordResult}/>}
+    </QueryGate>;
 });
