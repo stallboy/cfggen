@@ -1,9 +1,9 @@
 import {SItem, STable} from "@/api/schemaModel.ts";
-import {Entity, EntityEdgeType, EntityType} from "@/domain/entityModel.ts";
+import {CardEntity, Entity, EntityEdgeType, EntityType} from "@/domain/entityModel.ts";
 import {Schema} from "@/domain/schema.ts";
 import {HANDLE_IN, HANDLE_OUT} from "@/domain/handleIds.ts";;
 
-function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): Entity {
+function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): CardEntity<SItem> {
     return {
         id: id,
         label: item.name,
@@ -17,9 +17,10 @@ function createEntity(item: SItem, id: string, entityType: EntityType = EntityTy
     };
 }
 
-function addRefEdgesToExisting(entities: Entity[], entityMap: Map<string, Entity>, schema: Schema) {
+function addRefEdgesToExisting(entities: CardEntity<SItem>[], entityMap: Map<string, Entity>, schema: Schema) {
     for (const oldEntity of entities) {
-        const item = oldEntity.userData as SItem;
+        const item = oldEntity.userData;
+        if (!item) continue; // createEntity 必设 userData，守卫仅为类型收窄
         const directRefs = schema.getAllRefTablesByItem(item);
         for (const ref of directRefs) {
             if (entityMap.has(ref)) {
@@ -73,17 +74,16 @@ export function includeRefTables(entityMap: Map<string, Entity>, curTable: STabl
 
 
     let frontier: SItem[] = [curTable];
-    let entityFrontier: Entity[] = [curEntity];
+    let entityFrontier: CardEntity<SItem>[] = [curEntity];
     let depth = 1;
     while (depth <= maxOutDepth) {
 
         const newFrontier: SItem[] = [];
-        const newEntityFrontier: Entity[] = [];
+        const newEntityFrontier: CardEntity<SItem>[] = [];
 
         const refTableNames = schema.getAllRefTablesByItems(frontier);
         for (const ref of refTableNames) {
-            let refEntity = entityMap.get(ref);
-            if (refEntity) {
+            if (entityMap.has(ref)) {
                 continue;
             }
 
@@ -94,7 +94,7 @@ export function includeRefTables(entityMap: Map<string, Entity>, curTable: STabl
             }
 
             const entityType = depth == 1 ? EntityType.Ref : EntityType.Ref2;
-            refEntity = createEntity(refTable, ref, entityType);
+            const refEntity = createEntity(refTable, ref, entityType);
             entityMap.set(ref, refEntity);
 
             newFrontier.push(refTable);

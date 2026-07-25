@@ -22,7 +22,7 @@ export class RecordEntityCreator {
     createRecordEntity(id: string,
                        obj: JSONObject & Refs,
                        label?: string,
-                       arrayIndex?: number): ReadOnlyEntity | null {
+                       arrayIndex?: number): ReadOnlyEntity<RefId> | null {
 
         const fields: DisplayField[] = [];
         const type: string = obj['$type'] as string;
@@ -34,11 +34,17 @@ export class RecordEntityCreator {
 
         let sItem: STable | SStruct | null = null;
         if (!type.startsWith("$")) {
-            sItem = this.schema.itemIncludeImplMap.get(type) as STable | SStruct;
-            if (sItem == null) {
+            const item = this.schema.getItemIncludeImpl(type);
+            if (item == null) {
                 console.error(type + ' not found!');
                 return null;
             }
+            if (item.type === 'interface') {
+                // 记录视图的 $type 只会是 table/struct/impl 名；interface 名出现即脏数据，不再 as 强转后崩溃
+                console.error(type + ' is an interface, not structural (dirty $type?)');
+                return null;
+            }
+            sItem = item;
         }
 
         const sourceEdges: EntitySourceEdge[] = [];
@@ -103,7 +109,7 @@ export class RecordEntityCreator {
         let thisLabel = label ?? getLabel(type);
         thisLabel = arrayIndex === undefined ? thisLabel : thisLabel + '.' + arrayIndex;
 
-        const entity: ReadOnlyEntity = {
+        const entity: ReadOnlyEntity<RefId> = {
             id: id,
             label: thisLabel,
             type: 'readonly',

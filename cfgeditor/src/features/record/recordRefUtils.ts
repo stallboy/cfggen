@@ -125,7 +125,7 @@ export function createRefEntities({
 
         const label = getId(getLabel(table), id);
 
-        const entity: Entity = {
+        const entity: Entity<RefId> = {
             id: eid,
             label: label,
             type: 'card',

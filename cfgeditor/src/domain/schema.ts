@@ -17,15 +17,23 @@ import {
 
 export class Schema {
     isEditable: boolean;
-    itemMap: Map<string, SItem> = new Map<string, SItem>();
-    itemIncludeImplMap: Map<string, SItem> = new Map<string, SItem>();
+    // 测试与 TableList 仍直取 itemMap/itemIncludeImplMap，故只收 readonly，不收 private
+    readonly itemMap: Map<string, SItem> = new Map<string, SItem>();
+    readonly itemIncludeImplMap: Map<string, SItem> = new Map<string, SItem>();
     lastModifiedMap: Map<string, Map<string, number>>;
 
     constructor(public rawSchema: RawSchema) {
         this.isEditable = rawSchema.isEditable;
         this.lastModifiedMap = obj2map(rawSchema.lastModifiedMap);
-        // 结构名称->结构  方便查找
-        for (const item of rawSchema.items) {
+        this.buildItemMaps();
+        this.buildMapEntryTypes();
+        this.buildTableIdMaps();
+        this.fillRefInTables();
+    }
+
+    // 阶段一：结构名称->结构  方便查找
+    private buildItemMaps() {
+        for (const item of this.rawSchema.items) {
             if (item.type == 'interface') {
                 const ii = item;
                 // impl 附带上接口名称
@@ -39,8 +47,10 @@ export class Schema {
             this.itemMap.set(item.name, item);
             this.itemIncludeImplMap.set(item.name, item);
         }
+    }
 
-        // 构造map entry type（字段类型解析走 parseFieldTypeId 单一来源，替代手写 startsWith+substring+split）
+    // 阶段二：构造map entry type（字段类型解析走 parseFieldTypeId 单一来源，替代手写 startsWith+substring+split）
+    private buildMapEntryTypes() {
         const mapEntryTypes = new Map<string, SStruct>();
         for (const item of this.itemIncludeImplMap.values()) {
             if (item.type != "interface") {
@@ -71,9 +81,11 @@ export class Schema {
         for (const item of mapEntryTypes.values()) {
             this.itemIncludeImplMap.set(item.name, item);
         }
+    }
 
-        // table内 id -> (id,title?) 方便查找
-        for (const item of rawSchema.items) {
+    // 阶段三：table内 id -> (id,title?) 方便查找
+    private buildTableIdMaps() {
+        for (const item of this.rawSchema.items) {
             this.getAllRefTablesByItem(item);
             if (item.type == 'table') {
                 const st = item;
@@ -84,10 +96,12 @@ export class Schema {
                 }
             }
         }
+    }
 
-        // table 被哪些表 外键连接。refTables 由上一轮 getAllRefTablesByItem(item) 填充（Nameable 上类型可选），
-        // 用守卫替代 as Set<string> 强转：脏数据下安全跳过，而非吃 undefined。
-        for (const item of rawSchema.items) {
+    // 阶段四：table 被哪些表 外键连接。refTables 由上一轮 getAllRefTablesByItem(item) 填充（Nameable 上类型可选），
+    // 用守卫替代 as Set<string> 强转：脏数据下安全跳过，而非吃 undefined。
+    private fillRefInTables() {
+        for (const item of this.rawSchema.items) {
             if (item.type == 'table') {
                 const st = item;
                 const refTables = st.refTables;
@@ -115,6 +129,18 @@ export class Schema {
             return item;
         }
         return null;
+    }
+
+    /** 按 name 查顶层 item（struct/interface/table；不含 impl 与 map entry 合成类型）。
+     *  返回 nullable，替代直取 itemMap 吃 undefined。 */
+    getItem(name: string): SItem | null {
+        return this.itemMap.get(name) ?? null;
+    }
+
+    /** 按 name/impl.id 查 item（含 impl 与 map entry 合成类型）。
+     *  返回 nullable，替代直取 itemIncludeImplMap 吃 undefined。 */
+    getItemIncludeImpl(name: string): SItem | null {
+        return this.itemIncludeImplMap.get(name) ?? null;
     }
 
     /** 按 name 查 struct/interface（不含 table；字段类型为 list<struct>/struct/interface 引用时用）。
@@ -165,19 +191,16 @@ export class Schema {
             }
         }
 
-        if (depNameMap.size > 0) {
-            // 去掉对impl的依赖
-            const depNameMapGlobal = new Map<string, string>();
-            for (const [type, name] of depNameMap) {
-                if (this.itemMap.has(type)) {
-                    depNameMapGlobal.set(type, name);
-                }
-                // console.log(`getDepStructs ${item.name}, ${type} not found!`);
+        // 去掉对impl的依赖（只保留 itemMap 里的顶层 item；depNameMap 为空时循环天然跳过，
+        // 与原先 if (depNameMap.size > 0) 才过滤的 fall-through 等价，故拍平）
+        const depNameMapGlobal = new Map<string, string>();
+        for (const [type, name] of depNameMap) {
+            if (this.itemMap.has(type)) {
+                depNameMapGlobal.set(type, name);
             }
-            return depNameMapGlobal;
+            // console.log(`getDepStructs ${item.name}, ${type} not found!`);
         }
-
-        return depNameMap;
+        return depNameMapGlobal;
     }
 
     getDirectDepStructsByItems(items: SItem[]): Set<string> {
@@ -325,10 +348,11 @@ export class Schema {
         return HANDLE_IN;
     }
 
-    getSTableByLastName(tableLabel: string): STable | undefined {
+    getSTableByLastName(tableLabel: string): STable | null {
         // 收集全部同名末尾的表：恰好 1 个才返回；>1 个属于歧义（如 a.task / b.task 并存），
-        // 命中先注册者会静默挂错表，故打日志并返回 undefined；0 个行为不变。
-        let found: STable | undefined;
+        // 命中先注册者会静默挂错表，故打日志并返回 null；0 个行为不变。
+        // 空值约定与 getSTable/getStructOrInterface 一致：统一返回 null。
+        let found: STable | null = null;
         const ambiguous: string[] = [];
         for (const item of this.itemMap.values()) {
             if (item.type == 'table') {
@@ -348,7 +372,7 @@ export class Schema {
         }
         if (ambiguous.length > 0) {
             console.error(`getSTableByLastName(${tableLabel}) ambiguous: ${[found!.name, ...ambiguous].join(', ')}`);
-            return undefined;
+            return null;
         }
         return found;
     }

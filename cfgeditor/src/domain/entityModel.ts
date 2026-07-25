@@ -211,8 +211,6 @@ export interface EntityEditFieldOptions {
 
 /**
  * EntityEdit 接口
- * 重命名：editFields -> fields
- * 保持向后兼容：保留 editOnUpdateValues 等旧属性名
  */
 export interface EntityEdit {
     fields: EntityEditField[];
@@ -327,16 +325,17 @@ export function makeChildEdge(fieldKey: string, childId: string): EntitySourceEd
 // ============================================================================
 
 /**
- * 实体基础属性（所有 Entity 共享）
+ * 实体基础属性（所有 Entity 共享）。
+ * TUserData 默认 unknown：既有 28 个导入点零改动；各 creator 参数化自己的 userData
+ *（table 页 UserData / tableRef 页 SItem / record 系 RefId），消费侧按泛型或守卫收窄。
  */
-export interface EntityBase {
+export interface EntityBase<TUserData = unknown> {
     id: string;
     label: string;
     sourceEdges: EntitySourceEdge[];
     entityType?: EntityType;
     note?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    userData?: any;
+    userData?: TUserData;
     assets?: ResInfo[];
     handleIn?: boolean;
     handleOut?: boolean;
@@ -350,7 +349,7 @@ export interface EntityBase {
  * 只读显示型 Entity
  * 用于 Table/Record 浏览视图
  */
-export interface ReadOnlyEntity extends EntityBase {
+export interface ReadOnlyEntity<TUserData = unknown> extends EntityBase<TUserData> {
     type: 'readonly';
     fields: DisplayField[];
 }
@@ -359,7 +358,7 @@ export interface ReadOnlyEntity extends EntityBase {
  * 编辑型 Entity
  * 用于 Record 编辑视图
  */
-export interface EditableEntity extends EntityBase {
+export interface EditableEntity<TUserData = unknown> extends EntityBase<TUserData> {
     type: 'editable';
     edit: EntityEdit;
 }
@@ -368,7 +367,7 @@ export interface EditableEntity extends EntityBase {
  * 卡片型 Entity
  * 用于简短显示
  */
-export interface CardEntity extends EntityBase {
+export interface CardEntity<TUserData = unknown> extends EntityBase<TUserData> {
     type: 'card';
     brief: EntityBrief;
 }
@@ -377,7 +376,7 @@ export interface CardEntity extends EntityBase {
  * 统一的 Entity 联合类型
  * 使用判别属性 'type' 区分不同类型
  */
-export type Entity = ReadOnlyEntity | EditableEntity | CardEntity;
+export type Entity<TUserData = unknown> = ReadOnlyEntity<TUserData> | EditableEntity<TUserData> | CardEntity<TUserData>;
 
 // ============================================================================
 // 类型守卫函数
@@ -386,21 +385,21 @@ export type Entity = ReadOnlyEntity | EditableEntity | CardEntity;
 /**
  * 判断是否为 ReadOnlyEntity
  */
-export function isReadOnlyEntity(entity: Entity): entity is ReadOnlyEntity {
+export function isReadOnlyEntity<TUserData>(entity: Entity<TUserData>): entity is ReadOnlyEntity<TUserData> {
     return entity.type === 'readonly';
 }
 
 /**
  * 判断是否为 EditableEntity
  */
-export function isEditableEntity(entity: Entity): entity is EditableEntity {
+export function isEditableEntity<TUserData>(entity: Entity<TUserData>): entity is EditableEntity<TUserData> {
     return entity.type === 'editable';
 }
 
 /**
  * 判断是否为 CardEntity
  */
-export function isCardEntity(entity: Entity): entity is CardEntity {
+export function isCardEntity<TUserData>(entity: Entity<TUserData>): entity is CardEntity<TUserData> {
     return entity.type === 'card';
 }
 

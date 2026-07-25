@@ -21,7 +21,7 @@ function createEntity(
     id: string,
     table: string,
     entityType: EntityType = EntityType.Normal
-): ReadOnlyEntity {
+): ReadOnlyEntity<UserData> {
     const fields: DisplayField[] = item.type === "interface" ? [] : item.fields.map(field => ({
         key: field.name,
         name: field.name,
@@ -44,13 +44,13 @@ function createEntity(
 
 export class TableEntityCreator {
     constructor(
-        public entityMap: Map<string, ReadOnlyEntity>,
+        public entityMap: Map<string, ReadOnlyEntity<UserData>>,
         public schema: Schema,
         public curTable: STable,
         public maxImpl: number
     ) {}
 
-    private addEntityToMap(entity: ReadOnlyEntity): void {
+    private addEntityToMap(entity: ReadOnlyEntity<UserData>): void {
         this.entityMap.set(entity.id, entity);
     }
 
@@ -69,7 +69,7 @@ export class TableEntityCreator {
                 const entityId = eid(depName);
                 if (this.entityMap.has(entityId)) continue;
 
-                const dep = this.schema.itemMap.get(depName);
+                const dep = this.schema.getItem(depName);
                 if (!dep) continue;
 
                 const depEntity = createEntity(dep, dep.name, this.curTable.name);
@@ -87,7 +87,7 @@ export class TableEntityCreator {
         }
     }
 
-    private handleInterface(depInterface: SInterface, depEntity: ReadOnlyEntity, frontier: (STable | SStruct)[]): void {
+    private handleInterface(depInterface: SInterface, depEntity: ReadOnlyEntity<UserData>, frontier: (STable | SStruct)[]): void {
         depInterface.impls
             .slice(0, this.maxImpl)
             .forEach(impl => {
@@ -128,7 +128,8 @@ export class TableEntityCreator {
 
     includeRefTables(): void {
         Array.from(this.entityMap.values()).forEach(oldEntity => {
-            const item = oldEntity.userData as UserData;
+            const item = oldEntity.userData;
+            if (!item) return; // createEntity 必设 userData，守卫仅为类型收窄
 
             if (item.item.type === 'interface') {
                 this.handleInterfaceRef(item.item, oldEntity);
@@ -138,7 +139,7 @@ export class TableEntityCreator {
         });
     }
 
-    private handleInterfaceRef(ii: SInterface, entity: ReadOnlyEntity): void {
+    private handleInterfaceRef(ii: SInterface, entity: ReadOnlyEntity<UserData>): void {
         if (ii.enumRef) {
             this.addRefToEntityMapIf(ii.enumRef);
             entity.sourceEdges.push({
@@ -150,7 +151,7 @@ export class TableEntityCreator {
         }
     }
 
-    private handleStructOrTableRef(si: SStruct | STable, entity: ReadOnlyEntity): void {
+    private handleStructOrTableRef(si: SStruct | STable, entity: ReadOnlyEntity<UserData>): void {
         if (si.foreignKeys) {
             si.foreignKeys.forEach(fk => {
                 this.addRefToEntityMapIf(fk.refTable);

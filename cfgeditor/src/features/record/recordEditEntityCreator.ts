@@ -102,7 +102,7 @@ export class RecordEditEntityCreator {
             edit.editAllowObjType = sItem.id ?? sItem.name;
         }
 
-        const entity: EditableEntity = {
+        const entity: EditableEntity<RefId> = {
             id: id,
             label: label,
             type: 'editable',
@@ -130,7 +130,7 @@ export class RecordEditEntityCreator {
         }
         if ('impls' in sItem) {
             // sItem 是 interface：itemIncludeImplMap 里 impl 条目运行时是 struct
-            const impl = this.schema.itemIncludeImplMap.get(type);
+            const impl = this.schema.getItemIncludeImpl(type);
             if (!impl || impl.type !== 'struct') {
                 console.error(`impl ${type} not found or not a struct (dirty $type?)`);
                 return null;

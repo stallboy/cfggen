@@ -196,7 +196,7 @@ export class EditingSession {
                 return; // impl变化由updateInterfaceValue处理，这里不处理
             }
         }
-        const sItem = schema.itemIncludeImplMap.get(name);
+        const sItem = schema.getItemIncludeImpl(name);
         if (sItem == undefined) {
             console.log("%s not found", name);
             return;

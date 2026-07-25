@@ -25,7 +25,7 @@ export const Table = memo(function Table() {
     // entityMap 构建含 fillHandles 副作用，React Compiler 不会 memo，需手动 useMemo
     // 以免每次 render 新建 Map 触发 useEntityToGraph 全量重算。
     const entityMap = useMemo(() => {
-        const map = new Map<string, ReadOnlyEntity>();
+        const map = new Map<string, ReadOnlyEntity<UserData>>();
         const creator = new TableEntityCreator(map, schema, curTable, maxImpl);
         creator.includeSubStructs();
         creator.includeRefTables();

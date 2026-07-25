@@ -375,16 +375,16 @@ describe('getSTableByLastName', () => {
         expect(schema.getSTableByLastName('Hero')).toBe(t)
     })
 
-    it('未匹配返回 undefined', () => {
+    it('未匹配返回 null', () => {
         const schema = new Schema(makeRawSchema([]))
-        expect(schema.getSTableByLastName('Nope')).toBeUndefined()
+        expect(schema.getSTableByLastName('Nope')).toBeNull()
     })
 
-    it('多个表同末尾名时视为歧义返回 undefined（不静默命中先注册者）', () => {
+    it('多个表同末尾名时视为歧义返回 null（不静默命中先注册者）', () => {
         const t1 = makeTable('a.task', [field('id', 'int')])
         const t2 = makeTable('b.task', [field('id', 'int')])
         const schema = new Schema(makeRawSchema([t1, t2]))
-        expect(schema.getSTableByLastName('task')).toBeUndefined()
+        expect(schema.getSTableByLastName('task')).toBeNull()
     })
 })
 
