@@ -45,6 +45,11 @@ public final class CfgSchemaResolver {
         }
 
         if (errs.errs().isEmpty()) {
+            //依赖 span 已算好；检测 block 字段首列与外层祖先 block 首列重合（会静默丢数据，必须拒绝）
+            BlockFirstColOverlapChecker.check(cfgSchema, errs);
+        }
+
+        if (errs.errs().isEmpty()) {
             cfgSchema.setResolved();
         }
     }

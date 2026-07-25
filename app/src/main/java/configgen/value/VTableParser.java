@@ -159,6 +159,12 @@ public class VTableParser implements BlockParser {
      * 预计算每个 block 字段首列(cell-list index) -> 其词法包围的祖先 block 首列集合。
      * 列号空间与 parseBlock 的 firstColIndex 一致：都是 fieldIndices 过滤后的 cell list index，
      * 用 Span.fieldSpan 累加得到。模仿 Span.calcFieldSpanCheckLoop 的递归风格。
+     * <p>
+     * 键唯一性假设：用首列号做 key 隐含“一个列号唯一标识一个 block”。若内层 block 首列与某外层祖先
+     * block 首列重合（最典型：内层 block 排在外层 block 元素 struct 的首字段位置），下方 result.put 会用
+     * 同一 startCol 覆盖外层条目，parseBlock 反查时就拿到错误的 ancestors（如外层该有的空集被内层覆盖成
+     * 含自身首列，导致外层也误 break）。该缺陷现由 BlockFirstColOverlapChecker 在 schema 阶段拒绝首列重合
+     * 而规避——违反者进不到解析阶段，故此处对覆盖不做防御；若未来放宽该校验，需同步重审此处的 key 唯一性。
      */
     private static Map<Integer, SortedSet<Integer>> collectBlockAncestors(Structural structural) {
         Map<Integer, SortedSet<Integer>> result = new HashMap<>();

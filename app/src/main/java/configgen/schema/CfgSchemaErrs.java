@@ -298,6 +298,17 @@ public record CfgSchemaErrs(List<Err> errs,
     }
 
     /**
+     * block 字段首列与某个外层祖先 block 首列重合（最典型：内层 block 排在外层 block 元素 struct 的首字段位置）。
+     * 首列重合时该列同时承担内外两层 block 的“项标识”，parseBlock 无法区分，会静默丢数据，故 schema 阶段直接拒绝。
+     *
+     * @param structural block 字段所在的 struct/interface/table 全名
+     * @param field      block 字段名
+     */
+    public record BlockFirstColOverlap(String structural,
+                                       String field) implements Err {
+    }
+
+    /**
      * 主键、唯一键、外键的本地健 不存在
      */
     public record KeyNotFound(String structural,

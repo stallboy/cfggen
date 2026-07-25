@@ -159,6 +159,7 @@ Schema 验证在解析 `.cfg` 文件时进行，检查配置定义的语法和�
 | `JsonTableNotSupportMap` | 标记为 json 的 table 不能使用 map 类型 | 改用 list 类型 |
 | `MappingToExcelLoop` | 结构有循环且未使用 pack，无法映射到 excel | 使用 pack 格式或重构结构 |
 | `SeqFieldMustBeInt` | seq 只能用于 int 类型字段 | 修改字段类型为 int 或移除 seq |
+| `BlockFirstColOverlap` | block 字段首列与外层祖先 block 首列重合（通常是内层 block 排在外层 block 元素的首字段位置），该列无法同时标识内外两层 block 的项标识 | 在内层 block 前放一个非 block 的兄弟字段（如 `name`、`id`），让首列错开 |
 
 ### 警告（Warn）
 

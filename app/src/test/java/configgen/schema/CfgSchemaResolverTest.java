@@ -546,6 +546,59 @@ class CfgSchemaResolverTest {
     }
 
     @Test
+    public void BlockFirstColOverlap_innerBlockAsOuterItemFirstField() {
+        // 外层 block(outer) 的元素 Inner 的【首字段】innerList 又是 block =>
+        // 外层 block 首列 = 元素 struct 起始列 = 内层 block 首列（重合），parseBlock 无法区分内外层项标识、
+        // 会静默丢数据，schema 阶段直接拒绝。
+        String str = """
+                struct X {
+                    a:int;
+                    b:int;
+                }
+                struct Inner {
+                    innerList:list<X> (block=1);
+                    name:text;
+                }
+                table t[id] {
+                    id:int;
+                    outer:list<Inner> (block=1);
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+
+        assertEquals(1, errs.errs().size());
+        Err err = errs.errs().getFirst();
+        assertInstanceOf(BlockFirstColOverlap.class, err);
+        BlockFirstColOverlap be = (BlockFirstColOverlap) err;
+        assertEquals("Inner", be.structural());
+        assertEquals("innerList", be.field());
+    }
+
+    @Test
+    public void BlockFirstColOverlap_noErrWhenInnerBlockNotFirstField() {
+        // 反例：内层 block 排在外层元素 struct 的非首字段位置 => 首列错开，不重合，不应报错（防误报）
+        String str = """
+                struct X {
+                    a:int;
+                    b:int;
+                }
+                struct Inner {
+                    name:text;
+                    innerList:list<X> (block=1);
+                }
+                table t[id] {
+                    id:int;
+                    outer:list<Inner> (block=1);
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+
+        assertTrue(errs.errs().isEmpty(), () -> "不应误报，实际 errs=" + errs.errs());
+    }
+
+    @Test
     public void KeyNotFound_primaryKey() {
         String str = """
                 table t1[id] {
