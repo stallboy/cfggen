@@ -34,6 +34,13 @@ export const TauriSetting = memo(function ({schema}: {
                     placement: 'topRight',
                     duration: 3
                 });
+            }).catch((e) => {
+                // 失败也要给用户反馈，且兜底 unhandled rejection
+                notification.error({
+                    title: `summarizeRes failed: ${e}`,
+                    placement: 'topRight',
+                    duration: 3
+                });
             })
         }
     }, [notification, schema, resMap])

@@ -14,16 +14,26 @@ export const ThemeSetting = memo(function ThemeSetting() {
 
     // 检查当前主题文件是否存在
     useEffect(() => {
+        // cancelled 防两类问题：themeFile 快速变化时旧请求后返回覆盖新结果（stale race）；
+        // Tabs destroyOnHidden 切 tab 卸载后 pending setState
+        let cancelled = false;
         const checkThemeFile = async () => {
             if (themeConfig.themeFile) {
-                const exists = await themeService.themeExists(themeConfig.themeFile);
-                setThemeExists(exists);
+                const exists = await themeService.themeExists(themeConfig.themeFile)
+                    // 检查失败视为不存在（提示用户文件不可用），并兜底 unhandled rejection
+                    .catch(() => false);
+                if (!cancelled) {
+                    setThemeExists(exists);
+                }
             } else {
                 setThemeExists(null);
             }
         };
 
         checkThemeFile();
+        return () => {
+            cancelled = true;
+        };
     }, [themeConfig.themeFile]);
 
     const handleThemeChange = async (values: { themeFile: string }) => {

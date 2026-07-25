@@ -22,7 +22,8 @@ function srt2vtt(srtBody: string) {
 async function getSrt2Vtts(resInfo: ResInfo) {
     const {subtitlesTracks} = resInfo;
     if (!subtitlesTracks || subtitlesTracks.length == 0) {
-        return;
+        // react-query v5 的 queryFn 不能返回 undefined（会抛错进 error 态重试），无字幕时返回空数组
+        return [];
     }
 
     const vtts: string[] = [];
@@ -40,7 +41,8 @@ async function goExplorer(file: string) {
     const command = Command.create('explorer', ['/select,', file]);
     // message.info(file, 4);
     // console.log(file, command);
-    await command.execute();
+    // 链尾 catch：shell 插件失败时兜底，避免 unhandled rejection
+    await command.execute().catch((e) => console.error('goExplorer failed:', file, e));
 }
 
 export const VideoAudioSyncer = memo(function VideoAudioSyncer({resInfo}: { resInfo: ResInfo }) {
@@ -79,8 +81,10 @@ export const VideoAudioSyncer = memo(function VideoAudioSyncer({resInfo}: { resI
             if (video) {
                 const audios = ref.current.querySelectorAll<HTMLAudioElement>('audio');
                 for (const audio of audios) {
-                    audio.play();
+                    // 先对齐进度再播放，避免音轨从旧位置先响一瞬；
+                    // catch 兜底自动播放策略拒绝，避免 unhandled rejection
                     audio.currentTime = video.currentTime;
+                    void audio.play().catch(() => {});
                 }
             }
         }
