@@ -146,6 +146,8 @@ const sharedPrefState = {
 };
 
 // → cfgeditorSelf.yml（个人/敏感，aiConf 含 apiKey）
+// isEditMode 的共享默认值：session 初始态与 getLastNavToInLocalStore 的恢复默认都取它，保持一致
+export const DEFAULT_IS_EDIT_MODE = true;
 const selfPrefState = {
     aiConf: {
         baseUrl: 'https://api.deepseek.com/chat/completions',
@@ -153,7 +155,7 @@ const selfPrefState = {
         model: 'deepseek-v4-flash',
     },
     query: '',
-    isEditMode: true,
+    isEditMode: DEFAULT_IS_EDIT_MODE,
     imageSizeScale: 4,
     dragPanel: 'none',
 };
@@ -556,7 +558,9 @@ export function getLastNavToInLocalStore(): string | undefined {
         return undefined;
     }
     const id = getPrefStr('curId', '');
-    const isEditMode = getPrefBool('isEditMode', false);
+    // isEditMode 缺失时的默认与 selfPrefState 的 session 默认一致（true：编辑是产品核心路径）；
+    // 全新首装 tableId 缺失已在上方提前返回 undefined，走不到这里，所以 true 不影响首装行为
+    const isEditMode = getPrefBool('isEditMode', DEFAULT_IS_EDIT_MODE);
     return navTo(page ?? 'record', tableId, id, isEditMode);
 }
 
@@ -585,8 +589,12 @@ export function useLocationData() {
                 curPage = 'record';
                 idx = 3;
             }
-        } else if (pageEnums.includes(split[1])) {
-            curPage = split[1] as PageType;
+        } else {
+            // as const 元组的 includes 不收窄类型，用 find 收窄以消掉 as PageType
+            const page = pageEnums.find((p) => p === split[1]);
+            if (page) {
+                curPage = page;
+            }
         }
     }
     if (split.length > idx) {
