@@ -70,21 +70,27 @@ class BlockMigrationToolTest {
         List<BlockDiff> diffs = report.diffs().get("t");
         assertEquals(2, diffs.size());
 
-        // wave1 的 spawns：旧 1 → 新 3，丢失行 1、2
+        // wave1 的 spawns：旧 1 → 新 3，丢失 Excel 行 4、5
         BlockDiff wave1 = diffs.get(0);
+        assertEquals("t.csv", wave1.source());
         assertEquals("spawns", wave1.fieldName());
-        assertEquals(0, wave1.recordRow());
+        assertEquals(3, wave1.recordRow());       // record 首行 Excel 行号
+        assertEquals("1", wave1.pkDesc());
+        assertEquals("E", wave1.firstCol());      // pathId 列
         assertEquals(1, wave1.legacySize());
         assertEquals(3, wave1.newSize());
-        assertEquals(List.of(1, 2), wave1.newOnly());
+        assertEquals(List.of(4, 5), wave1.newOnly());
 
-        // wave2 的 spawns：旧 1 → 新 2，丢失行 4
+        // wave2 的 spawns：旧 1 → 新 2，丢失 Excel 行 7（同 record，往上扫到首行 pk=1）
         BlockDiff wave2 = diffs.get(1);
+        assertEquals("t.csv", wave2.source());
         assertEquals("spawns", wave2.fieldName());
         assertEquals(3, wave2.recordRow());
+        assertEquals("1", wave2.pkDesc());
+        assertEquals("E", wave2.firstCol());
         assertEquals(1, wave2.legacySize());
         assertEquals(2, wave2.newSize());
-        assertEquals(List.of(4), wave2.newOnly());
+        assertEquals(List.of(7), wave2.newOnly());
     }
 
     @Test

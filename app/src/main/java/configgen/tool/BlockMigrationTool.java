@@ -104,8 +104,8 @@ public class BlockMigrationTool extends Tool {
                 report.scannedTableCount(), report.diffTableCount(), report.diffRecordCount()));
         for (Map.Entry<String, List<BlockDiff>> e : report.diffs().entrySet()) {
             for (BlockDiff d : e.getValue()) {
-                sb.append(String.format("[表 %s] record 第 %d 行 (pk=%s) 字段 %s block 首列=列%d:\n",
-                        e.getKey(), d.recordRow(), d.pkDesc(), d.fieldName(), d.firstColIndex()));
+                sb.append(String.format("[%s] record 第 %d 行 (pk=%s) 字段 %s block 首列=列%s:\n",
+                        d.source(), d.recordRow(), d.pkDesc(), d.fieldName(), d.firstCol()));
                 sb.append(String.format("  旧 %d 个%s → 新 %d 个%s\n",
                         d.legacySize(), d.legacyRowIndices(),
                         d.newSize(), d.newRowIndices()));

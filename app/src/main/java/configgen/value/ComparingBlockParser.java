@@ -16,8 +16,8 @@ import static configgen.value.ValueParser.CellsWithRowIndex;
  * 同时用新算法（{@link VTableBlockParser}）和旧算法（firstColIndex-1，≤8aa463fc^）各算一份并对比，
  * 把差异记入 collector，再返回新算法结果让 ValueParser 继续构造（最终 value 即正确的新算法产物）。
  * <p>
- * 设计意图：一次解析内完成双算法对比，不重跑整表；差异天然带行号（rowIndex），精确定位到被旧算法
- * 误判提前 break 丢失的行。
+ * 设计意图：一次解析内完成双算法对比，不重跑整表；差异天然带行号，精确定位到被旧算法误判提前 break
+ * 丢失的行。报告里的定位均为 Excel/csv 实际位置（数据文件 + record 首行行号 + 往上扫得到的主键）。
  * <p>
  * 安全性：新旧两份结果共享同一 dTable；DCell.value 不可变、isCellEmpty 只看 value、setModePackOrSep
  * 只改 mode 位（block 判定不用 mode），第二算法拿到改过 mode 的 cell 不影响判定。
@@ -39,18 +39,24 @@ public class ComparingBlockParser implements BlockParser {
 
     @Override
     public List<CellsWithRowIndex> parseBlock(List<DCell> cells, int curRowIndex) {
-        int firstColIndex = VTableBlockParser.findColumnIndex(cells.getFirst(), dTable.rows().get(curRowIndex));
+        DCell firstCell = cells.getFirst();
+        int firstColIndex = VTableBlockParser.findColumnIndex(firstCell, dTable.rows().get(curRowIndex));
+
         List<CellsWithRowIndex> newRes = newBp.parseBlock(cells, curRowIndex);
         List<CellsWithRowIndex> legacyRes = legacyParseBlock(cells, curRowIndex, firstColIndex);
 
-        List<Integer> newRowIndices = rowIndexes(newRes);
-        List<Integer> legacyRowIndices = rowIndexes(legacyRes);
+        List<Integer> newRowIndices = excelRows(newRes);
+        List<Integer> legacyRowIndices = excelRows(legacyRes);
         if (!Objects.equals(newRowIndices, legacyRowIndices)) {
+            // 内层 block 的 curRowIndex 落在 block 行（pk 列空），往上扫到 record 首行取 pk 和定位行号
+            int recordFirstRow = findRecordFirstRow(curRowIndex);
+            DCell recordCell = dTable.rows().get(recordFirstRow).getFirst();
             collector.add(new BlockDiff(
                     tableFullName,
-                    curRowIndex,
-                    pkDesc(curRowIndex),
-                    firstColIndex,
+                    dTable.getSheetByRowId(recordCell.rowId()).id(),
+                    recordCell.displayRow(),
+                    pkDesc(recordFirstRow),
+                    firstCell.displayCol(),
                     newBp.fieldNameOf(firstColIndex),
                     newRowIndices,
                     legacyRowIndices));
@@ -88,16 +94,26 @@ public class ComparingBlockParser implements BlockParser {
         return res;
     }
 
-    private List<Integer> rowIndexes(List<CellsWithRowIndex> blocks) {
+    /** 从 curRowIndex 往上找 record 首行（主键所在格子非空的第一行）。 */
+    private int findRecordFirstRow(int curRowIndex) {
+        for (int r = curRowIndex; r >= 0; r--) {
+            if (!VTableParser.isPkCellAllEmpty(dTable.rows().get(r), pkColumnIndices)) {
+                return r;
+            }
+        }
+        return curRowIndex;
+    }
+
+    private List<Integer> excelRows(List<CellsWithRowIndex> blocks) {
         List<Integer> r = new ArrayList<>(blocks.size());
         for (CellsWithRowIndex b : blocks) {
-            r.add(b.rowIndex());
+            r.add(b.cells().getFirst().displayRow());
         }
         return r;
     }
 
-    private String pkDesc(int curRowIndex) {
-        List<DCell> recordRow = dTable.rows().get(curRowIndex);
+    private String pkDesc(int recordRowIndex) {
+        List<DCell> recordRow = dTable.rows().get(recordRowIndex);
         StringBuilder sb = new StringBuilder();
         for (int pkIdx : pkColumnIndices) {
             if (!sb.isEmpty()) {
@@ -109,20 +125,22 @@ public class ComparingBlockParser implements BlockParser {
     }
 
     /**
-     * 一处 block 字段的新旧解析差异。
+     * 一处 block 字段的新旧解析差异。定位均为 Excel/csv 实际位置。
      *
-     * @param table           表全名
-     * @param recordRow       record 起始行（cell-list index）
-     * @param pkDesc          主键值描述
-     * @param firstColIndex   block 字段首列（cell-list index）
+     * @param table           表全名（统计分组用）
+     * @param source          数据文件位置：csv 为文件路径，excel 为 文件路径[sheet名]
+     * @param recordRow       record 首行的 Excel 行号
+     * @param pkDesc          record 首行主键值
+     * @param firstCol        block 字段首列的 Excel 列字母
      * @param fieldName       block 字段名
-     * @param newRowIndices   新算法收集到的行号
-     * @param legacyRowIndices 旧算法收集到的行号
+     * @param newRowIndices   新算法收集到的 Excel 行号
+     * @param legacyRowIndices 旧算法收集到的 Excel 行号
      */
     public record BlockDiff(String table,
+                            String source,
                             int recordRow,
                             String pkDesc,
-                            int firstColIndex,
+                            String firstCol,
                             String fieldName,
                             List<Integer> newRowIndices,
                             List<Integer> legacyRowIndices) {

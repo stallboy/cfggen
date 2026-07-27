@@ -151,22 +151,23 @@ public record CfgData(Map<String, DTable> tables,
             return new DCell(sub, rowId, col, mode);
         }
 
+        /** 显示用行号（1-based，处理行列转置）。 */
+        public int displayRow() {
+            return ((mode & COLUMN_MODE) != 0 ? col : rowId.row) + 1;
+        }
+
+        /** 显示用列号（Excel 字母，处理行列转置）。 */
+        public String displayCol() {
+            return toAZ((mode & COLUMN_MODE) != 0 ? rowId.row : col);
+        }
+
         @Override
         public String toString() {
             String sheet = rowId.sheetName.isEmpty() ? rowId.fileName :
                     String.format("%s[%s]", rowId.fileName, rowId.sheetName);
-            int r;
-            int c;
-            if ((mode & COLUMN_MODE) != 0) {
-                r = col;
-                c = rowId.row;
-            } else {
-                r = rowId.row;
-                c = col;
-            }
             return LocaleUtil.getFormatedLocaleString("CellToString",
                     "sheet={0},row={1},col={2},data={3}",
-                    sheet, r + 1, toAZ(c), value);
+                    sheet, displayRow(), displayCol(), value);
         }
 
         private static final int N = 'Z' - 'A' + 1;
