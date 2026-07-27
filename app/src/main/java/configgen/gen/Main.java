@@ -68,6 +68,7 @@ public final class Main {
         Tools.addProvider("term", TodoTermListerAndChecker::new);
         Tools.addProvider("translate", TodoTranslator::new);
         Tools.addProvider("schematocsv", SchemaToCsvTool::new);
+        Tools.addProvider("blockmigrate", BlockMigrationTool::new);
 
         Generators.addProvider("verify", ValueVerifyTool::new);
         Generators.addProvider("search", ValueInspectTool::new);

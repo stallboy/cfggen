@@ -35,6 +35,7 @@ Java 配置生成器（cfggen）：从 Excel/CSV/JSON 读取配置数据，生�
 | `fastexcelcheck` | `ExcelReadDiffTool` | FastExcel vs POI 读取比对 |
 | `bytesview` | `BytesViewTool` | Bytes 文件查看 |
 | `schematocsv` | `SchemaToCsvTool` | Schema 导出 CSV |
+| `blockmigrate` | `BlockMigrationTool` | block 解析算法迁移检测（parseBlock 层新旧算法对比） |
 | `term` | `TodoTermListerAndChecker` | 待译词条列出与术语一致性检查 |
 | `translate` | `TodoTranslator` | AI 辅助翻译 |
 
