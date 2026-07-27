@@ -200,7 +200,7 @@ table level[id] {
 
 列布局为 `id, waveIndex, pathId, monsterId`（`waveIndex` 是外层 `waves` 的首列，`pathId` 是内层 `spawns` 的首列）：
 
-| id | waveIndex | pathId | monsterId | 说明 |
+| id | waves.waveIndex | pathId | monsterId | 说明 |
 |----|-----------|--------|-----------|------|
 | 1  | 1         | 1001   | 2001      | wave1 首行，waveIndex 有值 → 新 wave |
 |    |           | 1002   | 2002      | waveIndex 空 → 仍属 wave1 |
@@ -210,7 +210,7 @@ table level[id] {
 
 若 `Wave` 多一个 `startTime` 字段（列布局 `id, waveIndex, startTime, pathId, monsterId`），策划在 spawn 行冗余填了 `startTime`，解析仍按 `waveIndex` 判边界，spawn 不会丢失：
 
-| id | waveIndex | startTime | pathId | monsterId | 说明 |
+| id | waves.waveIndex | startTime | pathId | monsterId | 说明 |
 |----|-----------|-----------|--------|-----------|------|
 | 1  | 1         | 0.0       | 1001   | 2001      | wave1 spawn1 |
 |    |           | 1.0       | 1002   | 2002      | startTime 冗余填了，仍属 wave1 |
@@ -252,7 +252,7 @@ table task[id] {
 
 列布局为 `id, itemId, count`，第 3 行 `itemId` 刻意留空：
 
-| id | itemId | count | 说明 |
+| id | items.itemId | count | 说明 |
 |----|--------|-------|------|
 | 1  | 1001   | 5     | item1 |
 |    | 1002   | 10    | item2 |
@@ -301,7 +301,7 @@ interface weaponAttr{
 
 **Excel 表格结构**：
 
-| id  | weaponAttrs | weaponAttrs |
+| id  | weaponAttrs | p1 |
 | --- | ----------- | ----------- |
 | 1   | Damage      | 2           |
 | 2   | Damage      | 2           |
@@ -331,7 +331,7 @@ table test[id] {
 
 **Excel 表格结构**：
 
-| id  | weaponAttrs | weaponAttrs | weaponAttrs | weaponAttrs |
+| id  | weaponAttrs | p1 | impl2 | p2 |
 | --- | ----------- | ----------- | ----------- | ----------- |
 | 1   | Damage      | 2           |             |             |
 | 2   | Damage      | 2           |             |             |
@@ -371,7 +371,7 @@ table test[id] {
 
 **Excel 表格结构**：
 
-| id  | DmgRatio1 | DmgRatio1 | DmgRatio2 | DmgRatio3 |
+| id  | DmgRatio1.playerAttr | ratio | DmgRatio2 | DmgRatio3 |
 | --- | --------- | --------- | --------- | --------- |
 | 1   | 1         | 1         | 2,2       | 3,3       |
 
@@ -488,7 +488,7 @@ table task...{
 
 **Excel 表格结构**：
 
-| condition   | param1       | param2               |
+| condition   | p1       | p2               |
 |:------------|--------------|----------------------|
 | KillMonster |1001          |1                     |
 | And         |TalkNpc(5)    |CollectItem(2002, 3)  |
