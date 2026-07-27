@@ -83,7 +83,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
     @endif
 
     @if(model.isEnum)
-        private static final java.util.Map<${model.hasNoIntValue ? "String" : "Integer"}, ${model.className}> map = new java.util.HashMap<>();
+        public static final java.util.Map<${model.hasNoIntValue ? "String" : "Integer"}, ${model.className}> map = new java.util.HashMap<>();
 
         static {
             for(${model.className} e : ${model.className}.values()) {
@@ -102,7 +102,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                  */
             @endif
             public ${TypeStr.type(field.type())} get${StringUtil.upper1(field.name())}() {
-                @if(field == model.table.primaryKey().fieldSchemas().get(0))
+                @if(field == model.table.primaryKey().fieldSchemas().getFirst())
                     return value;
                 @elseif(field == model.entryBase.fieldSchema())
                     return name;
