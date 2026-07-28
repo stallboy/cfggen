@@ -139,6 +139,7 @@ tasks.register('copyGenJavaSources', Copy) {
     description = '复制模板源码到 resources 目录供运行时调用'
 
     from('src/main/java/configgen/genjava') {
+        // 注意：此清单须与 JavaCodeGenerator.COPY_FILES 保持一致（哪些 support 文件随生成项目分发）
         include 'Schema.java',
                 'SchemaBean.java',
                 'SchemaCompatibleException.java',
@@ -151,7 +152,10 @@ tasks.register('copyGenJavaSources', Copy) {
                 'SchemaDeserializer.java',
                 'ConfigErr.java',
                 'ConfigInput.java',
-                'BytesInspector.java'
+                'BytesInspector.java',
+                'JsonValue.java',
+                'CodeDataInspector.java',
+                'CodeDataPrinter.java'
     }
     // 打包后的路径：support/configgen/genjava/
     into layout.buildDirectory.dir("resources/main/support/configgen/genjava")

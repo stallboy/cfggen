@@ -4,6 +4,8 @@ import config.ConfigMgr;
 import config.ConfigMgrLoader;
 import config.task.Task;
 import configgen.genjava.BytesInspector;
+import configgen.genjava.CodeDataInspector;
+import configgen.genjava.CodeDataPrinter;
 import configgen.genjava.ConfigInput;
 import configgen.genjava.Schema;
 import configgen.genjava.SchemaCompatibleException;
@@ -74,6 +76,15 @@ public class LoadConfig {
         System.out.println(Task.get(1));
         new BytesInspector(fn).match("eq");
 
+        // CodeDataInspector：检查已加载的 ConfigMgr 数据（运行时对象，区别于读 bytes 文件的 BytesInspector）
+        CodeDataInspector inspector = new CodeDataInspector(ConfigMgr.getMgr(), ConfigCodeSchema.getCodeSchema());
+        CodeDataPrinter printer = new CodeDataPrinter(inspector);
+        System.out.println(printer.get("other.monster", "1"));
+        System.out.println(printer.get("other.keytest", "1,2"));
+        System.out.println(printer.query("1234", ""));
+        System.out.println(printer.schema("monster"));
+
+//        printer.loop();
 //        ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
 //        autoReload(watcher, fn, null);
 //        System.out.println("read ok");

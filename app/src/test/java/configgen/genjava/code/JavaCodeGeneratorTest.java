@@ -268,6 +268,34 @@ class JavaCodeGeneratorTest {
         assertTrue(builderContent.contains("build"), "应该包含build方法");
     }
 
+    @Test
+    void generate_copiesInspectorSupportFiles() throws IOException {
+        // Given: 简单表 schema + 数据
+        String cfgStr = """
+                table user[id] {
+                    id:int;
+                    name:str;
+                }
+                """;
+        String csvData = """
+                用户ID,姓名
+                id,name
+                1,Alice
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        Resources.addTempFileFromText("user.csv", tempDir, csvData);
+
+        // When: 带 configgenDir 生成
+        String configgenDir = tempDir.resolve("cgsrc").toString();
+        generateJavaCode("config_cg", "test.config.cg", ",configgenDir:" + configgenDir);
+
+        // Then: CodeDataInspector/CodeDataPrinter/JsonValue 应被拷到 configgenDir
+        File supportDir = new File(configgenDir, "configgen/genjava");
+        assertTrue(new File(supportDir, "CodeDataInspector.java").exists(), "应拷出 CodeDataInspector.java");
+        assertTrue(new File(supportDir, "CodeDataPrinter.java").exists(), "应拷出 CodeDataPrinter.java");
+        assertTrue(new File(supportDir, "JsonValue.java").exists(), "应拷出 JsonValue.java");
+    }
+
     /**
      * 公共的代码生成逻辑：创建 Context、构建参数、执行生成，返回输出目录。
      *
