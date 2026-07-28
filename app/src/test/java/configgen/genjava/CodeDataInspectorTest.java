@@ -2,10 +2,7 @@ package configgen.genjava;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static configgen.genjava.JsonValue.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,6 +36,7 @@ class CodeDataInspectorTest {
     record PointKey(int x, int y) {
     }
 
+    @SuppressWarnings("unused")
     static class Point {
         final int x, y;
 
@@ -96,8 +94,8 @@ class CodeDataInspectorTest {
         CodeDataInspector ins = new CodeDataInspector(buildMgr(), buildSchema());
         JsonValue v = ins.getJson("test.user", "1");
         assertInstanceOf(Obj.class, v);
-        assertEquals(1, ((Num) memberValue(v, "id")).value().intValue());
-        assertEquals("alice", ((Str) memberValue(v, "name")).value());
+        assertEquals(1, ((Num) Objects.requireNonNull(memberValue(v, "id"))).value().intValue());
+        assertEquals("alice", ((Str) Objects.requireNonNull(memberValue(v, "name"))).value());
     }
 
     @Test
@@ -105,8 +103,29 @@ class CodeDataInspectorTest {
         CodeDataInspector ins = new CodeDataInspector(buildMgr(), buildSchema());
         JsonValue v = ins.getJson("test.point", "3,5");
         assertInstanceOf(Obj.class, v);
-        assertEquals(3, ((Num) memberValue(v, "x")).value().intValue());
-        assertEquals(5, ((Num) memberValue(v, "y")).value().intValue());
+        assertEquals(3, ((Num) Objects.requireNonNull(memberValue(v, "x"))).value().intValue());
+        assertEquals(5, ((Num) Objects.requireNonNull(memberValue(v, "y"))).value().intValue());
+    }
+
+    @Test
+    void getMap_byStringKey() {
+        // String key：单值原始/字符串走快路径，不经反射构造器
+        class StrMgr {
+            public final Map<String, User> test_str_All = new LinkedHashMap<>();
+        }
+        SchemaInterface root = new SchemaInterface();
+        SchemaBean bean = new SchemaBean(true);
+        bean.addColumn("id", SchemaPrimitive.SInt);
+        bean.addColumn("name", SchemaPrimitive.SStr);
+        root.addImp("test.str", bean);
+
+        StrMgr m = new StrMgr();
+        m.test_str_All.put("alice", new User(1, "alice"));
+
+        CodeDataInspector ins = new CodeDataInspector(m, root);
+        JsonValue v = ins.getJson("test.str", "alice");
+        assertInstanceOf(Obj.class, v);
+        assertEquals("alice", ((Str) Objects.requireNonNull(memberValue(v, "name"))).value());
     }
 
     @Test
@@ -136,9 +155,9 @@ class CodeDataInspectorTest {
         assertInstanceOf(Arr.class, q);
         List<JsonValue> items = ((Arr) q).items();
         assertEquals(1, items.size());
-        Obj rec = (Obj) items.get(0);
+        Obj rec = (Obj) items.getFirst();
         assertEquals("test.user", rec.impl(), "记录 impl 应为表名");
-        assertEquals("alice", ((Str) memberValue(rec, "name")).value());
+        assertEquals("alice", ((Str) Objects.requireNonNull(memberValue(rec, "name"))).value());
     }
 
     @Test
@@ -161,8 +180,8 @@ class CodeDataInspectorTest {
         JsonValue s = ins.schemaJson("user");
         Obj table = (Obj) memberValue(s, "test.user");
         assertNotNull(table, "应包含 test.user 块");
-        assertEquals("int", ((Str) memberValue(table, "id")).value());
-        assertEquals("str", ((Str) memberValue(table, "name")).value());
+        assertEquals("int", ((Str) Objects.requireNonNull(memberValue(table, "id"))).value());
+        assertEquals("str", ((Str) Objects.requireNonNull(memberValue(table, "name"))).value());
     }
 
     @Test
@@ -172,8 +191,8 @@ class CodeDataInspectorTest {
         JsonValue s = ins.schemaJson("color");
         Obj enumBlock = (Obj) memberValue(s, "test.color");
         assertNotNull(enumBlock, "应包含 test.color 枚举块");
-        assertEquals(1, ((Num) memberValue(enumBlock, "Red")).value().intValue());
-        assertEquals(2, ((Num) memberValue(enumBlock, "Blue")).value().intValue());
+        assertEquals(1, ((Num) Objects.requireNonNull(memberValue(enumBlock, "Red"))).value().intValue());
+        assertEquals(2, ((Num) Objects.requireNonNull(memberValue(enumBlock, "Blue"))).value().intValue());
         String out = CodeDataPrinter.render(s);
         assertTrue(out.contains("test.color"), "渲染应含 test.color");
         assertTrue(out.contains("Red: 1"), "枚举值应渲染为 Red: 1");

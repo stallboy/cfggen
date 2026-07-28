@@ -80,7 +80,7 @@ final class GenConfigCodeSchema {
                                   List<List<Map.Entry<String, Schema>>> nullableOthers,
                                   CachedIndentPrinter ip) {
 
-        ip.println1("public static Schema getCodeSchema() {");
+        ip.println1("public static SchemaInterface getCodeSchema() {");
         ip.inc();
         ip.inc();
 
@@ -139,15 +139,15 @@ final class GenConfigCodeSchema {
         switch (schema) {
             case SchemaBean schemaBean -> {
                 String name = "s" + ip.indent();
-                ip.println("SchemaBean %s = new SchemaBean(%s);", name, schemaBean.isTable ? "true" : "false");
+                ip.println("SchemaBean %s = new SchemaBean(%s);", name, Boolean.toString(schemaBean.isTable));
                 for (SchemaBean.Column column : schemaBean.columns) {
                     ip.println("%s.addColumn(\"%s\", %s);", name, column.name(), parse(column.schema()));
                 }
             }
             case SchemaEnum schemaEnum -> {
                 String name = "s" + ip.indent();
-                ip.println("SchemaEnum %s = new SchemaEnum(%s, %s);", name, schemaEnum.isEnumPart ? "true" : "false",
-                        schemaEnum.hasIntValue ? "true" : "false");
+                ip.println("SchemaEnum %s = new SchemaEnum(%s, %s);", name, Boolean.toString(schemaEnum.isEnumPart),
+                        Boolean.toString(schemaEnum.hasIntValue));
                 for (Map.Entry<String, Integer> entry : schemaEnum.values.entrySet()) {
                     if (schemaEnum.hasIntValue) {
                         ip.println("%s.addValue(\"%s\", %d);", name, entry.getKey(), entry.getValue());

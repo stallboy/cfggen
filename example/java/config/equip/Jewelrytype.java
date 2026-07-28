@@ -13,7 +13,7 @@ public enum Jewelrytype {
         this.value = value;
     }
 
-    private static final java.util.Map<String, Jewelrytype> map = new java.util.HashMap<>();
+    public static final java.util.Map<String, Jewelrytype> map = new java.util.HashMap<>();
 
     static {
         for(Jewelrytype e : Jewelrytype.values()) {

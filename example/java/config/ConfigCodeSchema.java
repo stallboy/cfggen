@@ -4,7 +4,7 @@ import configgen.genjava.*;
 
 public class ConfigCodeSchema {
 
-    public static Schema getCodeSchema() {
+    public static SchemaInterface getCodeSchema() {
         SchemaInterface schema = new SchemaInterface();
         schema.addImp("LevelRank", LevelRank());
         schema.addImp("Position", Position());

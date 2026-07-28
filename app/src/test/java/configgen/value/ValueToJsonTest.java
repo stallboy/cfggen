@@ -75,7 +75,7 @@ class ValueToJsonTest {
                 List.of());
         VStruct vStruct = ofStruct(ss, List.of(ofInt(123), ofStr("test str")));
         JSONObject json = valueToJson.toJson(vStruct);
-        assertEquals(3, json.values().size());
+        assertEquals(3, json.size());
 
         assertEquals(123, json.getIntValue("fieldIntA"));
         assertEquals("test str", json.getString("fieldStrB"));

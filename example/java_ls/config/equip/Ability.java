@@ -18,7 +18,7 @@ public enum Ability {
         this.value = value;
     }
 
-    private static final java.util.Map<Integer, Ability> map = new java.util.HashMap<>();
+    public static final java.util.Map<Integer, Ability> map = new java.util.HashMap<>();
 
     static {
         for(Ability e : Ability.values()) {

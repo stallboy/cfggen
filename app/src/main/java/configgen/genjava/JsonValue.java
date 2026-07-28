@@ -1,6 +1,5 @@
 package configgen.genjava;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,16 +42,16 @@ public sealed interface JsonValue permits JsonValue.Obj, JsonValue.Arr, JsonValu
     // ---------- 构造便捷方法 ----------
 
     static Obj obj(Member... ms) {
-        return new Obj(null, new ArrayList<>(List.of(ms)));
+        return new Obj(null, List.of(ms));
     }
 
     /** 接口多态值：带实现类名作类型标记。 */
     static Obj obj(String impl, Member... ms) {
-        return new Obj(impl, new ArrayList<>(List.of(ms)));
+        return new Obj(impl, List.of(ms));
     }
 
     static Arr arr(JsonValue... vs) {
-        return new Arr(new ArrayList<>(List.of(vs)));
+        return new Arr(List.of(vs));
     }
 
     static Member member(String name, JsonValue v) {

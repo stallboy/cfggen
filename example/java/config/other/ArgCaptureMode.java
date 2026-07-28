@@ -11,7 +11,7 @@ public enum ArgCaptureMode {
         this.value = value;
     }
 
-    private static final java.util.Map<String, ArgCaptureMode> map = new java.util.HashMap<>();
+    public static final java.util.Map<String, ArgCaptureMode> map = new java.util.HashMap<>();
 
     static {
         for(ArgCaptureMode e : ArgCaptureMode.values()) {

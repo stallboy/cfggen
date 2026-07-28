@@ -18,7 +18,7 @@ public enum Rank {
         this.value = value;
     }
 
-    private static final java.util.Map<Integer, Rank> map = new java.util.HashMap<>();
+    public static final java.util.Map<Integer, Rank> map = new java.util.HashMap<>();
 
     static {
         for(Rank e : Rank.values()) {

@@ -19,7 +19,7 @@ public enum Completeconditiontype {
         this.value = value;
     }
 
-    private static final java.util.Map<Integer, Completeconditiontype> map = new java.util.HashMap<>();
+    public static final java.util.Map<Integer, Completeconditiontype> map = new java.util.HashMap<>();
 
     static {
         for(Completeconditiontype e : Completeconditiontype.values()) {

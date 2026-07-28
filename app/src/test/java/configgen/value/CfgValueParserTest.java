@@ -392,7 +392,7 @@ class CfgValueParserTest {
         VList items = (VList) record.values().get(1);
         // 首列空的行被丢弃：预期 3 个 item（1001/1002/1003），count=20 那行不构成 item
         assertEquals(3, items.valueList().size(), "首列(项标识)为空的行不应创建新项");
-        VStruct item1 = (VStruct) items.valueList().get(0);
+        VStruct item1 = (VStruct) items.valueList().getFirst();
         assertEquals(1001, ((VInt) item1.values().get(0)).value());
         assertEquals(5, ((VInt) item1.values().get(1)).value());
         VStruct item3 = (VStruct) items.valueList().get(2);
@@ -407,17 +407,17 @@ class CfgValueParserTest {
                     id:int;
                     rewardList:list<Reward> (block=1);
                 }
-                
+
                 struct Reward {
                     rewardName:text;
                     chestList:list<Chest> (block=1);
                 }
-                
+
                 struct Chest {
                     chestName:text;
                     itemList:list<Item> (block=1);
                 }
-                
+
                 struct Item {
                     itemId:int;
                     name:text;
@@ -444,7 +444,7 @@ class CfgValueParserTest {
         assertEquals(2, tVTable.valueList().size());
         {
             VStruct first = tVTable.valueList().getFirst();
-            VStruct firstReward = (VStruct) ((VList)(first.values().get(1))).valueList().get(0);
+            VStruct firstReward = (VStruct) ((VList)(first.values().get(1))).valueList().getFirst();
             assertEquals("1,((地狱熔炉奖励,((罗格的宝箱,((30001,末日毁灭者),(30002,风之力))),(血鸟宝箱,((30010,法力药水),(30011,暴风之盾))))))", first.packStr());
 
             VText rewardName = (VText) firstReward.values().getFirst();
@@ -466,7 +466,7 @@ class CfgValueParserTest {
         }
         {
             VStruct second = tVTable.valueList().get(1);
-            VStruct firstReward = (VStruct) ((VList)(second.values().get(1))).valueList().get(0);
+            VStruct firstReward = (VStruct) ((VList)(second.values().get(1))).valueList().getFirst();
             assertEquals("2,((安雅的奖励,((普通宝箱,((30021,乔丹之石),(30022,彩虹刻面))))))", second.packStr());
 
             VText rewardName = (VText) firstReward.values().getFirst();
@@ -527,7 +527,7 @@ class CfgValueParserTest {
         VList waves = (VList) record.values().get(1);
         assertEquals(2, waves.valueList().size(), "wave count");
 
-        VStruct wave1 = (VStruct) waves.valueList().get(0);
+        VStruct wave1 = (VStruct) waves.valueList().getFirst();
         VList spawns1 = (VList) wave1.values().get(2);
         assertEquals(3, spawns1.valueList().size(), "wave1 spawn count");
 

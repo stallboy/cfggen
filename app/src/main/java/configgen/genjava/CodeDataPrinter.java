@@ -83,11 +83,7 @@ public class CodeDataPrinter {
         return arrBlock(items, depth, indent, "");
     }
 
-    /**
-     * 渲染数组的括号内容，紧凑链式：对象项之间 {@code }, { } 相接，形如 {@code [{..},{..}]}。
-     * openPrefix 为开括号前的内容（顶层为 ""，字段值时为 {@code "key: "}）。
-     * 全是单行项（标量/短对象）时退化为每项一行、逗号分隔，避免挤成超长一行。
-     */
+
     private static List<String> arrBlock(List<JsonValue> items, int depth, String indent, String openPrefix) {
         String itemIndent = indent + "  ";
         List<List<String>> rendered = new ArrayList<>();
@@ -108,7 +104,7 @@ public class CodeDataPrinter {
             List<String> il = rendered.get(i);
             if (i == 0) {
                 String firstStripped = il.getFirst().substring(itemIndent.length());
-                out.add(indent + openPrefix + "[" + firstStripped);
+                out.add(indent + openPrefix + "[ " + firstStripped);
             } else {
                 // 前一项末行加逗号，下一项的 { 另起一行
                 int last = out.size() - 1;
@@ -190,6 +186,7 @@ public class CodeDataPrinter {
     }
 
     /** 仅按宽度决定是否展开：内联形式超宽才展开，否则尽量一行（短结构不论嵌套多深都保持单行）。 */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean shouldExpand(String inlineStr) {
         return inlineStr.length() > WIDTH_LIMIT;
     }

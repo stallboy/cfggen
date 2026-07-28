@@ -16,7 +16,7 @@ import static configgen.genjava.JsonValue.*;
  * 检查已加载 ConfigMgr 里的数据，按 {@code ConfigCodeSchema.getCodeSchema()} 返回的 Schema 递归翻译成
  * 通用的 {@link JsonValue} 结构。
  *
- * <p>纯反射，不依赖生成的 ConfigMgr / ConfigCodeSchema 类型 —— 构造器收 {@code Object mgr} + {@link Schema}，
+ * <p>纯反射，不依赖生成的 ConfigMgr / ConfigCodeSchema 类型 —— 构造器收 {@code Object mgr} + {@link SchemaInterface}，
  * 调用方自行接线：{@code new CodeDataInspector(ConfigMgr.getMgr(), ConfigCodeSchema.getCodeSchema())}。
  *
  * <p>领域→JSON 翻译约定：
@@ -36,9 +36,9 @@ public class CodeDataInspector {
     private final SchemaInterface rootSchema;
     private List<TableData> cachedTables;
 
-    public CodeDataInspector(Object mgr, Schema rootSchema) {
+    public CodeDataInspector(Object mgr, SchemaInterface rootSchema) {
         this.mgr = mgr;
-        this.rootSchema = (SchemaInterface) rootSchema;
+        this.rootSchema = rootSchema;
     }
 
     // ==================== 公开 API（均返回通用 JsonValue） ====================
@@ -91,9 +91,10 @@ public class CodeDataInspector {
             if (!nameMatches(td.displayName, tableMatch)) continue;
             int shownThisTable = 0;
             for (Object record : iterRecords(td)) {
-                if (!recordMatches(record, td.recordSchema, needle)) continue;
                 if (shownThisTable >= perTableCap || totalShown >= totalCap) break;
-                records.add(recordToJson(record, td.recordSchema, td.displayName));
+                JsonValue jv = recordToJson(record, td.recordSchema, td.displayName);
+                if (!needle.isEmpty() && !flatContains(jv, needle)) continue;
+                records.add(jv);
                 shownThisTable++;
                 totalShown++;
             }
@@ -162,6 +163,7 @@ public class CodeDataInspector {
         return containsHits == 1 ? contains : null;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean nameMatches(String name, String match) {
         if (match == null || match.isEmpty()) return true;
         return name.toLowerCase().contains(match.toLowerCase());
@@ -196,9 +198,16 @@ public class CodeDataInspector {
         return raw.get(key);
     }
 
-    /** 按位置式 "3,5" 构造键：枚举→valueOf；record/bean→反射公开构造器按形参类型强转。 */
+    /**
+     * 按位置式 key 构造：单值（无逗号）的原始/字符串 key 直接转换，绕开反射构造器；
+     * 复合 "3,5" 或单字段 record 走反射构造器按形参强转；枚举走 valueOf。
+     */
     @SuppressWarnings({"rawtypes", "unchecked"})
     private Object buildKey(Class<?> keyClass, String keyStr) throws Exception {
+        if (keyStr.indexOf(',') < 0) {
+            Object single = singlePrimitive(keyClass, keyStr.trim());
+            if (single != null) return single;
+        }
         String[] parts = keyStr.split(",");
         for (int i = 0; i < parts.length; i++) parts[i] = parts[i].trim();
         if (keyClass.isEnum()) {
@@ -216,21 +225,26 @@ public class CodeDataInspector {
     }
 
     private static Constructor<?> pickCtor(Class<?> cls, int paramCount) {
-        Constructor<?> fallback = null;
         for (Constructor<?> c : cls.getDeclaredConstructors()) {
             if (c.getParameterCount() == paramCount) return c;
-            if (fallback == null) fallback = c;
         }
-        return fallback != null && fallback.getParameterCount() == paramCount ? fallback : null;
+        return null;
+    }
+
+    /** 单值原始/字符串 key 直转；非这些类型（枚举/record/bean）返回 null，交由构造器路径处理。 */
+    private static Object singlePrimitive(Class<?> keyClass, String s) {
+        if (keyClass == String.class) return s;
+        if (keyClass == Integer.class || keyClass == int.class) return Integer.parseInt(s);
+        if (keyClass == Long.class || keyClass == long.class) return Long.parseLong(s);
+        if (keyClass == Float.class || keyClass == float.class) return Float.parseFloat(s);
+        if (keyClass == Double.class || keyClass == double.class) return Double.parseDouble(s);
+        if (keyClass == Boolean.class || keyClass == boolean.class) return Boolean.parseBoolean(s);
+        return null;
     }
 
     private static Object coerce(Class<?> targetType, String s) {
-        if (targetType == int.class || targetType == Integer.class) return Integer.parseInt(s);
-        if (targetType == long.class || targetType == Long.class) return Long.parseLong(s);
-        if (targetType == float.class || targetType == Float.class) return Float.parseFloat(s);
-        if (targetType == double.class || targetType == Double.class) return Double.parseDouble(s);
-        if (targetType == boolean.class || targetType == Boolean.class) return Boolean.parseBoolean(s);
-        return s;
+        Object v = singlePrimitive(targetType, s);
+        return v != null ? v : s;
     }
 
     // ==================== 记录遍历 / 匹配 ====================
@@ -248,52 +262,31 @@ public class CodeDataInspector {
         return list;
     }
 
-    /** 全字段子串：把记录所有叶子值拍平成串，看是否含 needle（已小写）。 */
-    private boolean recordMatches(Object record, SchemaBean bean, String needle) {
-        if (needle.isEmpty()) return true;
+    /** 把记录所有叶子值拍平成串做大小写不敏感子串匹配（needle 已小写）。 */
+    private static boolean flatContains(JsonValue v, String lowerNeedle) {
         StringBuilder sb = new StringBuilder();
-        try {
-            flatten(record, bean, sb);
-        } catch (Exception ignored) {
-            return false;
-        }
-        return sb.toString().toLowerCase().contains(needle);
+        appendFlat(v, sb);
+        return sb.toString().toLowerCase().contains(lowerNeedle);
     }
 
-    private void flatten(Object value, Schema sc, StringBuilder sb) throws Exception {
-        switch (sc) {
-            case SchemaBean bean -> {
-                for (SchemaBean.Column col : bean.columns) {
-                    Object v = getterValue(value, col.name());
-                    if (v != null) flatten(v, col.schema(), sb);
-                    sb.append(' ');
+    /** 对领域无关的 {@link JsonValue} 拍平：只收集叶子值/键/类型名，与 {@link #valueToJson} 共用同一棵翻译树。 */
+    private static void appendFlat(JsonValue v, StringBuilder sb) {
+        switch (v) {
+            case Obj o -> {
+                if (o.impl() != null) sb.append(o.impl()).append(' ');
+                for (Member m : o.members()) {
+                    sb.append(m.name()).append(' ');
+                    appendFlat(m.value(), sb);
                 }
             }
-            case SchemaInterface si -> {
-                sb.append(value.getClass().getSimpleName()).append(' ');
-                Schema impl = si.implementations.get(value.getClass().getSimpleName());
-                if (impl instanceof SchemaBean bean) flatten(value, bean, sb);
+            case Arr a -> {
+                for (JsonValue e : a.items()) appendFlat(e, sb);
             }
-            case SchemaList sl -> {
-                if (value instanceof Iterable<?> it) {
-                    for (Object e : it) flatten(e, sl.ele(), sb);
-                }
+            case Null ignored -> {
             }
-            case SchemaMap sm -> {
-                if (value instanceof Map<?, ?> m) {
-                    for (Map.Entry<?, ?> e : m.entrySet()) {
-                        sb.append(e.getKey()).append(' ');
-                        flatten(e.getValue(), sm.value(), sb);
-                    }
-                }
-            }
-            case SchemaRef ref -> {
-                Schema target = rootSchema.implementations.get(ref.type);
-                if (target instanceof SchemaBean bean) flatten(value, bean, sb);
-                else sb.append(value);
-            }
-            case SchemaPrimitive ignored -> sb.append(value);
-            case SchemaEnum ignored -> sb.append(value);
+            case Bool b -> sb.append(b.value()).append(' ');
+            case Num n -> sb.append(n.value()).append(' ');
+            case Str s -> sb.append(s.value()).append(' ');
         }
     }
 
@@ -309,12 +302,9 @@ public class CodeDataInspector {
                 if (value == null) yield new Null();
                 String implName = value.getClass().getSimpleName();
                 Schema impl = si.implementations.get(implName);
-                List<Member> members = new ArrayList<>();
-                if (impl instanceof SchemaBean bean) {
-                    members.addAll(collectMembers(value, bean));
-                } else {
-                    members.addAll(reflectiveMembers(value));
-                }
+                List<Member> members = impl instanceof SchemaBean bean
+                        ? collectMembers(value, bean)
+                        : reflectiveMembers(value);
                 yield new Obj(implName, members);
             }
             case SchemaList sl -> {
@@ -413,18 +403,19 @@ public class CodeDataInspector {
         switch (target) {
             case SchemaBean tb -> {
                 addBeanSchema(members, name, tb);
-                for (SchemaBean.Column col : tb.columns) collectDepSchema(members, col.schema(), done);
+                for (SchemaBean.Column col : tb.columns)
+                    collectDepSchema(members, col.schema(), done);
             }
             case SchemaEnum te -> {
                 // 枚举：有 int 值 → {Red: 1, Blue: 2}；否则 → [Red, Blue]
                 if (te.hasIntValue) {
-                    List<Member> vals = new ArrayList<>();
+                    List<Member> vals = new ArrayList<>(te.values.size());
                     for (Map.Entry<String, Integer> e : te.values.entrySet()) {
                         vals.add(member(e.getKey(), of(e.getValue())));
                     }
                     members.add(member(name, new Obj(null, vals)));
                 } else {
-                    List<JsonValue> vals = new ArrayList<>();
+                    List<JsonValue> vals = new ArrayList<>(te.values.size());
                     for (String n : te.values.keySet()) {
                         vals.add(new Str(n));
                     }
@@ -433,10 +424,10 @@ public class CodeDataInspector {
             }
             case SchemaInterface ti -> {
                 // 接口：{ImplName: {列}, ...}
-                List<Member> impls = new ArrayList<>();
+                List<Member> impls = new ArrayList<>(ti.implementations.size());
                 for (Map.Entry<String, Schema> e : ti.implementations.entrySet()) {
                     if (e.getValue() instanceof SchemaBean tb) {
-                        List<Member> cols = new ArrayList<>();
+                        List<Member> cols = new ArrayList<>(tb.columns.size());
                         for (SchemaBean.Column col : tb.columns) {
                             cols.add(member(col.name(), new Str(typeStr(col.schema()))));
                         }
@@ -446,7 +437,8 @@ public class CodeDataInspector {
                 members.add(member(name, new Obj(null, impls)));
                 for (Schema s : ti.implementations.values()) {
                     if (s instanceof SchemaBean tb) {
-                        for (SchemaBean.Column col : tb.columns) collectDepSchema(members, col.schema(), done);
+                        for (SchemaBean.Column col : tb.columns)
+                            collectDepSchema(members, col.schema(), done);
                     }
                 }
             }
@@ -462,9 +454,9 @@ public class CodeDataInspector {
             case SchemaRef ref -> ref.type;
             case SchemaList sl -> "list<" + typeStr(sl.ele()) + ">";
             case SchemaMap sm -> "map<" + typeStr(sm.key()) + "," + typeStr(sm.value()) + ">";
-            case SchemaBean b -> "bean";
-            case SchemaInterface i -> "interface";
-            case SchemaEnum e -> "enum";
+            case SchemaBean ignored -> "bean";
+            case SchemaInterface ignored -> "interface";
+            case SchemaEnum ignored -> "enum";
         };
     }
 
