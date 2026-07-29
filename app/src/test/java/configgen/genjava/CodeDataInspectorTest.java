@@ -262,7 +262,7 @@ class CodeDataInspectorTest {
 
     @Test
     void render_expandedArrayOfObjects_chainedCompact() {
-        // 对象数组：[{ 开头、}] 结尾，对象之间 }, 换行后 {。字段足够长使每个对象自身展开（多行项→链式）
+        // 对象数组：[ { 开头、}] 结尾，对象之间 }, 换行后 {。字段足够长使每个对象自身展开（多行项→链式）
         String longA = "a".repeat(80);
         String longB = "b".repeat(80);
         JsonValue v = new Arr(List.of(
@@ -270,7 +270,7 @@ class CodeDataInspectorTest {
                 obj(member("name", new Str(longB)))));
         String out = CodeDataPrinter.render(v);
         assertTrue(out.contains("\n"), "应展开为多行");
-        assertTrue(out.contains("[{"), "应以 [{ 开头");
+        assertTrue(out.contains("[ {"), "应以 [ { 开头");
         assertTrue(out.endsWith("}]"), "应以 }] 结尾");
         assertFalse(out.contains("}, {"), "对象之间不应 }, { 同行");
     }
