@@ -53,7 +53,7 @@ public class VTableJsonParser {
                         DFile.of(jf.relativePath().toString(), tableName));
 
                 valueList.add(vStruct);
-                Value pkValue = ValueUtil.extractPrimaryKeyValue(vStruct, tableSchema);
+                Value pkValue = ValueUtil.extractPrimaryKeyValue(vStruct, subTableSchema);
                 String id = pkValue.packStr();
                 idMap.put(id, modified);
             }

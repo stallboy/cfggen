@@ -27,6 +27,7 @@ public class VTableJsonStorage {
                                          @NotNull String id,
                                          @NotNull Path dataDir,
                                          DirectoryStructure directoryStructure) throws IOException {
+        validateId(id);
         var existingDirRelativePath = directoryStructure.getJsonTableDir(table);
         Path jsonDirRelPath = existingDirRelativePath != null
                 ? existingDirRelativePath
@@ -49,6 +50,7 @@ public class VTableJsonStorage {
                                     @NotNull String id,
                                     @NotNull Path dataDir,
                                     DirectoryStructure directoryStructure) throws IOException {
+        validateId(id);
         var existingDirRelativePath = directoryStructure.getJsonTableDir(table);
         Path jsonDirRelPath = existingDirRelativePath != null
                 ? existingDirRelativePath
@@ -57,6 +59,14 @@ public class VTableJsonStorage {
         Path recordPath = dataDir.resolve(relativePath);
         Files.delete(recordPath);
         return relativePath;
+    }
+
+    /// 校验记录 id 不包含路径分隔符和 ".."，防止写到表目录之外。
+    /// 拒绝时抛 IOException，由外层 Service 转换为错误返回。
+    private static void validateId(String id) throws IOException {
+        if (id.contains("/") || id.contains("\\") || id.contains("..")) {
+            throw new IOException("invalid record id (path separator or '..' not allowed): " + id);
+        }
     }
 
     /// 根据表名和数据目录，解析 JSON 表目录的相对路径。

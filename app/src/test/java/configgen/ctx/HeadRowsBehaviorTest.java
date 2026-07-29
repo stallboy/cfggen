@@ -119,14 +119,14 @@ class HeadRowsBehaviorTest {
         // Given: 各种有效的长整数值
         String decimalValue = "123";
         String hexValue = "0x7B";
-        String octalValue = "0173";
+        String leadingZeroValue = "0173";
         String largeValue = "9223372036854775807";
 
         // When & Then: 验证所有 HeadRow 类型都能正确解析
         for (HeadRow headRow : new HeadRow[]{HeadRows.A2_Default, HeadRows.A3, HeadRows.A4}) {
             assertEquals(123L, headRow.parseLong(decimalValue), "应该正确解析十进制值");
             assertEquals(123L, headRow.parseLong(hexValue), "应该正确解析十六进制值");
-            assertEquals(123L, headRow.parseLong(octalValue), "应该正确解析八进制值");
+            assertEquals(173L, headRow.parseLong(leadingZeroValue), "前导 0 的值应该按十进制解析");
             assertEquals(9223372036854775807L, headRow.parseLong(largeValue), "应该正确解析大数值");
         }
     }

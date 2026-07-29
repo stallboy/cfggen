@@ -83,7 +83,11 @@ public class ValuePack {
             StructSchema obj = new StructSchema("key", AUTO, Metadata.of(), keyFields, List.of());
             FieldType.StructRef ref = new FieldType.StructRef("key");
             ref.setObj(obj);
-            VStruct vStruct = (VStruct) unpack(id, ref, fileName, errs);
+            Value unpacked = unpack(id, ref, fileName, errs);
+            if (unpacked == null) {
+                return null;
+            }
+            VStruct vStruct = (VStruct) unpacked;
             List<SimpleValue> values = new ArrayList<>(vStruct.values().size());
             for (Value value : vStruct.values()) {
                 if (value instanceof SimpleValue simpleValue) {

@@ -4,6 +4,8 @@ import configgen.write.RecordBlock.RecordBlockTransformed;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -86,7 +88,9 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
         }
 
         // 确保有足够的列
-        ensureColumns(actualStartCol + contentColCount);
+        int requiredCols = actualStartCol + contentColCount;
+        ensureColumns(requiredCols);
+        int newRowColCount = Math.max(getColumnCount(), requiredCols);
 
         // 写入记录块内容（按列存储）
         for (int colOffset = 0; colOffset < contentColCount; colOffset++) {
@@ -95,6 +99,10 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
             // 获取 RecordBlock中该列的数据
             String[] colData = content.getRow(colOffset);
             if (colData != null) {
+                // 确保有足够的行（block 的行数可能超过 CSV 现有行数）
+                while (rows.size() < colData.length) {
+                    rows.add(createEmptyRow(newRowColCount));
+                }
                 // 写入该列的所有单元格
                 for (int row = 0; row < colData.length; row++) {
                     String cellValue = colData[row];
@@ -106,6 +114,10 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
             }
         }
         markModified();
+    }
+
+    private List<String> createEmptyRow(int columnCount) {
+        return new ArrayList<>(Collections.nCopies(columnCount, ""));
     }
 
     private void insertColumn(int colIndex) {
@@ -138,6 +150,6 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
     }
 
     private int getColumnCount() {
-        return rows.getFirst().size();
+        return rows.isEmpty() ? 0 : rows.getFirst().size();
     }
 }

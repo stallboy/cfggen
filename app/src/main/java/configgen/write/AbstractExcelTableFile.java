@@ -7,7 +7,10 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 /**
  * 基于Apache POI的Excel表格文件实现
@@ -91,17 +94,21 @@ public abstract class AbstractExcelTableFile implements TableFile {
             }
         }
 
-        // 4. 【关键缺失步骤】用临时文件覆盖源文件
+        // 4. 用临时文件覆盖源文件（优先原子移动，避免移动失败时原文件已丢失）
         if (tempFile.exists()) {
-            // 如果源文件存在，先删除（或者使用原子移动）
-            if (originalFile.exists()) {
-                if (!originalFile.delete()) {
-                    throw new RuntimeException("无法删除原文件，可能被占用: " + originalFile);
+            try {
+                Files.move(tempFile.toPath(), originalFile.toPath(),
+                        StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                // 文件系统不支持原子移动时降级为普通移动
+                try {
+                    Files.move(tempFile.toPath(), originalFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException ex) {
+                    throw new RuntimeException("无法移动临时文件到原文件: " + originalFile, ex);
                 }
-            }
-            // 重命名临时文件 -> 原文件
-            if (!tempFile.renameTo(originalFile)) {
-                throw new RuntimeException("无法重命名临时文件");
+            } catch (IOException e) {
+                throw new RuntimeException("无法移动临时文件到原文件: " + originalFile, e);
             }
         }
     }

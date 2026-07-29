@@ -126,6 +126,9 @@ public class HeadRows {
 
         @Override
         public ParseBoolResult parseBool(String str) {
+            if (str.isEmpty()) {
+                return ParseBoolResult.FALSE;
+            }
             return str.equals("0") || str.equalsIgnoreCase("false") ? ParseBoolResult.FALSE : ParseBoolResult.TRUE;
         }
     };
@@ -139,6 +142,11 @@ public class HeadRows {
         if (str.charAt(0) == '*') { // 为了避免用 Excel 打开大数时自动转换成科学计数法。
             str = str.substring(1);
         }
-        return Long.decode(str);
+        // 十六进制（0x/0X/# 前缀）沿用 decode，其余按十进制解析，
+        // 避免前导 0 被当作八进制（"010" 静默变 8，"08"/"09" 抛异常）
+        if (str.startsWith("0x") || str.startsWith("0X") || str.startsWith("#")) {
+            return Long.decode(str);
+        }
+        return Long.parseLong(str);
     }
 }
