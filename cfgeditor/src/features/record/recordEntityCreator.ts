@@ -98,7 +98,8 @@ export class RecordEntityCreator {
                 }
                 field.value = '<>';
             } else { // primitive
-                let valueStr: string = fieldValue.toString();
+                // 防御脏数据：classifyJsonValue（entityModel.ts）把 null 归为 primitive，null.toString() 会崩
+                let valueStr: string = fieldValue == null ? 'null' : fieldValue.toString();
                 if (typeof fieldValue === 'boolean') {
                     valueStr = fieldValue ? '✔️' : '✘';
                 }

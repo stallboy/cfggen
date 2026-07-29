@@ -68,4 +68,8 @@ export const ext2type: Record<string, ResType> = {
     ['.jpg']: 'image',
     ['.png']: 'image',
     ['.jpeg']: 'image',
+
+    // .srt 标准字幕扩展名（lang 缺失时由 packTracks 兜底 'zh'；.txt 字幕由 readResInfosAsync 的
+    // txtAsSrt 开关单独处理，可带 resDir 配置的 lang）
+    ['.srt']: 'subtitles',
 };

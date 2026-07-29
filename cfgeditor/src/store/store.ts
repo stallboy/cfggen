@@ -328,8 +328,11 @@ export function setServer(value: string) {
 }
 
 export function setNodeShow(nodeShow: NodeShowType) {
+    // 先序列化校验再写 store：quicktype uncast 对非法值（如 InputNumber 清空产生的 null）会 throw，
+    // 若先写 store 则校验失败时 store 已被污染，之后每次修改都会带着非法值再次 throw
+    const json = Convert.nodeShowTypeToJson(nodeShow);
     store.nodeShow = nodeShow;
-    setPref('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
+    setPref('nodeShow', json);
     // 不清 layout 缓存：布局相关字段已由 useEntityToGraph 的 pickLayoutKeys 进 queryKey——改这些字段时
     // queryKey 变 → 缓存自然失效；改纯颜色字段 queryKey 不变 → 命中缓存不重跑 ELK。
 }

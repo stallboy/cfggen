@@ -5,7 +5,7 @@ import {queryClient} from "./services/queryClient.ts";
 
 import '@xyflow/react/dist/style.css';
 import './style.css'
-import {App, ConfigProvider} from "antd";
+import {App, Button, ConfigProvider, Result} from "antd";
 import './app/i18n.js'
 import {createBrowserRouter} from "react-router";
 import {RouterProvider} from "react-router/dom";
@@ -119,6 +119,32 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
     );
 }
 
+// 渲染期异常兜底：任何 render throw（如脏数据解引用）此前会直接白屏整个 app。
+// 注意 error boundary 只兜渲染路径，捕获不到事件处理器 / query 回调里的异常。
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: Error | null }> {
+    state: { error: Error | null } = {error: null};
+
+    static getDerivedStateFromError(error: Error) {
+        return {error};
+    }
+
+    componentDidCatch(error: Error, info: React.ErrorInfo) {
+        console.error('render error:', error, info.componentStack);
+    }
+
+    render() {
+        if (this.state.error) {
+            return <Result
+                status="error"
+                title="Something went wrong"
+                subTitle={String(this.state.error)}
+                extra={<Button onClick={() => window.location.reload()}>Reload</Button>}
+            />;
+        }
+        return this.props.children;
+    }
+}
+
 function MyApp() {
 
     return (
@@ -134,7 +160,9 @@ function MyApp() {
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <ThemeProvider>
-            <MyApp/>
+            <ErrorBoundary>
+                <MyApp/>
+            </ErrorBoundary>
         </ThemeProvider>
     </React.StrictMode>
 );

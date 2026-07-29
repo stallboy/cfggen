@@ -12,7 +12,7 @@ import {Schema} from "@/domain/schema.ts";
 import {useQuery, useMutation} from "@tanstack/react-query";
 import {getPrompt, checkJson} from "@/api/apiClient.ts";
 import {CheckJsonResult} from "@/api/chatModel.ts";
-import {getCurrentEditingSession} from "@/services/editingSession.ts";
+import {EditingSession, getCurrentEditingSession} from "@/services/editingSession.ts";
 import {queryKeys} from "@/services/queryKeys.ts";
 import {accumulateSseContent} from "./chatSse.ts";
 import {QueryGate} from "@/app/QueryGate.tsx";
@@ -27,13 +27,8 @@ const role: BubbleListProps["role"] = {
     user: {placement: "end"},
 };
 
-// AI 未配置时的兜底（baseUrl 默认非空、apiKey 默认 ''，仅校验 baseUrl 会以空 key 发 Bearer 致 401 且无引导）
-const AI_FALLBACK = {
-    baseUrl: 'https://api.x.ant.design/api/big_model_glm-4.5-flash',
-    model: 'glm-4.5-flash',
-    apiKey: 'xxx',
-} as const;
-
+// AI 未配置（baseUrl/apiKey 任一为空）时禁用 Sender 并给出配置引导——不做第三方端点兜底：
+// 静默把用户 prompt（含表结构）发往公共演示服务既是数据外泄，假 key 也必然 401 且无引导
 export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }) {
     const {token} = theme.useToken();
     const styles = {
@@ -90,6 +85,9 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     // 提交请求时捕获当时的 curTableId：AI 流式请求未结束时用户可能切表，
     // 校验请求须仍以旧表发起；回调里再与实时 curTableId（navTo 写入 pref）比对，不一致则放弃写入
     const submitTableIdRef = useRef('');
+    // 同时捕获当时的编辑会话：流式 + checkJson 在途期间用户可能切换/关闭会话或做了手动修改，
+    // 写入前必须确认会话未变且无未保存编辑，否则 AI 结果会静默覆盖用户修改或写错记录
+    const submitSessionRef = useRef<EditingSession | null>(null);
 
     const promptQuery = useQuery({
         queryKey: queryKeys.prompt(curTableId),
@@ -112,23 +110,37 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
                 console.warn(`checkJson: 请求期间已切表 ${submitTableIdRef.current} -> ${nowTableId}，放弃写入`);
                 return;
             }
-            if (result.resultCode == 'ok') {
-                try {
-                    getCurrentEditingSession()?.replaceEditingObject(JSON.parse(result.jsonResult));
-                } catch (e) {
-                    notification.error({title: `parse jsonResult failed: ${e}`, placement: 'topRight', duration: 4});
-                }
-            } else {
-                notification.error({title: result.jsonResult, placement: 'topRight', duration: 4});
+            if (result.resultCode != 'ok') {
+                // jsonResult 仅 ParseJsonError 时有内容（chatModel.ts），其余结果码回退显示 resultCode，避免空 toast
+                notification.error({title: result.jsonResult || `checkJson failed: ${result.resultCode}`, placement: 'topRight', duration: 4});
+                return;
+            }
+            const session = getCurrentEditingSession();
+            if (!session) {
+                notification.warning({title: 'No open editing session, AI result discarded', placement: 'topRight', duration: 4});
+                return;
+            }
+            if (session !== submitSessionRef.current) {
+                notification.warning({title: 'Editing session changed while generating, AI result discarded to avoid writing to the wrong record', placement: 'topRight', duration: 4});
+                return;
+            }
+            if (session.getIsEdited()) {
+                notification.warning({title: 'Record has unsaved manual edits, AI result not applied (would overwrite them)', placement: 'topRight', duration: 4});
+                return;
+            }
+            try {
+                session.replaceEditingObject(JSON.parse(result.jsonResult));
+            } catch (e) {
+                notification.error({title: `parse jsonResult failed: ${e}`, placement: 'topRight', duration: 4});
             }
         },
     });
 
 
     // 同时校验 baseUrl 与 apiKey：默认 baseUrl 非空但 apiKey 默认为 ''，
-    // 仅校验 baseUrl 会以空 key 发 Bearer 导致 401 且无引导
+    // 仅校验 baseUrl 会以空 key 发 Bearer 导致 401 且无引导；未配置时禁用 Sender（见 chatSender）
     const isAiSet = aiConf.baseUrl.length > 0 && aiConf.apiKey.length > 0;
-    const {baseUrl, model, apiKey} = isAiSet ? aiConf : AI_FALLBACK;
+    const {baseUrl, model, apiKey} = aiConf;
     const {onRequest, messages, isRequesting, abort, setMessages} = useXChat({
         defaultMessages: [],
         provider: new OpenAIChatProvider({
@@ -215,6 +227,8 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
         // 不需要手动更新 messages 数组
         // 捕获提交时的表：流式请求期间切表后，checkJson 仍以旧表校验、回调比对放弃写入
         submitTableIdRef.current = curTableId;
+        // 捕获提交时的编辑会话：checkJson 回调里校验会话未变且无未保存编辑才写入
+        submitSessionRef.current = getCurrentEditingSession();
         onRequest({
             messages: [{ role: "user", content: val }],
         });
@@ -257,6 +271,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
         <Flex vertical gap={12} style={styles.chatSend}>
             <Sender
                 loading={isRequesting}
+                disabled={!isAiSet}
                 value={inputValue}
                 onChange={(v) => setInputValue(v)}
                 onSubmit={() => {
@@ -266,7 +281,9 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
                 onCancel={() => {
                     abort();
                 }}
-                placeholder="Ask me to generate configuration data..."
+                placeholder={isAiSet
+                    ? "Ask me to generate configuration data..."
+                    : "Please configure AI baseUrl and apiKey in Settings first"}
             />
         </Flex>
     );

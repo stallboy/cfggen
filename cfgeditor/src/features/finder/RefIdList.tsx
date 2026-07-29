@@ -78,6 +78,8 @@ export const RefIdList = memo(function ({lockedId}: {
             fetchRecordRefIds(server, thisTable, thisId,
                 refIdsInDepth, refIdsOutDepth, refIdsMaxNode,
                 signal),
+        // 未选表/无记录时 thisTable/thisId 为空串，空参数不发请求（与 RecordRef.tsx 的 enabled 先例一致）
+        enabled: thisTable.length > 0 && thisId.length > 0,
     })
 
     return <QueryGate query={recordQuery} emptyTitle={'record result empty'}>

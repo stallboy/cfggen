@@ -320,7 +320,8 @@ export const Record = memo(function () {
     const recordQuery = useQuery({
         queryKey: queryKeys.record(curTableId, curId),
         queryFn: ({signal}) => fetchRecord(server, curTableId, curId, signal),
-        enabled: !isNewRecord,
+        // curId 可能为空串（路由 * 可匹配空 id、pref 恢复的 navTo 缺 id），空 id 不发请求
+        enabled: !isNewRecord && curId.length > 0,
     })
 
     // 如果是新记录，使用默认数据

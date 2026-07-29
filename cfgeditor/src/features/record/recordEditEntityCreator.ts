@@ -207,7 +207,9 @@ export class RecordEditEntityCreator {
 
                 if (canEmbed) {
                     if (getEmbedState(obj, fieldKey) !== false) {
-                        // 内嵌模式，不创建子节点
+                        // 内嵌模式，不创建子节点（与 list 分支一致：内嵌字段也算有子节点，
+                        // 否则 fold 后 reEmbed 回嵌会因 hasChild=false 丢失 unfold 按钮、$fold 卡住）
+                        hasChild = true;
                         continue;
                     }
                     // $embed=false，展开模式，继续创建子节点

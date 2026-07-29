@@ -12,9 +12,13 @@ export const FlowVisualizationSetting = memo(function FlowVisualizationSetting()
     const {nodeShow} = useMyStore();
 
     function onValuesChange(_changedValues: Partial<NodeShowType>, allValues: Partial<NodeShowType>) {
+        // InputNumber 清空时值为 null：展开进 nodeShow 会让 quicktype 运行时校验 throw（与 numPrefSetter
+        // 「value 为 null 时不动作」语义对齐，剔除 null 保留原值）；ColorPicker 清空由 fixColor 兜底默认值
+        const cleanValues = Object.fromEntries(
+            Object.entries(allValues).filter(([, v]) => v != null)) as Partial<NodeShowType>;
         const newNodeShow: NodeShowType = {
             ...nodeShow,
-            ...allValues,
+            ...cleanValues,
             edgeColor: fixColor(allValues.edgeColor),
             editFoldColor: fixColor(allValues.editFoldColor),
             nodeColor: fixColor(allValues.nodeColor),

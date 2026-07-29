@@ -16,9 +16,6 @@ export interface AntdThemeConfig {
     };
 }
 
-// 主题文件读取缓存（模块级，与 clipboard.ts 同写法）：key 为主题文件名
-const cache = new Map<string, AntdThemeConfig>();
-
 /**
  * 检查主题文件是否存在
  */
@@ -38,15 +35,12 @@ export async function themeExists(themeFile: string): Promise<boolean> {
 
 /**
  * 读取主题文件内容
+ * 不做缓存：loadTheme 是冷路径（启动 / 改 themeFile / 点测试按钮各一次），缓存会导致磁盘上改过主题文件后
+ * 无法生效（只能重启），readFile 一次的开销可忽略
  */
 export async function loadTheme(themeFile: string): Promise<AntdThemeConfig | null> {
     if (!themeFile) {
         return null;
-    }
-
-    // 检查缓存
-    if (cache.has(themeFile)) {
-        return cache.get(themeFile) || null;
     }
 
     if (!isTauri()) {
@@ -63,7 +57,6 @@ export async function loadTheme(themeFile: string): Promise<AntdThemeConfig | nu
 
         // 验证主题配置格式
         if (validateThemeConfig(themeConfig)) {
-            cache.set(themeFile, themeConfig);
             return themeConfig;
         } else {
             console.error('主题配置格式无效:', themeFile);
