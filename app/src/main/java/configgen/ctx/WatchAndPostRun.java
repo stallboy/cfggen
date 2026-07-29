@@ -169,21 +169,25 @@ public enum WatchAndPostRun {
                     }
                 }
 
-                Process process = Runtime.getRuntime().exec(new String[]{postRun});
-                BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                while ((line = in.readLine()) != null) {
-                    Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunOutput",
-                        "post run output: {0}", line));
+                Process process = new ProcessBuilder(postRun).redirectErrorStream(true).start();
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunOutput",
+                            "post run output: {0}", line));
+                    }
+                    if (process.waitFor(10, TimeUnit.SECONDS)) {
+                        Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunOk",
+                            "post run ok!"));
+                    } else {
+                        Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunTimeout",
+                            "post run timeout"));
+                        process.destroy();
+                        if (!process.waitFor(5, TimeUnit.SECONDS)) {
+                            process.destroyForcibly();
+                        }
+                    }
                 }
-                if (process.waitFor(10, TimeUnit.SECONDS)) {
-                    Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunOk",
-                        "post run ok!"));
-                } else {
-                    Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunTimeout",
-                        "post run timeout"));
-                }
-                in.close();
             } catch (IOException e) {
                 Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunErr",
                     "post run err: {0}", e.getMessage()));

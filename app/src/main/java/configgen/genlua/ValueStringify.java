@@ -9,8 +9,9 @@ import static configgen.value.CfgValue.*;
 class ValueStringify {
 
     private static final Set<String> keywords = new HashSet<>(Arrays.asList(
-            "break", "goto", "do", "end", "for", "in", "repeat", "util", "while",
-            "if", "then", "elseif", "function", "local", "nil", "true", "false"));
+            "break", "goto", "do", "end", "for", "in", "repeat", "until", "while",
+            "if", "then", "elseif", "function", "local", "nil", "true", "false",
+            "and", "else", "not", "or", "return"));
 
 
     static void getLuaString(StringBuilder res, String value) {
@@ -19,7 +20,8 @@ class ValueStringify {
     }
 
     private static String toLuaStringLiteral(String value) {
-        String val = value.replace("\r\n", "\\n");
+        String val = value.replace("\\", "\\\\");
+        val = val.replace("\r\n", "\\n");
         val = val.replace("\n", "\\n");
         val = val.replace("\"", "\\\"");
         return val;

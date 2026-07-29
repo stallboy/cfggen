@@ -62,7 +62,7 @@ public class NoteEditService {
     }
 
     public synchronized NoteEditResult updateNote(String key, String note) {
-        if (key.isEmpty()) {
+        if (key == null || key.isEmpty()) {
             return new NoteEditResult(ResultCode.keyNotSet, getNotes());
         }
 

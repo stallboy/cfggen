@@ -211,7 +211,7 @@ class TypeStr {
                         if (bf.type() == BOOL) {
                             i++;
                             String c = getCommaDescStr(bf.comment());
-                            sb.append("\n    '").append(lower1(bf.name())).append("', -- ").append(CfgWriter.typeStr(field)).append(c);
+                            sb.append("\n    '").append(lower1(bf.name())).append("', -- ").append(CfgWriter.typeStr(bf)).append(c);
                         }
                     }
                     if (i < cnt) {

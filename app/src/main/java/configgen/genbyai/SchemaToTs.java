@@ -184,7 +184,7 @@ public class SchemaToTs {
                     v = String.valueOf(vInt.value());
                 }
                 case CfgValue.VLong vLong -> {
-                    v = String.valueOf(vLong);
+                    v = String.valueOf(vLong.value());
                 }
 
                 default -> {

@@ -517,12 +517,17 @@ public final class CfgSchemaResolver {
                 err = checkErrTypeAsKey(primitive);
             }
             case StructRef structRef -> {
-                switch (structRef.obj()) {
-                    case InterfaceSchema ignored -> {
-                        err = true;
-                    }
-                    case StructSchema structSchema -> {
-                        err = structSchema.fields().stream().anyMatch(f -> checkErrTypeAsKey(f.type()));
+                if (structRef.obj() == null) {
+                    // TypeStructNotFound 已在 resolve 时记录，这里不再重复
+                    err = true;
+                } else {
+                    switch (structRef.obj()) {
+                        case InterfaceSchema ignored -> {
+                            err = true;
+                        }
+                        case StructSchema structSchema -> {
+                            err = structSchema.fields().stream().anyMatch(f -> checkErrTypeAsKey(f.type()));
+                        }
                     }
                 }
             }

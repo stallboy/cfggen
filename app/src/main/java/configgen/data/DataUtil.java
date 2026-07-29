@@ -142,7 +142,7 @@ public class DataUtil {
         }
         String sub = dirName.substring(1);
         // _后要是英文字母
-        if (isFirstNotAzChar(sub)) {
+        if (sub.isEmpty() || isFirstNotAzChar(sub)) {
             return null;
         }
 
@@ -178,7 +178,7 @@ public class DataUtil {
         }
         String sub = dirName.substring(1);
         // _后要是英文字母
-        if (isFirstNotAzChar(sub)) {
+        if (sub.isEmpty() || isFirstNotAzChar(sub)) {
             return false;
         }
 

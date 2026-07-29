@@ -274,6 +274,13 @@ public class EditorServer extends GeneratorWithTag {
                 chain.doFilter(http);
             } catch (Throwable e) {
                 Logger.log(e.toString());
+                try {
+                    http.sendResponseHeaders(500, -1);
+                } catch (IOException ignored) {
+                    // ignore
+                } finally {
+                    http.close();
+                }
             } finally {
                 Logger.log(String.format("%s %s %s",
                         http.getRequestMethod(),

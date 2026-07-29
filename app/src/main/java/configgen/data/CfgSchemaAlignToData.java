@@ -59,7 +59,9 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                     } else {
                         if (dTable != null) {
                             TableSchema alignedTable = alignTable(table, dTable.fields(), errs);
-                            alignedCfg.add(alignedTable);
+                            if (alignedTable != null) {
+                                alignedCfg.add(alignedTable);
+                            }
                         } else {
                             Logger.log("remove table without data: " + table.name());
                         }
@@ -70,7 +72,9 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
 
         for (CfgData.DTable th : dTableMap.values()) {
             TableSchema newTable = newTableSchema(th, errs);
-            alignedCfg.add(newTable);
+            if (newTable != null) {
+                alignedCfg.add(newTable);
+            }
         }
         return alignedCfg;
     }

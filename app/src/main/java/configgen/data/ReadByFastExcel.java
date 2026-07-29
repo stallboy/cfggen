@@ -61,6 +61,9 @@ public enum ReadByFastExcel implements ExcelReader {
 
 
     private List<CfgData.DRawRow> fixRows(List<Row> rawRows) {
+        if (rawRows.isEmpty()) {
+            return List.of();
+        }
         int rowCount = rawRows.getLast().getRowNum(); // getRowNum is 1 based
         List<CfgData.DRawRow> result = new ArrayList<>(rowCount);
         for (Row r : rawRows) {

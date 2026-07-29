@@ -185,8 +185,8 @@ public class ValueJsonParser {
                     case Number num -> {
                         iv = num.intValue();
                     }
-                    default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.INT));
+                    case null, default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.INT));
                     }
                 }
                 return new VInt(iv, source);
@@ -197,8 +197,8 @@ public class ValueJsonParser {
                     case Number num -> {
                         lv = num.longValue();
                     }
-                    default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.LONG));
+                    case null, default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.LONG));
                     }
                 }
                 return new VLong(lv, source);
@@ -209,8 +209,8 @@ public class ValueJsonParser {
                     case Number num -> {
                         fv = num.floatValue();
                     }
-                    default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.FLOAT));
+                    case null, default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.FLOAT));
                     }
                 }
                 return new VFloat(fv, source);
@@ -224,8 +224,8 @@ public class ValueJsonParser {
                             sv = sv.toLowerCase();
                         }
                     }
-                    default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STR));
+                    case null, default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.STR));
                     }
                 }
                 return new VString(sv, source);
@@ -239,8 +239,8 @@ public class ValueJsonParser {
                             sv = sv.toLowerCase();
                         }
                     }
-                    default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STR));
+                    case null, default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.STR));
                     }
                 }
                 return new VText(sv, source);
@@ -251,8 +251,8 @@ public class ValueJsonParser {
                     case JSONObject jsonObject -> {
                         ov = jsonObject;
                     }
-                    default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STRUCT));
+                    case null, default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.STRUCT));
                     }
                 }
                 if (ov != null) {
@@ -277,8 +277,8 @@ public class ValueJsonParser {
                     case JSONArray array -> {
                         jsonArray = array;
                     }
-                    default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.ARRAY));
+                    case null, default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.ARRAY));
                     }
                 }
 
@@ -300,8 +300,8 @@ public class ValueJsonParser {
                     case JSONArray array -> {
                         jsonArray = array;
                     }
-                    default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.MAP));
+                    case null, default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.MAP));
                     }
                 }
                 int cnt = jsonArray.size();
@@ -316,8 +316,8 @@ public class ValueJsonParser {
                         case JSONObject jsonObject -> {
                             entry = jsonObject;
                         }
-                        default -> {
-                            errs.addErr(new JsonValueNotMatchType(source.child("[e" + i + "]"), itemObj.toString(), EType.MAP_ENTRY));
+                        case null, default -> {
+                            errs.addErr(new JsonValueNotMatchType(source.child("[e" + i + "]"), String.valueOf(itemObj), EType.MAP_ENTRY));
                         }
                     }
                     if (entry != null) {

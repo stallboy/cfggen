@@ -360,7 +360,7 @@ public class CfgWriter {
         String k = entry.getKey();
         return switch (entry.getValue()) {
             case MetaTag.TAG -> k;
-            case MetaFloat metaFloat -> String.format("%s=%f", k, metaFloat.value());
+            case MetaFloat metaFloat -> k + "=" + Float.toString(metaFloat.value());
             case MetaInt metaInt -> String.format("%s=%d", k, metaInt.value());
             case MetaStr metaStr -> String.format("%s='%s'", k, metaStr.value());
             case MetaEnumValues ignored -> "";  // enumValues 不会写出

@@ -344,6 +344,9 @@ public class ValueParser {
             }
             case FieldType.FList ignored -> {
                 VList vList = parseList(subField, cells, field, parseContext);
+                if (vList == null) {
+                    return null;
+                }
                 if (field.isMustFill() && vList.valueList().isEmpty()) {
                     errs.addErr(new CfgValueErrs.MustFillButCellEmpty(vList));
                 }
@@ -352,6 +355,9 @@ public class ValueParser {
 
             case FieldType.FMap ignored -> {
                 VMap vMap = parseMap(subField, cells, field, parseContext);
+                if (vMap == null) {
+                    return null;
+                }
                 if (field.isMustFill() && vMap.valueMap().isEmpty()) {
                     errs.addErr(new CfgValueErrs.MustFillButCellEmpty(vMap));
                 }
