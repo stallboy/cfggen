@@ -295,23 +295,23 @@ public class EditorServer extends GeneratorWithTag {
         }
     };
 
-    private static void sendOptionsResponse(HttpExchange exchange) throws IOException {
+    private static void setCorsHeaders(HttpExchange exchange) {
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
         exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS");
         exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "*");
+    }
+
+    private static void sendOptionsResponse(HttpExchange exchange) throws IOException {
+        setCorsHeaders(exchange);
         exchange.sendResponseHeaders(200, -1);
         exchange.getRequestBody().close();
     }
 
     private static void sendResponse(HttpExchange exchange, Object object) throws IOException {
         byte[] jsonBytes = JSON.toJSONBytes(object);
-        exchange.getResponseHeaders().set("Content-Type", "application/json");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "*");
+        setCorsHeaders(exchange);
 
         exchange.sendResponseHeaders(200, jsonBytes.length);
         OutputStream out = exchange.getResponseBody();

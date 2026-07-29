@@ -14,10 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import static configgen.value.CfgValue.VTable;
 
@@ -93,17 +91,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         }
 
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
-            for (Future<Void> f : executor.invokeAll(tasks)) {
-                f.get();
-            }
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException re) throw re;
-            if (cause instanceof Error err) throw err;
-            throw new RuntimeException(cause);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            invokeAllAndWait(executor, tasks);
         }
 
         generateModuleLoaders(cfgSchema, cfgValue);
@@ -191,7 +179,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
 
         // Generate module loader files
         for (ModuleModel mm : modules.values()) {
-            try (var ps = createCode(mm.outputFilaPath())) {
+            try (var ps = createCode(mm.outputFilePath())) {
                 JteEngine.render("cs/GenModuleLoader.jte", mm, ps);
             }
         }

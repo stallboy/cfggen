@@ -9,7 +9,9 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
 
@@ -109,6 +111,17 @@ public class GuiLauncher {
         return panel;
     }
 
+    private JButton createCollapseToggleButton(String localeKey, String defaultText, JPanel content) {
+        JButton toggleButton = new JButton("▶ " + LocaleUtil.getLocaleString(localeKey, defaultText));
+        toggleButton.addActionListener(e -> {
+            boolean visible = !content.isVisible();
+            content.setVisible(visible);
+            String prefix = visible ? "▼ " : "▶ ";
+            toggleButton.setText(prefix + LocaleUtil.getLocaleString(localeKey, defaultText));
+        });
+        return toggleButton;
+    }
+
     private JPanel createAdvancedDirPanel() {
         JPanel content = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -146,13 +159,8 @@ public class GuiLauncher {
         jsonDirsField = createTextField();
         content.add(jsonDirsField, gbc);
 
-        JButton toggleButton = new JButton("▶ " + LocaleUtil.getLocaleString("GuiLauncher.AdvancedDirectories", "Advanced Directories"));
-        toggleButton.addActionListener(e -> {
-            boolean visible = !content.isVisible();
-            content.setVisible(visible);
-            String prefix = visible ? "▼ " : "▶ ";
-            toggleButton.setText(prefix + LocaleUtil.getLocaleString("GuiLauncher.AdvancedDirectories", "Advanced Directories"));
-        });
+        JButton toggleButton = createCollapseToggleButton(
+                "GuiLauncher.AdvancedDirectories", "Advanced Directories", content);
 
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.add(toggleButton, BorderLayout.NORTH);
@@ -230,13 +238,8 @@ public class GuiLauncher {
         group.add(i18nFileRadio);
         group.add(langSwitchRadio);
 
-        JButton toggleButton = new JButton("▶ " + LocaleUtil.getLocaleString("GuiLauncher.I18nConfiguration", "I18n Configuration"));
-        toggleButton.addActionListener(e -> {
-            boolean visible = !content.isVisible();
-            content.setVisible(visible);
-            String prefix = visible ? "▼ " : "▶ ";
-            toggleButton.setText(prefix + LocaleUtil.getLocaleString("GuiLauncher.I18nConfiguration", "I18n Configuration"));
-        });
+        JButton toggleButton = createCollapseToggleButton(
+                "GuiLauncher.I18nConfiguration", "I18n Configuration", content);
 
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.add(toggleButton, BorderLayout.NORTH);
@@ -464,8 +467,8 @@ public class GuiLauncher {
     }
 
     private void redirectOutput() {
-        System.setOut(new PrintStream(new TextAreaOutputStream(outputArea), true));
-        System.setErr(new PrintStream(new TextAreaOutputStream(outputArea), true));
+        System.setOut(new PrintStream(new TextAreaOutputStream(outputArea), true, StandardCharsets.UTF_8));
+        System.setErr(new PrintStream(new TextAreaOutputStream(outputArea), true, StandardCharsets.UTF_8));
         Logger.setPrinter(new GuiPrinter());
     }
 
@@ -512,27 +515,88 @@ public class GuiLauncher {
     }
 
     private static class TextAreaOutputStream extends java.io.OutputStream {
+        private static final int BUFFER_LIMIT = 8192;
+
         private final JTextArea textArea;
+        private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
         public TextAreaOutputStream(JTextArea textArea) {
             this.textArea = textArea;
         }
 
         @Override
-        public void write(int b) {
-            SwingUtilities.invokeLater(() -> {
-                textArea.append(String.valueOf((char) b));
-                textArea.setCaretPosition(textArea.getDocument().getLength());
-            });
+        public synchronized void write(int b) {
+            buffer.write(b);
+            // 缓冲成行/块再批量提交到EDT，避免每个字节都产生一个EDT任务
+            if (b == '\n' || buffer.size() >= BUFFER_LIMIT) {
+                flushBuffer();
+            }
         }
 
         @Override
-        public void write(byte[] b, int off, int len) {
-            String text = new String(b, off, len);
+        public synchronized void write(byte[] b, int off, int len) {
+            buffer.write(b, off, len);
+            if (containsNewline(b, off, len) || buffer.size() >= BUFFER_LIMIT) {
+                flushBuffer();
+            }
+        }
+
+        @Override
+        public synchronized void flush() {
+            flushBuffer();
+        }
+
+        private static boolean containsNewline(byte[] b, int off, int len) {
+            for (int i = off; i < off + len; i++) {
+                if (b[i] == '\n') {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void flushBuffer() {
+            int size = buffer.size();
+            if (size == 0) {
+                return;
+            }
+            byte[] bytes = buffer.toByteArray();
+            // 不切断UTF-8多字节字符：不完整的尾部留到下次flush
+            int completeLen = completeUtf8Length(bytes, size);
+            String text = new String(bytes, 0, completeLen, StandardCharsets.UTF_8);
+            buffer.reset();
+            if (completeLen < size) {
+                buffer.write(bytes, completeLen, size - completeLen);
+            }
             SwingUtilities.invokeLater(() -> {
                 textArea.append(text);
                 textArea.setCaretPosition(textArea.getDocument().getLength());
             });
+        }
+
+        /**
+         * @return bytes[0..end)中完整UTF-8序列的长度（末尾不完整的多字节字符不计入）
+         */
+        private static int completeUtf8Length(byte[] bytes, int end) {
+            int i = end - 1;
+            // 找到最后一个非continuation（非10xxxxxx）的字节
+            while (i > 0 && (bytes[i] & 0xC0) == 0x80) {
+                i--;
+            }
+            int lead = bytes[i] & 0xFF;
+            int expected;
+            if ((lead & 0x80) == 0) {
+                expected = 1;
+            } else if ((lead & 0xE0) == 0xC0) {
+                expected = 2;
+            } else if ((lead & 0xF0) == 0xE0) {
+                expected = 3;
+            } else if ((lead & 0xF8) == 0xF0) {
+                expected = 4;
+            } else {
+                expected = 1; // 非法起始字节按1字节处理，交给解码器替换
+            }
+            return (i + expected <= end) ? end : i;
         }
     }
 

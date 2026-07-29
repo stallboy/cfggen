@@ -27,7 +27,7 @@ public class ModuleModel {
         this.unity = gen.unity;
     }
 
-    public String outputFilaPath() {
+    public String outputFilePath() {
         return "_loaders/%sLoader.cs".formatted(moduleKey.isEmpty() ? "_root" : moduleKey);
     }
 

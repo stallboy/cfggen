@@ -17,10 +17,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import static configgen.value.CfgValue.VTable;
 
@@ -105,17 +103,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
         }
 
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
-            for (Future<Void> f : executor.invokeAll(tasks)) {
-                f.get();
-            }
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException re) throw re;
-            if (cause instanceof Error err) throw err;
-            throw new RuntimeException(cause);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            invokeAllAndWait(executor, tasks);
         }
 
         CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());

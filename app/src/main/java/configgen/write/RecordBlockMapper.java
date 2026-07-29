@@ -187,22 +187,7 @@ public class RecordBlockMapper {
      * 映射fix或block规则的list数据到block里
      */
     private NextColAndUseRow mapList_listOrBlock(VList vList, FieldSchema field, int startRow, int startCol) {
-        FieldFormat fmt = field.fmt();
-        boolean isBlock;
-        int fix;
-        switch (fmt) {
-            case FieldFormat.Fix(int count) -> {
-                fix = count;
-                isBlock = false;
-            }
-            case FieldFormat.Block(int count) -> {
-                fix = count;
-                isBlock = true;
-            }
-            default -> {
-                throw new IllegalArgumentException("SHOULD NOT HAPPEN, FieldFormat is not Fix or Block for VList");
-            }
-        }
+        FixAndBlock fb = parseFixOrBlock(field, "VList");
 
         if (!(field.type() instanceof FieldType.FList(SimpleType item))) {
             throw new IllegalArgumentException("SHOULD NOT HAPPEN, FieldType is not FList for VList");
@@ -210,37 +195,13 @@ public class RecordBlockMapper {
 
 
         List<SimpleValue> values = vList.valueList();
-        if (!isBlock && values.size() > fix) {
-            throw new IllegalArgumentException("VList size exceeds fixed length, size=" + values.size() + ", fix=" + fix);
+        if (!fb.isBlock && values.size() > fb.fix) {
+            throw new IllegalArgumentException("VList size exceeds fixed length, size=" + values.size() + ", fix=" + fb.fix);
         }
 
         int elemSpan = Span.simpleTypeSpan(item);
-        int logicRowCount = (values.size() + fix - 1) / fix;
-        int nextRow = startRow;
-
-        for (int logicRowIdx = 0; logicRowIdx < logicRowCount; logicRowIdx++) {
-            int maxUseRow = 1;
-
-            for (int logicColIdx = 0; logicColIdx < fix; logicColIdx++) {
-                int elemIdx = logicRowIdx * fix + logicColIdx;
-                if (elemIdx >= values.size()) {
-                    break;
-                }
-                SimpleValue elemValue = values.get(elemIdx);
-                int col = startCol + logicColIdx * elemSpan;
-                int useRow = mapSimpleValue(elemValue, nextRow, col);
-
-                if (useRow > maxUseRow) {
-                    maxUseRow = useRow;
-                }
-            }
-
-            nextRow += maxUseRow;
-        }
-
-
-        return new NextColAndUseRow(startCol + fix * elemSpan,
-                Math.max(1, nextRow - startRow));
+        return mapElements_listOrBlock(values.size(), fb.fix, elemSpan, startRow, startCol,
+                (elemIdx, row, col) -> mapSimpleValue(values.get(elemIdx), row, col));
     }
 
     /**
@@ -264,22 +225,7 @@ public class RecordBlockMapper {
     }
 
     private NextColAndUseRow mapMap_listOrBlock(VMap vMap, FieldSchema field, int startRow, int startCol) {
-        FieldFormat fmt = field.fmt();
-        boolean isBlock;
-        int fix;
-        switch (fmt) {
-            case FieldFormat.Fix(int count) -> {
-                fix = count;
-                isBlock = false;
-            }
-            case FieldFormat.Block(int count) -> {
-                fix = count;
-                isBlock = true;
-            }
-            default -> {
-                throw new IllegalArgumentException("SHOULD NOT HAPPEN, FieldFormat is not Fix or Block for VMap");
-            }
-        }
+        FixAndBlock fb = parseFixOrBlock(field, "VMap");
 
         if (!(field.type() instanceof FMap(SimpleType key, SimpleType value))) {
             throw new IllegalArgumentException("SHOULD NOT HAPPEN, FieldType is not FMap for VMap");
@@ -287,15 +233,55 @@ public class RecordBlockMapper {
 
 
         Map<SimpleValue, SimpleValue> map = vMap.valueMap();
-        if (!isBlock && map.size() > fix) {
-            throw new IllegalArgumentException("VMap size exceeds fixed length, size=" + map.size() + ", fix=" + fix);
+        if (!fb.isBlock && map.size() > fb.fix) {
+            throw new IllegalArgumentException("VMap size exceeds fixed length, size=" + map.size() + ", fix=" + fb.fix);
         }
         var entries = new ArrayList<>(map.entrySet());
         int keySpan = Span.simpleTypeSpan(key);
         int valueSpan = Span.simpleTypeSpan(value);
         int elemSpan = keySpan + valueSpan;
 
-        int logicRowCount = (entries.size() + fix - 1) / fix;
+        return mapElements_listOrBlock(entries.size(), fb.fix, elemSpan, startRow, startCol,
+                (elemIdx, row, col) -> {
+                    var entry = entries.get(elemIdx);
+                    int useRow1 = mapSimpleValue(entry.getKey(), row, col);
+                    int useRow2 = mapSimpleValue(entry.getValue(), row, col + keySpan);
+                    return Math.max(useRow1, useRow2);
+                });
+    }
+
+    /**
+     * fix或block规则的fmt解析
+     */
+    private record FixAndBlock(int fix, boolean isBlock) {
+    }
+
+    private static FixAndBlock parseFixOrBlock(FieldSchema field, String valueKind) {
+        return switch (field.fmt()) {
+            case FieldFormat.Fix(int count) -> new FixAndBlock(count, false);
+            case FieldFormat.Block(int count) -> new FixAndBlock(count, true);
+            default -> throw new IllegalArgumentException(
+                    "SHOULD NOT HAPPEN, FieldFormat is not Fix or Block for " + valueKind);
+        };
+    }
+
+    /**
+     * 映射一个逻辑行内的一个元素
+     *
+     * @return useRow，使用的行数
+     */
+    @FunctionalInterface
+    private interface ElementMapper {
+        int map(int elemIdx, int row, int col);
+    }
+
+    /**
+     * fix或block规则的行列循环骨架：按逻辑行x逻辑列遍历元素，逐个映射到block里
+     */
+    private NextColAndUseRow mapElements_listOrBlock(int elemCount, int fix, int elemSpan,
+                                                     int startRow, int startCol,
+                                                     ElementMapper mapper) {
+        int logicRowCount = (elemCount + fix - 1) / fix;
         int nextRow = startRow;
 
         for (int logicRowIdx = 0; logicRowIdx < logicRowCount; logicRowIdx++) {
@@ -303,14 +289,11 @@ public class RecordBlockMapper {
 
             for (int logicColIdx = 0; logicColIdx < fix; logicColIdx++) {
                 int elemIdx = logicRowIdx * fix + logicColIdx;
-                if (elemIdx >= entries.size()) {
+                if (elemIdx >= elemCount) {
                     break;
                 }
-                var entry = entries.get(elemIdx);
                 int col = startCol + logicColIdx * elemSpan;
-                int useRow1 = mapSimpleValue(entry.getKey(), nextRow, col);
-                int useRow2 = mapSimpleValue(entry.getValue(), nextRow, col + keySpan);
-                int useRow = Math.max(useRow1, useRow2);
+                int useRow = mapper.map(elemIdx, nextRow, col);
 
                 if (useRow > maxUseRow) {
                     maxUseRow = useRow;

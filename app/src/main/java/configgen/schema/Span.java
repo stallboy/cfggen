@@ -128,27 +128,9 @@ public class Span {
             Map<String, Fieldable> needChecks = new HashMap<>();
             for (FieldSchema field : fieldFrontiers) {
                 if (field.fmt() != PACK) {
-                    switch (field.type()) {
-                        case StructRef structRef -> {
-                            // 这里只去除pack，不去除sep，因为sep是不能允许递归，所以需要检测
-                            addIfNotPack(needChecks, structRef.obj());
-                        }
-                        case FList fList -> {
-                            if (fList.item() instanceof StructRef structRef) {
-                                addIfNotPack(needChecks, structRef.obj());
-                            }
-                        }
-                        case FMap fMap -> {
-                            if (fMap.key() instanceof StructRef structRef) {
-                                addIfNotPack(needChecks, structRef.obj());
-                            }
-                            if (fMap.value() instanceof StructRef structRef) {
-                                addIfNotPack(needChecks, structRef.obj());
-                            }
-                        }
-                        default -> {
-                        }
-                    }
+                    // 这里只去除pack，不去除sep，因为sep是不能允许递归，所以需要检测
+                    ForeachSchema.foreachFieldStructRef(field,
+                            fieldable -> addIfNotPack(needChecks, fieldable));
                 }
             }
 

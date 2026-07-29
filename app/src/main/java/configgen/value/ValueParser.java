@@ -5,6 +5,7 @@ import configgen.data.Source;
 import configgen.schema.*;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 
 import static configgen.data.CfgData.DCell;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
@@ -373,29 +374,9 @@ public class ValueParser {
         FieldType.FMap subType = (FieldType.FMap) subField.type();
         FieldType.FMap type = (FieldType.FMap) field.type();
 
-        List<DCell> parsed = null;
-        List<CellsWithRowIndex> blocks = null;
-        if (parseContext.pack) {
-            require(cells.size() == 1);
-            DCell cell = cells.getFirst();
-            cell.setModePackOrSep();
-            try {
-                parsed = DCells.parsePack(cell);
-            } catch (Exception e) {
-                errs.addErr(new CfgValueErrs.ParsePackErr(cell, type.toString(), e.getMessage()));
-                return null;
-            }
-
-        } else if (field.fmt() instanceof FieldFormat.Block ignored) {
-            blocks = blockParser.parseBlock(cells, parseContext.curRowIndex);
-
-        } else {
-            require(cells.size() == Span.fieldSpan(field));
-            parsed = cells;
-        }
-
+        List<CellsWithRowIndex> blocks = parseToBlocks(cells, field, parseContext, false);
         if (blocks == null) {
-            blocks = List.of(new CellsWithRowIndex(parsed, parseContext.curRowIndex));
+            return null;
         }
 
         Map<SimpleValue, SimpleValue> valueMap = new LinkedHashMap<>();
@@ -404,36 +385,24 @@ public class ValueParser {
         int vc = parseContext.pack ? 1 : Span.simpleTypeSpan(type.value());
         int itemSpan = kc + vc;
 
-        for (CellsWithRowIndex block : blocks) {
-            List<DCell> curLineParsed = block.cells;
-            for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
-                if (startIdx + itemSpan > curLineParsed.size()) {
-                    errs.addErr(new CfgValueErrs.FieldCellSpanNotEnough(
-                            Source.of(curLineParsed.subList(startIdx, curLineParsed.size())),
-                            parseContext.nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
-                    continue;
-                }
-                List<DCell> keyCells = curLineParsed.subList(startIdx, startIdx + kc);
-                List<DCell> valueCells = curLineParsed.subList(startIdx + kc, startIdx + itemSpan);
+        forEachItem(blocks, itemSpan, field, parseContext, (itemCells, rowIndex) -> {
+            List<DCell> keyCells = itemCells.subList(0, kc);
+            List<DCell> valueCells = itemCells.subList(kc, itemSpan);
 
-                // 可部分为空，全为空则忽略
-                if (isCellNotAllEmpty(keyCells) || isCellNotAllEmpty(valueCells)) {
-                    ParseContext ctx = new ParseContext(parseContext.nameable, parseContext.pack, false, block.rowIndex);
-                    SimpleValue key = parseSimpleType(subType.key(), keyCells, type.key(),
-                            ctx, field);
-                    SimpleValue value = parseSimpleType(subType.value(), valueCells, type.value(),
-                            ctx, field);
+            ParseContext ctx = new ParseContext(parseContext.nameable, parseContext.pack, false, rowIndex);
+            SimpleValue key = parseSimpleType(subType.key(), keyCells, type.key(),
+                    ctx, field);
+            SimpleValue value = parseSimpleType(subType.value(), valueCells, type.value(),
+                    ctx, field);
 
-                    if (key != null && value != null) {
-                        SimpleValue old = valueMap.put(key, value);
-                        if (old != null) {
-                            errs.addErr(new CfgValueErrs.MapKeyDuplicated(
-                                    Source.of(keyCells), parseContext.nameable, field.name()));
-                        }
-                    }
+            if (key != null && value != null) {
+                SimpleValue old = valueMap.put(key, value);
+                if (old != null) {
+                    errs.addErr(new CfgValueErrs.MapKeyDuplicated(
+                            Source.of(keyCells), parseContext.nameable, field.name()));
                 }
             }
-        }
+        });
 
         return new VMap(valueMap, Source.of(cells));
     }
@@ -446,7 +415,30 @@ public class ValueParser {
         FieldType.FList subType = (FieldType.FList) subField.type();
         FieldType.FList type = (FieldType.FList) field.type();
 
+        List<CellsWithRowIndex> blocks = parseToBlocks(cells, field, parseContext, true);
+        if (blocks == null) {
+            return null;
+        }
 
+        List<SimpleValue> valueList = new ArrayList<>();
+        int itemSpan = parseContext.pack ? 1 : Span.simpleTypeSpan(type.item());
+        forEachItem(blocks, itemSpan, field, parseContext, (itemCells, rowIndex) -> {
+            SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
+                    new ParseContext(parseContext.nameable, parseContext.pack, false, rowIndex),
+                    field);
+            if (value != null) {
+                valueList.add(value);
+            }
+        });
+
+        return new VList(valueList, Source.of(cells));
+    }
+
+    // 按 fmt 把 cells 解析成 blocks：pack 解包成单 block、block 按行分块、sep 按分隔符拆分、否则整体作为一个 block。
+    // allowSep 区分 list（支持 sep fmt）和 map（不支持，sep fmt 走默认分支）。
+    // pack 解包失败时记录 ParsePackErr 并返回 null。
+    private List<CellsWithRowIndex> parseToBlocks(List<DCell> cells, FieldSchema field,
+                                                  ParseContext parseContext, boolean allowSep) {
         List<DCell> parsed = null;
         List<CellsWithRowIndex> blocks = null;
         if (parseContext.pack) {
@@ -456,14 +448,14 @@ public class ValueParser {
             try {
                 parsed = DCells.parsePack(cell);
             } catch (Exception e) {
-                errs.addErr(new CfgValueErrs.ParsePackErr(cell, type.toString(), e.getMessage()));
+                errs.addErr(new CfgValueErrs.ParsePackErr(cell, field.type().toString(), e.getMessage()));
                 return null;
             }
 
         } else if (field.fmt() instanceof FieldFormat.Block ignored) {
             blocks = blockParser.parseBlock(cells, parseContext.curRowIndex);
 
-        } else if (field.fmt() instanceof FieldFormat.Sep(char sep)) {
+        } else if (allowSep && field.fmt() instanceof FieldFormat.Sep(char sep)) {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
             cell.setModePackOrSep();
@@ -477,9 +469,13 @@ public class ValueParser {
         if (blocks == null) {
             blocks = List.of(new CellsWithRowIndex(parsed, parseContext.curRowIndex));
         }
+        return blocks;
+    }
 
-        List<SimpleValue> valueList = new ArrayList<>();
-        int itemSpan = parseContext.pack ? 1 : Span.simpleTypeSpan(type.item());
+    // 按 itemSpan 遍历所有 block 的 cells，逐个提取 item：
+    // 不足 itemSpan 时记录 FieldCellSpanNotEnough 并跳过，全为空的 item 忽略，其余交给 itemHandler。
+    private void forEachItem(List<CellsWithRowIndex> blocks, int itemSpan, FieldSchema field,
+                             ParseContext parseContext, BiConsumer<List<DCell>, Integer> itemHandler) {
         for (CellsWithRowIndex block : blocks) {
             List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
@@ -490,20 +486,12 @@ public class ValueParser {
                     continue;
                 }
                 List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
-                // 全为空，可忽略
+                // 可部分为空，全为空则忽略
                 if (isCellNotAllEmpty(itemCells)) {
-                    SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
-                            new ParseContext(parseContext.nameable, parseContext.pack, false, block.rowIndex),
-                            field);
-                    if (value != null) {
-                        valueList.add(value);
-                    }
+                    itemHandler.accept(itemCells, block.rowIndex);
                 }
             }
         }
-
-        return new VList(valueList, Source.of(cells));
-
     }
 
     private static boolean isCellNotAllEmpty(List<DCell> cells) {

@@ -1,6 +1,5 @@
 package configgen.util;
 
-import gg.jte.CodeResolver;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.TemplateOutput;
@@ -64,6 +63,12 @@ public class JteEngine {
         }
     }
 
+    // renderTryFileFirst 的本地文件模板引擎。与动态编译路径一样，jte 按模板文件变更热重载，
+    // 缓存后首次渲染才编译，避免每次调用都新建 engine 现编译。
+    // static final 由类加载保证线程安全，TemplateEngine.render 本身线程安全。
+    private static final TemplateEngine fileFirstEngine = TemplateEngine.create(
+            new DirectoryCodeResolver(Path.of(".")), ContentType.Plain);
+
     public static void render(String name, Object model, TemplateOutput output) {
         engine.render(name, model, output);
     }
@@ -78,9 +83,7 @@ public class JteEngine {
         TemplateOutput prompt = new StringOutput();
         Path root = Path.of(".");
         if (filePath != null && Files.exists(root.resolve(filePath))) {
-            CodeResolver codeResolver = new DirectoryCodeResolver(root);
-            TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Plain);
-            templateEngine.render(filePath, model, prompt);
+            fileFirstEngine.render(filePath, model, prompt);
         } else { //内置的
             JteEngine.render(fileInResources, model, prompt);
         }

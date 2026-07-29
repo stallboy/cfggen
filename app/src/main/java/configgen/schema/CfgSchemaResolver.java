@@ -730,34 +730,11 @@ public final class CfgSchemaResolver {
         while (!needToCheck.isEmpty()) {
             Map<String, Fieldable> needToCheckFieldables = new HashMap<>();
             for (FieldSchema field : needToCheck) {
-                switch (field.type()) {
-                    case StructRef structRef -> {
-                        if (structRef.obj() != null) {
-                            needToCheckFieldables.put(structRef.obj().name(), structRef.obj());
-                        }
+                ForeachSchema.foreachFieldStructRef(field, obj -> {
+                    if (obj != null) {
+                        needToCheckFieldables.put(obj.name(), obj);
                     }
-                    case FList fList -> {
-                        if (fList.item() instanceof StructRef structRef) {
-                            if (structRef.obj() != null) {
-                                needToCheckFieldables.put(structRef.obj().name(), structRef.obj());
-                            }
-                        }
-                    }
-                    case FMap fMap -> {
-                        if (fMap.key() instanceof StructRef structRef) {
-                            if (structRef.obj() != null) {
-                                needToCheckFieldables.put(structRef.obj().name(), structRef.obj());
-                            }
-                        }
-                        if (fMap.value() instanceof StructRef structRef) {
-                            if (structRef.obj() != null) {
-                                needToCheckFieldables.put(structRef.obj().name(), structRef.obj());
-                            }
-                        }
-                    }
-                    default -> {
-                    }
-                }
+                });
             }
 
 

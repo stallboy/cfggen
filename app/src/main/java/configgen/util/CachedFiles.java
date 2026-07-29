@@ -50,8 +50,7 @@ public class CachedFiles {
         }
 
         byte[] buf = Files.readAllBytes(path);
-        int nread = buf.length;
-        if (!arrayEquals(buf, nread, data, data.length)) {
+        if (!Arrays.equals(buf, data)) {
             Logger.log("modify file: " + path);
             Files.write(path, data, StandardOpenOption.CREATE,
                     StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
@@ -60,20 +59,6 @@ public class CachedFiles {
 
     public static void keepFile(Path path) {
         filename_set.add(fileKey(path));
-    }
-
-    private static boolean arrayEquals(byte[] a, int aSize, byte[] a2, int a2Size) {
-        if (a == a2)
-            return true;
-
-        if (aSize != a2Size)
-            return false;
-
-        for (int i = 0; i < aSize; i++)
-            if (a[i] != a2[i])
-                return false;
-
-        return true;
     }
 
     private static void mkdirs(File file) {

@@ -1,8 +1,5 @@
 package configgen.write;
 
-import configgen.write.RecordBlock.RecordBlockTransformed;
-import org.jetbrains.annotations.NotNull;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,92 +19,48 @@ public class CsvTableFile extends AbstractCsvTableFile {
         fixedMaxColumnCount = rows.getFirst().size();
     }
 
-    /**
-     * 清空指定行范围的数据
-     *
-     * @param startRow 起始行号（从0开始）
-     * @param count    要清空的行数
-     * @param fieldIndices 如果为null表示第一行全部清空，如果不为null表示第一行只清空指定indices下的数据
-     */
     @Override
-    public void emptyRows(int startRow, int count, List<Integer> fieldIndices) {
-        if (startRow < 0 || count <= 0 || startRow >= rows.size()) {
-            return;
-        }
-
-        int end = Math.min(startRow + count, rows.size());
-
-        // 清空指定范围内的行
-        for (int i = startRow; i < end; i++) {
-            List<String> row = rows.get(i);
-
-            if (i == startRow && fieldIndices != null) {
-                // 只清空指定 indices下的数据
-                for (int colIndex : fieldIndices) {
-                    if (colIndex >= 0 && colIndex < row.size()) {
-                        row.set(colIndex, "");
-                    }
-                }
-            } else {
-                // 清空行中的所有单元格
-                Collections.fill(row, "");
-            }
-        }
-        markModified();
+    protected int lineCount() {
+        return rows.size();
     }
 
-    /**
-     * 插入记录块到指定位置
-     * @param startRow 起始行号，-1表示放到最后
-     * @param emptyRowCount 可用的空行数
-     * @param content 记录块内容
-     */
     @Override
-    public void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlockTransformed content) {
-        if (content.getRowCount() <= 0) {
-            return;
+    protected void emptyCell(int line, int index) {
+        List<String> row = rows.get(line);
+        if (index >= 0 && index < row.size()) {
+            row.set(index, "");
         }
+    }
 
-        int actualStartRow;
-        if (startRow == -1) {
-            // 放到最后
-            actualStartRow = Math.max(rows.size(), headRow);
-        } else {
-            actualStartRow = startRow;
+    @Override
+    protected void emptyLine(int line) {
+        Collections.fill(rows.get(line), "");
+    }
+
+    @Override
+    protected void insertGapLines(int from, int count) {
+        for (int i = 0; i < count; i++) {
+            rows.add(from + i, createEmptyRow());
         }
+    }
 
-        int contentRowCount = content.getRowCount();
-
-        // 如果内容行数大于可用空行数，需要插入新行
-        if (contentRowCount > emptyRowCount && startRow != -1) {
-            int insertCount = contentRowCount - emptyRowCount;
-            for (int i = 0; i < insertCount; i++) {
-                rows.add(actualStartRow + emptyRowCount + i, createEmptyRow());
-            }
-        }
-
+    @Override
+    protected void ensureCapacity(int required) {
         // 确保有足够的行
-        while (rows.size() < actualStartRow + contentRowCount) {
+        while (rows.size() < required) {
             rows.add(createEmptyRow());
         }
+    }
 
-        // 写入记录块内容
-        for (int rowOffset = 0; rowOffset < contentRowCount; rowOffset++) {
-            int rowNum = actualStartRow + rowOffset;
-            List<String> row = rows.get(rowNum);
-
-            // 写入该行的数据
-            String[] rowData = content.getRow(rowOffset);
-            if (rowData != null) {
-                for (int col = 0; col < rowData.length; col++) {
-                    String cellValue = rowData[col];
-                    if (cellValue != null) {
-                        row.set(col, cellValue);
-                    }
-                }
+    @Override
+    protected void writeLine(int lineNum, String[] lineData, int capacity) {
+        List<String> row = rows.get(lineNum);
+        for (int col = 0; col < lineData.length; col++) {
+            String cellValue = lineData[col];
+            if (cellValue != null) {
+                row.set(col, cellValue);
             }
         }
-        markModified();
     }
 
     private List<String> createEmptyRow() {

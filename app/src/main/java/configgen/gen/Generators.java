@@ -1,34 +1,22 @@
 package configgen.gen;
 
-import configgen.util.Logger;
-
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Generators {
-    public interface GeneratorProvider {
-        Generator create(Parameter parameter);
+    public interface GeneratorProvider extends ProviderRegistry.Provider<Generator> {
     }
 
-    private static final Map<String, GeneratorProvider> providers = new LinkedHashMap<>();
+    private static final ProviderRegistry<GeneratorProvider, Generator> registry = new ProviderRegistry<>();
 
     public static Generator create(String arg) {
-        ParameterParser parameter = new ParameterParser(arg);
-        GeneratorProvider provider = providers.get(parameter.id());
-        if (provider == null) {
-            Logger.log(parameter.id() + " not support");
-            return null;
-        }
-        Generator generator = provider.create(parameter);
-        parameter.assureNoExtra();
-        return generator;
+        return registry.create(arg);
     }
 
     public static void addProvider(String name, GeneratorProvider provider) {
-        providers.put(name, provider);
+        registry.addProvider(name, provider);
     }
 
     public static Map<String, GeneratorProvider> getAllProviders() {
-        return providers;
+        return registry.getAllProviders();
     }
 }

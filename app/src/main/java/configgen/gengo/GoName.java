@@ -14,7 +14,6 @@ import configgen.util.StringUtil;
 public class GoName {
     public static String modName;
 
-    public final String fileName;
     public final String filePath;
     public final String className;
     public final String pkgName;
@@ -29,7 +28,6 @@ public class GoName {
         }
         pkgName = nameable.name();
         String[] seps = name.split("\\.");
-        fileName = seps[seps.length - 1].toLowerCase() + ".go";
 
         String _filePath = "";
         String _className = "";

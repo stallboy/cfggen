@@ -1,34 +1,22 @@
 package configgen.gen;
 
-import configgen.util.Logger;
-
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Tools {
-    public interface ToolProvider {
-        Tool create(Parameter parameter);
+    public interface ToolProvider extends ProviderRegistry.Provider<Tool> {
     }
 
-    private static final Map<String, ToolProvider> providers = new LinkedHashMap<>();
+    private static final ProviderRegistry<ToolProvider, Tool> registry = new ProviderRegistry<>();
 
     public static Tool create(String arg) {
-        ParameterParser parameter = new ParameterParser(arg);
-        ToolProvider provider = providers.get(parameter.id());
-        if (provider == null) {
-            Logger.log(parameter.id() + " not support");
-            return null;
-        }
-        Tool tool = provider.create(parameter);
-        parameter.assureNoExtra();
-        return tool;
+        return registry.create(arg);
     }
 
     public static void addProvider(String name, ToolProvider provider) {
-        providers.put(name, provider);
+        registry.addProvider(name, provider);
     }
 
     public static Map<String, ToolProvider> getAllProviders() {
-        return providers;
+        return registry.getAllProviders();
     }
 }

@@ -17,10 +17,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import static configgen.value.CfgValue.VTable;
 
@@ -135,22 +133,13 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
             // 两个 invokeAll 屏障：struct 阶段先于 table 阶段完成，保持 mapsInMgr 里 struct 项先于 table 项的顺序
-            for (Future<List<String>> f : executor.invokeAll(structTasks)) {
-                mapsInMgr.addAll(f.get());
+            for (List<String> maps : invokeAllAndWait(executor, structTasks)) {
+                mapsInMgr.addAll(maps);
             }
-            for (Future<TableRefs> f : executor.invokeAll(tableTasks)) {
-                TableRefs r = f.get();
+            for (TableRefs r : invokeAllAndWait(executor, tableTasks)) {
                 mapsInMgr.addAll(r.maps);
                 setAllRefsInMgrLoader.addAll(r.setAllRefs);
             }
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException re) throw re;
-            if (cause instanceof Error err) throw err;
-            throw new RuntimeException(cause);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
         }
 
         if (isLangSwitch) {

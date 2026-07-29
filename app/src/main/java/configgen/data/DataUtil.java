@@ -136,7 +136,9 @@ public class DataUtil {
         return "_" + tableName.replace(".", "_");
     }
 
-    public static String getTableNameIfTableDirForJson(String dirName) {
+    /// 从 "_" 开头的 JSON 目录名提取子表名。
+    /// "_buff" → "buff"；非 "_" 开头、_后不是英文字母、或含中文返回 null。
+    private static String subTableNameIfJsonDir(String dirName) {
         if (!dirName.startsWith("_")) {
             return null;
         }
@@ -151,7 +153,14 @@ public class DataUtil {
         if (hanIdx != -1) {
             return null;
         }
+        return sub;
+    }
 
+    public static String getTableNameIfTableDirForJson(String dirName) {
+        String sub = subTableNameIfJsonDir(dirName);
+        if (sub == null) {
+            return null;
+        }
         return sub.replace("_", ".");
     }
 
@@ -159,32 +168,11 @@ public class DataUtil {
     /// 如 "_buff" → "buff"，"_instancelogic" → "instancelogic"。
     /// 非 "_" 开头或不符合规则返回 null。
     public static String getSubTableNameIfJsonSubDir(String subDirName) {
-        if (!subDirName.startsWith("_")) {
-            return null;
-        }
-        String sub = subDirName.substring(1);
-        if (sub.isEmpty() || isFirstNotAzChar(sub)) {
-            return null;
-        }
-        if (findFirstHanIndex(sub) != -1) {
-            return null;
-        }
-        return sub;
+        return subTableNameIfJsonDir(subDirName);
     }
 
     public static boolean isTableDirForJson(String dirName) {
-        if (!dirName.startsWith("_")) {
-            return false;
-        }
-        String sub = dirName.substring(1);
-        // _后要是英文字母
-        if (sub.isEmpty() || isFirstNotAzChar(sub)) {
-            return false;
-        }
-
-        // 不能含中文
-        int hanIdx = findFirstHanIndex(sub);
-        return hanIdx == -1;
+        return subTableNameIfJsonDir(dirName) != null;
     }
 
 }

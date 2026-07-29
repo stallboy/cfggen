@@ -2,13 +2,7 @@ package configgen.value;
 
 import configgen.data.CfgData.DCell;
 import configgen.data.CfgData.DTable;
-import configgen.schema.FieldFormat;
-import configgen.schema.FieldSchema;
-import configgen.schema.FieldType;
-import configgen.schema.Fieldable;
-import configgen.schema.InterfaceSchema;
-import configgen.schema.Span;
-import configgen.schema.StructSchema;
+import configgen.schema.BlockAncestorWalker;
 import configgen.schema.Structural;
 import configgen.schema.TableSchema;
 
@@ -18,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
 import static configgen.value.ValueParser.BlockParser;
 import static configgen.value.ValueParser.CellsWithRowIndex;
@@ -28,8 +21,9 @@ import static configgen.value.ValueParser.CellsWithRowIndex;
  * 任一祖先首列非空 => 外层 block 起了新项 => 结束本 block。
  * <p>
  * 从 VTableParser 抽出，使 VTableParser 退化为纯 parseTable 驱动，并允许迁移工具注入其它 BlockParser
- * （如 {@link ComparingBlockParser}）做新旧算法对比。列号空间、递归范围与
- * {@code BlockFirstColOverlapChecker} 保持一致（只对 Block 格式的 list/map 字段展开元素）。
+ * （如 {@link ComparingBlockParser}）做新旧算法对比。列号空间、递归范围由
+ * {@link BlockAncestorWalker} 统一实现（只对 Block 格式的 list/map 字段展开元素），
+ * 与 {@code BlockFirstColOverlapChecker} 的校验范围精确对应。
  */
 public class VTableBlockParser implements BlockParser {
     /** 一个 block 字段的预算信息：祖先首列集合（解析用）+ 字段名（迁移报告用）。 */
@@ -114,8 +108,8 @@ public class VTableBlockParser implements BlockParser {
 
     /**
      * 预计算每个 block 字段首列(cell-list index) -> {祖先 block 首列集合, 字段名}。
-     * 列号空间与 parseBlock 的 firstColIndex 一致：都是 fieldIndices 过滤后的 cell list index，
-     * 用 Span.fieldSpan 累加得到。模仿 Span.calcFieldSpanCheckLoop 的递归风格。
+     * 列号空间与 parseBlock 的 firstColIndex 一致：都是 fieldIndices 过滤后的 cell list index；
+     * 遍历骨架（列号累加、递归范围）由 {@link BlockAncestorWalker} 统一实现，此处只做收集。
      * <p>
      * 键唯一性假设：用首列号做 key 隐含"一个列号唯一标识一个 block"。若内层 block 首列与某外层祖先
      * block 首列重合（最典型：内层 block 排在外层 block 元素 struct 的首字段位置），下方 result.put 会用
@@ -125,97 +119,9 @@ public class VTableBlockParser implements BlockParser {
      */
     private static Map<Integer, BlockFieldInfo> collectBlockAncestors(Structural structural) {
         Map<Integer, BlockFieldInfo> result = new HashMap<>();
-        collectStructuralBlockAncestors(structural, 0, Collections.emptySortedSet(), result);
+        BlockAncestorWalker.walk(structural, (parent, field, startCol, outerAncestors) ->
+                result.put(startCol, new BlockFieldInfo(outerAncestors, field.name())));
         return result;
-    }
-
-    private static void collectStructuralBlockAncestors(Structural structural, int startCol,
-                                                        SortedSet<Integer> outerAncestors,
-                                                        Map<Integer, BlockFieldInfo> result) {
-        // pack/sep 结构只占 1 列，内部不可能有 block（Span 计算时已保证占 1 列）
-        FieldFormat fmt = structural.fmt();
-        if (fmt == FieldFormat.AutoOrPack.PACK || fmt instanceof FieldFormat.Sep) {
-            return;
-        }
-        int col = startCol;
-        for (FieldSchema field : structural.fields()) {
-            collectFieldBlockAncestors(field, col, outerAncestors, result);
-            col += Span.fieldSpan(field);
-        }
-    }
-
-    private static void collectFieldBlockAncestors(FieldSchema field, int startCol,
-                                                   SortedSet<Integer> outerAncestors,
-                                                   Map<Integer, BlockFieldInfo> result) {
-        // pack/sep 字段只占 1 列，内部结构不展开（Span 也不为它们计算内部 span），不可能含 block。
-        // 这也是断开 struct/interface 自引用环的关键：合法 schema 中自引用必须经 pack 截断
-        // （否则 Span 计算会报 StructNestLoop），在 pack 处 return 即终止递归。
-        FieldFormat fmt = field.fmt();
-        if (fmt == FieldFormat.AutoOrPack.PACK || fmt instanceof FieldFormat.Sep) {
-            return;
-        }
-        switch (field.type()) {
-            case FieldType.Primitive ignored -> { }
-            case FieldType.StructRef sr ->
-                    collectFieldableBlockAncestors(sr.obj(), startCol, outerAncestors, result);
-            case FieldType.FList fl -> {
-                if (field.fmt() instanceof FieldFormat.Block(int fix)) {
-                    result.put(startCol, new BlockFieldInfo(outerAncestors, field.name()));
-                    // 元素内 block 的祖先 = 外层祖先 + 本 block 首列；
-                    // fix>1 时横排的每个元素副本互为兄弟（互不为祖先），各自独立传入同一 itemAncestors
-                    SortedSet<Integer> itemAncestors = concatSorted(outerAncestors, startCol);
-                    int itemSpan = Span.simpleTypeSpan(fl.item());
-                    for (int i = 0; i < fix; i++) {
-                        collectSimpleTypeBlockAncestors(fl.item(), startCol + i * itemSpan, itemAncestors, result);
-                    }
-                }
-            }
-            case FieldType.FMap fm -> {
-                if (field.fmt() instanceof FieldFormat.Block(int fix)) {
-                    result.put(startCol, new BlockFieldInfo(outerAncestors, field.name()));
-                    SortedSet<Integer> entryAncestors = concatSorted(outerAncestors, startCol);
-                    int keySpan = Span.simpleTypeSpan(fm.key());
-                    int entrySpan = keySpan + Span.simpleTypeSpan(fm.value());
-                    // key 和 value 同属一个 entry，互为兄弟（互不为祖先）
-                    for (int i = 0; i < fix; i++) {
-                        int entryCol = startCol + i * entrySpan;
-                        collectSimpleTypeBlockAncestors(fm.key(), entryCol, entryAncestors, result);
-                        collectSimpleTypeBlockAncestors(fm.value(), entryCol + keySpan, entryAncestors, result);
-                    }
-                }
-            }
-        }
-    }
-
-    private static void collectFieldableBlockAncestors(Fieldable fieldable, int startCol,
-                                                       SortedSet<Integer> outerAncestors,
-                                                       Map<Integer, BlockFieldInfo> result) {
-        switch (fieldable) {
-            case Structural s ->
-                    collectStructuralBlockAncestors(s, startCol, outerAncestors, result);
-            case InterfaceSchema is -> {
-                // interface 第一列是 impl 名（在 startCol），各 impl 字段从 startCol+1 起（Span 用 max+1）
-                for (StructSchema impl : is.impls()) {
-                    collectStructuralBlockAncestors(impl, startCol + 1, outerAncestors, result);
-                }
-            }
-        }
-    }
-
-    private static void collectSimpleTypeBlockAncestors(FieldType.SimpleType st, int startCol,
-                                                        SortedSet<Integer> outerAncestors,
-                                                        Map<Integer, BlockFieldInfo> result) {
-        switch (st) {
-            case FieldType.Primitive ignored -> { }
-            case FieldType.StructRef sr ->
-                    collectFieldableBlockAncestors(sr.obj(), startCol, outerAncestors, result);
-        }
-    }
-
-    private static SortedSet<Integer> concatSorted(SortedSet<Integer> base, int add) {
-        TreeSet<Integer> r = new TreeSet<>(base);
-        r.add(add);
-        return Collections.unmodifiableSortedSet(r);
     }
 
 

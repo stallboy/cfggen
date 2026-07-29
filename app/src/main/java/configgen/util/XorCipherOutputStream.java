@@ -22,24 +22,28 @@ public class XorCipherOutputStream extends FilterOutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        // Perform XOR operation with the current cipher byte
-        int encryptedByte = b ^ cipherBytes[index % cipherBytes.length];
-        super.write(encryptedByte);
-        index++;
-        if (index == cipherBytes.length) {
-            index = 0;
-        }
+        super.write(xorNext(b));
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        for (int i = off; i < off + len; i++) {
-            int encryptedByte = b[i] ^ cipherBytes[index % cipherBytes.length];
-            super.write(encryptedByte);
-            index++;
-            if (index == cipherBytes.length) {
-                index = 0;
-            }
+        byte[] encrypted = new byte[len];
+        for (int i = 0; i < len; i++) {
+            encrypted[i] = (byte) xorNext(b[off + i]);
         }
+        // 注意不能调 super.write(byte[],off,len)：FilterOutputStream 会逐字节回调 write(int) 导致二次异或
+        out.write(encrypted, 0, len);
+    }
+
+    /**
+     * 用当前密钥字节异或，并推进密钥循环
+     */
+    private int xorNext(int b) {
+        int encryptedByte = b ^ cipherBytes[index % cipherBytes.length];
+        index++;
+        if (index == cipherBytes.length) {
+            index = 0;
+        }
+        return encryptedByte;
     }
 }

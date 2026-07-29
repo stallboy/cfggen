@@ -15,10 +15,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import static configgen.value.CfgValue.VStruct;
 import static configgen.value.CfgValue.VTable;
@@ -162,18 +160,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         }
 
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
-            List<Future<Void>> futures = executor.invokeAll(tasks);
-            for (Future<Void> f : futures) {
-                f.get(); // 传播生成异常
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException re) throw re;
-            if (cause instanceof Error err) throw err;
-            throw new RuntimeException(cause);
+            invokeAllAndWait(executor, tasks);
         }
     }
 

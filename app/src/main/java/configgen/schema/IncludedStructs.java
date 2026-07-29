@@ -70,48 +70,12 @@ public class IncludedStructs {
                     }
                     case Structural structural -> {
                         for (FieldSchema field : structural.fields()) {
-                            switch (field.type()) {
-
-                                case FieldType.StructRef structRef -> {
-                                    Fieldable obj = structRef.obj();
-                                    String fn = obj.fullName();
-                                    if (!checked.containsKey(fn)) {
-                                        newFrontiers.put(fn, obj);
-                                    }
+                            ForeachSchema.foreachFieldStructRef(field, obj -> {
+                                String fn = obj.fullName();
+                                if (!checked.containsKey(fn)) {
+                                    newFrontiers.put(fn, obj);
                                 }
-                                case FieldType.FList fList -> {
-                                    FieldType.SimpleType item = fList.item();
-                                    if (item instanceof FieldType.StructRef structRef) {
-                                        Fieldable obj = structRef.obj();
-                                        String fn = obj.fullName();
-                                        if (!checked.containsKey(fn)) {
-                                            newFrontiers.put(fn, obj);
-                                        }
-                                    }
-                                }
-
-                                case FieldType.FMap fMap -> {
-                                    FieldType.SimpleType key = fMap.key();
-                                    if (key instanceof FieldType.StructRef structRef) {
-                                        Fieldable obj = structRef.obj();
-                                        String fn = obj.fullName();
-                                        if (!checked.containsKey(fn)) {
-                                            newFrontiers.put(fn, obj);
-                                        }
-                                    }
-                                    FieldType.SimpleType value = fMap.value();
-                                    if (value instanceof FieldType.StructRef structRef) {
-                                        Fieldable obj = structRef.obj();
-                                        String fn = obj.fullName();
-                                        if (!checked.containsKey(fn)) {
-                                            newFrontiers.put(fn, obj);
-                                        }
-                                    }
-                                }
-
-                                default -> {
-                                }
-                            }
+                            });
                         }
                     }
                 }
