@@ -132,14 +132,13 @@ public class BytesInspector {
     }
 
     private void printSchemaBean(String name, SchemaBean schemaBean) {
-        println(name + " {");
-        indent++;
-
         if (printedSchemas.contains(schemaBean)) {
             return;
         }
 
         printedSchemas.add(schemaBean);
+        println(name + " {");
+        indent++;
 
         for (SchemaBean.Column column : schemaBean.columns) {
             println("%s: %s", column.name(), column.schema());
