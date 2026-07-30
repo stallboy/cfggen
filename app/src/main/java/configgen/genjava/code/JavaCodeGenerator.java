@@ -29,7 +29,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private final boolean sealed;
     private final String buildersFilename;
     private final String configgenDir; // 新增：configgen genjava 源文件复制目录
-    private final boolean snakeEnumName; // enum/entry 常量字段名用 SCREAMING_SNAKE_CASE，默认 false 保持老行为（toUpperCase）
+    private final boolean beautifulName; // 美化由 snake_case schema 名派生的标识符（类名/getter 转 PascalCase、enum 常量转 SCREAMING_SNAKE_CASE），默认 false 保持老行为
     private Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
 
@@ -69,7 +69,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         buildersFilename = parameter.get("builders", null);
         configgenDir = parameter.get("configgenDir", null);
         schemaNumPerFile = Integer.parseInt(parameter.get("schemaNumPerFile", "100"));
-        snakeEnumName = parameter.has("snakeEnumName");
+        beautifulName = parameter.has("beautifulName");
     }
 
 
@@ -81,7 +81,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
         Name.codeTopPkg = pkg;
         NameableName.isSealedInterface = sealed;
-        Name.snakeEnumName = snakeEnumName;
+        Name.beautifulName = beautifulName;
         boolean isLangSwitch = ctx.nullableLangSwitch() != null;
         TypeStr.isLangSwitch = isLangSwitch; //辅助 Text的类型声明和创建
 

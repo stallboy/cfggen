@@ -59,8 +59,8 @@ public class ConfigMgrLoader {
     private static Map<String, ConfigLoader> getAllConfigLoaders() {
         Map<String, ConfigLoader> allConfigLoaders = new LinkedHashMap<>();
         allConfigLoaders.put("ai.ai", new config.ai.Ai._ConfigLoader());
-        allConfigLoaders.put("ai.ai_action", new config.ai.Ai_action._ConfigLoader());
-        allConfigLoaders.put("ai.ai_condition", new config.ai.Ai_condition._ConfigLoader());
+        allConfigLoaders.put("ai.ai_action", new config.ai.AiAction._ConfigLoader());
+        allConfigLoaders.put("ai.ai_condition", new config.ai.AiCondition._ConfigLoader());
         allConfigLoaders.put("equip.equipconfig", new config.equip.Equipconfig._ConfigLoader());
         allConfigLoaders.put("equip.jewelry", new config.equip.Jewelry._ConfigLoader());
         allConfigLoaders.put("equip.jewelryrandom", new config.equip.Jewelryrandom._ConfigLoader());

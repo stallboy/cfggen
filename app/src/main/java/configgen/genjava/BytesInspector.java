@@ -312,7 +312,7 @@ public class BytesInspector {
     }
 
     private void prefix(String fmt) {
-        tmp.append("    ".repeat(Math.max(0, indent)));
+        tmp.repeat("    ", Math.max(0, indent));
         tmp.append(fmt);
         tmp.append('\n');
     }

@@ -7,7 +7,7 @@
 ### [Unreleased]
 
 #### Added
-- Java 生成器新增 `snakeEnumName` 参数：开启后 enum/entry 常量字段名转为 SCREAMING_SNAKE_CASE（`ResetDuration`、`Reset_Duration` 都得到 `RESET_DURATION`），默认关闭保持原 `toUpperCase` 行为。interface impl 的 `type()` 引用同步使用新命名。
+- Java 生成器新增 `beautifulName` 参数：开启后由 snake_case schema 名派生的标识符统一美化——类名/getter/all 函数名转 PascalCase（`factory_animation_type` -> `FactoryAnimationType`），enum/entry 常量转 SCREAMING_SNAKE_CASE（`ResetDuration`、`Reset_Duration` 都得到 `RESET_DURATION`）；生成器自带的后缀 `_Entry`/`_Detail` 原样保留以区隔包装类/详情类（`equip_config` 的 entry 类为 `EquipConfig_Entry`）；默认关闭保持原 `upper1`/`toUpperCase` 行为。
 
 ### [v1.4.0] - 2026-07-20
 

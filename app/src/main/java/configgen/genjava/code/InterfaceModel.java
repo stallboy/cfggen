@@ -1,9 +1,7 @@
 package configgen.genjava.code;
 
-import configgen.gen.Generator;
 import configgen.schema.HasRef;
 import configgen.schema.InterfaceSchema;
-import configgen.util.StringUtil;
 
 import java.util.List;
 
@@ -32,7 +30,7 @@ public class InterfaceModel {
 
         this.impls = sInterface.impls().stream().map(impl ->
                         new Impl(impl.name(),
-                                StringUtil.upper1(impl.name()),
+                                Name.pascalName(impl.name()),
                                 Name.fullName(impl)))
                 .toList();
     }

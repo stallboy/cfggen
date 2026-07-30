@@ -125,7 +125,7 @@ class JavaCodeGeneratorTest {
     }
 
     @Test
-    void generate_enumTable_snakeEnumName() throws IOException {
+    void generate_enumTable_beautifulName() throws IOException {
         // Given: 枚举表，枚举值用 camelCase 命名
         String cfgStr = """
                 table ability[id] (enum='name') {
@@ -145,8 +145,8 @@ class JavaCodeGeneratorTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("ability.csv", tempDir, csvData);
 
-        // When: 开启 snakeEnumName 生成代码
-        File outputDir = generateJavaCode("config_snake", "test.config.snake", ",snakeEnumName");
+        // When: 开启 beautifulName 生成代码
+        File outputDir = generateJavaCode("config_snake", "test.config.snake", ",beautifulName");
 
         // Then: 枚举常量字段名转为 SCREAMING_SNAKE_CASE，字符串实参保持原值
         File expectedFilesDir = new File(outputDir, "test/config/snake");
@@ -159,6 +159,81 @@ class JavaCodeGeneratorTest {
         assertTrue(content.contains("MAX_HP(\"MaxHp\""), "MaxHp 应转为 MAX_HP");
         assertTrue(content.contains("FIREBALL(\"Fireball\""), "Fireball 单词应保持 FIREBALL");
         assertFalse(content.contains("RESETDURATION"), "不应出现老的大写直连 RESETDURATION");
+    }
+
+    @Test
+    void generate_beautifulName_snakeTableName() throws IOException {
+        // Given: snake_case 表名，验证 beautifulName 对类名及 ConfigMgr 派生标识符的美化
+        String cfgStr = """
+                table user_login[id] {
+                    id:int;
+                    name:str;
+                }
+                """;
+
+        String csvData = """
+                用户ID,姓名
+                id,name
+                1,Alice
+                """;
+
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        Resources.addTempFileFromText("user_login.csv", tempDir, csvData);
+
+        // When: 开启 beautifulName 生成代码
+        File outputDir = generateJavaCode("config_beautiful", "test.config.beautiful", ",beautifulName");
+
+        // Then: 类名 user_login -> UserLogin，ConfigMgr 的 getter/all 函数名同步美化
+        File expectedFilesDir = new File(outputDir, "test/config/beautiful");
+        File userLoginFile = new File(expectedFilesDir, "UserLogin.java");
+        assertTrue(userLoginFile.exists(), "snake_case 表名应美化出 UserLogin.java");
+
+        String classContent = Files.readString(userLoginFile.toPath());
+        assertTrue(classContent.contains("class UserLogin"), "类名应为 UserLogin");
+
+        File configMgrFile = new File(expectedFilesDir, "ConfigMgr.java");
+        assertTrue(configMgrFile.exists(), "应该生成ConfigMgr.java文件");
+        String mgrContent = Files.readString(configMgrFile.toPath());
+        assertTrue(mgrContent.contains("getUserLogin"), "主键 getter 应美化为 getUserLogin");
+        assertTrue(mgrContent.contains("allUserLogin"), "all 函数应美化为 allUserLogin");
+        assertFalse(mgrContent.contains("getUser_login"), "不应残留未美化的 getUser_login");
+        assertFalse(mgrContent.contains("allUser_login"), "不应残留未美化的 allUser_login");
+    }
+
+    @Test
+    void generate_beautifulName_keepsDetailPostfix() throws IOException {
+        // Given: snake_case 表名的 enum 表，带额外字段 -> 生成 enum 类 + _Detail 数据类
+        String cfgStr = """
+                table user_login[id] (enum='name') {
+                    id:int;
+                    name:str;
+                    value:int;
+                }
+                """;
+
+        String csvData = """
+                用户ID,名称,值
+                id,name,value
+                1,Foo,10
+                """;
+
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        Resources.addTempFileFromText("user_login.csv", tempDir, csvData);
+
+        // When: 开启 beautifulName 生成代码
+        File outputDir = generateJavaCode("config_detail", "test.config.detail", ",beautifulName");
+
+        // Then: 基础名美化（user_login -> UserLogin），但生成器后缀 _Detail 必须原样保留
+        File expectedFilesDir = new File(outputDir, "test/config/detail");
+        File enumFile = new File(expectedFilesDir, "UserLogin.java");
+        File detailFile = new File(expectedFilesDir, "UserLogin_Detail.java");
+        assertTrue(enumFile.exists(), "enum 类应美化出 UserLogin.java");
+        assertTrue(detailFile.exists(), "_Detail 后缀必须保留，应为 UserLogin_Detail.java");
+        assertFalse(new File(expectedFilesDir, "UserLoginDetail.java").exists(),
+                "不应把 _Detail 吸收成 UserLoginDetail");
+
+        String detailContent = Files.readString(detailFile.toPath());
+        assertTrue(detailContent.contains("class UserLogin_Detail"), "详情类名应为 UserLogin_Detail");
     }
 
     @Test

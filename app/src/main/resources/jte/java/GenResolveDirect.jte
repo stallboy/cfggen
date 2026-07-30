@@ -60,9 +60,9 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                 @elseif(isEnum)
                     for (${refN.fullName} vv : ${refN.fullName}.values()) {
                         @if(refTable.primaryKey().fieldSchemas().size() == 1 && refTable.primaryKey().fieldSchemas().getFirst().isSeq())
-                            ${refN.fullName}_Detail v = mgr.${refN.containerPrefix}All[vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}()];
+                            ${Name.tableDataFullName(refTable)} v = mgr.${refN.containerPrefix}All[vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}()];
                         @else
-                            ${refN.fullName}_Detail v = mgr.${refN.containerPrefix}All.get(vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}());
+                            ${Name.tableDataFullName(refTable)} v = mgr.${refN.containerPrefix}All.get(vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}());
                         @endif
                 @else
                     @if(refTable.primaryKey().fieldSchemas().size() == 1 && refTable.primaryKey().fieldSchemas().getFirst().isSeq())

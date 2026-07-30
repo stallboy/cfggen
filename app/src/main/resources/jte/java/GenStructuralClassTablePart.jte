@@ -2,7 +2,6 @@
 @import configgen.genjava.code.StructuralClassModel
 @import configgen.genjava.code.MethodStr
 @import configgen.schema.*
-@import configgen.util.StringUtil
 @import java.util.Arrays
 @import java.util.stream.Collectors
 @param StructuralClassModel model
@@ -20,7 +19,7 @@
     @endfor
     !{
         String primaryMapName = model.name.containerPrefix  + "All";
-        String functionAllName = "all" + Arrays.stream(model.structural.name().split("\\.")).map(StringUtil::upper1).collect(Collectors.joining());
+        String functionAllName = "all" + Arrays.stream(model.structural.name().split("\\.")).map(Name::pascalName).collect(Collectors.joining());
         if (primarySeq) {
             model.mapsInMgr.add(String.format("public java.util.List<%s> %s() { return java.util.Arrays.asList(%s); }",
                     model.name.fullName, functionAllName, primaryMapName));

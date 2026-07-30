@@ -17,17 +17,17 @@ public class ConfigMgr {
 
     public java.util.Collection<config.ai.Ai> allAiAi() { return ai_ai_All.values(); }
 
-    public java.util.Map<Integer, config.ai.Ai_action> ai_ai_action_All;
+    public java.util.Map<Integer, config.ai.AiAction> ai_ai_action_All;
 
-    public config.ai.Ai_action getAiAi_action(int iD) { return ai_ai_action_All.get(iD); }
+    public config.ai.AiAction getAiAiAction(int iD) { return ai_ai_action_All.get(iD); }
 
-    public java.util.Collection<config.ai.Ai_action> allAiAi_action() { return ai_ai_action_All.values(); }
+    public java.util.Collection<config.ai.AiAction> allAiAiAction() { return ai_ai_action_All.values(); }
 
-    public java.util.Map<Integer, config.ai.Ai_condition> ai_ai_condition_All;
+    public java.util.Map<Integer, config.ai.AiCondition> ai_ai_condition_All;
 
-    public config.ai.Ai_condition getAiAi_condition(int iD) { return ai_ai_condition_All.get(iD); }
+    public config.ai.AiCondition getAiAiCondition(int iD) { return ai_ai_condition_All.get(iD); }
 
-    public java.util.Collection<config.ai.Ai_condition> allAiAi_condition() { return ai_ai_condition_All.values(); }
+    public java.util.Collection<config.ai.AiCondition> allAiAiCondition() { return ai_ai_condition_All.values(); }
 
     public java.util.Map<String, config.equip.Equipconfig> equip_equipconfig_All;
 

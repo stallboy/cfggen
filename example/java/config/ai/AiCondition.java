@@ -1,18 +1,18 @@
 package config.ai;
 
 // 来自：ai_行为/ai行为.xlsx[AI_CONDITION]
-public class Ai_condition {
+public class AiCondition {
     private int iD;
     private String desc;
     private int formulaID;
     private java.util.List<Integer> argIList;
     private java.util.List<Integer> argSList;
 
-    private Ai_condition() {
+    private AiCondition() {
     }
 
-    public static Ai_condition _create(configgen.genjava.ConfigInput input) {
-        Ai_condition self = new Ai_condition();
+    public static AiCondition _create(configgen.genjava.ConfigInput input) {
+        AiCondition self = new AiCondition();
         self.iD = input.readInt();
         self.desc = input.readStringInPool();
         self.formulaID = input.readInt();
@@ -78,14 +78,14 @@ public class Ai_condition {
         return "(" + iD + "," + desc + "," + formulaID + "," + argIList + "," + argSList + ")";
     }
 
-    public static Ai_condition get(int iD) {
+    public static AiCondition get(int iD) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getAiAi_condition(iD);
+        return mgr.getAiAiCondition(iD);
     }
 
-    public static java.util.Collection<Ai_condition> all() {
+    public static java.util.Collection<AiCondition> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.allAiAi_condition();
+        return mgr.allAiAiCondition();
     }
     public static class _ConfigLoader implements config.ConfigLoader {
 
@@ -94,7 +94,7 @@ public class Ai_condition {
             int c = input.readInt();
             mgr.ai_ai_condition_All = new java.util.LinkedHashMap<>(c);
             for (; c > 0; c--) {
-                Ai_condition self = Ai_condition._create(input);
+                AiCondition self = AiCondition._create(input);
                 mgr.ai_ai_condition_All.put(self.iD, self);
             }
         }

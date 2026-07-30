@@ -1,6 +1,5 @@
 package configgen.genjava.code;
 
-import configgen.gen.Generator;
 import configgen.genjava.GenJavaUtil;
 import configgen.schema.*;
 import configgen.util.StringUtil;
@@ -16,23 +15,33 @@ public class Name {
     static String codeTopPkg;
 
     /**
-     * enum/entry 常量字段名风格开关。
-     * false（默认，老行为）：直接 toUpperCase，如 ResetDuration -> RESETDURATION。
-     * true：转 SCREAMING_SNAKE_CASE，如 ResetDuration / Reset_Duration -> RESET_DURATION。
+     * 美化命名开关。开启后，由 snake_case schema 名派生的标识符统一美化：
+     * 类名/getter/all 函数名等转 PascalCase（factory_animation_type -> FactoryAnimationType），
+     * enum/entry 常量转 SCREAMING_SNAKE_CASE。默认 false 保持老行为（upper1 / toUpperCase）。
      * 由 JavaCodeGenerator.generate() 在并发渲染前一次性赋值。
      */
-    static boolean snakeEnumName = false;
+    static boolean beautifulName = false;
 
     /**
      * 生成 enum/entry 常量的 Java 字段名。声明处（GenEntryOrEnumClass）和引用处
      * （GenStructuralClass 里 interface impl 的 type()）必须用同一个方法，保证一致。
      */
     public static String enumFieldName(String enumName) {
-        return snakeEnumName ? StringUtil.toScreamingSnakeCase(enumName) : enumName.toUpperCase();
+        return beautifulName ? StringUtil.toScreamingSnakeCase(enumName) : enumName.toUpperCase();
+    }
+
+    /**
+     * 把单个名字段（schema 名按 '.' 拆出的一段，可能含 postfix）转成 PascalCase 标识符的一部分。
+     * beautifulName 开启时合并下划线并首字母大写（foo_bar -> FooBar），否则仅 upper1 保持老行为。
+     * className / sealed permits / getter / all 函数名等均走此方法，保证 snake_case 表名派生出的
+     * 各类标识符风格一致。
+     */
+    public static String pascalName(String part) {
+        return beautifulName ? StringUtil.underscoreToPascalCase(part) : StringUtil.upper1(part);
     }
 
     public static String GetByKeyFunctionNameInConfigMgr(KeySchema keySchema, boolean isPrimaryKey, Nameable nameable) {
-        String name = "get" + Arrays.stream(nameable.name().split("\\.")).map(StringUtil::upper1).collect(Collectors.joining());
+        String name = "get" + Arrays.stream(nameable.name().split("\\.")).map(Name::pascalName).collect(Collectors.joining());
 
         if (isPrimaryKey){
             return name;
@@ -79,11 +88,12 @@ public class Name {
     }
 
     public static String tableDataFullName(TableSchema table) {
-        String fn = fullName(table);
-        if (table.entry() instanceof EntryType.EEnum && !GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(table)) {
-            fn = fn + "_Detail";
-        }
-        return fn;
+        // 与 JavaCodeGenerator.generateTableClass 里 dataName 的构造保持一致：postfix 走 NameableName，
+        // 这样 beautifulName 时 "_Detail" 会被一并 pascal 化（ai_action_Detail -> AiActionDetail），
+        // 而不是在这里拼出与实际类名不一致的 "AiAction_Detail"。
+        String postfix = (table.entry() instanceof EntryType.EEnum
+                && !GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(table)) ? "_Detail" : "";
+        return new NameableName(table, postfix).fullName;
     }
 
 

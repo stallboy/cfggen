@@ -83,7 +83,7 @@ public class LoadConfig {
         System.out.println(printer.get("other.keytest", "1,2"));
         System.out.println(printer.query("1234", ""));
         System.out.println(printer.schema("monster"));
-        // printer.loop();
+        printer.loop();
 
 //        ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
 //        autoReload(watcher, fn, null);

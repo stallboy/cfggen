@@ -1,18 +1,18 @@
 package config.ai;
 
 // 来自：ai_行为/ai行为.xlsx[AI_ACTION_中文测试], ai_行为/ai行为.xlsx[AI_ACTION_1_继续测试]
-public class Ai_action {
+public class AiAction {
     private int iD;
     private String desc;
     private int formulaID;
     private java.util.List<Integer> argIList;
     private java.util.List<Integer> argSList;
 
-    private Ai_action() {
+    private AiAction() {
     }
 
-    public static Ai_action _create(configgen.genjava.ConfigInput input) {
-        Ai_action self = new Ai_action();
+    public static AiAction _create(configgen.genjava.ConfigInput input) {
+        AiAction self = new AiAction();
         self.iD = input.readInt();
         self.desc = input.readStringInPool();
         self.formulaID = input.readInt();
@@ -78,14 +78,14 @@ public class Ai_action {
         return "(" + iD + "," + desc + "," + formulaID + "," + argIList + "," + argSList + ")";
     }
 
-    public static Ai_action get(int iD) {
+    public static AiAction get(int iD) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getAiAi_action(iD);
+        return mgr.getAiAiAction(iD);
     }
 
-    public static java.util.Collection<Ai_action> all() {
+    public static java.util.Collection<AiAction> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.allAiAi_action();
+        return mgr.allAiAiAction();
     }
     public static class _ConfigLoader implements config.ConfigLoader {
 
@@ -94,7 +94,7 @@ public class Ai_action {
             int c = input.readInt();
             mgr.ai_ai_action_All = new java.util.LinkedHashMap<>(c);
             for (; c > 0; c--) {
-                Ai_action self = Ai_action._create(input);
+                AiAction self = AiAction._create(input);
                 mgr.ai_ai_action_All.put(self.iD, self);
             }
         }
