@@ -3,12 +3,7 @@ import config.ConfigCodeSchema;
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
 import config.task.Task;
-import configgen.genjava.BytesInspector;
-import configgen.genjava.CodeDataInspector;
-import configgen.genjava.CodeDataPrinter;
-import configgen.genjava.ConfigInput;
-import configgen.genjava.Schema;
-import configgen.genjava.SchemaCompatibleException;
+import configgen.genjava.*;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -74,21 +69,36 @@ public class LoadConfig {
         String fn = "config.bytes";
         load(fn);
         System.out.println(Task.get(1));
-        new BytesInspector(fn).match("eq");
 
-        // CodeDataInspector：检查已加载的 ConfigMgr 数据（运行时对象，区别于读 bytes 文件的 BytesInspector）
-        CodeDataInspector inspector = new CodeDataInspector(ConfigMgr.getMgr(), ConfigCodeSchema.getCodeSchema());
-        CodeDataPrinter printer = new CodeDataPrinter(inspector);
-        System.out.println(printer.get("other.monster", "1"));
-        System.out.println(printer.get("other.keytest", "1,2"));
-        System.out.println(printer.query("1234", ""));
-        System.out.println(printer.schema("monster"));
-        printer.loop();
+        boolean isRepl = false;
+        if (args.length > 0) {
+            isRepl = args[0].equals("repl");
+        }
 
-//        ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
-//        autoReload(watcher, fn, null);
-//        System.out.println("read ok");
-//        new BytesInspector(fn).loop();
-//        watcher.close();
+        if (isRepl) {
+            // CodeDataInspector：检查已加载的 ConfigMgr 数据（运行时对象，区别于读 bytes 文件的 BytesInspector）
+            var repl = new Repl("> ");
+            CodeDataInspector inspector = new CodeDataInspector(ConfigMgr.getMgr(), ConfigCodeSchema.getCodeSchema());
+            CodeDataPrinter printer = new CodeDataPrinter(inspector);
+            printer.registerCommands(repl);
+            new BytesInspector(fn).registerCommands(repl);
+            repl.run();
+
+        } else {
+            new BytesInspector(fn).match("eq");
+            CodeDataInspector inspector = new CodeDataInspector(ConfigMgr.getMgr(), ConfigCodeSchema.getCodeSchema());
+            CodeDataPrinter printer = new CodeDataPrinter(inspector);
+            System.out.println(printer.get("other.monster", "1"));
+            System.out.println(printer.get("other.keytest", "1,2"));
+            System.out.println(printer.query("1234", ""));
+            System.out.println(printer.schema("monster"));
+            // ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
+            // autoReload(watcher, fn, null);
+            // System.out.println("read ok");
+            // new BytesInspector(fn).loop();
+            // watcher.close();
+        }
+
+
     }
 }

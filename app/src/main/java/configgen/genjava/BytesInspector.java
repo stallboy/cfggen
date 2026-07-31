@@ -12,20 +12,30 @@ public class BytesInspector {
         this.bytesFilename = bytesFilename;
     }
 
-
+    /**
+     * 交互式查看：{@code bytes <表名子串>}（startsWith 匹配），打印该表的 schema 与数据；q 退出。
+     */
     public void loop() throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        while (true) {
-            System.out.print("input>");
-            String input = br.readLine();
-            if (input.equals("q")) {
-                break;
-            }
-            match(input);
-        }
+        Repl repl = new Repl("input>");
+        registerCommands(repl);
+        repl.run();
     }
 
-    public void match(String match) {
+    /**
+     * 把本查看器的 {@code bytes <表名子串>} 命令注册进给定 {@link Repl}。
+     * 命令定义集中在此；{@link #loop()} 复用它，外部也可把多组命令注册到同一个 REPL。
+     */
+    public void registerCommands(Repl repl) {
+        repl.command("bytes", "bytes <表名子串>（查看匹配该前缀的表 schema 与数据）",
+                args -> match(args.length > 0 ? args[0] : ""));
+    }
+
+    /**
+     * 按表名前缀查看 bytes 文件里匹配的表（schema + 数据），返回渲染好的字符串。
+     * 由 {@link Repl} 在交互式 loop 里调用，也被 {@code BytesViewTool} 一次性调用后打印。
+     */
+    public String match(String tableMatch) {
+        out.setLength(0);
         try (ConfigInput input = new ConfigInput(Path.of(bytesFilename))) {
             // 1. 读取 Schema 长度标记
             int schemaLength = input.readInt();
@@ -34,7 +44,7 @@ public class BytesInspector {
                 rootSchema = (SchemaInterface) SchemaDeserializer.deserialize(new ConfigInput(schemaBytes));
             } else {
                 println("no schema in data file");
-                return;
+                return out.toString();
             }
 
             // 2. 读取 StringPool
@@ -48,7 +58,7 @@ public class BytesInspector {
             for (int i = 0; i < tableCount; i++) {
                 String tableName = input.readString();
                 int tableSize = input.readInt();
-                if (match == null || tableName.startsWith(match)) {
+                if (tableMatch == null || tableName.startsWith(tableMatch)) {
                     boolean read = printTableInfo(tableName, tableSize, input);
                     if (read) {
                         println("");
@@ -63,6 +73,7 @@ public class BytesInspector {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return out.toString();
     }
 
 
@@ -299,15 +310,15 @@ public class BytesInspector {
 
     private int indent = 0;
     private final StringBuilder tmp = new StringBuilder();
+    private final StringBuilder out = new StringBuilder();
 
     private void println(String fmt, Object... args) {
         tmp.setLength(0);
+        prefix(fmt);
         if (args.length > 0) {
-            prefix(fmt);
-            System.out.printf(tmp.toString(), args);
+            out.append(String.format(tmp.toString(), args));
         } else {
-            prefix(fmt);
-            System.out.print(tmp);
+            out.append(tmp);
         }
     }
 

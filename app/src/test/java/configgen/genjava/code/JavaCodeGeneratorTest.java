@@ -364,11 +364,12 @@ class JavaCodeGeneratorTest {
         String configgenDir = tempDir.resolve("cgsrc").toString();
         generateJavaCode("config_cg", "test.config.cg", ",configgenDir:" + configgenDir);
 
-        // Then: CodeDataInspector/CodeDataPrinter/JsonValue 应被拷到 configgenDir
+        // Then: CodeDataInspector/CodeDataPrinter/JsonValue/Repl 应被拷到 configgenDir
         File supportDir = new File(configgenDir, "configgen/genjava");
         assertTrue(new File(supportDir, "CodeDataInspector.java").exists(), "应拷出 CodeDataInspector.java");
         assertTrue(new File(supportDir, "CodeDataPrinter.java").exists(), "应拷出 CodeDataPrinter.java");
         assertTrue(new File(supportDir, "JsonValue.java").exists(), "应拷出 JsonValue.java");
+        assertTrue(new File(supportDir, "Repl.java").exists(), "应拷出 Repl.java");
     }
 
     /**

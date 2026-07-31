@@ -26,7 +26,7 @@ public class BytesViewTool extends Tool {
                 throw new RuntimeException(e);
             }
         } else {
-            jd.match(match);
+            System.out.print(jd.match(match));
         }
     }
 }

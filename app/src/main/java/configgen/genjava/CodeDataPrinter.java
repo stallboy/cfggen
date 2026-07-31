@@ -1,8 +1,6 @@
 package configgen.genjava;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -198,41 +196,19 @@ public class CodeDataPrinter {
     // ==================== 交互式 REPL ====================
 
     public void loop() throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("CodeDataInspector REPL。命令：schema [表名子串] | get <表> <键> | query <记录子串> [表名子串] | q");
-        while (true) {
-            System.out.print("> ");
-            String line = br.readLine();
-            if (line == null) break;
-            line = line.trim();
-            if (line.isEmpty()) continue;
-            if (line.equals("q") || line.equals("quit")) break;
-            try {
-                System.out.println(runCommand(line));
-            } catch (Exception ex) {
-                System.out.println("错误: " + ex.getMessage());
-            }
-        }
+        Repl repl = new Repl("> ");
+        registerCommands(repl);
+        repl.run();
     }
 
-    private String runCommand(String line) {
-        String[] parts = line.split("\\s+");
-        String cmd = parts[0];
-        switch (cmd) {
-            case "schema" -> {
-                return schema(parts.length > 1 ? parts[1] : "");
-            }
-            case "get" -> {
-                if (parts.length < 3) return "用法：get <表> <键>";
-                return get(parts[1], parts[2]);
-            }
-            case "query" -> {
-                if (parts.length < 2) return "用法：query <记录子串> [表名子串]";
-                return query(parts[1], parts.length > 2 ? parts[2] : "");
-            }
-            default -> {
-                return "未知命令: " + cmd + "（schema/get/query/q）";
-            }
-        }
+    /**
+     * 把本查看器的 schema/get/query 命令注册进给定 {@link Repl}。
+     * 命令定义集中在此；{@link #loop()} 复用它，外部也可把多组命令注册到同一个 REPL。
+     */
+    public void registerCommands(Repl repl) {
+        repl.command("schema", "schema [表名子串]", args -> schema(args.length > 0 ? args[0] : ""))
+                .command("get", "get <表> <键>", args -> args.length < 2 ? "用法：get <表> <键>" : get(args[0], args[1]))
+                .command("query", "query <记录子串> [表名子串]", args -> args.length < 1 ? "用法：query <记录子串> [表名子串]"
+                        : query(args[0], args.length > 1 ? args[1] : ""));
     }
 }

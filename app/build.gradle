@@ -155,7 +155,8 @@ tasks.register('copyGenJavaSources', Copy) {
                 'BytesInspector.java',
                 'JsonValue.java',
                 'CodeDataInspector.java',
-                'CodeDataPrinter.java'
+                'CodeDataPrinter.java',
+                'Repl.java'
     }
     // 打包后的路径：support/configgen/genjava/
     into layout.buildDirectory.dir("resources/main/support/configgen/genjava")

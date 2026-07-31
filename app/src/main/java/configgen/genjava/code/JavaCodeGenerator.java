@@ -58,6 +58,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             "JsonValue.java",
             "CodeDataInspector.java",
             "CodeDataPrinter.java",
+            "Repl.java",
     };
 
     public JavaCodeGenerator(Parameter parameter) {
