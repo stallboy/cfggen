@@ -31,6 +31,20 @@ class WaitWatcherBehaviorTest {
         Logger.setPrinter(Logger.Printer.outPrinter);
     }
 
+    /**
+     * 轮询等待listener被调用到expected次。触发链路（文件事件→tick→debounce→listener）是异步的，
+     * 固定sleep在负载下不可靠，换成有界轮询。
+     */
+    private static void awaitListenerCalled(AtomicInteger count, int expected) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5000;
+        while (count.get() < expected) {
+            if (System.currentTimeMillis() > deadline) {
+                fail("5秒内listener未被调用到" + expected + "次，当前" + count.get());
+            }
+            Thread.sleep(10);
+        }
+    }
+
 
     @Test
     void shouldTriggerListenerAfterWaitPeriodWhenSingleEventOccurs() throws IOException, InterruptedException {
@@ -43,17 +57,12 @@ class WaitWatcherBehaviorTest {
         waitWatcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(30);
-
             // When: 触发文件事件
             Path testFile = tempDir.resolve("test.csv");
             Files.writeString(testFile, "test content");
 
-            // 等待超过等待时间
-            Thread.sleep(200);
-
             // Then: 监听器应该被调用一次
+            awaitListenerCalled(listenerCallCount, 1);
             assertEquals(1, listenerCallCount.get(), "监听器应该被调用一次");
         } finally {
             watcher.stop();
@@ -72,9 +81,6 @@ class WaitWatcherBehaviorTest {
         waitWatcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(30);
-
             // When: 在等待时间内触发多个文件事件
             Path file1 = tempDir.resolve("file1.csv");
             Files.writeString(file1, "content1");
@@ -85,10 +91,8 @@ class WaitWatcherBehaviorTest {
             Path file3 = tempDir.resolve("file3.csv");
             Files.writeString(file3, "content3");
 
-            // 等待超过等待时间（增加等待时间以适应非递归监控的延迟）
-            Thread.sleep(200);
-
             // Then: 监听器应该只被调用一次（事件聚合）
+            awaitListenerCalled(listenerCallCount, 1);
             assertEquals(1, listenerCallCount.get(), "多个事件应该被聚合为一次调用");
         } finally {
             watcher.stop();
@@ -129,24 +133,49 @@ class WaitWatcherBehaviorTest {
         waitWatcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(30);
-
             // 触发第一次事件并等待监听器调用
             Path file1 = tempDir.resolve("file1.csv");
             Files.writeString(file1, "content1");
-            Thread.sleep(200);
-
-            int firstCallCount = listenerCallCount.get();
-            assertEquals(1, firstCallCount, "第一次调用");
+            awaitListenerCalled(listenerCallCount, 1);
 
             // When: 触发第二次事件
             Path file2 = tempDir.resolve("file2.csv");
             Files.writeString(file2, "content2");
-            Thread.sleep(200);
 
             // Then: 监听器应该被调用两次
+            awaitListenerCalled(listenerCallCount, 2);
             assertEquals(2, listenerCallCount.get(), "监听器应该被调用两次");
+        } finally {
+            watcher.stop();
+            waitWatcher.stop();
+        }
+    }
+
+    @Test
+    void shouldSupportStopFromListenerThread() throws IOException, InterruptedException {
+        // WatchAndPostRun的autoFix循环保护会在reloadData（即listener）里调用stopWatch→waitWatcher.stop()，
+        // 即从轮询线程自身调用stop。必须支持：不抛异常、不自join挂死，且轮询循环在本次tick后退出
+        Watcher watcher = new Watcher(tempDir, null);
+        watcher.start();
+
+        AtomicInteger listenerCallCount = new AtomicInteger(0);
+        WaitWatcher[] holder = new WaitWatcher[1];
+        WaitWatcher waitWatcher = new WaitWatcher(watcher, () -> {
+            listenerCallCount.incrementAndGet();
+            holder[0].stop();
+        }, 30, 20);
+        holder[0] = waitWatcher;
+        waitWatcher.start();
+
+        try {
+            // When: 触发事件，listener内自停
+            Files.writeString(tempDir.resolve("self_stop.csv"), "content");
+            awaitListenerCalled(listenerCallCount, 1);
+
+            // Then: 轮询线程应已退出——之后的新事件不再触发listener
+            Files.writeString(tempDir.resolve("self_stop2.csv"), "content2");
+            Thread.sleep(300);
+            assertEquals(1, listenerCallCount.get(), "自停后轮询线程应退出，不应再触发listener");
         } finally {
             watcher.stop();
             waitWatcher.stop();
@@ -210,9 +239,6 @@ class WaitWatcherBehaviorTest {
         waitWatcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(30);
-
             // When: 在等待时间内触发事件
             Path file1 = tempDir.resolve("file1.csv");
             Files.writeString(file1, "content1");
@@ -224,7 +250,7 @@ class WaitWatcherBehaviorTest {
             assertEquals(0, listenerCallCount.get(), "等待时间不足时监听器不应该被调用");
 
             // 继续等待到超过等待时间
-            Thread.sleep(200);
+            awaitListenerCalled(listenerCallCount, 1);
 
             // 监听器应该被调用
             assertEquals(1, listenerCallCount.get(), "等待时间足够时监听器应该被调用");
@@ -250,9 +276,6 @@ class WaitWatcherBehaviorTest {
         waitWatcher2.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(30);
-
             // When: 触发文件事件
             Path testFile = tempDir.resolve("test.csv");
             Files.writeString(testFile, "test content");

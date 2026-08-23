@@ -29,7 +29,34 @@ class WatcherBehaviorTest {
     static void setDefaultLogger(){
         Logger.setPrinter(Logger.Printer.outPrinter);
     }
-    
+
+    /**
+     * 轮询等待事件被检测到。事件交付是异步的，固定sleep在负载下不可靠（曾是本测试类偶发失败的根源），
+     * 换成有界轮询后既稳定又比"睡够"更快。
+     */
+    private static void awaitEventDetected(Watcher watcher) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5000;
+        while (watcher.getLastEventMillis() == 0 || watcher.getEventVersion() == 0) {
+            if (System.currentTimeMillis() > deadline) {
+                fail("5秒内未检测到文件事件");
+            }
+            Thread.sleep(10);
+        }
+    }
+
+    @Test
+    void shouldDetectFileCreatedImmediatelyAfterStart() throws IOException, InterruptedException {
+        // start()在调用线程内同步完成目录注册，返回后立即创建的文件也必须被捕获（回归：注册竞态）
+        Watcher watcher = new Watcher(tempDir, null);
+        watcher.start();
+        try {
+            Files.writeString(tempDir.resolve("instant.csv"), "no sleep before this write");
+            awaitEventDetected(watcher);
+        } finally {
+            watcher.stop();
+        }
+    }
+
     @Test
     void shouldDetectFileCreationWhenNewFileIsCreatedInWatchedDirectory() throws IOException, InterruptedException {
         // Given: 启动的 Watcher
@@ -37,23 +64,12 @@ class WatcherBehaviorTest {
         watcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(20);
-
             // When: 创建新文件
             Path newFile = tempDir.resolve("test.csv"); // 使用 .csv 确保被监控
             Files.writeString(newFile, "test content");
 
-            // 等待文件系统事件处理
-            Thread.sleep(20);
-
             // Then: 应该检测到事件
-            long lastEventTime = watcher.getLastEventMillis();
-            assertTrue(lastEventTime > 0, "应该检测到文件创建事件");
-
-            long version = watcher.getEventVersion();
-            assertTrue(version > 0, "应该检测到文件创建事件");
-
+            awaitEventDetected(watcher);
         } finally {
             watcher.stop();
         }
@@ -69,21 +85,11 @@ class WatcherBehaviorTest {
         watcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(50);
-
             // When: 修改文件
             Files.writeString(existingFile, "modified content");
 
-            // 等待文件系统事件处理
-            Thread.sleep(50);
-
             // Then: 应该检测到事件
-            long lastEventTime = watcher.getLastEventMillis();
-            assertTrue(lastEventTime > 0, "应该检测到文件修改事件");
-
-            long version = watcher.getEventVersion();
-            assertTrue(version > 0, "应该检测到文件修改事件");
+            awaitEventDetected(watcher);
         } finally {
             watcher.stop();
         }
@@ -99,21 +105,11 @@ class WatcherBehaviorTest {
         watcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(50);
-
             // When: 删除文件
             Files.delete(fileToDelete);
 
-            // 等待文件系统事件处理
-            Thread.sleep(50);
-
             // Then: 应该检测到事件
-            long lastEventTime = watcher.getLastEventMillis();
-            assertTrue(lastEventTime > 0, "应该检测到文件删除事件");
-
-            long version = watcher.getEventVersion();
-            assertTrue(version > 0, "应该检测到文件删除事件");
+            awaitEventDetected(watcher);
         } finally {
             watcher.stop();
         }
@@ -126,13 +122,10 @@ class WatcherBehaviorTest {
         watcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(50);
-
             // 创建文件触发事件
             Path testFile = tempDir.resolve("test.csv");
             Files.writeString(testFile, "content");
-            Thread.sleep(50);
+            awaitEventDetected(watcher);
 
             // When: 获取并重置事件时间
             long firstCall = watcher.getLastEventMillis();
@@ -152,19 +145,13 @@ class WatcherBehaviorTest {
         watcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(50);
-
             // When: 创建隐藏文件
             Path hiddenFile = tempDir.resolve("~hidden.txt");
             Files.writeString(hiddenFile, "hidden content");
 
-            // 等待文件系统事件处理
-            Thread.sleep(50);
-
             // Then: 应该忽略隐藏文件
-            long lastEventTime = watcher.getLastEventMillis();
-            assertEquals(0, lastEventTime, "应该忽略隐藏文件");
+            Thread.sleep(200);
+            assertEquals(0, watcher.getLastEventMillis(), "应该忽略隐藏文件");
         } finally {
             watcher.stop();
         }
@@ -177,22 +164,12 @@ class WatcherBehaviorTest {
         watcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(50);
-
             // When: 创建新目录
             Path newDir = tempDir.resolve("new_directory");
             Files.createDirectories(newDir);
 
-            // 等待文件系统事件处理
-            Thread.sleep(50);
-
             // Then: 应该检测到目录创建事件
-            long lastEventTime = watcher.getLastEventMillis();
-            assertTrue(lastEventTime > 0, "应该检测到目录创建事件");
-
-            long version = watcher.getEventVersion();
-            assertTrue(version > 0, "应该检测到目录创建事件");
+            awaitEventDetected(watcher);
         } finally {
             watcher.stop();
         }
@@ -202,9 +179,7 @@ class WatcherBehaviorTest {
     void shouldFilterFilesBasedOnExplicitDirectoryConfiguration() throws IOException, InterruptedException {
         // Given: 显式目录配置和启动的 Watcher
         Path includedDir = tempDir.resolve("included");
-        Path excludedDir = tempDir.resolve("excluded");
         Files.createDirectories(includedDir);
-        Files.createDirectories(excludedDir);
 
         ExplicitDir explicitDir = new ExplicitDir(
                 java.util.Map.of(),
@@ -216,23 +191,12 @@ class WatcherBehaviorTest {
         watcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(50);
-
             // When: 在包含的目录中创建文件
             Path includedFile = includedDir.resolve("test.csv");
             Files.writeString(includedFile, "included content");
 
-            // 在排除的目录中创建文件
-            Path excludedFile = excludedDir.resolve("test.csv");
-            Files.writeString(excludedFile, "excluded content");
-
-            // 等待文件系统事件处理
-            Thread.sleep(50);
-
             // Then: 应该只检测包含目录中的文件
-            long lastEventTime = watcher.getLastEventMillis();
-            assertTrue(lastEventTime > 0, "应该检测到包含目录中的文件");
+            awaitEventDetected(watcher);
 
             // 注意：由于文件系统事件的异步性，我们无法精确测试排除的文件是否被忽略
             // 但显式目录配置应该影响监控器的行为
@@ -248,28 +212,17 @@ class WatcherBehaviorTest {
         watcher.start();
 
         try {
-            // 等待监控器初始化
-            Thread.sleep(50);
-
             // When: 执行多个文件操作
             Path file1 = tempDir.resolve("file1.csv");
             Files.writeString(file1, "content1");
 
-            Thread.sleep(20);
-
             Path file2 = tempDir.resolve("file2.csv");
             Files.writeString(file2, "content2");
 
-            Thread.sleep(20);
-
             Files.delete(file1);
 
-            // 等待文件系统事件处理
-            Thread.sleep(20);
-
             // Then: 应该检测到事件
-            long lastEventTime = watcher.getLastEventMillis();
-            assertTrue(lastEventTime > 0, "应该检测到多个文件操作事件");
+            awaitEventDetected(watcher);
         } finally {
             watcher.stop();
         }
@@ -281,7 +234,7 @@ class WatcherBehaviorTest {
         Watcher watcher = new Watcher(tempDir, null);
         watcher.start();
         try {
-            Thread.sleep(20);
+            Thread.sleep(100);
             // When: 获取最后事件时间
             long lastEventTime = watcher.getLastEventMillis();
 

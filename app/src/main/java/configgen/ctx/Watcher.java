@@ -4,11 +4,12 @@ import configgen.util.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static configgen.data.DataUtil.*;
@@ -23,8 +24,10 @@ public class Watcher {
     private volatile long lastEvtMillis;
     private final AtomicInteger eventVersion = new AtomicInteger(0);
     private Thread startedThread;
-    private volatile WatchService watchService;
-    private final Map<WatchKey, Path> keys = new HashMap<>();
+    private WatchService watchService;
+    private volatile boolean recursiveSupport;
+    // ENTRY_CREATE新目录时由轮询线程写入；stop后若旧线程迟迟未退出、实例被重启，存在跨线程访问，用并发map防损坏
+    private final Map<WatchKey, Path> keys = new ConcurrentHashMap<>();
 
     public Watcher(Path rootDir, ExplicitDir explicitDir) {
         Objects.requireNonNull(rootDir);
@@ -32,18 +35,36 @@ public class Watcher {
         this.explicitDir = explicitDir;
     }
 
-    public void start() {
+    /**
+     * 创建WatchService和初始目录注册在调用线程内同步完成，start()返回后事件即可被捕获：
+     * 注册在轮询线程里异步做的话，调用方（如测试、server启动）在注册完成前操作的文件会漏检。
+     * 注册失败直接抛出（如rootDir不存在），不再退化为"静默无监听"。
+     */
+    public synchronized void start() {
+        if (startedThread != null) {
+            throw new IllegalStateException("already started");
+        }
+        WatchService ws;
+        try {
+            ws = FileSystems.getDefault().newWatchService();
+            keys.clear();
+            recursiveSupport = registerRoot(ws);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Watcher register failed for " + rootDir, e);
+        }
+        watchService = ws;
         startedThread = Thread.startVirtualThread(() -> {
             try {
-                watchLoop();
+                watchLoop(ws);
             } catch (IOException | InterruptedException | ClosedWatchServiceException e) {
                 Logger.log("Watcher stopped by %s", e.toString());
             }
         });
     }
 
-    // watchService.take()不响应interrupt（JDK已知限制），必须close让take()抛ClosedWatchServiceException才能退出
-    public void stop() {
+    // watchService.take()不响应interrupt（JDK已知限制），必须close让take()抛ClosedWatchServiceException才能退出。
+    // start()同步完成注册后watchService必非null，这里总能close到，不会出现线程永久挂在take()上的泄漏
+    public synchronized void stop() {
         Thread thread = startedThread;
         if (thread == null) {
             return;
@@ -51,6 +72,7 @@ public class Watcher {
         startedThread = null;
 
         WatchService ws = watchService;
+        watchService = null;
         if (ws != null) {
             try {
                 ws.close();
@@ -83,6 +105,24 @@ public class Watcher {
         eventVersion.incrementAndGet();
     }
 
+    private boolean registerRoot(WatchService watcher) throws IOException {
+        // 跨平台兼容的目录注册方式
+        try {
+            // 尝试使用FILE_TREE（仅Windows支持）
+            WatchEvent.Modifier modifier = (WatchEvent.Modifier) Class
+                    .forName("com.sun.nio.file.ExtendedWatchEventModifier")
+                    .getField("FILE_TREE")
+                    .get(null);
+            rootDir.register(watcher, new WatchEvent.Kind<?>[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY},
+                    modifier);
+            return true;
+        } catch (Exception e) {
+            // 回退到手动递归监控
+            registerAll(rootDir, watcher);
+            return false;
+        }
+    }
+
     private void register(Path dir, WatchService watcher) throws IOException {
         WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         keys.put(key, dir);
@@ -100,27 +140,7 @@ public class Watcher {
         });
     }
 
-    private void watchLoop() throws IOException, InterruptedException {
-        WatchService watchService = FileSystems.getDefault().newWatchService();
-        this.watchService = watchService;
-        keys.clear();
-        boolean recursiveSupport = false;
-
-        // 跨平台兼容的目录注册方式
-        try {
-            // 尝试使用FILE_TREE（仅Windows支持）
-            WatchEvent.Modifier modifier = (WatchEvent.Modifier) Class
-                    .forName("com.sun.nio.file.ExtendedWatchEventModifier")
-                    .getField("FILE_TREE")
-                    .get(null);
-            rootDir.register(watchService, new WatchEvent.Kind<?>[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY},
-                    modifier);
-            recursiveSupport = true;
-        } catch (Exception e) {
-            // 回退到手动递归监控
-            registerAll(rootDir, watchService);
-        }
-
+    private void watchLoop(WatchService watchService) throws IOException, InterruptedException {
         WatchKey key;
         while ((key = watchService.take()) != null) {
             Path dir = keys.get(key);
@@ -133,6 +153,9 @@ public class Watcher {
             for (WatchEvent<?> event : key.pollEvents()) {
                 WatchEvent.Kind<?> kind = event.kind();
                 if (kind == OVERFLOW) {
+                    // 事件队列溢出说明有事件丢失（如git checkout一次性改几十个文件），必须触发一次全量reload自愈，
+                    // 静默丢弃会导致溢出期间的变更若再无后续事件就永远丢失
+                    trigger();
                     continue;
                 }
 

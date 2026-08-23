@@ -15,6 +15,7 @@ public class WaitWatcher {
 
     private long lastEvtMillis;
     private int evtVersion;
+    private volatile boolean stopped;
     private Thread startedThread;
 
     public WaitWatcher(Watcher watcher,
@@ -46,10 +47,11 @@ public class WaitWatcher {
         if (startedThread != null) {
             throw new IllegalStateException("already started");
         }
+        stopped = false;
         startedThread = Thread.startVirtualThread(() -> {
             evtVersion = watcher.getEventVersion();
             lastEvtMillis = watcher.getLastEventMillis();
-            while (true) {
+            while (!stopped) {
                 try {
                     //noinspection BusyWait
                     Thread.sleep(sleepMillis); // 减少轮询间隔到100ms
@@ -83,17 +85,26 @@ public class WaitWatcher {
         }
     }
 
+    /**
+     * 支持从listener回调（即轮询线程自身）里调用stop（WatchAndPostRun的autoFix循环保护就是这么用的）：
+     * 此时只置停止标志，不能自interrupt+自join——自join要么立刻抛InterruptedException打断上层清理，
+     * 要么永久挂死。轮询循环会在本次tick（即当前listener）返回后自行退出。
+     */
     public void stop() {
-        if (startedThread == null) {
+        stopped = true;
+        Thread thread = startedThread;
+        if (thread == null) {
             return;
         }
-        startedThread.interrupt();
+        if (thread == Thread.currentThread()) {
+            return;
+        }
+        startedThread = null;
+        thread.interrupt();
         try {
-            startedThread.join();
+            thread.join();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            startedThread = null;
+            Thread.currentThread().interrupt();
         }
     }
 
