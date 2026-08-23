@@ -25,10 +25,11 @@ public class ArgParser {
         Map<String, String> map = new LinkedHashMap<>();
         for (int i = fromIndex; i < sp.length; i++) {
             String s = sp[i];
-            int c = s.indexOf(':');
-            if (c == -1) {
-                c = s.indexOf('=');
-            }
+            // 取最先出现的分隔符（':' 或 '='），而不是固定优先 ':'：
+            // 否则 name=value 形式且值里含 ':' 时（如 Windows 绝对路径 dst=D:\out）会被 ':' 劈开解析错
+            int c1 = s.indexOf(':');
+            int c2 = s.indexOf('=');
+            int c = (c1 == -1) ? c2 : (c2 == -1 || c1 < c2) ? c1 : c2;
 
             if (c == -1) {
                 map.put(s.trim().toLowerCase(), null);
