@@ -1,5 +1,6 @@
 package configgen.gen;
 
+import configgen.gengo.GoCodeGenerator;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,6 +17,19 @@ class GeneratorsTest {
     @AfterAll
     static void setDefaultLogger(){
         Logger.setPrinter(Logger.Printer.outPrinter);
+    }
+
+    @Test
+    void shouldRejectEncodingParam_forGoGenerator() {
+        // Go规范强制源码UTF-8，encoding参数已移除：传入应报unsupported parameter
+        ParameterParser ok = new ParameterParser("go,dir:.");
+        new GoCodeGenerator(ok);
+        assertDoesNotThrow(ok::assureNoExtra, "合法参数应全部被消费");
+
+        ParameterParser bad = new ParameterParser("go,dir:.,encoding:GBK");
+        new GoCodeGenerator(bad);
+        assertThrows(Main.CliException.class, bad::assureNoExtra,
+                "encoding参数已移除，传入必须报错而非静默忽略");
     }
 
     @Test

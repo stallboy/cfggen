@@ -24,7 +24,8 @@ import static configgen.schema.FieldType.Primitive.TEXT;
 public class GoCodeGenerator extends GeneratorWithTag {
     private final String dir;
     private final String pkg;
-    private final String encoding;
+    // Go 规范强制源码 UTF-8，不支持配置其他编码（GBK 中文注释在 go build/gofmt 下是非法字节序列）
+    private static final String ENCODING = "UTF-8";
     public final boolean serverText;
     private Path dstDir;
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
@@ -41,8 +42,6 @@ public class GoCodeGenerator extends GeneratorWithTag {
         super(parameter);
         dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
-        // Go 规范要求源码 UTF-8，GBK 编码的中文注释会生成无法编译的 .go 文件
-        encoding = parameter.get("encoding", "UTF-8");
         serverText = parameter.has("serverText");
         GoName.modName = parameter.get("mod", null);
     }
@@ -59,7 +58,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
             FileUtil.copyFileIfNotExist("/support/go/" + fn,
                     "src/main/resources/support/go/" + fn,
                     dstDir.resolve(fn),
-                    encoding);
+                    ENCODING);
         }
 
         genCfgMgrFile(cfgValue);
@@ -106,7 +105,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
     }
 
     private CachedIndentPrinter createCode(String fn) {
-        return mainCc.get().printer(dstDir.resolve(fn), encoding);
+        return mainCc.get().printer(dstDir.resolve(fn), ENCODING);
     }
 
     private void generateInterface(InterfaceSchema sInterface) {
