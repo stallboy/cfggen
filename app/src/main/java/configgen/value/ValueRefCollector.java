@@ -100,7 +100,7 @@ public class ValueRefCollector {
                 continue;
             }
             // 这里没考虑ListRef
-            if (refKey instanceof RefKey.RefSimple refSimple) {
+            if (refKey instanceof RefKey.RefSimple _) {
                 FieldSchema firstField = fk.key().fieldSchemas().getFirst();
                 FieldType ft = firstField.type();
 

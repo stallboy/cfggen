@@ -1,6 +1,5 @@
 package configgen.genlua;
 
-import configgen.gen.Generator;
 import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
