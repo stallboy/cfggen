@@ -1,8 +1,7 @@
 package configgen.gengo;
 
-import configgen.schema.InterfaceSchema;
+import configgen.naming.GenNaming;
 import configgen.schema.Nameable;
-import configgen.schema.StructSchema;
 import configgen.util.StringUtil;
 
 /// go命名规范
@@ -18,17 +17,8 @@ public class GoName {
     public final String pkgName;
 
     public GoName(Nameable nameable) {
-        // 不用 naming.GenNaming.classNameSegments：这里既有规则是把 interface 名整体小写后作前缀段
-        // （会抹掉 TriggerTick 这类 camel，属历史行为，下游已依赖，改动需专门决策）
-        String name;
-        InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
-        if (nullableInterface != null) {
-            name = nullableInterface.name().toLowerCase() + "." + nameable.name();
-        } else {
-            name = nameable.name();
-        }
         pkgName = nameable.name();
-        String[] seps = name.split("\\.");
+        String[] seps = GenNaming.classNameSegments(nameable).toArray(new String[0]);
 
         String _filePath = "";
         String _className = "";

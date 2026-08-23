@@ -329,12 +329,12 @@ func testDefaultBean() {
 
 func testSwitchBean(aiai *config.AiAi) {
 	switch x := aiai.TrigTick().(type) {
-	case *config.AiTriggertickConstValue:
+	case *config.AiTriggerTickConstValue:
 		if x.Value() == 30000 {
 			println("pass: testSwitchBean")
 			return
 		}
-	case *config.AiTriggertickByLevel:
+	case *config.AiTriggerTickByLevel:
 		if x.Coefficient() == 0.1 {
 			println("pass: testSwitchBean")
 			return
@@ -342,7 +342,7 @@ func testSwitchBean(aiai *config.AiAi) {
 	case *config.AiTriggerTick:
 		println("fail: testSwitchBean")
 		return
-	case *config.AiTriggertickByServerUpDay:
+	case *config.AiTriggerTickByServerUpDay:
 		if x.Coefficient2() == 0.2 {
 			println("pass: testSwitchBean")
 			return
@@ -368,7 +368,7 @@ func testCellNumberAsInterface() {
 	testSwitchBean(ai.Get(10020))
 	testSwitchBean(ai.Get(10021))
 
-	if v, ok := ai.Get(10019).TrigTick().(*config.AiTriggertickConstValue); ok {
+	if v, ok := ai.Get(10019).TrigTick().(*config.AiTriggerTickConstValue); ok {
 		if v.Value() == 30000 {
 			println("pass: testCellNumberAsInterface")
 		} else {

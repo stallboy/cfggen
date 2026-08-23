@@ -6,11 +6,11 @@ func createAiTriggerTick(stream *Stream) AiTriggerTick {
     var typeName = stream.ReadStringInPool()
     switch typeName {
     case "ConstValue":
-        return createAiTriggertickConstValue(stream)
+        return createAiTriggerTickConstValue(stream)
     case "ByLevel":
-        return createAiTriggertickByLevel(stream)
+        return createAiTriggerTickByLevel(stream)
     case "ByServerUpDay":
-        return createAiTriggertickByServerUpDay(stream)
+        return createAiTriggerTickByServerUpDay(stream)
     default:
         panic("unexpected AiTriggerTick type: " + typeName)
     }
