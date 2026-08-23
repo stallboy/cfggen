@@ -101,18 +101,19 @@ public class EditorServer extends GeneratorWithTag {
         server.start();
         Logger.log("Server is started at " + listenAddress);
 
-
+        // 无论是否开启watch都注册：reload换代后与编辑写操作（含同进程McpServer的写）成功后，
+        // 都会经此刷新内存快照（见WatchAndPostRun/StateCoordinator）
+        WatchAndPostRun.INSTANCE.registerPostRunCallback(this::initFromCtx);
         if (waitSecondsAfterWatchEvt > 0) {
-            WatchAndPostRun.INSTANCE.startWatch(state.context(), waitSecondsAfterWatchEvt);
-            WatchAndPostRun.INSTANCE.registerPostRunCallback(this::initFromCtx);
+            WatchAndPostRun.INSTANCE.startWatch(ctx, waitSecondsAfterWatchEvt);
             if (postRun != null) {
                 WatchAndPostRun.INSTANCE.registerPostRunBat(postRun);
             }
         }
     }
 
-    // synchronized与写handler互斥：写handler基于旧数据算出的新值，不能覆盖掉reload装入的新一代状态
-    private synchronized void initFromCtx(Context newContext) {
+    // 在WatchAndPostRun的editLock内被调用（reload换代后、编辑写成功后的统一刷新），或启动期单线程调用
+    private void initFromCtx(Context newContext) {
         // 可以包含tag，这样更灵活，方便查看filter过后的数据
         // 此时所有的修改指令将返回错误 serverNotEditable
         CfgValue newCfgValue = newContext.makeValue(tag, true);
@@ -232,8 +233,7 @@ public class EditorServer extends GeneratorWithTag {
         String jsonStr = new String(bytes, StandardCharsets.UTF_8);
 
         RecordEditResult result = editRecord(
-                (ctx, cfgValue) -> RecordEditService.addOrUpdateRecord(ctx, cfgValue, table, jsonStr),
-                addOk, updateOk);
+                (ctx, cfgValue) -> RecordEditService.addOrUpdateRecord(ctx, cfgValue, table, jsonStr));
         sendResponse(exchange, result);
     }
 
@@ -247,27 +247,20 @@ public class EditorServer extends GeneratorWithTag {
         String id = query.get("id");
 
         RecordEditResult result = editRecord(
-                (ctx, cfgValue) -> RecordEditService.deleteRecord(ctx, cfgValue, table, id),
-                deleteOk);
+                (ctx, cfgValue) -> RecordEditService.deleteRecord(ctx, cfgValue, table, id));
         sendResponse(exchange, result);
     }
 
     /**
-     * 写操作统一临界区：基于当前State快照调用编辑服务，命中成功码则在同一临界区内装配新State，
-     * 避免与reload交错产生跨代状态。所有写接口必须经此进入，不得自行取快照。
+     * 写操作统一临界区：基于当前State快照调用编辑服务，整个编辑（读快照→写文件→context换代缓存）在
+     * WatchAndPostRun的editLock内，与reload、其他写（含同进程McpServer的写工具）互斥；
+     * 编辑完成后由统一刷新重建State。所有写接口必须经此进入，不得自行取快照。
      */
-    private RecordEditResult editRecord(BiFunction<Context, CfgValue, RecordEditService.ResultWithNewCfgValue> editCall,
-                                        RecordEditService.ResultCode... successCodes) {
-        RecordEditResult result;
-        synchronized (this) {
-            State st = state;
-            RecordEditService.ResultWithNewCfgValue res = editCall.apply(st.context(), st.cfgValue());
-            result = res.result();
-            if (Arrays.asList(successCodes).contains(result.resultCode())) {
-                state = new State(st.context(), res.newCfgValue(), st.graph());
-            }
-        }
-        return result;
+    private RecordEditResult editRecord(BiFunction<Context, CfgValue, RecordEditService.ResultWithNewCfgValue> editCall) {
+        return WatchAndPostRun.INSTANCE.runEdit(ctx -> {
+            State st = state; // editLock内，快照必为当前代
+            return editCall.apply(st.context(), st.cfgValue()).result();
+        });
     }
 
 

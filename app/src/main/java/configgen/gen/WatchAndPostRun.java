@@ -2,6 +2,7 @@ package configgen.gen;
 
 import configgen.ctx.Context;
 import configgen.ctx.DirectoryStructure;
+import configgen.ctx.StateCoordinator;
 import configgen.ctx.WaitWatcher;
 import configgen.ctx.Watcher;
 
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public enum WatchAndPostRun {
     INSTANCE;
@@ -34,11 +36,16 @@ public enum WatchAndPostRun {
     }
 
     private boolean started = false;
-    // 注册发生在主线程、迭代发生在reload线程/bat虚拟线程，用COW保证可见性
+    // 注册发生在主线程、迭代发生在reload线程，用COW保证可见性
     private final List<PostRunBat> postRunBats = new CopyOnWriteArrayList<>();
-    private final List<PostRunCallback> postRunCallbacks = new CopyOnWriteArrayList<>();
-    // reloadData（WaitWatcher 线程）写、tryPostRun 的 bat 虚拟线程（:163）读，跨线程必须保证可见性
-    private volatile Context context;
+
+    /**
+     * 当前代context与其快照订阅的统一协调（见 {@link StateCoordinator} 的说明）：
+     * reloadData换代（installState）与所有编辑写操作（runEdit）互斥；
+     * server（EditorServer/CfgMcpServer）可同进程并存，写路径都走runEdit天然串行化，
+     * 写成功后锁内统一刷新所有订阅者快照，任一server的修改对其他server立即可见。
+     */
+    private final StateCoordinator<Context> coordinator = new StateCoordinator<>();
     private Watcher watcher;
     private WaitWatcher waitWatcher;
     // autoFix写回config.cfg会再触发watch→reload，若对齐不稳定会形成写-触发循环，需要上限保护
@@ -48,13 +55,33 @@ public enum WatchAndPostRun {
     private static final long POST_RUN_JOIN_TIMEOUT_MILLIS = 10 * 60 * 1000;
 
     /**
+     * Main在创建Context后、执行generators前登记当前代。之后所有读写都经 {@link #context()} / {@link #runEdit} 取当前代。
+     */
+    public void initContext(Context context) {
+        coordinator.setInitial(context);
+    }
+
+    public Context context() {
+        return coordinator.state();
+    }
+
+    /**
+     * 编辑写操作的统一临界区（EditorServer的record写接口、McpServer的WriteRecordTool都必须经此进入，不得自行取快照）：
+     * 与reload换代、与其他写操作互斥；临界区内先执行编辑（写文件+context.updateDataAndValue），
+     * 随后统一刷新所有注册快照，保证同进程所有server立刻看到新值。
+     */
+    public <T> T runEdit(Function<Context, T> edit) {
+        return coordinator.runEdit(edit);
+    }
+
+    /**
      * 开始监听，多次调用，只有第一次起效，后面的忽略
      * @param context 上下文
      * @param waitSecondsAfterWatchEvt  监听到文件变化后，等待多少秒再执行reloadData，避免频繁触发
      */
     public synchronized void startWatch(Context context, int waitSecondsAfterWatchEvt) {
         if (started) {
-            if (this.context == context) {
+            if (coordinator.state() == context) {
                 // 正常场景：同一命令行下多个generator（如 server + mcpserver）共享同一个context和watcher
                 Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherAlreadyStarted",
                     "file change watcher already started, shared"));
@@ -69,20 +96,26 @@ public enum WatchAndPostRun {
                 "watcher waitSecondsAfterWatchEvt < 0, ignore start"));
             return;
         }
-        this.context = context;
+        if (coordinator.state() == null) {
+            coordinator.setInitial(context);
+        }
         started = true;
         consecutiveAutoFixReloads = 0;
 
         DirectoryStructure ss = context.sourceStructure();
         watcher = new Watcher(ss.getRootDir(), ss.getExplicitDir());
         waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt * 1000);
-        waitWatcher.start();
+        // watcher先启动：start内同步完成目录注册，注册失败即抛，不会留下已启动的waitWatcher无人停止
         watcher.start();
+        waitWatcher.start();
 
         Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherStarted",
             "file change watcher started"));
     }
 
+    /**
+     * 可能从reloadData（即waitWatcher轮询线程自身）里被调用（autoFix循环保护），WaitWatcher.stop已支持自停。
+     */
     private synchronized void stopWatch() {
         if (waitWatcher != null) {
             waitWatcher.stop();
@@ -115,21 +148,23 @@ public enum WatchAndPostRun {
     }
 
     /**
-     * 要在主线程中做注册
+     * 要在主线程中做注册。
+     * server（EditorServer/CfgMcpServer）无论是否开启watch都应注册：除reload换代外，
+     * 编辑写操作成功后也会经此回调刷新内存快照。
      * @param callback 回调函数
      */
     public void registerPostRunCallback(PostRunCallback callback) {
         if (callback == null) {
             return;
         }
-        postRunCallbacks.add(callback);
+        coordinator.addRefresher(callback::onNewContextLoaded);
     }
 
     /**
      * 这是在virtual thread里执行的
      */
     private void reloadData() {
-        Context cur = context;
+        Context cur = coordinator.state();
         DirectoryStructure newStructure = cur.sourceStructure().reload();
         if (newStructure.lastModifiedEquals(cur.sourceStructure())) {
             Logger.verbose(LocaleUtil.getLocaleString("WatchAndPostRun.LastModifiedNotChanged",
@@ -150,10 +185,14 @@ public enum WatchAndPostRun {
             } else {
                 consecutiveAutoFixReloads = 0;
             }
-            this.context = newContext;
+            // 换代安装+快照刷新在editLock内，与编辑写操作互斥：写handler基于旧数据算出的新值不会覆盖这一代
+            coordinator.installState(newContext);
             Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.ReloadContextOk",
                 "reload context ok"));
-            onNewContextReloaded();
+
+            for (PostRunBat bat : postRunBats) {
+                tryPostRun(bat);
+            }
         } catch (Exception e) {
             Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.ReloadContextIgnored",
                 "reload context ignored: {0}", e.toString()));
@@ -161,25 +200,7 @@ public enum WatchAndPostRun {
                 e.printStackTrace();
             }
         }
-
     }
-
-    private void onNewContextReloaded() {
-        for (PostRunCallback callback : postRunCallbacks) {
-            try {
-                callback.onNewContextLoaded(context);
-            } catch (Exception e) {
-                Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.FailedToRunPostRun",
-                    "failed to run post run task: {0}", e.getMessage()));
-            }
-        }
-
-        for (PostRunBat bat : postRunBats) {
-            tryPostRun(bat);
-        }
-
-    }
-
 
     private void tryPostRun(PostRunBat bat) {
         Thread batThread = bat.thread;
@@ -216,7 +237,7 @@ public enum WatchAndPostRun {
                             Generator generator = Generators.create(parameter);
                             if (generator != null) {
                                 Logger.log("-gen " + parameter);
-                                generator.generate(context);
+                                generator.generate(coordinator.state());
                             }
                         } else {
                             break;
@@ -253,4 +274,3 @@ public enum WatchAndPostRun {
         });
     }
 }
-

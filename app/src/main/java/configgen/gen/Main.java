@@ -266,6 +266,8 @@ public final class Main {
 
         Context context = new Context(new Context.ContextCfg(dataDirPath, explicitDir, headRow, csvDefaultEncoding,
                 i18nfile, langSwitchDir, langSwitchDefaultLang, allowValueErr));
+        // 登记为当前代：server类generator（无论是否开watch）的编辑写路径统一经WatchAndPostRun取当前代并互斥
+        WatchAndPostRun.INSTANCE.initContext(context);
 
         for (NamedGenerator ng : generators) {
             Logger.verbose("-----generate %s", ng.gen.parameter.toString());

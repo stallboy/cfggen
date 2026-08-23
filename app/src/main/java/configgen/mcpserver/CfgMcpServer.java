@@ -45,9 +45,11 @@ public class CfgMcpServer extends GeneratorWithTag {
 
         initFromCtx(ctx);
         INSTANCE = this;
+        // 无论是否开启watch都注册：reload换代后与编辑写操作（含同进程EditorServer的写）成功后，
+        // 都会经此刷新内存快照（见WatchAndPostRun/StateCoordinator）
+        WatchAndPostRun.INSTANCE.registerPostRunCallback(this::initFromCtx);
         if (waitSecondsAfterWatchEvt > 0) {
             WatchAndPostRun.INSTANCE.startWatch(ctx, waitSecondsAfterWatchEvt);
-            WatchAndPostRun.INSTANCE.registerPostRunCallback(this::reloadCfgValue);
             if (postRun != null) {
                 WatchAndPostRun.INSTANCE.registerPostRunBat(postRun);
             }
@@ -60,6 +62,7 @@ public class CfgMcpServer extends GeneratorWithTag {
                 .build());
     }
 
+    // 在WatchAndPostRun的editLock内被调用（reload换代后、编辑写成功后的统一刷新），或启动期单线程调用
     private void initFromCtx(Context newContext) {
         // 可以包含tag，这样更灵活，方便查看filter过后的数据
         // 此时所有的修改指令将返回错误 serverNotEditable
@@ -67,18 +70,7 @@ public class CfgMcpServer extends GeneratorWithTag {
         cfgValueWithContext = new CfgValueWithContext(cfgValue, newContext);
     }
 
-    private void reloadCfgValue(Context newContext) {
-        initFromCtx(newContext);
-        Logger.log("reload value ok");
-    }
-
     public CfgValueWithContext cfgValueWithContext() {
         return cfgValueWithContext;
     }
-
-    public void updateCfgValue(CfgValue newCfgValue) {
-        CfgValueWithContext old = cfgValueWithContext;
-        cfgValueWithContext = new CfgValueWithContext(newCfgValue, old.context());
-    }
 }
-
