@@ -101,7 +101,10 @@ public final class SchemaParser {
             case INT -> SInt;
             case LONG -> SLong;
             case FLOAT -> SFloat;
-            case STRING, TEXT -> SStr;
+            // TEXT 必须是 SText：数据序列化时 VText 写入的是 langTextPool 的索引（TableSerializer/MultiLangTableSerializer），
+            // 标成 SStr 会让按 schema 读数据的一方走 StringPool 读错池、后续数据全部错位
+            case STRING -> SStr;
+            case TEXT -> SText;
             case StructRef structRef -> new SchemaRef(structRef.nameNormalized());
             case FList fList -> new SchemaList(parseType(fList.item()));
             case FMap fMap -> new SchemaMap(parseType(fMap.key()), parseType(fMap.value()));

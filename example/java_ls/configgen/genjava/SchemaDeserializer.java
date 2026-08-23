@@ -20,6 +20,7 @@ public final class SchemaDeserializer {
             case Schema.LONG -> SchemaPrimitive.SLong;
             case Schema.FLOAT -> SchemaPrimitive.SFloat;
             case Schema.STR -> SchemaPrimitive.SStr;
+            case Schema.TEXT -> SchemaPrimitive.SText;
             case Schema.REF -> deserializeRef();
             case Schema.LIST -> deserializeList();
             case Schema.MAP -> deserializeMap();

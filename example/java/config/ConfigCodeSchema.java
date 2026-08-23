@@ -246,7 +246,7 @@ public class ConfigCodeSchema {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("SuitID", SchemaPrimitive.SInt);
         s2.addColumn("Ename", SchemaPrimitive.SStr);
-        s2.addColumn("Name", SchemaPrimitive.SStr);
+        s2.addColumn("Name", SchemaPrimitive.SText);
         s2.addColumn("Ability1", SchemaPrimitive.SInt);
         s2.addColumn("Ability1Value", SchemaPrimitive.SInt);
         s2.addColumn("Ability2", SchemaPrimitive.SInt);
@@ -302,14 +302,14 @@ public class ConfigCodeSchema {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("name", SchemaPrimitive.SStr);
         s2.addColumn("id", SchemaPrimitive.SInt);
-        s2.addColumn("comment", SchemaPrimitive.SStr);
+        s2.addColumn("comment", SchemaPrimitive.SText);
         return s2;
     }
 
     static Schema other_drop() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("dropid", SchemaPrimitive.SInt);
-        s2.addColumn("name", SchemaPrimitive.SStr);
+        s2.addColumn("name", SchemaPrimitive.SText);
         s2.addColumn("items", new SchemaList(new SchemaRef("other.DropItem")));
         s2.addColumn("testmap", new SchemaMap(SchemaPrimitive.SInt, SchemaPrimitive.SInt));
         return s2;
@@ -330,7 +330,7 @@ public class ConfigCodeSchema {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("lootid", SchemaPrimitive.SInt);
         s2.addColumn("ename", SchemaPrimitive.SStr);
-        s2.addColumn("name", SchemaPrimitive.SStr);
+        s2.addColumn("name", SchemaPrimitive.SText);
         s2.addColumn("chanceList", new SchemaList(SchemaPrimitive.SInt));
         return s2;
     }
@@ -381,7 +381,7 @@ public class ConfigCodeSchema {
     static Schema task_task() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("taskid", SchemaPrimitive.SInt);
-        s2.addColumn("name", new SchemaList(SchemaPrimitive.SStr));
+        s2.addColumn("name", new SchemaList(SchemaPrimitive.SText));
         s2.addColumn("nexttask", SchemaPrimitive.SInt);
         s2.addColumn("completecondition", new SchemaRef("task.completecondition"));
         s2.addColumn("exp", SchemaPrimitive.SInt);
@@ -392,7 +392,7 @@ public class ConfigCodeSchema {
     static Schema task_task2() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("taskid", SchemaPrimitive.SInt);
-        s2.addColumn("name", new SchemaList(SchemaPrimitive.SStr));
+        s2.addColumn("name", new SchemaList(SchemaPrimitive.SText));
         s2.addColumn("nexttask", SchemaPrimitive.SInt);
         s2.addColumn("completecondition", new SchemaRef("task.completecondition"));
         s2.addColumn("exp", SchemaPrimitive.SInt);
