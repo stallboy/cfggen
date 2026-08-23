@@ -20,16 +20,16 @@ public class GoName {
         pkgName = nameable.name();
         String[] seps = GenNaming.classNameSegments(nameable).toArray(new String[0]);
 
-        String _filePath = "";
-        String _className = "";
+        StringBuilder _filePath = new StringBuilder();
+        StringBuilder _className = new StringBuilder();
         for (int i = 0; i < seps.length; i++) {
-            _filePath = _filePath + seps[i].toLowerCase();
+            _filePath.append(seps[i].toLowerCase());
             if (i < seps.length - 1)
-                _filePath = _filePath + '_';
+                _filePath.append('_');
 
-            _className = _className + StringUtil.upper1(seps[i]);
+            _className.append(StringUtil.upper1(seps[i]));
         }
         filePath = _filePath + ".go";
-        className = _className;
+        className = _className.toString();
     }
 }

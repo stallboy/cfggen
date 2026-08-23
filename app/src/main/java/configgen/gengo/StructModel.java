@@ -27,10 +27,6 @@ public class StructModel {
         this.vTable = vTable;
     }
 
-    public boolean isLangSwitch() {
-        return gen.isLangSwitch;
-    }
-
     public String genReadField(FieldType t) {
         return switch (t) {
             case BOOL -> "stream.ReadBool()";
@@ -48,7 +44,7 @@ public class StructModel {
     /**
      * 字段的Go类型。TEXT按isLangSwitch映射（*Text/string），容器递归使用同一规则——
      * 读代码模板（GenStruct.jte）对list/map元素也按本方法生成，声明与读取必须同源，
-     * 拆出第二个"忽略langswitch"的类型函数曾导致 []string 声明 + []*Text 读取的自相矛盾代码。
+     * 拆出第二个"忽略 langswitch "的类型函数曾导致 []string 声明 + []*Text 读取的自相矛盾代码。
      * 键类型（主键/唯一键/map键）经schema校验只可能是BOOL/INT/LONG/STRING，不会走到TEXT分支。
      */
     public String type(FieldType t) {
@@ -151,14 +147,9 @@ public class StructModel {
     public static String toStringField(FieldSchema f) {
         String fieldName = StringUtil.lower1(f.name());
         FieldType t = f.type();
-        if (t instanceof FList) {
-            return String.format("fmt.Sprintf(\"%%v\", t.%s)", fieldName);
-        } else if (t instanceof FMap) {
-            return String.format("fmt.Sprintf(\"%%v\", t.%s)", fieldName);
-        } else if (t instanceof StructRef) {
-            return String.format("fmt.Sprintf(\"%%v\", t.%s)", fieldName);
-        } else {
-            return "t." + fieldName;
-        }
+        return switch (t) {
+            case FList _, FMap _, StructRef _ -> String.format("fmt.Sprintf(\"%%v\", t.%s)", fieldName);
+            case null, default -> "t." + fieldName;
+        };
     }
 }

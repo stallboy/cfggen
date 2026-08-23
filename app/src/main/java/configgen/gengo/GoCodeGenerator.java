@@ -16,10 +16,6 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-
-import static configgen.schema.FieldType.Primitive.*;
-import static configgen.schema.FieldType.Primitive.TEXT;
 
 public class GoCodeGenerator extends GeneratorWithTag {
     private final String dir;

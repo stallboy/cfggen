@@ -96,7 +96,7 @@ class ValueStringify {
 
     public void addValue(Value value, List<String> fieldChain) {
         switch (value) {
-            case VBool vBool -> add(vBool.value() ? "true" : "false");
+            case VBool vBool -> add(Boolean.toString(vBool.value()));
             case VInt vInt -> add(String.valueOf(vInt.value()));
             case VLong vLong -> add(String.valueOf(vLong.value()));
             case VFloat vFloat -> add(String.valueOf(vFloat.value()));

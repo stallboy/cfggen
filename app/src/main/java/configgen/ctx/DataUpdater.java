@@ -52,9 +52,7 @@ public class DataUpdater {
                             ti.tableName(), ti.index(), fieldSeparator, dTable.nullableAddTag());
                 }
 
-                case EXCEL -> {
-                    result = context.excelReader().readExcels(path, relativePath, sheet.sheetName());
-                }
+                case EXCEL -> result = context.excelReader().readExcels(path, relativePath, sheet.sheetName());
             }
             Objects.requireNonNull(result);
             for (ReadResult.OneSheet oneSheet : result.sheets()) {

@@ -33,9 +33,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
         CfgSchema alignedCfg = CfgSchema.of();
         for (Nameable item : cfgSchema.items()) {
             switch (item) {
-                case Fieldable fieldable -> {
-                    alignedCfg.add(fieldable.copy());
-                }
+                case Fieldable fieldable -> alignedCfg.add(fieldable.copy());
                 case TableSchema table -> {
                     CfgData.DTable dTable = dTableMap.remove(table.name());
 
@@ -279,9 +277,9 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
             return fs;
         }
 
-        //// 以下是为兼容之前的做法,
-        //// - 允许a1,a2,a3..代表aList
-        //// - 允许a1,b1, a2, b2,..代表a2bMap
+        // 以下是为兼容之前的做法,
+        // - 允许a1,a2,a3..代表 aList
+        // - 允许a1,b1, a2, b2,..代表 a2bMap
         if (!name.endsWith("1")) {
             return null;
         }

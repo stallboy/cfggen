@@ -66,7 +66,7 @@ public final class StateCoordinator<T> {
     }
 
     /**
-     * 编辑写操作的统一临界区：与 {@link #installState}、其他 {@link #runEdit} 互斥。
+     * 编辑写操作的统一临界区：与 {@link #installState}、其他 { @link #runEdit } 互斥。
      * 编辑（写文件 + 就地更新状态）完成后统一刷新所有订阅者快照。编辑抛异常则直接传播、不刷新（状态未变）。
      */
     public <R> R runEdit(Function<T, R> edit) {

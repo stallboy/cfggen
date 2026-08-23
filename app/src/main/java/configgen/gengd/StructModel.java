@@ -38,8 +38,7 @@ public class StructModel {
     public String type(FieldType t) {
         return switch (t) {
             case BOOL -> "bool";
-            case INT -> "int";
-            case LONG -> "int";
+            case INT, LONG -> "int";
             case FLOAT -> "float";
             case STRING -> "String";
             case TEXT -> gen.isLangSwitch ? "ConfigText" : "String";
@@ -68,7 +67,7 @@ public class StructModel {
             case RefKey.RefList ignored -> {
                 return "Array[" + fullName(fk.refTableSchema()) + "]";
             }
-            case RefKey.RefSimple refSimple -> {
+            case RefKey.RefSimple _ -> {
                 FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
                 switch (firstLocal.type()) {
                     case SimpleType ignored2 -> {

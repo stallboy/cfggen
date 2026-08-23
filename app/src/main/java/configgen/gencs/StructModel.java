@@ -95,8 +95,7 @@ public class StructModel {
             case STRING -> "reader.ReadStringInPool()";
             case TEXT -> gen.isLangSwitch ? topPkg + ".Text._create(reader)" : "reader.ReadTextInPool()";
             case StructRef structRef -> fullName(structRef.obj()) + "._create(reader)";
-            case FList _ -> null;
-            case FMap _ -> null;
+            case FList _, FMap _ -> null;
         };
     }
 

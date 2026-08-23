@@ -121,3 +121,4 @@
 
 # 架构评审报告（本地文档，不入库）
 /app/ARCHITECTURE_REVIEW.md
+/.zcode

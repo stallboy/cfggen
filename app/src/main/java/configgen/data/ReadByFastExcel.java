@@ -87,24 +87,12 @@ public enum ReadByFastExcel implements ExcelReader {
                 if (cell != null) {
                     CellType type = cell.getType();
                     switch (type) {
-                        case NUMBER -> {
-                            stat.cellNumberCount++;
-                        }
-                        case STRING -> {
-                            stat.cellStrCount++;
-                        }
-                        case FORMULA -> {
-                            stat.cellFormulaCount++;
-                        }
-                        case ERROR -> {
-                            stat.cellErrCount++;
-                        }
-                        case BOOLEAN -> {
-                            stat.cellBoolCount++;
-                        }
-                        case EMPTY -> {
-                            stat.cellEmptyCount++;
-                        }
+                        case NUMBER -> stat.cellNumberCount++;
+                        case STRING -> stat.cellStrCount++;
+                        case FORMULA -> stat.cellFormulaCount++;
+                        case ERROR -> stat.cellErrCount++;
+                        case BOOLEAN -> stat.cellBoolCount++;
+                        case EMPTY -> stat.cellEmptyCount++;
                     }
 
                     if (type == CellType.FORMULA) {

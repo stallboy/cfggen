@@ -20,10 +20,10 @@ final class GenConfigCodeSchema {
         } else {
             main = all.subList(0, schemaNumPerFile);
             int left = all.size() - schemaNumPerFile;
-            int seperateFileNum = (left + schemaNumPerFile - 1) / schemaNumPerFile;
+            int separateFileNum = (left + schemaNumPerFile - 1) / schemaNumPerFile;
 
             nullableOthers = new ArrayList<>();
-            for (int i = 0; i < seperateFileNum; i++) {
+            for (int i = 0; i < separateFileNum; i++) {
                 int start = (i + 1) * schemaNumPerFile;
                 int end = start + schemaNumPerFile;
                 if (end > all.size()) {
@@ -169,23 +169,15 @@ final class GenConfigCodeSchema {
                     ip.println("}");
                 }
             }
-            default -> {
-                throw new IllegalStateException();
-            }
+            default -> throw new IllegalStateException();
         }
     }
 
     private static String parse(Schema schema) {
         switch (schema) {
-            case SchemaBean ignored -> {
-                throw new IllegalStateException();
-            }
-            case SchemaEnum ignored -> {
-                throw new IllegalStateException();
-            }
-            case SchemaInterface ignored -> {
-                throw new IllegalStateException();
-            }
+            case SchemaBean ignored -> throw new IllegalStateException();
+            case SchemaEnum ignored -> throw new IllegalStateException();
+            case SchemaInterface ignored -> throw new IllegalStateException();
             case SchemaList schemaList -> {
                 return "new SchemaList(" + parse(schemaList.ele()) + ")";
             }
