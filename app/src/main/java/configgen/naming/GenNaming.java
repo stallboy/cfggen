@@ -2,6 +2,7 @@ package configgen.naming;
 
 import configgen.schema.ForeignKeySchema;
 import configgen.schema.KeySchema;
+import configgen.schema.Nameable;
 import configgen.schema.RefKey;
 import configgen.util.StringUtil;
 
@@ -47,6 +48,17 @@ public class GenNaming {
                 }
             }
         }
+    }
+
+    // ---------- 类名 / 包路径的段落拆分 ----------
+
+    /**
+     * 生成代码类名/包路径的名字段：schema 名按 '.' 拆分为段；
+     * interface 内嵌 struct 时由 Nameable.fullName() 提供 interface 前缀段（如 [iface, pkg, struct]）。
+     * 各语言再对段施自己的大小写规则与连接符（Pascal/小写/下划线/'.'/'/'）。
+     */
+    public static List<String> classNameSegments(Nameable nameable) {
+        return List.of(nameable.fullName().split("\\."));
     }
 
     // ---------- 唯一键命名族：Pascal 规范形（java/cs/ts/lua/go） ----------

@@ -1,8 +1,7 @@
 package configgen.gencs;
 
-import configgen.schema.InterfaceSchema;
+import configgen.naming.GenNaming;
 import configgen.schema.Nameable;
-import configgen.schema.StructSchema;
 import configgen.util.StringUtil;
 
 public class Name {
@@ -12,14 +11,7 @@ public class Name {
     public final String path;
 
     Name(String topPkg, String prefix, Nameable nameable) {
-        String name;
-        InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
-        if (nullableInterface != null) {
-            name = nullableInterface.name() + "." + nameable.name();
-        } else {
-            name = nameable.name();
-        }
-        String[] seps = name.split("\\.");
+        String[] seps = GenNaming.classNameSegments(nameable).toArray(new String[0]);
         String[] pks = new String[seps.length - 1];
         for (int i = 0; i < pks.length; i++)
             pks[i] = StringUtil.underscoreToPascalCase(seps[i]);

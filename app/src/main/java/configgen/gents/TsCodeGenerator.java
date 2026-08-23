@@ -1,5 +1,6 @@
 package configgen.gents;
 
+import configgen.naming.GenNaming;
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
@@ -13,7 +14,6 @@ import configgen.value.CfgValue;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.Arrays;
 
 public class TsCodeGenerator extends GeneratorWithTag {
     public final String pkg;
@@ -55,8 +55,7 @@ public class TsCodeGenerator extends GeneratorWithTag {
     }
 
     public String className(Nameable nameable) {
-        String[] s = nameable.fullName().split("\\.");
-        return String.join("_", Arrays.stream(s).map(StringUtil::upper1).toList());
+        return String.join("_", GenNaming.classNameSegments(nameable).stream().map(StringUtil::upper1).toList());
     }
 
 }

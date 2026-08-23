@@ -1,9 +1,11 @@
 package configgen.naming;
 
+import configgen.schema.FieldFormat;
 import configgen.schema.ForeignKeySchema;
 import configgen.schema.KeySchema;
 import configgen.schema.Metadata;
 import configgen.schema.RefKey;
+import configgen.schema.StructSchema;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -61,5 +63,12 @@ class GenNamingTest {
         assertEquals("find_by_name_id", GenNaming.uniqueKeyGetByNameSnake(COMPOSITE_KEY));
         assertEquals("find_by_name_id", GenNaming.uniqueKeyGetByNameSnake(List.of("name", "id")));
         assertEquals("_name_id_map", GenNaming.uniqueKeyMapNameSnake(COMPOSITE_KEY));
+    }
+
+    @Test
+    void 类名段落_按点拆分() {
+        StructSchema struct = new StructSchema("task.extra", FieldFormat.AutoOrPack.AUTO,
+                new Metadata(new LinkedHashMap<>()), List.of(), List.of());
+        assertEquals(List.of("task", "extra"), GenNaming.classNameSegments(struct));
     }
 }

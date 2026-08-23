@@ -36,13 +36,9 @@ public class Name {
             case InterfaceSchema ignored -> {
                 return "Beans." + nameable.name().toLowerCase();
             }
-            case StructSchema struct -> {
-                InterfaceSchema interfaceSchema = struct.nullableInterface();
-                if (interfaceSchema != null) {
-                    return "Beans." + interfaceSchema.name().toLowerCase() + "." + struct.name().toLowerCase();
-                } else {
-                    return "Beans." + nameable.name().toLowerCase();
-                }
+            case StructSchema ignored -> {
+                return "Beans." + String.join(".", GenNaming.classNameSegments(nameable).stream()
+                        .map(String::toLowerCase).toList());
             }
             case TableSchema table -> {
                 return aCtx.getPkgPrefixStr() + table.name().toLowerCase();

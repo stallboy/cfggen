@@ -18,6 +18,8 @@ public class GoName {
     public final String pkgName;
 
     public GoName(Nameable nameable) {
+        // 不用 naming.GenNaming.classNameSegments：这里既有规则是把 interface 名整体小写后作前缀段
+        // （会抹掉 TriggerTick 这类 camel，属历史行为，下游已依赖，改动需专门决策）
         String name;
         InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
         if (nullableInterface != null) {
