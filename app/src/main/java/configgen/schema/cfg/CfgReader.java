@@ -59,7 +59,10 @@ public enum CfgReader {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CfgParser parser = new CfgParser(tokens);
 
-        // 添加自定义错误监听器
+        // 添加自定义错误监听器。lexer 也必须挂：默认的 ConsoleErrorListener 只打印 stderr 就跳过非法字符，
+        // 之后语法可能仍然合法（如 "@name: int;" 被读成 "name: int;"），坏 schema 会被静默当成正确的读入
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
         parser.removeErrorListeners();
         parser.addErrorListener(ThrowingErrorListener.INSTANCE);
 

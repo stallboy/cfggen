@@ -13,6 +13,25 @@ import static org.junit.jupiter.api.Assertions.*;
 class CfgReaderTest {
 
     @Test
+    void lexerErrorThrowsInsteadOfSilentSkip() {
+        // lexer 默认的 ConsoleErrorListener 只打印 stderr 就跳过无法匹配的字符，
+        // 之后语法可能仍然合法（@name 会被读成 name），坏 schema 被静默当成正确的读入
+        String withIllegalChar = """
+                struct Position {
+                    @x:int;
+                }
+                """;
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse(withIllegalChar));
+
+        String withDollar = """
+                struct Po$sition {
+                    x:int;
+                }
+                """;
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse(withDollar));
+    }
+
+    @Test
     void parseEnumTable() {
         String str = """
                 table ability[id] (enum='name') {
