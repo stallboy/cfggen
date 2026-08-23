@@ -43,14 +43,14 @@ public class TsCodeGenerator extends GeneratorWithTag {
         cfgSchema = cfgValue.schema();
         nullableLanguageSwitch = ctx.nullableLangSwitch();
 
-        try (var ps = new CachedIndentPrinter(dstDir.resolve("Config.ts"), encoding)) {
+        try (var ps = new CachedIndentPrinter(dstDir.resolve("Config.ts"), encoding, ctx.outputFiles())) {
             JteEngine.render("ts/Config.jte", this, ps);
         }
 
         FileUtil.copyFileIfNotExist("/support/ts/ConfigUtil.ts",
                 "src/main/resources/support/ts/ConfigUtil.ts",
                 dstDir.resolve("ConfigUtil.ts"),
-                encoding);
+                encoding, ctx.outputFiles());
 
     }
 

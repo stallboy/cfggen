@@ -35,8 +35,8 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
             return of(512 * 1024);
         }
 
-        public CachedIndentPrinter printer(Path path, String encoding) {
-            return new CachedIndentPrinter(path, encoding, this);
+        public CachedIndentPrinter printer(Path path, String encoding, CachedFiles cachedFiles) {
+            return new CachedIndentPrinter(path, encoding, this, cachedFiles);
         }
 
     }
@@ -47,22 +47,20 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
             new StringBuilder(128)
     );
 
+    private final CachedFiles cachedFiles;
 
-    public CachedIndentPrinter(Path path) {
-        this(path, "UTF-8");
+    public CachedIndentPrinter(Path path, String encoding, CachedFiles cachedFiles) {
+        this(path, encoding, DEFAULT_CACHE_CONFIG, cachedFiles);
     }
 
-    public CachedIndentPrinter(Path path, String encoding) {
-        this(path, encoding, DEFAULT_CACHE_CONFIG);
+    public CachedIndentPrinter(File file, String encoding, CachedFiles cachedFiles) {
+        this(file.toPath().toAbsolutePath().normalize(), encoding, cachedFiles);
     }
 
-    public CachedIndentPrinter(File file, String encoding) {
-        this(file.toPath().toAbsolutePath().normalize(), encoding);
-    }
-
-    public CachedIndentPrinter(Path path, String encoding, CacheConfig cacheConfig) {
+    public CachedIndentPrinter(Path path, String encoding, CacheConfig cacheConfig, CachedFiles cachedFiles) {
         this.path = path.toAbsolutePath().normalize();
         this.encoding = encoding;
+        this.cachedFiles = cachedFiles;
         this.dst = cacheConfig.dst;
         this.cache = cacheConfig.cache;
         this.tmp = cacheConfig.tmp;
@@ -199,7 +197,7 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
     @Override
     public void close() {
         try {
-            CachedFiles.writeFile(path, dst.toString().getBytes(encoding));
+            cachedFiles.writeFile(path, dst.toString().getBytes(encoding));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

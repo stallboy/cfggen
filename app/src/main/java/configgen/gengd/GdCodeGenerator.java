@@ -27,6 +27,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
     public final String prefix;
 
     private Path dstDir;
+    private CachedFiles outputFiles;
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
     public CfgSchema cfgSchema;
@@ -55,6 +56,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
         cfgSchema = cfgValue.schema();
 
         dstDir = Paths.get(dir);
+        outputFiles = ctx.outputFiles();
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
 
@@ -67,7 +69,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
             FileUtil.copyFileIfNotExist("/support/gd/" + fn,
                     "src/main/resources/support/gd/" + fn,
                     dstDir.resolve(fn),
-                    ENCODING);
+                    ENCODING, outputFiles);
         }
 
         generateProcessor(cfgSchema);
@@ -106,7 +108,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
             invokeAllAndWait(executor, tasks);
         }
 
-        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
+        outputFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
 
     private void generateInterface(InterfaceSchema sInterface) {
@@ -139,6 +141,6 @@ public class GdCodeGenerator extends GeneratorWithTag {
 
 
     private CachedIndentPrinter createCode(String fn) {
-        return mainCc.get().printer(dstDir.resolve(fn), ENCODING);
+        return mainCc.get().printer(dstDir.resolve(fn), ENCODING, outputFiles);
     }
 }

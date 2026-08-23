@@ -279,7 +279,8 @@ public final class Main {
             Logger.profile("generate " + ng.name);
         }
 
-        CachedFiles.finalExit();
+        // 清理生成目录中未登记的文件：作用域到本次run（context持有登记册），并发run互不影响
+        context.outputFiles().finalizeRun();
         Logger.profile("end");
         return 0;
     }

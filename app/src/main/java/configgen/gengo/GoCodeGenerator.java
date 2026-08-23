@@ -28,6 +28,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
     private static final String ENCODING = "UTF-8";
     public final boolean serverText;
     private Path dstDir;
+    private CachedFiles outputFiles;
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
 
@@ -48,6 +49,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
     @Override
     public void generate(Context ctx) throws IOException {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
+        outputFiles = ctx.outputFiles();
         CfgValue cfgValue = ctx.makeValue(tag);
         CfgSchema cfgSchema = cfgValue.schema();
 
@@ -57,7 +59,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
             FileUtil.copyFileIfNotExist("/support/go/" + fn,
                     "src/main/resources/support/go/" + fn,
                     dstDir.resolve(fn),
-                    ENCODING);
+                    ENCODING, outputFiles);
         }
 
         genCfgMgrFile(cfgValue);
@@ -100,11 +102,11 @@ public class GoCodeGenerator extends GeneratorWithTag {
             generateText(ctx.nullableLangSwitch());
         }
 
-        CachedFiles.deleteOtherFiles(dstDir.toFile());
+        outputFiles.deleteOtherFiles(dstDir.toFile());
     }
 
     private CachedIndentPrinter createCode(String fn) {
-        return mainCc.get().printer(dstDir.resolve(fn), ENCODING);
+        return mainCc.get().printer(dstDir.resolve(fn), ENCODING, outputFiles);
     }
 
     private void generateInterface(InterfaceSchema sInterface) {

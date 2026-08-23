@@ -35,6 +35,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
     private Path dstDir;
     private CfgData cfgData;
+    private CachedFiles outputFiles;
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
 
@@ -80,6 +81,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgData = ctx.cfgData();
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
+        outputFiles = ctx.outputFiles();
 
         // 一次生成的固定配置：不可变、随调用链显式传递，替代原先散落在 Name/TypeStr/NameableName 的
         // static 字段（并发生成时会互相踩踏）
@@ -161,7 +163,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
         GenConfigCodeSchema.generateAll(this, cfg, schemaNumPerFile, cfgValue, ctx.nullableLangSwitch());
 
-        CachedFiles.deleteOtherFiles(dstDir.toFile());
+        outputFiles.deleteOtherFiles(dstDir.toFile());
 
         copyConfigGenSourcesIfNeed();
     }
@@ -199,12 +201,12 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         for (String fn : COPY_FILES) {
             FileUtil.copyFileIfNotExist("/support/configgen/genjava/" + fn,
                     "src/main/java/configgen/genjava/" + fn,
-                    targetDir.resolve(fn), encoding);
+                    targetDir.resolve(fn), encoding, outputFiles);
         }
     }
 
     CachedIndentPrinter createCode(String fn) {
-        return mainCc.get().printer(dstDir.resolve(fn), encoding);
+        return mainCc.get().printer(dstDir.resolve(fn), encoding, outputFiles);
     }
 
     private void generateStructClass(GenCfg cfg, StructSchema struct) {

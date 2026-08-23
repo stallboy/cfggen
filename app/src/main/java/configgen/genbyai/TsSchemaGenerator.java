@@ -49,7 +49,7 @@ public class TsSchemaGenerator extends GeneratorWithTag {
             Logger.log("ignore gen ts: table=%s not found!", table);
             return;
         }
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstPath.resolve(table + ".ts"), encoding)) {
+        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstPath.resolve(table + ".ts"), encoding, ctx.outputFiles())) {
             String generate = new SchemaToTs(cfgValue, vTable.schema(), refTables, false).generate();
             ps.println(generate);
         }

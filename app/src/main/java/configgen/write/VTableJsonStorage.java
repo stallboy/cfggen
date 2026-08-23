@@ -4,6 +4,7 @@ import configgen.ctx.DirectoryStructure;
 import configgen.data.DataUtil;
 import configgen.util.FileNameUtil;
 import configgen.util.CachedFileOutputStream;
+import configgen.util.CachedFiles;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueToJson;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +28,8 @@ public class VTableJsonStorage {
                                          @NotNull String table,
                                          @NotNull String id,
                                          @NotNull Path dataDir,
-                                         DirectoryStructure directoryStructure) throws IOException {
+                                         DirectoryStructure directoryStructure,
+                                         CachedFiles cachedFiles) throws IOException {
         validateId(id);
         var existingDirRelativePath = directoryStructure.getJsonTableDir(table);
         Path jsonDirRelPath = existingDirRelativePath != null
@@ -36,7 +38,7 @@ public class VTableJsonStorage {
         Path relativePath = jsonDirRelPath.resolve(id + ".json");
 
         Path recordPath = dataDir.resolve(relativePath);
-        try (var writer = CachedFileOutputStream.createUtf8Writer(recordPath)) {
+        try (var writer = CachedFileOutputStream.createUtf8Writer(recordPath, cachedFiles)) {
             String jsonString = ValueToJson.toJsonStr(record);
             writer.write(jsonString);
             return relativePath;

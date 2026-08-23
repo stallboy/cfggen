@@ -7,6 +7,7 @@ import configgen.genjava.*;
 import configgen.i18n.LangSwitchable;
 import configgen.i18n.LangSwitchableRuntime;
 import configgen.util.CachedFileOutputStream;
+import configgen.util.CachedFiles;
 import configgen.util.XorCipherOutputStream;
 import configgen.value.CfgValue;
 
@@ -20,6 +21,7 @@ public class BytesGenerator extends GeneratorWithTag {
     private final String cipher;
     private final boolean hasSchema;
     private final boolean isLangSeparated;
+    private CachedFiles outputFiles;
 
     public BytesGenerator(Parameter parameter) {
         super(parameter);
@@ -31,6 +33,7 @@ public class BytesGenerator extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx) throws IOException {
+        outputFiles = ctx.outputFiles();
         CfgValue cfgValue = ctx.makeValue(tag);
         LangSwitchable langSwitch = ctx.nullableLangSwitch();
 
@@ -119,7 +122,7 @@ public class BytesGenerator extends GeneratorWithTag {
     }
 
     private ConfigOutput createConfigOutput(String fileName) {
-        CachedFileOutputStream stream = new CachedFileOutputStream((Path.of(dir, fileName)));
+        CachedFileOutputStream stream = new CachedFileOutputStream(Path.of(dir, fileName), outputFiles);
         if (cipher.isEmpty()) {
             return new ConfigOutput(stream);
         } else {

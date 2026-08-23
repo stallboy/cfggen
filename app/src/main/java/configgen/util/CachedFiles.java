@@ -9,28 +9,35 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * 一次生成 run 的输出登记册：writeFile 登记保留文件，deleteOtherFiles/keepMetaAndDeleteOtherFiles
+ * 登记待清理目录，finalizeRun 统一删除目录中未登记的文件。
+ * 原为全 static 的进程级状态，两个并发的 run（GUI/postRun bat 线程 vs 主线程）会互相清掉对方登记；
+ * 现为实例，由 Context 持有（ctx.outputFiles()），随 run 传递。
+ */
 public class CachedFiles {
     // 表生成并发：writeFile/keepFile 会被多个工作线程同时调用，必须用并发安全 Set
-    private static final Set<String> filename_set = ConcurrentHashMap.newKeySet();
+    private final Set<String> filename_set = ConcurrentHashMap.newKeySet();
 
-    // Main.run末尾的finalExit会迭代这两个列表，而watch的bat虚拟线程可能同时在跑
-    // generator注册清理目录，必须用并发安全容器
-    private static final List<File> deleteFiles = new CopyOnWriteArrayList<>();
-    private static final List<File> deleteKeepMetaWithSuffixFiles = new CopyOnWriteArrayList<>();
+    // finalizeRun 会迭代这两个列表，登记与清理可能来自不同线程，必须用并发安全容器
+    private final List<File> deleteFiles = new CopyOnWriteArrayList<>();
+    private final List<File> deleteKeepMetaWithSuffixFiles = new CopyOnWriteArrayList<>();
     private static final Set<String> metaSuffixSet = Set.of(".meta", ".uid");
 
-    public static void deleteOtherFiles(File dir) {
+    public void deleteOtherFiles(File dir) {
         deleteFiles.add(dir);
     }
 
-    public static void keepMetaAndDeleteOtherFiles(File dir) {
+    public void keepMetaAndDeleteOtherFiles(File dir) {
         deleteKeepMetaWithSuffixFiles.add(dir);
     }
 
-    // Main.run每次运行末尾都会调用（不只进程退出），登记必须按run清空：
-    // 否则GUI第二次Run会按上一轮的登记再清一遍目录，上一轮之后新生成的文件会被误删。
-    // 清空安全：所有要keep的文件每run都会重新登记（writeFile/copyFileIfNotExist都无条件keepFile）
-    public static void finalExit() {
+    /**
+     * 处理登记的清理目录后清空登记：Main.run 每次运行末尾都会调用（不只进程退出），
+     * 同一 Context 上 postRun bat 也可能再次触发生成，登记必须按 run 清空。
+     * 清空安全：所有要keep的文件每run都会重新登记（writeFile/copyFileIfNotExist都无条件keepFile）
+     */
+    public void finalizeRun() {
         deleteFiles.stream().filter(File::exists)
                 .forEach(f -> doRemoveFile(f, false));
         deleteKeepMetaWithSuffixFiles.forEach(dir ->
@@ -40,7 +47,7 @@ public class CachedFiles {
         filename_set.clear();
     }
 
-    public static void writeFile(Path path, byte[] data) throws IOException {
+    public void writeFile(Path path, byte[] data) throws IOException {
         keepFile(path);
         if (!path.toFile().exists()) {
             Logger.log("create file: " + path);
@@ -66,7 +73,7 @@ public class CachedFiles {
         }
     }
 
-    public static void keepFile(Path path) {
+    public void keepFile(Path path) {
         filename_set.add(fileKey(path));
     }
 
@@ -94,7 +101,7 @@ public class CachedFiles {
         return deleteOk;
     }
 
-    private static void doRemoveFile(File file, boolean keepMeta) {
+    private void doRemoveFile(File file, boolean keepMeta) {
         String key = fileKey(file.toPath());
         boolean keep = filename_set.contains(key);
         if (keep) {

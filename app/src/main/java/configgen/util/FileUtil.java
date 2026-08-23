@@ -69,10 +69,10 @@ public class FileUtil {
 
 
     public static void copyFileIfNotExist(String sourceFileInResources, String fallbackSourceFile,
-                                             Path dstFile, String dstEncoding) throws IOException {
+                                             Path dstFile, String dstEncoding, CachedFiles cachedFiles) throws IOException {
 
         if (Files.exists(dstFile)) {
-            CachedFiles.keepFile(dstFile);
+            cachedFiles.keepFile(dstFile);
             return;
         }
 
@@ -94,7 +94,7 @@ public class FileUtil {
         // 3. 使用 try-with-resources 确保所有流（包括 InputStream）都被正确关闭
         try (InputStream autoCloseIs = is;
              BufferedReader br = new BufferedReader(new UnicodeReader(autoCloseIs, StandardCharsets.UTF_8));
-             CachedIndentPrinter ps = new CachedIndentPrinter(dstFile, dstEncoding)) {
+             CachedIndentPrinter ps = new CachedIndentPrinter(dstFile, dstEncoding, cachedFiles)) {
 
             String line;
             while ((line = br.readLine()) != null) {

@@ -46,21 +46,21 @@ public class CfgSchemas {
         return destination;
     }
 
-    public static void writeToDir(Path destination, CfgSchema root) {
+    public static void writeToDir(Path destination, CfgSchema root, CachedFiles cachedFiles) {
         Path absoluteDst = destination.toAbsolutePath().normalize();
         Map<String, CfgSchema> modules = CfgUtil.separate(root);
         for (Map.Entry<String, CfgSchema> entry : modules.entrySet()) {
             String ns = entry.getKey();
             CfgSchema cfg = entry.getValue();
             Path dst = CfgUtil.getCfgFilePathByNamespace(ns, absoluteDst);
-            writeToOneFile(dst, cfg);
+            writeToOneFile(dst, cfg, cachedFiles);
         }
     }
 
-    private static void writeToOneFile(Path dst, CfgSchema cfg) {
+    private static void writeToOneFile(Path dst, CfgSchema cfg, CachedFiles cachedFiles) {
         String content = CfgWriter.stringify(cfg, true, false);
         try {
-            CachedFiles.writeFile(dst, content.getBytes(StandardCharsets.UTF_8));
+            cachedFiles.writeFile(dst, content.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

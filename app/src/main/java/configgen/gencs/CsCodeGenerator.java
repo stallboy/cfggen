@@ -28,6 +28,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
     public final boolean unity;
 
     private Path dstDir;
+    private CachedFiles outputFiles;
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
     public boolean isLangSwitch;
@@ -48,6 +49,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         CfgSchema cfgSchema = cfgValue.schema();
 
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
+        outputFiles = ctx.outputFiles();
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
         // unity 模式用 C#9 兼容的 Loader（含自定义 OrderedDictionary 等）；否则用最新特性版
@@ -55,7 +57,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         FileUtil.copyFileIfNotExist("/support/cs/" + loaderSrc,
                 "src/main/resources/support/cs/" + loaderSrc,
                 dstDir.resolve("Loader.cs"),
-                encoding);
+                encoding, outputFiles);
 
         generateProcessor(cfgSchema);
 
@@ -100,7 +102,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
             generateText(ctx.nullableLangSwitch());
         }
 
-        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
+        outputFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
 
     private void generateInterface(InterfaceSchema sInterface) {
@@ -143,7 +145,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
 
 
     private CachedIndentPrinter createCode(String fn) {
-        return mainCc.get().printer(dstDir.resolve(fn), encoding);
+        return mainCc.get().printer(dstDir.resolve(fn), encoding, outputFiles);
     }
 
     private void generateModuleLoaders(CfgSchema cfgSchema, CfgValue cfgValue) {

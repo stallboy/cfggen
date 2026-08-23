@@ -227,18 +227,22 @@ public enum WatchAndPostRun {
                     genPrefix = "# -gen ";
                 }
                 if (genPrefix != null) {
+                    Context runCtx = coordinator.state();
                     for (String line : Files.readAllLines(Path.of(postRun))) {
                         if (line.startsWith(genPrefix)) {
                             String parameter = line.substring(genPrefix.length());
                             Generator generator = Generators.create(parameter);
                             if (generator != null) {
                                 Logger.log("-gen " + parameter);
-                                generator.generate(coordinator.state());
+                                generator.generate(runCtx);
                             }
                         } else {
                             break;
                         }
                     }
+                    // bat内进程生成的清理收口：原先只登记目录、无人finalize，悬空靠外部bat子进程兜底；
+                    // 在外部进程启动前完成，删除的陈旧文件子进程会重生成
+                    runCtx.outputFiles().finalizeRun();
                 }
 
                 Process process = new ProcessBuilder(postRun).redirectErrorStream(true).start();

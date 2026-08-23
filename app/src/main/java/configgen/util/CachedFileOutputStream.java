@@ -8,22 +8,24 @@ import java.nio.file.Path;
 
 public class CachedFileOutputStream extends ByteArrayOutputStream {
     private final Path path;
+    private final CachedFiles cachedFiles;
 
-    public CachedFileOutputStream(Path path) {
-        this(path, 512);
+    public CachedFileOutputStream(Path path, CachedFiles cachedFiles) {
+        this(path, 512, cachedFiles);
     }
 
-    public CachedFileOutputStream(Path path, int size) {
+    public CachedFileOutputStream(Path path, int size, CachedFiles cachedFiles) {
         super(size);
         this.path = path.toAbsolutePath().normalize();
+        this.cachedFiles = cachedFiles;
     }
 
-    public static OutputStreamWriter createUtf8Writer(Path path) {
-        return new OutputStreamWriter(new CachedFileOutputStream(path), StandardCharsets.UTF_8);
+    public static OutputStreamWriter createUtf8Writer(Path path, CachedFiles cachedFiles) {
+        return new OutputStreamWriter(new CachedFileOutputStream(path, cachedFiles), StandardCharsets.UTF_8);
     }
 
     @Override
     public void close() throws IOException {
-        CachedFiles.writeFile(path, toByteArray());
+        cachedFiles.writeFile(path, toByteArray());
     }
 }
