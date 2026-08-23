@@ -80,7 +80,7 @@ public class AddOrUpdateService {
                 context.sourceStructure().updateExcelFileLastModified(Path.of(dRawSheet.relativeFilePath()));
             }
 
-            context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue());
+            context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue(), !nr.errStrList().isEmpty());
 
             Logger.log("addOrUpdateRecord: table=%s, id=%s, result=%s",
                     tableName, id, code);

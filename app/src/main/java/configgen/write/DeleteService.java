@@ -71,7 +71,7 @@ public class DeleteService {
                 context.sourceStructure().updateExcelFileLastModified(Path.of(dRawSheet.relativeFilePath()));
             }
 
-            context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue());
+            context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue(), !nr.errStrList().isEmpty());
 
             Logger.log("Deleted record: table=%s, id=%s".formatted(tableName, recordId));
             return new DeleteRecordResult(DeleteErrorCode.OK,
