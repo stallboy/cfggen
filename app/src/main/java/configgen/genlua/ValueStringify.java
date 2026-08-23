@@ -3,6 +3,7 @@ package configgen.genlua;
 import configgen.schema.FieldSchema;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static configgen.value.CfgValue.*;
 
@@ -120,13 +121,17 @@ class ValueStringify {
         }
     }
 
+    // map键会拼进 {...} 构造器的 `k = v` 位置，仅合法Lua标识符（且非关键字）才可裸输出：
+    // 含空格/点/引号等字符的键裸输出是非法Lua；纯数字键裸输出会变成number键，按字符串查询永远查不到
+    private static final Pattern LUA_IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9]*");
+
     private void addString(String string) {
         String val = toLuaStringLiteral(string);
         if (isKey) {
-            if (keywords.contains(val) || val.contains("-") || val.contains("=") || val.contains(",")) {
-                res.append("[\"").append(val).append("\"]");
-            } else {
+            if (LUA_IDENTIFIER.matcher(val).matches() && !keywords.contains(val)) {
                 res.append(val);
+            } else {
+                res.append("[\"").append(val).append("\"]");
             }
         } else {
             if (AContext.getInstance().isNoStr()) {
