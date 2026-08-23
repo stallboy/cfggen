@@ -129,16 +129,16 @@ public class StructModel {
 
 
     public String uniqueKeyGetByName(KeySchema keySchema) {
-        return "GetBy" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
+        return GenNaming.uniqueKeyGetByName(keySchema);
     }
 
     public String uniqueKeyMapName(KeySchema keySchema) {
-        return "_" + lower1(keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Map");
+        return "_" + lower1(GenNaming.uniqueKeyMapName(keySchema));
     }
 
     public String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
-            return keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Key";
+            return GenNaming.compositeKeyClassName(keySchema);
         else
             return type(keySchema.fieldSchemas().getFirst().type());
     }
@@ -187,8 +187,8 @@ public class StructModel {
             case RefKey.RefPrimary _ -> fullName(refTable) + post + ".Get(" + actualParam + ")";
 
             case RefKey.RefUniq refUniq ->
-                    fullName(refTable) + post + ".GetBy" + refUniq.keyNames().stream().map(StringUtil::upper1).
-                            collect(Collectors.joining()) + "(" + actualParam + ")";
+                    fullName(refTable) + post + "." + GenNaming.uniqueKeyGetByName(refUniq.keyNames())
+                            + "(" + actualParam + ")";
         };
     }
 

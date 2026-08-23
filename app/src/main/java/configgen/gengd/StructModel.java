@@ -91,15 +91,11 @@ public class StructModel {
     }
 
     public String uniqueKeyGetByName(KeySchema keySchema) {
-        return "find_by_" + keySchema.fields().stream()
-                .map(StringUtil::lower1)
-                .collect(Collectors.joining("_"));
+        return GenNaming.uniqueKeyGetByNameSnake(keySchema);
     }
 
     public String uniqueKeyMapName(KeySchema keySchema) {
-        return "_" + keySchema.fields().stream()
-                .map(StringUtil::lower1)
-                .collect(Collectors.joining("_")) + "_map";
+        return GenNaming.uniqueKeyMapNameSnake(keySchema);
     }
 
     public String keyClassName(KeySchema keySchema) {
@@ -156,9 +152,8 @@ public class StructModel {
                 return fullName(refTable) + ".find(" + actualParam + ")";
             }
             case RefKey.RefUniq refUniq -> {
-                return fullName(refTable) + ".find_by_" + refUniq.keyNames().stream()
-                        .map(StringUtil::lower1)
-                        .collect(Collectors.joining("_")) + "(" + actualParam + ")";
+                return fullName(refTable) + "." + GenNaming.uniqueKeyGetByNameSnake(refUniq.keyNames())
+                        + "(" + actualParam + ")";
             }
         }
     }

@@ -124,11 +124,11 @@ public class StructModel {
 
 
     public String uniqueKeyGetByName(KeySchema keySchema) {
-        return "GetBy" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
+        return GenNaming.uniqueKeyGetByName(keySchema);
     }
 
     public String uniqueKeyMapName(KeySchema keySchema) {
-        return lower1(keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Map");
+        return lower1(GenNaming.uniqueKeyMapName(keySchema));
     }
 
 
@@ -209,8 +209,8 @@ public class StructModel {
                 return className(refTable) + ".Get(" + actualParam + ")";
             }
             case RefKey.RefUniq refUniq -> {
-                return className(refTable) + ".GetBy" + refUniq.keyNames().stream().map(StringUtil::upper1).
-                        collect(Collectors.joining()) + "(" + actualParam + ")";
+                return className(refTable) + "." + GenNaming.uniqueKeyGetByName(refUniq.keyNames())
+                        + "(" + actualParam + ")";
             }
         }
     }

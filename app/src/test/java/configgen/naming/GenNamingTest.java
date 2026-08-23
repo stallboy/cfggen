@@ -38,4 +38,28 @@ class GenNamingTest {
         assertEquals("RefItem", GenNaming.refFieldName(fk("item", new RefKey.RefPrimary(false))));
         assertEquals("RefItem", GenNaming.refFieldName(fk("Item", new RefKey.RefPrimary(false))));
     }
+
+    private static final KeySchema COMPOSITE_KEY = new KeySchema(List.of("name", "id"));
+
+    @Test
+    void pascal族_词干与成品() {
+        assertEquals("NameId", GenNaming.keyFieldsPascalName(COMPOSITE_KEY));
+        assertEquals("NameIdMap", GenNaming.uniqueKeyMapName(COMPOSITE_KEY));
+        assertEquals("NameIdKey", GenNaming.compositeKeyClassName(COMPOSITE_KEY));
+    }
+
+    @Test
+    void pascal族_查找函数名_主键与唯一键() {
+        assertEquals("Get", GenNaming.uniqueKeyGetByName(List.of()));
+        assertEquals("Get", GenNaming.uniqueKeyGetByName(COMPOSITE_KEY, true));
+        assertEquals("GetByNameId", GenNaming.uniqueKeyGetByName(COMPOSITE_KEY));
+        assertEquals("GetByNameId", GenNaming.uniqueKeyGetByName(COMPOSITE_KEY, false));
+    }
+
+    @Test
+    void snake族_gd风格() {
+        assertEquals("find_by_name_id", GenNaming.uniqueKeyGetByNameSnake(COMPOSITE_KEY));
+        assertEquals("find_by_name_id", GenNaming.uniqueKeyGetByNameSnake(List.of("name", "id")));
+        assertEquals("_name_id_map", GenNaming.uniqueKeyMapNameSnake(COMPOSITE_KEY));
+    }
 }

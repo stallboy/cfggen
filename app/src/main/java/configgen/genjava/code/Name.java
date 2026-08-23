@@ -36,18 +36,15 @@ public class Name {
         if (isPrimaryKey){
             return name;
         }
-        return name + "By" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
+        return name + "By" + GenNaming.keyFieldsPascalName(keySchema.fields());
     }
 
     public static String GetByKeyFunctionName(KeySchema keySchema, boolean isPrimaryKey) {
-        if (isPrimaryKey){
-            return "get";
-        }
-        return "getBy" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
+        return StringUtil.lower1(GenNaming.uniqueKeyGetByName(keySchema, isPrimaryKey));
     }
 
     public static String uniqueKeyMapName(KeySchema keySchema) {
-        return keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Map";
+        return GenNaming.uniqueKeyMapName(keySchema);
     }
 
     public static String keyClassName(GenCfg cfg, KeySchema keySchema){
@@ -56,7 +53,7 @@ public class Name {
 
     public static String keyClassName(GenCfg cfg, KeySchema keySchema, NameableName nullableName) {
         if (keySchema.fields().size() > 1) {
-            String klsName = keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Key";
+            String klsName = GenNaming.compositeKeyClassName(keySchema);
             if (nullableName != null) {
                 return nullableName.fullName + "." + klsName;
             } else {

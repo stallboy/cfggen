@@ -105,13 +105,13 @@ public class StructModel {
 
     public String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
-            return "Key" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
+            return "Key" + GenNaming.keyFieldsPascalName(keySchema);
         else return type(keySchema.fieldSchemas().getFirst().type());
     }
 
     public static String mapName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1) {
-            return StringUtil.lower1(keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()));
+            return StringUtil.lower1(GenNaming.keyFieldsPascalName(keySchema));
         } else {
             return StringUtil.lower1(keySchema.fields().getFirst());
         }
