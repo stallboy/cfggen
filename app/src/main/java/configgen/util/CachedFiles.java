@@ -51,7 +51,7 @@ public class CachedFiles {
         keepFile(path);
         if (!path.toFile().exists()) {
             Logger.log("create file: " + path);
-            mkdirs(path.getParent().toFile());
+            mkDirs(path.getParent().toFile());
             Files.write(path, data, StandardOpenOption.CREATE,
                     StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
             return;
@@ -77,7 +77,7 @@ public class CachedFiles {
         filename_set.add(fileKey(path));
     }
 
-    private static void mkdirs(File file) {
+    private static void mkDirs(File file) {
         if (!file.exists()) {
             if (!file.mkdirs()) {
                 Logger.log("mkdirs fail: " + normalizePath(file.toPath()));
@@ -93,7 +93,7 @@ public class CachedFiles {
         return path.toAbsolutePath().normalize().toString();
     }
 
-    public static boolean delete(File file) {
+    private static boolean delete(File file) {
         String dir = file.isDirectory() ? "dir" : "file";
         boolean deleteOk = file.delete();
         String status = deleteOk ? "" : " fail";

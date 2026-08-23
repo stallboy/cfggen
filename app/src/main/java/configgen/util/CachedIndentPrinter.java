@@ -3,7 +3,6 @@ package configgen.util;
 import gg.jte.TemplateOutput;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -51,10 +50,6 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
 
     public CachedIndentPrinter(Path path, String encoding, CachedFiles cachedFiles) {
         this(path, encoding, DEFAULT_CACHE_CONFIG, cachedFiles);
-    }
-
-    public CachedIndentPrinter(File file, String encoding, CachedFiles cachedFiles) {
-        this(file.toPath().toAbsolutePath().normalize(), encoding, cachedFiles);
     }
 
     public CachedIndentPrinter(Path path, String encoding, CacheConfig cacheConfig, CachedFiles cachedFiles) {

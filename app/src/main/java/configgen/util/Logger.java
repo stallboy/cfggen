@@ -3,7 +3,6 @@ package configgen.util;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.UnaryOperator;
@@ -18,11 +17,11 @@ public class Logger {
         };
         Printer outPrinter = System.out::printf;
 
-        static Printer of(PrintStream stream){
+        static Printer of(PrintStream stream) {
             return stream::printf;
         }
 
-        static Printer ofSeq(Printer... printers){
+        static Printer ofSeq(Printer... printers) {
             return (fmt, args) -> {
                 for (Printer p : printers) {
                     p.printf(fmt, args);
@@ -57,19 +56,13 @@ public class Logger {
 
     /**
      * 作用域内把日志改向到 scopedPrinter（通常用 Printer.ofSeq(base, of(stream)) 做 tee）。
-     * close 时从栈中移除自己，正常嵌套 O(1)，乱序关闭也能恢复。
+     * close 时从栈顶向下移除第一个 equals 命中（printer 为 lambda，按身份比较）——
+     * 正常的 try-with-resources 嵌套关闭即栈顶命中，乱序关闭也能正确恢复。
      */
     public static PrinterScope printerScope(Printer scopedPrinter) {
         Objects.requireNonNull(scopedPrinter);
         printerStack.push(scopedPrinter);
-        return () -> {
-            for (Iterator<Printer> it = printerStack.descendingIterator(); it.hasNext(); ) {
-                if (it.next() == scopedPrinter) {
-                    it.remove();
-                    return;
-                }
-            }
-        };
+        return () -> printerStack.remove(scopedPrinter);
     }
 
     private static Printer currentPrinter() {
@@ -122,7 +115,7 @@ public class Logger {
      * 基础 printer（config 里配置的那个），不含 printerScope 栈顶。
      * 想构造 tee 时用它作为原样输出的一路。
      */
-    public static Printer getPrinter(){
+    public static Printer getPrinter() {
         return config.printer();
     }
 
