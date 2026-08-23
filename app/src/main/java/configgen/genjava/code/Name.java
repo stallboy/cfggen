@@ -1,13 +1,13 @@
 package configgen.genjava.code;
 
 import configgen.genjava.GenJavaUtil;
+import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static configgen.util.StringUtil.upper1;
 import static configgen.schema.FieldType.*;
 
 public class Name {
@@ -117,11 +117,7 @@ public class Name {
     }
 
     public static String refName(ForeignKeySchema fk) {
-        String prefix = switch (fk.refKey()) {
-            case RefKey.RefList ignored -> "ListRef";
-            case RefKey.RefSimple refSimple -> refSimple.nullable() ? "NullableRef" : "Ref";
-        };
-        return prefix + upper1(fk.name());
+        return GenNaming.refFieldName(fk);
     }
 
 }

@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 
@@ -113,7 +114,7 @@ public class ValueRefCollector {
                     }
                 }
                 if (refName == null) {
-                    refName = namePrefix + (refSimple.nullable() ? "nullableRef" : "ref") + StringUtil.upper1(fk.name());
+                    refName = namePrefix + StringUtil.lower1(GenNaming.refFieldName(fk));
                 }
 
                 switch (ft) {

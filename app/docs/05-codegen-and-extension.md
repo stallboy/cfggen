@@ -89,7 +89,7 @@ cs 第 4 步的 `keepMetaAndDeleteOtherFiles` **不能**照搬给所有语言，
 
 1. 新建 `gen<lang>` 包，写 `XxxCodeGenerator extends Generator`（需要 tag 就继承 `GeneratorWithTag`）。
 2. **构造函数里声明参数**：`dir = parameter.get("dir", "...")` 等——只写这一遍，参数解析和 `-h` 文档都有了。
-3. `generate(ctx)`：`ctx.makeValue(tag)` → 建 `Model` → `JteEngine.render("lang/Xxx.jte", model, ps)`。并发渲染照抄 cs 的 `ThreadLocal` + `invokeAll` 套路。
+3. `generate(ctx)`：`ctx.makeValue(tag)` → 建 `Model` → `JteEngine.render("lang/Xxx.jte", model, ps)`。并发渲染照抄 cs 的 `ThreadLocal` + `invokeAll` 套路。命名（外键引用字段名、唯一键 Map/GetBy 名等）一律委托 `naming.GenNaming`，禁止把命名 switch 复制进生成器——跨语言命名契约只有一份，历史上 gd 的 RefList 前缀曾因各写一份而漂移（提交 ccc2381c）。
 4. 模板放 `src/main/resources/jte/lang/`。
 5. 在 `Main.registerAllProviders` 加一行 `Generators.addProvider("lang", XxxCodeGenerator::new)`。
 

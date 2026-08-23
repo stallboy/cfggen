@@ -1,5 +1,6 @@
 package configgen.gencs;
 
+import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 import configgen.value.CfgValue;
@@ -123,18 +124,7 @@ public class StructModel {
     }
 
     public String refName(ForeignKeySchema fk) {
-        switch (fk.refKey()) {
-            case RefKey.RefList _ -> {
-                return "ListRef" + upper1(fk.name());
-            }
-            case RefKey.RefSimple refSimple -> {
-                if (refSimple.nullable()) {
-                    return "NullableRef" + upper1(fk.name());
-                } else {
-                    return "Ref" + upper1(fk.name());
-                }
-            }
-        }
+        return GenNaming.refFieldName(fk);
     }
 
 

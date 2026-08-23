@@ -1,6 +1,7 @@
 package configgen.genlua;
 
 import configgen.gen.Generator;
+import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 
@@ -33,18 +34,7 @@ public class Name {
 
 
     static String refName(ForeignKeySchema fk) {
-        switch (fk.refKey()) {
-            case RefKey.RefList ignored -> {
-                return "ListRef" + upper1(fk.name());
-            }
-            case RefKey.RefSimple refSimple -> {
-                if (refSimple.nullable()) {
-                    return "NullableRef" + upper1(fk.name());
-                } else {
-                    return "Ref" + upper1(fk.name());
-                }
-            }
-        }
+        return GenNaming.refFieldName(fk);
     }
 
     static String fullName(AContext aCtx, Nameable nameable) {

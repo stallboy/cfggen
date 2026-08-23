@@ -16,6 +16,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  *   gen（含各语言生成器、write、editorserver、mcpserver、tool）
  *     -&gt; ctx -&gt; value -&gt; data -&gt; schema -&gt; util
  *     value 也可依赖 i18n（i18n 与 data 平级，仅依赖 schema/util）
+ *     naming 仅依赖 schema/util（跨语言生成命名契约），位于 schema 之上，
+ *     可被各 gen* 与 value 使用
  *
  * 历史上存在过四组包级循环（gen与ctx、schema与data、data与ctx、value与ctx），
  * 已分别解开；本测试防止回潮。下层对上层的 import 会让本测试失败。
@@ -45,6 +47,14 @@ class ArchitectureTest {
     @Test
     void schema是最底层_不得依赖其他任何业务包() {
         noClasses().that().resideInAPackage("..configgen.schema..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        pkgs("..configgen.data..", "..configgen.i18n..", "..configgen.value..", "..configgen.ctx.."))
+                .check(CLASSES);
+    }
+
+    @Test
+    void naming仅依赖schema和util_不得依赖其他任何业务包() {
+        noClasses().that().resideInAPackage("..configgen.naming..")
                 .should().dependOnClassesThat().resideInAnyPackage(
                         pkgs("..configgen.data..", "..configgen.i18n..", "..configgen.value..", "..configgen.ctx.."))
                 .check(CLASSES);

@@ -44,6 +44,7 @@ flowchart TD
 | 数据读取 | `data` | `CfgDataReader`、`ReadByFastExcel`、`ReadCsv` |
 | 值模型 / 外键 | `value` | `CfgValue`、`CfgValueParser`、`RefValidator` |
 | 代码生成 | `gen` 基类 + `genjava`/`gencs`/`genlua`/`genbytes` + `gents`/`gengd`/`gengo` + /`genjson`/`genbyai` | `Generator`、各 `*CodeGenerator` |
+| 跨语言生成命名契约（外键引用字段名、唯一键名等） | `naming` | `GenNaming` |
 | 二进制格式 | `genbytes` | `BytesGenerator`、各 `*Serializer`、`ConfigOutput`/`ConfigInput` |
 | 国际化 | `i18n` + `geni18n` | `LangTextFinder`、`LangSwitchable`、`I18nBy*Generator` |
 | 写回（编辑器 / AI → 文件） | `write` + `editorserver` + `mcpserver` | `VTableStorage`、`EditorServer`、`CfgMcpServer` |
