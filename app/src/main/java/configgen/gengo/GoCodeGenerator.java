@@ -41,7 +41,8 @@ public class GoCodeGenerator extends GeneratorWithTag {
         super(parameter);
         dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
-        encoding = parameter.get("encoding", "GBK");
+        // Go 规范要求源码 UTF-8，GBK 编码的中文注释会生成无法编译的 .go 文件
+        encoding = parameter.get("encoding", "UTF-8");
         serverText = parameter.has("serverText");
         GoName.modName = parameter.get("mod", null);
     }
