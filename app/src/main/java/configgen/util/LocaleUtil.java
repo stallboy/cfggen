@@ -4,7 +4,8 @@ import java.text.MessageFormat;
 import java.util.*;
 
 public final class LocaleUtil {
-    private static ResourceBundle resourceBundle;
+    // 懒加载缓存：setLocale 置 null 失效；volatile 保证换语言后其他线程能立刻看到重建
+    private static volatile ResourceBundle resourceBundle;
     private static final Set<Locale> availableLocalesSet;
 
     static {

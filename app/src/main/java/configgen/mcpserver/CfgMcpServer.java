@@ -11,10 +11,11 @@ import configgen.util.Logger;
 import configgen.value.CfgValue;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 @McpServerApplication(basePackage = "configgen.mcpserver")
 public class CfgMcpServer extends GeneratorWithTag {
-    private static volatile CfgMcpServer INSTANCE = null;
+    private static final AtomicReference<CfgMcpServer> INSTANCE = new AtomicReference<>();
 
     public record CfgValueWithContext(CfgValue cfgValue,
                                       Context context) {
@@ -26,7 +27,7 @@ public class CfgMcpServer extends GeneratorWithTag {
     private volatile CfgValueWithContext cfgValueWithContext;
 
     public static CfgMcpServer getInstance() {
-        return INSTANCE;
+        return INSTANCE.get();
     }
 
     public CfgMcpServer(Parameter parameter) {
@@ -38,13 +39,17 @@ public class CfgMcpServer extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx) throws IOException {
-        if (INSTANCE != null) {
+        if (INSTANCE.get() != null) {
             Logger.log("CfgMcpServer instance already exists! ignore this");
             return;
         }
 
         initFromCtx(ctx);
-        INSTANCE = this;
+        // CAS 发布：并发的两个 generate 只有一个生效；init 先行保证其抛异常时不发布半初始化实例
+        if (!INSTANCE.compareAndSet(null, this)) {
+            Logger.log("CfgMcpServer instance already exists! ignore this");
+            return;
+        }
         // 无论是否开启watch都注册：reload换代后与编辑写操作（含同进程EditorServer的写）成功后，
         // 都会经此刷新内存快照（见WatchAndPostRun/StateCoordinator）
         WatchAndPostRun.INSTANCE.registerPostRunCallback(this::initFromCtx);

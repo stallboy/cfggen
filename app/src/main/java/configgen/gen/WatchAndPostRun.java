@@ -48,8 +48,9 @@ public enum WatchAndPostRun {
     private final StateCoordinator<Context> coordinator = new StateCoordinator<>();
     private Watcher watcher;
     private WaitWatcher waitWatcher;
-    // autoFix写回config.cfg会再触发watch→reload，若对齐不稳定会形成写-触发循环，需要上限保护
-    private int consecutiveAutoFixReloads = 0;
+    // autoFix写回config.cfg会再触发watch→reload，若对齐不稳定会形成写-触发循环，需要上限保护。
+    // 读写跨线程（reloadData在watcher线程、startWatch的重置在主线程），volatile 保证重置可见
+    private volatile int consecutiveAutoFixReloads = 0;
     private static final int MAX_CONSECUTIVE_AUTO_FIX_RELOADS = 3;
     // bat里先跑-generator再跑外部进程，外部进程不关stdout时readLine会永久阻塞，join必须有界
     private static final long POST_RUN_JOIN_TIMEOUT_MILLIS = 10 * 60 * 1000;
