@@ -45,10 +45,14 @@ public class StructModel {
     }
 
     public String type(FieldType t) {
-        if (t == TEXT) {
-            return gen.isLangSwitch ? "*Text" : "string";
-        }
-        return plainType(t);
+        // 容器必须递归用实例type：读代码模板对list/map的元素也按实例type生成（TEXT→*Text），
+        // 声明若走plainType会产生 []string 声明 + []*Text 读取的自相矛盾代码（langswitch下无法编译）
+        return switch (t) {
+            case TEXT -> gen.isLangSwitch ? "*Text" : "string";
+            case FList fList -> "[]" + type(fList.item());
+            case FMap fMap -> String.format("map[%s]%s", type(fMap.key()), type(fMap.value()));
+            default -> plainType(t);
+        };
     }
 
     /// 与实例type的区别仅在TEXT：key/映射键等不涉isLangSwitch的场景用string
