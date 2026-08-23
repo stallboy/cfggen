@@ -55,14 +55,10 @@ public enum WatchAndPostRun {
     private static final long POST_RUN_JOIN_TIMEOUT_MILLIS = 10 * 60 * 1000;
 
     /**
-     * Main在创建Context后、执行generators前登记当前代。之后所有读写都经 {@link #context()} / {@link #runEdit} 取当前代。
+     * Main在创建Context后、执行generators前登记当前代。之后所有编辑写操作都经 {@link #runEdit} 取当前代。
      */
     public void initContext(Context context) {
         coordinator.setInitial(context);
-    }
-
-    public Context context() {
-        return coordinator.state();
     }
 
     /**

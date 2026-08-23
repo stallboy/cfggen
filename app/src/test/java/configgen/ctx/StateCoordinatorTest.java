@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -81,7 +82,7 @@ class StateCoordinatorTest {
             });
         });
         editor.start();
-        assertTrue(editStarted.await(5, java.util.concurrent.TimeUnit.SECONDS), "编辑应已进入临界区");
+        assertTrue(editStarted.await(5, TimeUnit.SECONDS), "编辑应已进入临界区");
 
         Thread installer = new Thread(() -> {
             c.installState("new");

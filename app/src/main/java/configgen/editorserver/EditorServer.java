@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import configgen.util.Logger;
 
 import static configgen.editorserver.CheckJsonService.*;
-import static configgen.editorserver.RecordEditService.ResultCode.*;
 import static configgen.editorserver.RecordService.*;
 import static configgen.editorserver.RecordEditService.*;
 

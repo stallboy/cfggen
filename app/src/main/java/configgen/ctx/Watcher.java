@@ -72,7 +72,6 @@ public class Watcher {
         startedThread = null;
 
         WatchService ws = watchService;
-        watchService = null;
         if (ws != null) {
             try {
                 ws.close();
