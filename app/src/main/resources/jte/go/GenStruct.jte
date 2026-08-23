@@ -31,7 +31,7 @@ type ${className} struct {
     @endfor
     <%--ref property--%>
     @for (ForeignKeySchema fk : structural.foreignKeys())
-        ${lower1(StructModel.refName(fk))} ${StructModel.refType(fk)}
+        ${lower1(StructModel.refName(fk))} ${model.refType(fk)}
     @endfor
 }
 

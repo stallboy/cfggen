@@ -44,26 +44,20 @@ public class StructModel {
         };
     }
 
+    /**
+     * 字段的Go类型。TEXT按isLangSwitch映射（*Text/string），容器递归使用同一规则——
+     * 读代码模板（GenStruct.jte）对list/map元素也按本方法生成，声明与读取必须同源，
+     * 拆出第二个"忽略langswitch"的类型函数曾导致 []string 声明 + []*Text 读取的自相矛盾代码。
+     * 键类型（主键/唯一键/map键）经schema校验只可能是BOOL/INT/LONG/STRING，不会走到TEXT分支。
+     */
     public String type(FieldType t) {
-        // 容器必须递归用实例type：读代码模板对list/map的元素也按实例type生成（TEXT→*Text），
-        // 声明若走plainType会产生 []string 声明 + []*Text 读取的自相矛盾代码（langswitch下无法编译）
-        return switch (t) {
-            case TEXT -> gen.isLangSwitch ? "*Text" : "string";
-            case FList fList -> "[]" + type(fList.item());
-            case FMap fMap -> String.format("map[%s]%s", type(fMap.key()), type(fMap.value()));
-            default -> plainType(t);
-        };
-    }
-
-    /// 与实例type的区别仅在TEXT：key/映射键等不涉isLangSwitch的场景用string
-    public static String plainType(FieldType t) {
         return switch (t) {
             case BOOL -> "bool";
             case INT -> "int32";
             case LONG -> "int64";
             case FLOAT -> "float32";
             case STRING -> "string";
-            case TEXT -> "string";
+            case TEXT -> gen.isLangSwitch ? "*Text" : "string";
             case StructRef structRef -> {
                 Fieldable fieldable = structRef.obj();
                 yield switch (fieldable) {
@@ -71,8 +65,8 @@ public class StructModel {
                     case InterfaceSchema ignored -> ClassName(fieldable);
                 };
             }
-            case FList fList -> "[]" + plainType(fList.item());
-            case FMap fMap -> String.format("map[%s]%s", plainType(fMap.key()), plainType(fMap.value()));
+            case FList fList -> "[]" + type(fList.item());
+            case FMap fMap -> String.format("map[%s]%s", type(fMap.key()), type(fMap.value()));
         };
     }
 
@@ -81,7 +75,7 @@ public class StructModel {
         return varName.className;
     }
 
-    public static String refType(ForeignKeySchema fk) {
+    public String refType(ForeignKeySchema fk) {
         GoName refTableName = new GoName(fk.refTableSchema());
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
@@ -97,7 +91,7 @@ public class StructModel {
                         return "[]*" + ClassName(fk.refTableSchema());
                     }
                     case FMap fMap -> {
-                        return String.format("map[%s]*%s", plainType(fMap.key()), ClassName(fk.refTableSchema()));
+                        return String.format("map[%s]*%s", type(fMap.key()), ClassName(fk.refTableSchema()));
                     }
                 }
             }
@@ -119,10 +113,10 @@ public class StructModel {
         }
     }
 
-    public static String keyClassName(KeySchema keySchema) {
+    public String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
             return "Key" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
-        else return plainType(keySchema.fieldSchemas().getFirst().type());
+        else return type(keySchema.fieldSchemas().getFirst().type());
     }
 
     public static String mapName(KeySchema keySchema) {
@@ -145,13 +139,13 @@ public class StructModel {
                 .collect(Collectors.joining(", "));
     }
 
-    public static String GetVarDefines(KeySchema keySchema) {
+    public String GetVarDefines(KeySchema keySchema) {
         return keySchema.fieldSchemas().stream()
-                .map(f -> StringUtil.lower1(f.name()) + " " + plainType(f.type()))
+                .map(f -> StringUtil.lower1(f.name()) + " " + type(f.type()))
                 .collect(Collectors.joining(", "));
     }
 
-    public static String GetFuncName(KeySchema keySchema, boolean refPrimary) {
+    public String GetFuncName(KeySchema keySchema, boolean refPrimary) {
         var fieldSchemas = keySchema.fieldSchemas();
         var fieldCnt = fieldSchemas.size();
         if (refPrimary) {
