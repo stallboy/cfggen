@@ -77,11 +77,12 @@ public final class I18nByIdGenerator extends Generator {
                                                 boolean checkWrite,
                                                 Path langsDir,
                                                 Path backupDir) throws IOException {
-        try (PrintStream verboseStream = new PrintStream("log_" + lang + ".txt")) {
-            Logger.Printer old = Logger.getPrinter();
-            Logger.setPrinter(Logger.Printer.ofSeq(old, Logger.Printer.of(verboseStream)));
+        // 此语言生成期间，日志在原样输出的同时 tee 到 log_<lang>.txt；
+        // scope 栈保证异常路径也会恢复原 printer（原先手工换回，抛异常时永久劫持全局日志）
+        try (PrintStream verboseStream = new PrintStream("log_" + lang + ".txt");
+             Logger.PrinterScope ignored = Logger.printerScope(
+                     Logger.Printer.ofSeq(Logger.getPrinter(), Logger.Printer.of(verboseStream)))) {
             generateForValue(cfgValue, lang, checkWrite, langsDir, backupDir);
-            Logger.setPrinter(old);
         }
     }
 

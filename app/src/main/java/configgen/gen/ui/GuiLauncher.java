@@ -47,7 +47,6 @@ public class GuiLauncher {
 
     private final PrintStream originalOut = System.out;
     private final PrintStream originalErr = System.err;
-    private final Logger.Printer originalPrinter = Logger.getPrinter();
 
     public static void launch() {
         SwingUtilities.invokeLater(() -> {
@@ -60,6 +59,9 @@ public class GuiLauncher {
     }
 
     private void init() {
+        // GUI 是宿主：日志 printer 一次性接管到 GUI 控制台即可（GuiPrinter 经 invokeLater 投递，线程安全），
+        // 不必每次 Run 换入换出——原先的 save/restore 正是把它当临时劫持才需要
+        Logger.setPrinter(new GuiPrinter());
         String currentDir = System.getProperty("user.dir");
         String title = LocaleUtil.getLocaleString("GuiLauncher.Title", "Configuration Generator") + " - " + currentDir;
 
@@ -469,13 +471,11 @@ public class GuiLauncher {
     private void redirectOutput() {
         System.setOut(new PrintStream(new TextAreaOutputStream(outputArea), true, StandardCharsets.UTF_8));
         System.setErr(new PrintStream(new TextAreaOutputStream(outputArea), true, StandardCharsets.UTF_8));
-        Logger.setPrinter(new GuiPrinter());
     }
 
     private void restoreOutput() {
         System.setOut(originalOut);
         System.setErr(originalErr);
-        Logger.setPrinter(originalPrinter);
     }
 
     private JTextField createTextField() {
