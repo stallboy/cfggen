@@ -12,7 +12,6 @@ import configgen.util.StringUtil;
 /// 变量名camlCase,私有变量首字母小写，导出变量首字母大写
 /// 函数名，导出函数首字母大写，包内函数小写
 public class GoName {
-    public static String modName;
 
     public final String filePath;
     public final String className;

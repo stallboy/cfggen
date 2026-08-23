@@ -2,9 +2,9 @@
 @import configgen.genjava.code.*
 @import configgen.schema.*
 @import configgen.util.StringUtil
-@param String codeTopPkg
+@param configgen.genjava.code.GenCfg cfg
 @param Structural structural
-public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
+public void _resolveDirect(${cfg.codeTopPkg()}.ConfigMgr mgr) {
         @for(ForeignKeySchema fk : structural.foreignKeys())
             @if(fk.refKey() instanceof RefKey.RefSimple refSimple)
                 !{
@@ -13,7 +13,7 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                     TableSchema refTable = fk.refTableSchema();
                 }
                 @if(firstField.type() instanceof FieldType.SimpleType)
-                    ${refName} = ${MethodStr.tableGet(refTable, refSimple, MethodStr.actualParams(fk.key().fields()))};
+                    ${refName} = ${MethodStr.tableGet(cfg, refTable, refSimple, MethodStr.actualParams(fk.key().fields()))};
                     @if(!refSimple.nullable())
                         configgen.genjava.LoadValueErrs.requireNonNull(${refName}, "${structural.name()}.${fk.name()} -> ${refTable.name()}", ${MethodStr.keyDisplayExpr(fk.key())});
                     @endif
@@ -25,8 +25,8 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                         ${refName} = java.util.Collections.emptyList();
                     } else {
                         ${refName} = new java.util.ArrayList<>(${firstFieldName}.size());
-                        for (${TypeStr.boxType(fList.item())} e : ${firstFieldName}) {
-                            ${Name.refType(refTable)} r = ${MethodStr.tableGet(refTable, refSimple, "e")};
+                        for (${TypeStr.boxType(cfg, fList.item())} e : ${firstFieldName}) {
+                            ${Name.refType(cfg, refTable)} r = ${MethodStr.tableGet(cfg, refTable, refSimple, "e")};
                             configgen.genjava.LoadValueErrs.requireNonNull(r, "${structural.name()}.${fk.name()} -> ${refTable.name()}", e);
                             ${refName}.add(r);
                         }
@@ -39,8 +39,8 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                         ${refName} = java.util.Collections.emptyMap();
                     } else {
                         ${refName} = new java.util.LinkedHashMap<>(${firstFieldName}.size());
-                        for (java.util.Map.Entry<${TypeStr.boxType(fMap.key())}, ${TypeStr.boxType(fMap.value())}> e : ${firstFieldName}.entrySet()) {
-                            ${Name.refType(refTable)} rv = ${MethodStr.tableGet(refTable, refSimple, "e.getValue()")};
+                        for (java.util.Map.Entry<${TypeStr.boxType(cfg, fMap.key())}, ${TypeStr.boxType(cfg, fMap.value())}> e : ${firstFieldName}.entrySet()) {
+                            ${Name.refType(cfg, refTable)} rv = ${MethodStr.tableGet(cfg, refTable, refSimple, "e.getValue()")};
                             configgen.genjava.LoadValueErrs.requireNonNull(rv, "${structural.name()}.${fk.name()} -> ${refTable.name()}", e.getValue());
                             ${refName}.put(e.getKey(), rv);
                         }
@@ -50,7 +50,7 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                 !{
                     String refName = Name.refName(fk);
                     TableSchema refTable = fk.refTableSchema();
-                    NameableName refN = new NameableName(refTable);
+                    NameableName refN = new NameableName(cfg, refTable);
                     boolean isEnumAndNoDetail = GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(refTable);
                     boolean isEnum = refTable.entry() instanceof EntryType.EEnum && !isEnumAndNoDetail;
                 }
@@ -60,15 +60,15 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                 @elseif(isEnum)
                     for (${refN.fullName} vv : ${refN.fullName}.values()) {
                         @if(refTable.primaryKey().fieldSchemas().size() == 1 && refTable.primaryKey().fieldSchemas().getFirst().isSeq())
-                            ${Name.tableDataFullName(refTable)} v = mgr.${refN.containerPrefix}All[vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}()];
+                            ${Name.tableDataFullName(cfg, refTable)} v = mgr.${refN.containerPrefix}All[vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}()];
                         @else
-                            ${Name.tableDataFullName(refTable)} v = mgr.${refN.containerPrefix}All.get(vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}());
+                            ${Name.tableDataFullName(cfg, refTable)} v = mgr.${refN.containerPrefix}All.get(vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}());
                         @endif
                 @else
                     @if(refTable.primaryKey().fieldSchemas().size() == 1 && refTable.primaryKey().fieldSchemas().getFirst().isSeq())
-                        for (${Name.refType(refTable)} v : java.util.Arrays.asList(mgr.${refN.containerPrefix}All)) {
+                        for (${Name.refType(cfg, refTable)} v : java.util.Arrays.asList(mgr.${refN.containerPrefix}All)) {
                     @else
-                        for (${Name.refType(refTable)} v : mgr.${refN.containerPrefix}All.values()) {
+                        for (${Name.refType(cfg, refTable)} v : mgr.${refN.containerPrefix}All.values()) {
                     @endif
                 @endif
                     !{

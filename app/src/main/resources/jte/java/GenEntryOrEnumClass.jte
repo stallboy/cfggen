@@ -1,5 +1,4 @@
 @import configgen.genjava.code.EntryOrEnumModel
-@import configgen.genjava.code.TypeStr
 @import configgen.genjava.code.Name
 @import configgen.schema.FieldSchema
 @import configgen.schema.ForeignKeySchema
@@ -25,9 +24,9 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 String fix = c == len ? ";" : ",";
             }
             @if(model.isEnum)
-                ${Name.enumFieldName(enumName)}("${enumName}")${fix}
+                ${model.enumFieldName(enumName)}("${enumName}")${fix}
             @else
-                public static final ${model.className} ${Name.enumFieldName(enumName)} = new ${model.className}("${enumName}");
+                public static final ${model.className} ${model.enumFieldName(enumName)} = new ${model.className}("${enumName}");
             @endif
         @endfor
         @if(model.isEnum && 0 == c)
@@ -58,9 +57,9 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 String fix = c == len ? ";" : ",";
             }
             @if(model.isEnum)
-                ${Name.enumFieldName(enumName)}("${enumName}", ${value})${fix}
+                ${model.enumFieldName(enumName)}("${enumName}", ${value})${fix}
             @else
-                public static final ${model.className} ${Name.enumFieldName(enumName)} = new ${model.className}("${enumName}", ${value});
+                public static final ${model.className} ${model.enumFieldName(enumName)} = new ${model.className}("${enumName}", ${value});
             @endif
         @endfor
         @if(model.isEnum && 0 == c)
@@ -101,7 +100,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 @for(String line : field.comment().split("\n")) * ${line}@endfor
                  */
             @endif
-            public ${TypeStr.type(field.type())} get${StringUtil.upper1(field.name())}() {
+            public ${model.type(field.type())} get${StringUtil.upper1(field.name())}() {
                 @if(field == model.table.primaryKey().fieldSchemas().getFirst())
                     return value;
                 @elseif(field == model.entryBase.fieldSchema())
@@ -114,7 +113,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
         @endfor
 
         @for(ForeignKeySchema fk : model.table.foreignKeys())
-            public ${Name.refType(fk)} ${StringUtil.lower1(Name.refName(fk))}() {
+            public ${model.refType(fk)} ${StringUtil.lower1(Name.refName(fk))}() {
                 return ref.${StringUtil.lower1(Name.refName(fk))}();
             }
 
@@ -144,7 +143,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
         @else
             public static void setAllRefs(${model.codeTopPkg}.ConfigMgr mgr) {
                 @for(String enumName : model.enumNames)
-                    ${Name.enumFieldName(enumName)}.setRef(mgr);
+                    ${model.enumFieldName(enumName)}.setRef(mgr);
                 @endfor
             }
         @endif

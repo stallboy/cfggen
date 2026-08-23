@@ -40,7 +40,7 @@ class ValueStringify {
     private ValueStringify notKey;
 
     /**
-     * @param pkStr 可为null。当设置时，此时AContext.getInstance().nullableLangSwitchSupport()！=null，并且此table含有text
+     * @param pkStr 可为null。当设置时，此时ctx.aCtx().nullableLangSwitchSupport()！=null，并且此table含有text
      */
     public ValueStringify(StringBuilder res, Ctx ctx, String beanTypeStr, String pkStr) {
         this.res = res;
@@ -48,7 +48,7 @@ class ValueStringify {
         this.beanTypeStr = beanTypeStr;
         this.pkStr = pkStr;
         if (pkStr != null) {
-            if (AContext.getInstance().nullableLangSwitchSupport() == null) {
+            if (ctx.aCtx().nullableLangSwitchSupport() == null) {
                 throw new IllegalArgumentException("Don't set pkStr when no LangSwitch");
             }
         }
@@ -114,7 +114,7 @@ class ValueStringify {
      */
     private void addVText(VText value, List<String> fieldChain) {
         if (hasLangSwitchAndText()) {
-            int id = AContext.getInstance().nullableLangSwitchSupport().enterText(pkStr, fieldChain, value.value()) + 1;
+            int id = ctx.aCtx().nullableLangSwitchSupport().enterText(pkStr, fieldChain, value.value()) + 1;
             res.append(id);
         } else {
             addString(value.value());
@@ -134,7 +134,7 @@ class ValueStringify {
                 res.append("[\"").append(val).append("\"]");
             }
         } else {
-            if (AContext.getInstance().isNoStr()) {
+            if (ctx.aCtx().isNoStr()) {
                 res.append("''");
             } else {
                 res.append("\"").append(val).append("\"");
@@ -147,7 +147,7 @@ class ValueStringify {
         int sz = value.valueList().size();
         if (sz == 0) { //优化，避免重复创建空table
             ctx.ctxShared().incEmptyTableUseCount();
-            res.append(AContext.getInstance().getEmptyTableStr());
+            res.append(ctx.aCtx().getEmptyTableStr());
 
         } else {
             String vstr = getSharedCompositeBriefName(value);
@@ -156,7 +156,7 @@ class ValueStringify {
 
             } else {
                 ctx.ctxShared().incListTableUseCount();
-                res.append(AContext.getInstance().getListMapPrefixStr());
+                res.append(ctx.aCtx().getListMapPrefixStr());
                 int idx = 0;
                 for (Value eleValue : value.valueList()) {
                     notKey.addValue(eleValue, subChain(fieldChain, String.valueOf(idx)));
@@ -165,7 +165,7 @@ class ValueStringify {
                         res.append(", ");
                     }
                 }
-                res.append(AContext.getInstance().getListMapPostfixStr());
+                res.append(ctx.aCtx().getListMapPostfixStr());
             }
         }
     }
@@ -182,7 +182,7 @@ class ValueStringify {
         int sz = value.valueMap().size();
         if (sz == 0) { //优化，避免重复创建空table
             ctx.ctxShared().incEmptyTableUseCount();
-            res.append(AContext.getInstance().getEmptyTableStr());
+            res.append(ctx.aCtx().getEmptyTableStr());
 
         } else {
             String vstr = getSharedCompositeBriefName(value);
@@ -191,7 +191,7 @@ class ValueStringify {
 
             } else {
                 ctx.ctxShared().incMapTableUseCount();
-                res.append(AContext.getInstance().getListMapPrefixStr());
+                res.append(ctx.aCtx().getListMapPrefixStr());
                 int idx = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> e : value.valueMap().entrySet()) {
                     key.addValue(e.getKey(), subChain(fieldChain, String.format("%dk", idx)));
@@ -202,7 +202,7 @@ class ValueStringify {
                         res.append(", ");
                     }
                 }
-                res.append(AContext.getInstance().getListMapPostfixStr());
+                res.append(ctx.aCtx().getListMapPostfixStr());
             }
         }
     }
@@ -216,7 +216,7 @@ class ValueStringify {
 
         String beanType = beanTypeStr;
         if (beanType == null) {
-            beanType = ctx.ctxName().getLocalName(Name.fullName(vStruct.schema()));
+            beanType = ctx.ctxName().getLocalName(Name.fullName(ctx.aCtx(), vStruct.schema()));
         }
 
         String vstr = getSharedCompositeBriefName(value);
@@ -224,7 +224,7 @@ class ValueStringify {
             res.append(vstr);
 
         } else {
-            AStat statistics = AContext.getInstance().getStatistics();
+            AStat statistics = ctx.aCtx().getStatistics();
             if (beanTypeStr != null) {
                 statistics.useRecordTable();
             } else if (nullableInterface != null) {
@@ -238,7 +238,7 @@ class ValueStringify {
                 res.append("(");
                 int idx = 0;
                 boolean meetBool = false;
-                boolean doPack = TypeStr.isDoPackBool(vStruct.schema());
+                boolean doPack = TypeStr.isDoPackBool(ctx.aCtx(), vStruct.schema());
                 int i = 0;
                 for (FieldSchema field : vStruct.schema().fields()) {
                     Value fieldValue = vStruct.values().get(i);

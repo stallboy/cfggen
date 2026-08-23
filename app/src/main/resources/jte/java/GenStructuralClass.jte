@@ -1,5 +1,3 @@
-@import configgen.genjava.code.Name
-@import configgen.genjava.code.TypeStr
 @import configgen.genjava.code.StructuralClassModel
 @import configgen.genjava.code.StructuralClassModel.FieldInfo
 @import configgen.genjava.code.StructuralClassModel.ForeignKeyInfo
@@ -15,8 +13,8 @@ ${model.sourceComment}
     public ${model.isSealedInterface?"final ":""}class ${model.className} implements ${model.nullableInterfaceFullName} {
         @if(model.enumRefTable != null)
             @Override
-            public ${Name.refType(model.enumRefTable)} type() {
-                return ${Name.refType(model.enumRefTable)}.${Name.enumFieldName(model.structural.name())};
+            public ${model.refType(model.enumRefTable)} type() {
+                return ${model.refType(model.enumRefTable)}.${model.enumFieldName(model.structural.name())};
             }
 
         @endif
@@ -65,7 +63,7 @@ ${model.sourceComment}
                 String ln = StringUtil.lower1(field.name());
             }
             @if(field.type() instanceof FieldType.SimpleType simpleType)
-                self.${ln} = ${TypeStr.readValue(simpleType)};
+                self.${ln} = ${model.readValue(simpleType)};
             @elseif(field.type() instanceof FieldType.FList fList)
                 {
                     int c = input.readInt();
@@ -74,7 +72,7 @@ ${model.sourceComment}
                     } else {
                         self.${ln} = new java.util.ArrayList<>(c);
                         for (; c > 0; c--) {
-                            self.${ln}.add(${TypeStr.readValue((fList.item()))});
+                            self.${ln}.add(${model.readValue((fList.item()))});
                         }
                     }
                 }
@@ -86,7 +84,7 @@ ${model.sourceComment}
                     } else {
                         self.${ln} = new java.util.LinkedHashMap<>(c);
                         for (; c > 0; c--) {
-                            self.${ln}.put(${TypeStr.readValue(fMap.key())}, ${TypeStr.readValue((fMap.value()))});
+                            self.${ln}.put(${model.readValue(fMap.key())}, ${model.readValue((fMap.value()))});
                         }
                     }
                 }
@@ -154,13 +152,13 @@ ${model.sourceComment}
 
     @if(model.hasRef && !model.isTableAndNeedBuilder)
         @if(!model.structural.foreignKeys().isEmpty())
-            @template.java.GenResolveDirect(codeTopPkg = model.codeTopPkg, structural = model.structural)
+            @template.java.GenResolveDirect(cfg = model.cfg, structural = model.structural)
         @endif
 
         @if(model.nullableInterface!=null)
             @Override
         @endif
-        @template.java.GenResolve(codeTopPkg = model.codeTopPkg, structural = model.structural)
+        @template.java.GenResolve(cfg = model.cfg, structural = model.structural)
     @endif
 
     @if(model.isTable)

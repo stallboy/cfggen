@@ -7,11 +7,17 @@ import static configgen.value.CfgValue.*;
 
 class ValueShared {
 
+    private final AContext aContext;
     private final List<ValueSharedLayer> layers = new ArrayList<>();
     private final VTable vTable;
 
-    ValueShared(VTable vtable) {
+    ValueShared(AContext aContext, VTable vtable) {
+        this.aContext = aContext;
         vTable = vtable;
+    }
+
+    AContext aCtx() {
+        return aContext;
     }
 
     void iterateShared() {

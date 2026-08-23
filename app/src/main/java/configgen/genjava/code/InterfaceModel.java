@@ -19,19 +19,19 @@ public class InterfaceModel {
                        String fullName) {
     }
 
-    InterfaceModel(InterfaceSchema sInterface, NameableName name) {
+    InterfaceModel(GenCfg cfg, InterfaceSchema sInterface, NameableName name) {
         this.pkg = name.pkg;
-        this.codeTopPkg = Name.codeTopPkg;
+        this.codeTopPkg = cfg.codeTopPkg();
         this.className = name.className;
-        this.isSealedInterface = NameableName.isSealedInterface;
+        this.isSealedInterface = cfg.isSealedInterface();
         this.nullableEnumRefTable = sInterface.nullableEnumRefTable() != null ?
-                Name.refType(sInterface.nullableEnumRefTable()) : null;
+                Name.refType(cfg, sInterface.nullableEnumRefTable()) : null;
         this.hasRef = HasRef.hasRef(sInterface);
 
         this.impls = sInterface.impls().stream().map(impl ->
                         new Impl(impl.name(),
-                                Name.pascalName(impl.name()),
-                                Name.fullName(impl)))
+                                Name.pascalName(cfg, impl.name()),
+                                Name.fullName(cfg, impl)))
                 .toList();
     }
 }

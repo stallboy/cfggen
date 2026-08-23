@@ -10,6 +10,7 @@ public class StructuralClassModel {
     public final Structural structural;
     public final NameableName name;
 
+    public final GenCfg cfg;
     public final String pkg;
     public final String className;
     public final boolean isSealedInterface;
@@ -35,33 +36,34 @@ public class StructuralClassModel {
                                  String name) {
     }
 
-    public StructuralClassModel(Structural structural, NameableName name, boolean isTableAndNeedBuilder,
+    public StructuralClassModel(GenCfg cfg, Structural structural, NameableName name, boolean isTableAndNeedBuilder,
                                 String sourceComment) {
+        this.cfg = cfg;
         this.structural = structural;
         this.name = name;
         this.sourceComment = sourceComment;
         this.pkg = name.pkg;
         this.className = name.className;
-        this.isSealedInterface = NameableName.isSealedInterface;
+        this.isSealedInterface = cfg.isSealedInterface();
         this.isTable = structural instanceof TableSchema;
         this.isTableAndNeedBuilder = isTableAndNeedBuilder;
         this.isStructAndHasNoField = !isTable && structural.fields().isEmpty();
-        this.codeTopPkg = Name.codeTopPkg;
+        this.codeTopPkg = cfg.codeTopPkg();
 
         // Interface information
         nullableInterface = structural instanceof StructSchema struct ? struct.nullableInterface() : null;
         this.isImpl = nullableInterface != null;
-        this.nullableInterfaceFullName = isImpl ? Name.fullName(nullableInterface) : null;
+        this.nullableInterfaceFullName = isImpl ? Name.fullName(cfg, nullableInterface) : null;
         this.enumRefTable = isImpl ? nullableInterface.nullableEnumRefTable() : null;
 
         // Fields
         this.fields = structural.fields().stream()
-                .map(f -> new FieldInfo(lower1(f.name()), TypeStr.type(f.type()), f.comment()))
+                .map(f -> new FieldInfo(lower1(f.name()), TypeStr.type(cfg, f.type()), f.comment()))
                 .toList();
 
         // Foreign keys
         this.foreignKeys = structural.foreignKeys().stream()
-                .map(fk -> new ForeignKeyInfo(Name.refType(fk), Name.refName(fk)))
+                .map(fk -> new ForeignKeyInfo(Name.refType(cfg, fk), Name.refName(fk)))
                 .toList();
 
         this.hasRef = HasRef.hasRef(structural);
@@ -69,7 +71,7 @@ public class StructuralClassModel {
 
 
     public String formalParams() {
-        return MethodStr.formalParams(structural.fields());
+        return MethodStr.formalParams(cfg, structural.fields());
     }
 
     public String hashCodes() {
@@ -85,5 +87,22 @@ public class StructuralClassModel {
                 .map(FieldInfo::name)
                 .reduce((a, b) -> a + " + \",\" + " + b)
                 .orElse("");
+    }
+
+    // 以下为模板渲染的便捷入口：让 .jte 无须再传 cfg 调 Name/TypeStr 的静态方法
+    public String refType(TableSchema table) {
+        return Name.refType(cfg, table);
+    }
+
+    public String enumFieldName(String enumName) {
+        return Name.enumFieldName(cfg, enumName);
+    }
+
+    public String readValue(FieldType t) {
+        return TypeStr.readValue(cfg, t);
+    }
+
+    public String actualParamsKey(KeySchema keySchema, String pre) {
+        return MethodStr.actualParamsKey(cfg, keySchema, pre, null);
     }
 }

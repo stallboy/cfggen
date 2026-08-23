@@ -31,13 +31,13 @@ class TypeStr {
 
         TableSchema table = ctx.vTable().schema();
 
-        String keystr1 = getColumnStrOrIndex(keySchema.fieldSchemas().get(0), table);
+        String keystr1 = getColumnStrOrIndex(ctx.aCtx(), keySchema.fieldSchemas().get(0), table);
 
         if (keySchema.fieldSchemas().size() > 1) {
             if (keySchema.fieldSchemas().size() != 2) {
                 throw new RuntimeException("uniqkeys size != 2 " + table.name());
             }
-            String keystr2 = getColumnStrOrIndex(keySchema.fieldSchemas().get(1), table);
+            String keystr2 = getColumnStrOrIndex(ctx.aCtx(), keySchema.fieldSchemas().get(1), table);
 
             return String.format("{ '%s', '%s', %s, %s }, ", allname, getname, keystr1, keystr2);
         } else {
@@ -46,13 +46,13 @@ class TypeStr {
     }
 
 
-    private static String getColumnStrOrIndex(FieldSchema field, Structural structural) {
-        int idx = findColumnIndex(field, structural);
+    private static String getColumnStrOrIndex(AContext aCtx, FieldSchema field, Structural structural) {
+        int idx = findColumnIndex(aCtx, field, structural);
         return String.valueOf(idx);
     }
 
-    private static int findColumnIndex(FieldSchema field, Structural structural) {
-        boolean doPack = isDoPackBool(structural);
+    private static int findColumnIndex(AContext aCtx, FieldSchema field, Structural structural) {
+        boolean doPack = isDoPackBool(aCtx, structural);
         if (doPack) {
             boolean meetBool = false;
             int cnt = 0;
@@ -85,8 +85,8 @@ class TypeStr {
         throw new RuntimeException("未找到field");
     }
 
-    static boolean isDoPackBool(Structural structural) {
-        boolean doPack = AContext.getInstance().isPackBool();
+    static boolean isDoPackBool(AContext aCtx, Structural structural) {
+        boolean doPack = aCtx.isPackBool();
         if (doPack) {
             int boolCnt = getBoolFieldCount(structural);
             if (boolCnt >= 50) {
@@ -117,7 +117,7 @@ class TypeStr {
                 return "nil";
             }
             case EntryType.EntryBase entryBase -> {
-                return getColumnStrOrIndex(entryBase.fieldSchema(), table);
+                return getColumnStrOrIndex(ctx.aCtx(), entryBase.fieldSchema(), table);
             }
         }
     }
@@ -129,20 +129,20 @@ class TypeStr {
      * {refName, 2, dstTable, dstAllName, thisColumnIdx, dstColumnIdx}, --listRef到别的表
      * {refName, 3, dstTable, dstGetName, thisColumnIdx}, --本身是map
      */
-    static String getLuaRefsString(Structural structural) {
+    static String getLuaRefsString(AContext aCtx, Structural structural) {
         StringBuilder sb = new StringBuilder();
         sb.append("{ ");
 
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             String refName = Name.refName(fk);
-            String dstTable = Name.fullName(fk.refTableSchema());
+            String dstTable = Name.fullName(aCtx, fk.refTableSchema());
 
             switch (fk.refKey()) {
                 case RefKey.RefList refList -> {
                     //{refName, 2, dstTable, dstAllName, thisColumnIdx, dstColumnIdx}, --listRef到别的表
                     String dstAllName = Name.primaryKeyMapName;
-                    String thisColumnIdx = getColumnStrOrIndex(fk.key().fieldSchemas().getFirst(), structural);
-                    String dstColumnIdx = getColumnStrOrIndex(refList.key().fieldSchemas().getFirst(), fk.refTableSchema());
+                    String thisColumnIdx = getColumnStrOrIndex(aCtx, fk.key().fieldSchemas().getFirst(), structural);
+                    String dstColumnIdx = getColumnStrOrIndex(aCtx, refList.key().fieldSchemas().getFirst(), fk.refTableSchema());
 
                     sb.append(String.format("\n    { '%s', 2, %s, '%s', %s, %s }, ",
                             refName, dstTable, dstAllName, thisColumnIdx, dstColumnIdx));
@@ -151,7 +151,7 @@ class TypeStr {
                 case RefKey.RefSimple refSimple -> {
                     FieldSchema firstField = fk.key().fieldSchemas().getFirst();
                     String dstGetName = Name.uniqueKeyGetByName(refSimple.keyNames());
-                    String thisColumnIdx = getColumnStrOrIndex(firstField, structural);
+                    String thisColumnIdx = getColumnStrOrIndex(aCtx, firstField, structural);
 
                     switch (firstField.type()) {
                         case SimpleType ignored -> {
@@ -161,7 +161,7 @@ class TypeStr {
 
                             // {refName, 0, dstTable, dstGetName, thisColumnIdx}  --最常见类型
                             if (fk.key().fieldSchemas().size() > 1) {
-                                String thisColumnIdx2 = getColumnStrOrIndex(fk.key().fieldSchemas().get(1), structural);
+                                String thisColumnIdx2 = getColumnStrOrIndex(aCtx, fk.key().fieldSchemas().get(1), structural);
                                 sb.append(String.format("\n    { '%s', 0, %s, '%s', %s, %s }, ",
                                         refName, dstTable, dstGetName, thisColumnIdx, thisColumnIdx2));
                             } else {
@@ -191,14 +191,14 @@ class TypeStr {
         }
     }
 
-    static String getLuaFieldsString(Structural structural) {
+    static String getLuaFieldsString(AContext aCtx, Structural structural) {
         StringBuilder sb = new StringBuilder();
 
         int cnt = structural.fields().size();
         int i = 0;
 
 
-        boolean doPack = isDoPackBool(structural);
+        boolean doPack = isDoPackBool(aCtx, structural);
         boolean meetBool = false;
 
         for (FieldSchema field : structural.fields()) {
@@ -238,13 +238,13 @@ class TypeStr {
         return sb.toString();
     }
 
-    static String getLuaFieldsStringEmmyLua(Structural structural) {
+    static String getLuaFieldsStringEmmyLua(AContext aCtx, Structural structural) {
         StringBuilder sb = new StringBuilder();
         boolean has = false;
         for (FieldSchema field : structural.fields()) {
 
             String c = getCommaDescStr(field.comment());
-            sb.append("---@field ").append(lower1(field.name())).append(" ").append(typeToLuaType(field.type())).append(" ").append(c).append("\n");
+            sb.append("---@field ").append(lower1(field.name())).append(" ").append(typeToLuaType(aCtx, field.type())).append(" ").append(c).append("\n");
             has = true;
         }
         if (has) {
@@ -253,24 +253,24 @@ class TypeStr {
         return sb.toString();
     }
 
-    static String getLuaUniqKeysStringEmmyLua(TableSchema table) {
+    static String getLuaUniqKeysStringEmmyLua(AContext aCtx, TableSchema table) {
         StringBuilder sb = new StringBuilder();
-        String fullName = Name.fullName(table);
+        String fullName = Name.fullName(aCtx, table);
         sb.append(String.format("---@field %s fun(%s):%s\n",
-                Name.primaryKeyGetName, getLuaGetParam(table.primaryKey()), fullName));
+                Name.primaryKeyGetName, getLuaGetParam(aCtx, table.primaryKey()), fullName));
         for (KeySchema uk : table.uniqueKeys()) {
             sb.append(String.format("---@field %s fun(%s):%s\n",
-                    Name.uniqueKeyGetByName(uk), getLuaGetParam(uk), fullName));
+                    Name.uniqueKeyGetByName(uk), getLuaGetParam(aCtx, uk), fullName));
         }
         sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
     }
 
-    private static String getLuaGetParam(KeySchema primaryOrUniqueKey) {
+    private static String getLuaGetParam(AContext aCtx, KeySchema primaryOrUniqueKey) {
         StringBuilder sb = new StringBuilder();
         boolean has = false;
         for (FieldSchema field : primaryOrUniqueKey.fieldSchemas()) {
-            sb.append(field.name()).append(":").append(typeToLuaType(field.type())).append(",");
+            sb.append(field.name()).append(":").append(typeToLuaType(aCtx, field.type())).append(",");
             has = true;
         }
         if (has) {
@@ -280,12 +280,12 @@ class TypeStr {
     }
 
 
-    static String getLuaEnumStringEmmyLua(VTable vTable) {
+    static String getLuaEnumStringEmmyLua(AContext aCtx, VTable vTable) {
         StringBuilder sb = new StringBuilder();
         boolean has = false;
         if (vTable.enumNames() != null){
             for (String enumName : vTable.enumNames()) {
-                sb.append("---@field ").append(enumName).append(" ").append(Name.fullName(vTable.schema())).append("\n");
+                sb.append("---@field ").append(enumName).append(" ").append(Name.fullName(aCtx, vTable.schema())).append("\n");
                 has = true;
             }
         }
@@ -295,12 +295,12 @@ class TypeStr {
         return sb.toString();
     }
 
-    static String getLuaRefsStringEmmyLua(Structural structural) {
+    static String getLuaRefsStringEmmyLua(AContext aCtx, Structural structural) {
         StringBuilder sb = new StringBuilder();
         boolean hasRef = false;
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             String refName = Name.refName(fk);
-            String dstTable = Name.fullName(fk.refTableSchema());
+            String dstTable = Name.fullName(aCtx, fk.refTableSchema());
 
             boolean isList = (fk.refKey() instanceof RefKey.RefList);
             if (!isList) {
@@ -322,15 +322,15 @@ class TypeStr {
         }
     }
 
-    private static String typeToLuaType(FieldType type) {
+    private static String typeToLuaType(AContext aCtx, FieldType type) {
         return switch (type) {
             case BOOL -> "boolean";
             case INT, LONG, FLOAT -> "number";
             case STRING -> "string";
             case TEXT -> "text";
-            case StructRef structRef -> Name.fullName(structRef.obj());
-            case FList fList -> String.format("table<number,%s>", typeToLuaType(fList.item()));
-            case FMap fMap -> String.format("table<%s,%s>", typeToLuaType(fMap.key()), typeToLuaType(fMap.value()));
+            case StructRef structRef -> Name.fullName(aCtx, structRef.obj());
+            case FList fList -> String.format("table<number,%s>", typeToLuaType(aCtx, fList.item()));
+            case FMap fMap -> String.format("table<%s,%s>", typeToLuaType(aCtx, fMap.key()), typeToLuaType(aCtx, fMap.value()));
         };
     }
 

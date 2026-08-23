@@ -8,7 +8,7 @@ package ${name.pkg};
 
 public class ${name.className}Builder {
     @for(FieldSchema field : table.fields())
-        public ${TypeStr.type(field.type())} ${StringUtil.lower1(field.name())};
+        public ${TypeStr.type(name.cfg, field.type())} ${StringUtil.lower1(field.name())};
     @endfor
 
 

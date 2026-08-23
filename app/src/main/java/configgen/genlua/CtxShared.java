@@ -12,10 +12,15 @@ import static configgen.value.CfgValue.CompositeValue;
  * 用于lua生成时table能共享内存就共享，以最小化客户端的内存占用
  */
 class CtxShared {
+    private final AContext aContext;
     private int emptyTableUseCount = 0;
     private int listTableUseCount = 0;
     private int mapTableUseCount = 0;
     private final Map<CompositeValue, CompositeValueStr> sharedCompositeValues = new LinkedHashMap<>();
+
+    CtxShared(AContext aContext) {
+        this.aContext = aContext;
+    }
 
 
     /**
@@ -44,7 +49,7 @@ class CtxShared {
 
 
     void parseShared(Ctx ctx) {
-        ValueShared shared = new ValueShared(ctx.vTable());
+        ValueShared shared = new ValueShared(ctx.aCtx(), ctx.vTable());
         shared.iterateShared();
 
         // 遍历层级收集下
@@ -54,7 +59,7 @@ class CtxShared {
             for (ValueSharedLayer.CompositeValueCnt vc : layer.getCompositeValueToCnt().values()) {
                 if (vc.getCnt() > 1) {
                     idx++;
-                    AContext.getInstance().getStatistics().useSharedTable(vc.getCnt() - 1);
+                    aContext.getStatistics().useSharedTable(vc.getCnt() - 1);
                     sharedCompositeValues.put(vc.getFirst(), new CompositeValueStr(idx));
                 }
             }
@@ -92,7 +97,7 @@ class CtxShared {
 
     void incEmptyTableUseCount() {
         emptyTableUseCount++;
-        AContext.getInstance().getStatistics().useEmptyTable();
+        aContext.getStatistics().useEmptyTable();
     }
 
     public boolean hasListTableOrMapTable() {
@@ -101,12 +106,12 @@ class CtxShared {
 
     void incListTableUseCount() {
         listTableUseCount++;
-        AContext.getInstance().getStatistics().useListTable();
+        aContext.getStatistics().useListTable();
     }
 
     void incMapTableUseCount() {
         mapTableUseCount++;
-        AContext.getInstance().getStatistics().useMapTable();
+        aContext.getStatistics().useMapTable();
     }
 
 }

@@ -43,7 +43,6 @@ public class GoCodeGenerator extends GeneratorWithTag {
         dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
         serverText = parameter.has("serverText");
-        GoName.modName = parameter.get("mod", null);
     }
 
     @Override

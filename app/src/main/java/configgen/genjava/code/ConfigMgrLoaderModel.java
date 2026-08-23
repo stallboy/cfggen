@@ -17,14 +17,14 @@ public class ConfigMgrLoaderModel {
                             String fullName) {
     }
 
-    public ConfigMgrLoaderModel(CfgValue cfgValue, List<String> setAllRefsInMgrLoader) {
-        this.pkg = Name.codeTopPkg;
+    public ConfigMgrLoaderModel(GenCfg cfg, CfgValue cfgValue, List<String> setAllRefsInMgrLoader) {
+        this.pkg = cfg.codeTopPkg();
         this.setAllRefs_FullClassNames = setAllRefsInMgrLoader;
 
         tables = new ArrayList<>(cfgValue.vTableMap().size());
         for (VTable vTable : cfgValue.tables()) {
             if (!GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(vTable.schema())) {
-                tables.add(new TableInfo(vTable.name(), Name.tableDataFullName(vTable.schema())));
+                tables.add(new TableInfo(vTable.name(), Name.tableDataFullName(cfg, vTable.schema())));
             }
         }
     }

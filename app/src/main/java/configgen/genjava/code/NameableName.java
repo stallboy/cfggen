@@ -8,8 +8,7 @@ import java.util.Arrays;
 
 public class NameableName {
 
-    static boolean isSealedInterface = false;
-
+    public final GenCfg cfg;
     public final Nameable nameable;
     public final String pkg;
     public final String className;
@@ -17,18 +16,19 @@ public class NameableName {
     public final String path;
     public final String containerPrefix;
 
-    public NameableName(Nameable nameable) {
-        this(nameable, "");
+    public NameableName(GenCfg cfg, Nameable nameable) {
+        this(cfg, nameable, "");
     }
 
-    public NameableName(Nameable nameable, String postfix) {
+    public NameableName(GenCfg cfg, Nameable nameable, String postfix) {
+        this.cfg = cfg;
         this.nameable = nameable;
         InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
-        String topPkg = Name.codeTopPkg;
+        String topPkg = cfg.codeTopPkg();
         String name;
         if (nullableInterface != null) {
             name = nullableInterface.name().toLowerCase() + "." + nameable.name();
-        } else if (isSealedInterface && nameable instanceof InterfaceSchema sInterface) { //java要求：sealed interface需要跟impl在同一个package下
+        } else if (cfg.isSealedInterface() && nameable instanceof InterfaceSchema sInterface) { //java要求：sealed interface需要跟impl在同一个package下
             String[] split = sInterface.name().split("\\.");
             String interfaceName = split[split.length - 1];
             name = sInterface.name().toLowerCase() + "." + interfaceName;
@@ -44,7 +44,7 @@ public class NameableName {
         // pascal 化：equip_config + _Entry -> EquipConfig_Entry（而非 EquipConfigEntry），否则分不清表名与后缀。
         // 老行为（upper1 整段）本就只改首字母、后缀不动，这里拆开后对 non-beautiful 等价。
         String base = postfix.isEmpty() ? c : c.substring(0, c.length() - postfix.length());
-        className = Name.pascalName(base) + postfix;
+        className = Name.pascalName(cfg, base) + postfix;
 
         String[] pks = Arrays.copyOf(seps, seps.length - 1);
         if (pks.length == 0)

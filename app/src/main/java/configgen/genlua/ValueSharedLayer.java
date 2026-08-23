@@ -136,8 +136,8 @@ class ValueSharedLayer {
         }
     }
 
-    private static boolean isLangSwitchAndCompositeValueHasText(CompositeValue value) {
-        return AContext.getInstance().nullableLangSwitchSupport() != null &&
+    private boolean isLangSwitchAndCompositeValueHasText(CompositeValue value) {
+        return shared.aCtx().nullableLangSwitchSupport() != null &&
                 TextValue.hasText(value);
     }
 

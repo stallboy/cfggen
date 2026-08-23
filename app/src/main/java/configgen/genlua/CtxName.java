@@ -7,16 +7,18 @@ import java.util.TreeMap;
 
 class CtxName {
 
+    private final AContext aContext;
     private final Set<String> locals = new HashSet<>();
     private final Map<String, String> fullNameToLocals = new TreeMap<>(); //用TreeMap使得生成代码确定
 
-    private static int MAX_LOCAL = 128;
+    // 因为lua有local变量总共250个左右的限制,这里限制128给其他留一点;luajit没这个限制
+    // 参考https://zhuanlan.zhihu.com/p/31732401
+    // https://stackoverflow.com/questions/38952744/lua-ellipsis-expression-limited-at-248
+    private static final int MAX_LOCAL = Integer.parseInt(
+            System.getProperty("genlua.max_local", "128"));
 
-    static {
-        String max_local = System.getProperty("genlua.max_local");
-        if (max_local != null) {
-            MAX_LOCAL = Integer.parseInt(max_local);
-        }
+    CtxName(AContext aContext) {
+        this.aContext = aContext;
     }
 
     Map<String, String> getLocalNameMap() {
@@ -29,9 +31,6 @@ class CtxName {
             return loc;
         }
 
-        // 因为lua有local变量总共250个左右的限制,这里限制128给其他留一点;luajit没这个限制
-        // 参考https://zhuanlan.zhihu.com/p/31732401
-        // https://stackoverflow.com/questions/38952744/lua-ellipsis-expression-limited-at-248
         if (fullNameToLocals.size() > MAX_LOCAL) {
             return fullName;
         }
@@ -45,7 +44,7 @@ class CtxName {
                 tryName = seps[i] + "_" + tryName;
             }
 
-            if (AContext.getInstance().isForbidName(tryName)) {
+            if (aContext.isForbidName(tryName)) {
                 continue;
             }
 

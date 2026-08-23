@@ -47,7 +47,7 @@ public class Name {
         }
     }
 
-    static String fullName(Nameable nameable) {
+    static String fullName(AContext aCtx, Nameable nameable) {
         switch (nameable) {
             case InterfaceSchema ignored -> {
                 return "Beans." + nameable.name().toLowerCase();
@@ -61,7 +61,7 @@ public class Name {
                 }
             }
             case TableSchema table -> {
-                return AContext.getInstance().getPkgPrefixStr() + table.name().toLowerCase();
+                return aCtx.getPkgPrefixStr() + table.name().toLowerCase();
             }
         }
     }

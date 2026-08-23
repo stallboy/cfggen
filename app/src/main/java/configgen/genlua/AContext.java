@@ -6,23 +6,18 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/// 一次 lua 生成的全局配置与统计。原先是 static 单例（getInstance + init），并发生成时
+/// 互相覆盖；现由 LuaCodeGenerator.generate() 每次构造一份实例，沿 Ctx 链传递。
 class AContext {
-    private static final AContext instance = new AContext();
+    private final String pkgPrefixStr;
+    private final LangSwitchSupport nullableLangSwitchSupport;
+    private final boolean shared;
+    private final boolean packBool;
+    private final boolean noStr; //只用于测试
 
-    static AContext getInstance() {
-        return instance;
-    }
-
-    private String pkgPrefixStr;
-    private LangSwitchSupport nullableLangSwitchSupport;
-    private boolean sharedEmptyTable;
-    private boolean shared;
-    private boolean packBool;
-    private boolean noStr; //只用于测试
-
-    private String emptyTableStr;
-    private String listMapPrefixStr;
-    private String listMapPostfixStr;
+    private final String emptyTableStr;
+    private final String listMapPrefixStr;
+    private final String listMapPostfixStr;
 
     private final Set<String> forbidLocalNames = new HashSet<>(Arrays.asList("Beans", "this", "mk",
                                                                              "A", //表示共享Table
@@ -30,18 +25,17 @@ class AContext {
                                                                              "R"  //表示为共享Table的一个包装方法 --> 后改为list，map的封装，用于检测修改
     ));
 
-    private AStat statistics;
+    private final AStat statistics;
 
-    void init(String pkg, LangSwitchable ls, boolean shareEmptyTable, boolean share,
-              boolean packBool, boolean noStr, boolean rForOldShared) {
+    AContext(String pkg, LangSwitchable ls, boolean shareEmptyTable, boolean shared,
+             boolean packBool, boolean noStr, boolean rForOldShared) {
 
         nullableLangSwitchSupport = ls != null ? new LangSwitchSupport(ls) : null;
-        sharedEmptyTable = shareEmptyTable;
-        shared = share;
+        this.shared = shared;
         this.packBool = packBool;
         this.noStr = noStr;
 
-        if (sharedEmptyTable) {
+        if (shareEmptyTable) {
             emptyTableStr = "E";
         } else {
             emptyTableStr = "{}";

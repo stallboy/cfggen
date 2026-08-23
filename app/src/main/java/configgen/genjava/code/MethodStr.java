@@ -1,6 +1,5 @@
 package configgen.genjava.code;
 
-import configgen.gen.Generator;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 
@@ -12,17 +11,17 @@ import static configgen.schema.RefKey.*;
 
 public class MethodStr {
 
-    public static String formalParams(List<FieldSchema> fs) {
-        return fs.stream().map(f -> TypeStr.type(f.type()) + " " + lower1(f.name())).collect(Collectors.joining(", "));
+    public static String formalParams(GenCfg cfg, List<FieldSchema> fs) {
+        return fs.stream().map(f -> TypeStr.type(cfg, f.type()) + " " + lower1(f.name())).collect(Collectors.joining(", "));
     }
 
     public static String actualParams(List<String> keys) {
         return keys.stream().map(StringUtil::lower1).collect(Collectors.joining(", "));
     }
 
-    public static String actualParamsKey(KeySchema keySchema, String pre, NameableName nullableName) {
+    public static String actualParamsKey(GenCfg cfg, KeySchema keySchema, String pre, NameableName nullableName) {
         String p = actualParamsKeyRaw(keySchema, pre);
-        return keySchema.fields().size() > 1 ? "new " + Name.keyClassName(keySchema, nullableName) + "(" + p + ")" : p;
+        return keySchema.fields().size() > 1 ? "new " + Name.keyClassName(cfg, keySchema, nullableName) + "(" + p + ")" : p;
     }
 
     public static String actualParamsKeyRaw(KeySchema keySchema, String pre) {
@@ -54,8 +53,8 @@ public class MethodStr {
         return TypeStr.isJavaPrimitive(t) ? a + " == " + b : a + ".equals(" + b + ")";
     }
 
-    public static String tableGet(TableSchema refTable, RefSimple refSimple, String actualParam) {
-        NameableName name = new NameableName(refTable);
+    public static String tableGet(GenCfg cfg, TableSchema refTable, RefSimple refSimple, String actualParam) {
+        NameableName name = new NameableName(cfg, refTable);
 
         if (refTable.entry() instanceof EntryType.EEnum) {
             return name.fullName + ".get(" + actualParam + ")";
@@ -70,7 +69,7 @@ public class MethodStr {
                     } else if (refTable.primaryKey().fieldSchemas().size() == 1) {
                         return pre + "All.get(" + actualParam + ")";
                     } else {
-                        return pre + "All.get(new " + Name.keyClassName(refTable.primaryKey(), name) +
+                        return pre + "All.get(new " + Name.keyClassName(cfg, refTable.primaryKey(), name) +
                                 "(" + actualParam + ") )";
                     }
                 }
@@ -85,7 +84,7 @@ public class MethodStr {
                         return pre + mapName + ".get(" + actualParam + ")";
                     } else {
                         return pre + mapName + ".get( new " +
-                                Name.keyClassName(refUniq.key(), name) + "(" + actualParam + ") )";
+                                Name.keyClassName(cfg, refUniq.key(), name) + "(" + actualParam + ") )";
                     }
                 }
             }

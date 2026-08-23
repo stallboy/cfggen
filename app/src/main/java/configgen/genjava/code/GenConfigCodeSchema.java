@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 final class GenConfigCodeSchema {
-    static void generateAll(JavaCodeGenerator gen, int schemaNumPerFile, CfgValue cfgValue, LangSwitchable ls) {
+    static void generateAll(JavaCodeGenerator gen, GenCfg cfg, int schemaNumPerFile, CfgValue cfgValue, LangSwitchable ls) {
         SchemaInterface schemaInterface = SchemaParser.parse(cfgValue, ls);
         List<Map.Entry<String, Schema>> all = new ArrayList<>(schemaInterface.implementations.entrySet());
         List<Map.Entry<String, Schema>> main;
@@ -33,12 +33,12 @@ final class GenConfigCodeSchema {
             }
         }
 
-        generateFile(gen, 0, main, nullableOthers);
+        generateFile(gen, cfg, 0, main, nullableOthers);
         if (nullableOthers != null) {
             int idx = 0;
             for (List<Map.Entry<String, Schema>> nullableOther : nullableOthers) {
                 idx++;
-                generateFile(gen, idx, nullableOther, null);
+                generateFile(gen, cfg, idx, nullableOther, null);
             }
         }
     }
@@ -52,13 +52,13 @@ final class GenConfigCodeSchema {
         return className;
     }
 
-    static void generateFile(JavaCodeGenerator gen, int idx,
+    static void generateFile(JavaCodeGenerator gen, GenCfg cfg, int idx,
                              List<Map.Entry<String, Schema>> schemas,
                              List<List<Map.Entry<String, Schema>>> nullableOthers) {
 
         String className = getClassName(idx);
         try (CachedIndentPrinter ps = gen.createCode(className + ".java")) {
-            ps.println("package %s;", Name.codeTopPkg);
+            ps.println("package %s;", cfg.codeTopPkg());
             ps.println();
             ps.println("import configgen.genjava.*;");
             ps.println();

@@ -37,6 +37,8 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     private CfgSchema cfgSchema;
     private Path dstDir;
     private boolean isLangSwitch;
+    // 一次生成的全局配置（原 AContext static 单例），generate() 入口构造，随 Ctx 链下传
+    private AContext aCtx;
 
     // 表生成并发：每个工作线程独占一组缓冲区。
     // mainCc 给主表文件，extraCc 给 extraSplit 分片文件——二者在 generate_table 中生命周期重叠
@@ -77,9 +79,9 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx) throws IOException {
-        AContext.getInstance().init(pkg, ctx.nullableLangSwitch(), useSharedEmptyTable, useShared,
+        aCtx = new AContext(pkg, ctx.nullableLangSwitch(), useSharedEmptyTable, useShared,
                 packBool, noStr, rForOldShared);
-        isLangSwitch = AContext.getInstance().nullableLangSwitchSupport() != null;
+        isLangSwitch = aCtx.nullableLangSwitchSupport() != null;
 
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
 
@@ -114,10 +116,10 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             generateTablesParallel();
         }
 
-        AContext.getInstance().getStatistics().print();
+        aCtx.getStatistics().print();
 
-        if (AContext.getInstance().nullableLangSwitchSupport() != null) {
-            Map<String, List<String>> lang2Texts = AContext.getInstance().nullableLangSwitchSupport().getLang2Texts();
+        if (aCtx.nullableLangSwitchSupport() != null) {
+            Map<String, List<String>> lang2Texts = aCtx.nullableLangSwitchSupport().getLang2Texts();
             StringBuilder lineCache = lineCacheTl.get();
             for (Map.Entry<String, List<String>> e : lang2Texts.entrySet()) {
                 String lang = e.getKey();
@@ -210,7 +212,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         Set<String> context = new HashSet<>();
         context.add(pkg);
         for (TableSchema table : cfgValue.schema().sortedTables()) {
-            String full = Name.fullName(table);
+            String full = Name.fullName(aCtx, table);
             definePkg(full, ps, context);
 
             if (useEmmyLua) {
@@ -243,7 +245,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         ps.println("local require = require");
         ps.println();
         for (TableSchema table : cfgValue.schema().sortedTables()) {
-            ps.println("require \"%s\"", Name.fullName(table));
+            ps.println("require \"%s\"", Name.fullName(aCtx, table));
         }
         ps.println();
     }
@@ -268,7 +270,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         Set<String> context = new HashSet<>();
         context.add("Beans");
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
-            String full = Name.fullName(fieldable);
+            String full = Name.fullName(aCtx, fieldable);
             definePkg(full, ps, context);
             context.add(full);
 
@@ -288,7 +290,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
                     for (StructSchema impl : sInterface.impls()) {
                         // function mkcfg.action(typeName, refs, ...)
-                        String fulln = Name.fullName(impl);
+                        String fulln = Name.fullName(aCtx, impl);
                         definePkg(fulln, ps, context);
                         context.add(fulln);
                         String func = "action";
@@ -306,8 +308,8 @@ public class LuaCodeGenerator extends GeneratorWithTag {
                                 ps.println("---@field %s fun(%s :fun)", setHandlerName, handlerName);
                                 ps.println("---@field %s fun(self: %s, ...)", handlerName, fulln);
                             }
-                            ps.printlnIf(TypeStr.getLuaFieldsStringEmmyLua(impl));
-                            ps.printlnIf(TypeStr.getLuaRefsStringEmmyLua(impl));
+                            ps.printlnIf(TypeStr.getLuaFieldsStringEmmyLua(aCtx, impl));
+                            ps.printlnIf(TypeStr.getLuaRefsStringEmmyLua(aCtx, impl));
                             ps.println();
                             ps.println("---@type %s", fulln);
                         }
@@ -317,9 +319,9 @@ public class LuaCodeGenerator extends GeneratorWithTag {
                             ps.println("%s = %s(\"%s\")()", fulln, func, impl.name());
                         } else {
                             ps.println("%s = %s(\"%s\", %s, %s%s\n    )", fulln, func, impl.name(),
-                                    TypeStr.getLuaRefsString(impl),
+                                    TypeStr.getLuaRefsString(aCtx, impl),
                                     textFieldsStr,
-                                    TypeStr.getLuaFieldsString(impl));
+                                    TypeStr.getLuaFieldsString(aCtx, impl));
                         }
                         ps.println();
                     }
@@ -337,8 +339,8 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
                     if (useEmmyLua) {
                         ps.println("---@class %s", full);
-                        ps.printlnIf(TypeStr.getLuaFieldsStringEmmyLua(struct));
-                        ps.printlnIf(TypeStr.getLuaRefsStringEmmyLua(struct));
+                        ps.printlnIf(TypeStr.getLuaFieldsStringEmmyLua(aCtx, struct));
+                        ps.printlnIf(TypeStr.getLuaRefsStringEmmyLua(aCtx, struct));
                         ps.println();
                         ps.println("---@type %s", full);
                     }
@@ -348,9 +350,9 @@ public class LuaCodeGenerator extends GeneratorWithTag {
                         ps.println("%s = %s()()", full, func);
                     } else {
                         ps.println("%s = %s(%s, %s%s\n    )", full, func,
-                                TypeStr.getLuaRefsString(struct),
+                                TypeStr.getLuaRefsString(aCtx, struct),
                                 textFieldsStr,
-                                TypeStr.getLuaFieldsString(struct));
+                                TypeStr.getLuaFieldsString(aCtx, struct));
                     }
                     ps.println();
                 }
@@ -364,7 +366,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         TableSchema table = vTable.schema();
 
         if (isLangSwitch) {
-            AContext.getInstance().nullableLangSwitchSupport().enterTable(table.name());
+            aCtx.nullableLangSwitchSupport().enterTable(table.name());
         }
 
         ps.println("local %s = require \"%s._cfgs\"", pkg, pkg);
@@ -373,15 +375,15 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         }
         ps.println();
 
-        String fullName = Name.fullName(table);
+        String fullName = Name.fullName(aCtx, table);
         if (useEmmyLua) {
             ps.println("---@class %s", fullName);
-            ps.println(TypeStr.getLuaFieldsStringEmmyLua(table));
-            ps.printlnIf(TypeStr.getLuaUniqKeysStringEmmyLua(table));
-            ps.printlnIf(TypeStr.getLuaEnumStringEmmyLua(vTable));
+            ps.println(TypeStr.getLuaFieldsStringEmmyLua(aCtx, table));
+            ps.printlnIf(TypeStr.getLuaUniqKeysStringEmmyLua(aCtx, table));
+            ps.printlnIf(TypeStr.getLuaEnumStringEmmyLua(aCtx, vTable));
 
             ps.println("---@field %s table<any,%s>", Name.primaryKeyMapName, fullName);
-            ps.printlnIf(TypeStr.getLuaRefsStringEmmyLua(table));
+            ps.printlnIf(TypeStr.getLuaRefsStringEmmyLua(aCtx, table));
             ps.println();
         }
 
@@ -396,7 +398,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
         boolean tryUseShared = useShared && extraSplit == 0;
 
-        Ctx ctx = new Ctx(vTable);
+        Ctx ctx = new Ctx(aCtx, vTable);
         if (tryUseShared) {
             ctx.parseShared();
         }
@@ -414,9 +416,9 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         ps.println("local mk = %s._mk.%s(this, %s, %s, %s, %s%s\n    )", pkg, func,
                 TypeStr.getLuaUniqKeysString(ctx),
                 TypeStr.getLuaEnumString(ctx),
-                TypeStr.getLuaRefsString(table),
+                TypeStr.getLuaRefsString(aCtx, table),
                 textFieldsStr,
-                TypeStr.getLuaFieldsString(table));
+                TypeStr.getLuaFieldsString(aCtx, table));
         ps.println();
 
 
@@ -425,7 +427,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             ///////////////////////////////////// 正常模式
             extraFileCnt = ps.enableCache(extraSplit, vTable.valueList().size());
 
-            boolean hasLangSwitchAndText = AContext.getInstance().nullableLangSwitchSupport() != null &&
+            boolean hasLangSwitchAndText = aCtx.nullableLangSwitchSupport() != null &&
                     HasText.hasText(vTable.schema());
 
             if (!hasLangSwitchAndText) {

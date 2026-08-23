@@ -1,6 +1,5 @@
 @import configgen.genjava.code.Name
 @import configgen.genjava.code.StructuralClassModel
-@import configgen.genjava.code.MethodStr
 @import configgen.schema.*
 @import java.util.Arrays
 @import java.util.stream.Collectors
@@ -10,15 +9,15 @@
         boolean primarySeq = table.primaryKey().fieldSchemas().size() == 1 && table.primaryKey().fieldSchemas().getFirst().isSeq();
     }
     @if(table.primaryKey().fields().size() > 1)
-@template.java.GenKeyClass(keySchema = table.primaryKey())
-    @endif@template.java.GenMapGetBy(keySchema = table.primaryKey(), name = model.name, isPrimaryKey = true, codeTopPkg = model.codeTopPkg)
+@template.java.GenKeyClass(cfg = model.cfg, keySchema = table.primaryKey())
+    @endif@template.java.GenMapGetBy(keySchema = table.primaryKey(), name = model.name, isPrimaryKey = true)
     @for(KeySchema keySchema : table.uniqueKeys())
-        @if(keySchema.fields().size() > 1)@template.java.GenKeyClass(keySchema = keySchema)
-        @endif@template.java.GenMapGetBy(keySchema = keySchema, name = model.name, isPrimaryKey = false, codeTopPkg = model.codeTopPkg)
+        @if(keySchema.fields().size() > 1)@template.java.GenKeyClass(cfg = model.cfg, keySchema = keySchema)
+        @endif@template.java.GenMapGetBy(keySchema = keySchema, name = model.name, isPrimaryKey = false)
     @endfor
     !{
         String primaryMapName = model.name.containerPrefix + "All";
-        String functionAllName = "all" + Arrays.stream(model.structural.name().split("\\.")).map(Name::pascalName).collect(Collectors.joining());
+        String functionAllName = "all" + Arrays.stream(model.structural.name().split("\\.")).map(s -> Name.pascalName(model.cfg, s)).collect(Collectors.joining());
     }
     @if(primarySeq)
     public static java.util.List<${model.className}> all() {
@@ -53,16 +52,16 @@
             for (; c > 0; c--) {
                 ${model.className} self = ${model.className}._create(input);
                 @if(primarySeq)
-                    mgr.${primaryMapName}[${MethodStr.actualParamsKey(table.primaryKey(), "self.", null)}] = self;
+                    mgr.${primaryMapName}[${model.actualParamsKey(table.primaryKey(), "self.")}] = self;
                 @else
-                    mgr.${primaryMapName}.put(${MethodStr.actualParamsKey(table.primaryKey(), "self.", null)}, self);
+                    mgr.${primaryMapName}.put(${model.actualParamsKey(table.primaryKey(), "self.")}, self);
                 @endif
                 @for(KeySchema uk : table.uniqueKeys())
                     !{ boolean ukSeq2 = uk.fieldSchemas().size() == 1 && uk.fieldSchemas().getFirst().isSeq(); }
                     @if(ukSeq2)
-                        mgr.${model.name.containerPrefix + Name.uniqueKeyMapName(uk)}[${MethodStr.actualParamsKey(uk, "self.", null)}] = self;
+                        mgr.${model.name.containerPrefix + Name.uniqueKeyMapName(uk)}[${model.actualParamsKey(uk, "self.")}] = self;
                     @else
-                        mgr.${model.name.containerPrefix + Name.uniqueKeyMapName(uk)}.put(${MethodStr.actualParamsKey(uk, "self.", null)}, self);
+                        mgr.${model.name.containerPrefix + Name.uniqueKeyMapName(uk)}.put(${model.actualParamsKey(uk, "self.")}, self);
                     @endif
                 @endfor
             }

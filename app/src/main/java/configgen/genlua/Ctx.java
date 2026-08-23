@@ -3,14 +3,20 @@ package configgen.genlua;
 import static configgen.value.CfgValue.VTable;
 
 class Ctx {
+    private final AContext aContext;
     private final VTable vTable;
     private final CtxShared ctxShared;
     private final CtxName ctxName;
 
-    Ctx(VTable vtable) {
+    Ctx(AContext aContext, VTable vtable) {
+        this.aContext = aContext;
         vTable = vtable;
-        ctxName = new CtxName();
-        ctxShared = new CtxShared();
+        ctxName = new CtxName(aContext);
+        ctxShared = new CtxShared(aContext);
+    }
+
+    AContext aCtx() {
+        return aContext;
     }
 
     public VTable vTable() {
