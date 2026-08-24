@@ -136,8 +136,17 @@ public class Logger {
         }
     }
 
+    /**
+     * 无参调用传入的是拼好的纯文本消息而非格式串（如 CfgSchemaErrs 的 "\t"+msg、各处 locale 消息，
+     * 可能含数据里的 "100%" 等）：走 %s 直出，不进格式解析，否则 % 会被当转换符解析而抛
+     * UnknownFormatConversionException。带参数的调用保持 printf 语义。
+     */
     public static void log(String fmt, Object... args) {
-        currentPrinter().printf((fmt) + System.lineSeparator(), args);
+        if (args.length == 0) {
+            currentPrinter().printf("%s", fmt + System.lineSeparator());
+        } else {
+            currentPrinter().printf(fmt + System.lineSeparator(), args);
+        }
     }
 
     private final static DateTimeFormatter df = DateTimeFormatter.ofPattern("HH.mm.ss.SSS");
