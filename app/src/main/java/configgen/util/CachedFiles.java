@@ -79,7 +79,10 @@ public class CachedFiles {
 
     private static void mkDirs(File file) {
         if (!file.exists()) {
-            if (!file.mkdirs()) {
+            //noinspection ResultOfMethodCallIgnored
+            file.mkdirs();
+            // 并发生成时其他线程可能刚建好同一目录使 mkdirs 返回 false，以最终存在为准
+            if (!file.exists()) {
                 Logger.log("mkdirs fail: " + normalizePath(file.toPath()));
             }
         }

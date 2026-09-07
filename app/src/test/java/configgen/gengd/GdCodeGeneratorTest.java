@@ -3,7 +3,6 @@ package configgen.gengd;
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.CliException;
-import configgen.gen.Parameter;
 import configgen.gen.ParameterParser;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
@@ -106,5 +105,49 @@ class GdCodeGeneratorTest {
         assertThrows(CliException.class, () -> new GdCodeGenerator(new ParameterParser("gd,prefix:my-c")));
         assertThrows(CliException.class, () -> new GdCodeGenerator(new ParameterParser("gd,prefix:$x")));
         assertDoesNotThrow(() -> new GdCodeGenerator(new ParameterParser("gd,prefix:_Cfg")));
+    }
+
+    @Test
+    void generate_compositeKey_reportsCleanError() {
+        String cfgStr = """
+                table pair[a,b] {
+                    a:int;
+                    b:int;
+                }
+                """;
+        String csv = """
+                A,B
+                a,b
+                1,2
+                """;
+
+        Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("pair", csv));
+        Path outDir = tempDir.resolve("gdout_composite");
+        // 复合键应提前报清表名并给出处理办法，而不是渲染中途抛裸异常栈
+        CliException e = assertThrows(CliException.class,
+                () -> new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx));
+        assertTrue(e.getMessage().contains("pair"), "错误信息应包含表名，实际: " + e.getMessage());
+        assertTrue(e.getMessage().contains("nogd"), "错误信息应给出nogd处理提示，实际: " + e.getMessage());
+    }
+
+    @Test
+    void generate_compositeKey_filteredByOwnSucceeds() {
+        String cfgStr = """
+                table pair[a,b] (nogd) {
+                    a:int;
+                    b:int;
+                }
+                """;
+        String csv = """
+                A,B
+                a,b
+                1,2
+                """;
+
+        Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("pair", csv));
+        Path outDir = tempDir.resolve("gdout_composite_filtered");
+        // 标了 (nogd) 并用 own:-nogd 过滤后，复合键表被排除，生成应成功
+        assertDoesNotThrow(() ->
+                new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir + ",own:-nogd")).generate(ctx));
     }
 }

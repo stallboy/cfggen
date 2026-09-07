@@ -66,6 +66,20 @@ public class GdCodeGenerator extends GeneratorWithTag {
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
 
+        // gd 不支持复合键：提前报清涉及的表并给出处理办法，而不是渲染中途抛裸异常栈
+        List<String> compositeKeyTables = new ArrayList<>();
+        for (VTable vTable : cfgValue.sortedTables()) {
+            TableSchema s = vTable.schema();
+            if (s.primaryKey().fieldSchemas().size() > 1
+                    || s.uniqueKeys().stream().anyMatch(k -> k.fieldSchemas().size() > 1)) {
+                compositeKeyTables.add(s.name());
+            }
+        }
+        if (!compositeKeyTables.isEmpty()) {
+            throw new CliException("gd not support composite key: " + String.join(", ", compositeKeyTables)
+                    + "; add (nogd) tag to these tables or filter with own:-nogd");
+        }
+
         dstDir = Paths.get(dir);
         outputFiles = ctx.outputFiles();
 
