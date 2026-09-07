@@ -2,7 +2,7 @@
 import config.ConfigCodeSchema;
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
-import config.task.Task;
+import config.task.CfgTask;
 import configgen.genjava.ConfigInput;
 import configgen.genjava.Schema;
 import configgen.genjava.SchemaCompatibleException;
@@ -70,7 +70,7 @@ public class LoadConfig {
     public static void main(String[] args) throws IOException {
         String fn = "config.bytes";
         load(fn);
-        System.out.println(Task.get(1));
+        System.out.println(CfgTask.get(1));
 //        new BytesInspector(fn).match("eq");
 
 //        ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();

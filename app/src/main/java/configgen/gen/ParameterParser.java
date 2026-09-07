@@ -41,7 +41,7 @@ public class ParameterParser implements Parameter {
         if (v.equalsIgnoreCase("false")) {
             return false;
         }
-        throw new Main.CliException("invalid boolean value for parameter '" + key + "': " + v + " (expect true/false), arg: " + arg);
+        throw new CliException("invalid boolean value for parameter '" + key + "': " + v + " (expect true/false), arg: " + arg);
     }
 
     public String id() {
@@ -50,7 +50,7 @@ public class ParameterParser implements Parameter {
 
     void assureNoExtra() {
         if (!params.isEmpty()) {
-            throw new Main.CliException("unsupported parameter(s) for '" + id + "': " + params.keySet() + ", arg: " + arg);
+            throw new CliException("unsupported parameter(s) for '" + id + "': " + params.keySet() + ", arg: " + arg);
         }
     }
 

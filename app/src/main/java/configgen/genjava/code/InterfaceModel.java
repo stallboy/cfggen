@@ -15,7 +15,7 @@ public class InterfaceModel {
     public final List<Impl> impls;
 
     public record Impl(String name,
-                       String upper1Name,
+                       String className,
                        String fullName) {
     }
 
@@ -28,10 +28,10 @@ public class InterfaceModel {
                 Name.refType(cfg, sInterface.nullableEnumRefTable()) : null;
         this.hasRef = HasRef.hasRef(sInterface);
 
-        this.impls = sInterface.impls().stream().map(impl ->
-                        new Impl(impl.name(),
-                                Name.pascalName(cfg, impl.name()),
-                                Name.fullName(cfg, impl)))
-                .toList();
+        this.impls = sInterface.impls().stream().map(impl -> {
+            // permits 用与实际生成 impl 类同一个 NameableName，保证 prefix/beautifulName 下名字一致
+            NameableName implName = new NameableName(cfg, impl);
+            return new Impl(impl.name(), implName.className, implName.fullName);
+        }).toList();
     }
 }

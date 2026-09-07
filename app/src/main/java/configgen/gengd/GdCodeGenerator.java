@@ -1,6 +1,7 @@
 package configgen.gengd;
 
 import configgen.ctx.Context;
+import configgen.gen.CliException;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.schema.*;
@@ -47,6 +48,16 @@ public class GdCodeGenerator extends GeneratorWithTag {
         super(parameter);
         dir = parameter.get("dir", "config");
         prefix = parameter.get("prefix", "Data");
+        // 非法前缀会静默产出编不过的代码，这里直接报错；GDScript 标识符片段：字母或_开头，后续字母/数字/_
+        for (int i = 0; i < prefix.length(); i++) {
+            char c = prefix.charAt(i);
+            boolean ok = i == 0 ? (Character.isLetter(c) || c == '_')
+                    : (Character.isLetterOrDigit(c) || c == '_');
+            if (!ok) {
+                throw new CliException("invalid value for parameter 'prefix': '" + prefix
+                        + "' is not a valid gdscript identifier fragment");
+            }
+        }
     }
 
 

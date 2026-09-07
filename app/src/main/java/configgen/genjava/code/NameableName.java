@@ -44,7 +44,7 @@ public class NameableName {
         // pascal 化：equip_config + _Entry -> EquipConfig_Entry（而非 EquipConfigEntry），否则分不清表名与后缀。
         // 老行为（upper1 整段）本就只改首字母、后缀不动，这里拆开后对 non-beautiful 等价。
         String base = postfix.isEmpty() ? c : c.substring(0, c.length() - postfix.length());
-        className = Name.pascalName(cfg, base) + postfix;
+        className = cfg.prefix() + Name.pascalName(cfg, base) + postfix;
 
         String[] pks = Arrays.copyOf(seps, seps.length - 1);
         if (pks.length == 0)

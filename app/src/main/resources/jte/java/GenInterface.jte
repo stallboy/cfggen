@@ -3,7 +3,7 @@
 package ${model.pkg};
 
 @if(model.isSealedInterface)
-public sealed interface ${model.className} permits ${String.join(", ", model.impls.stream().map(InterfaceModel.Impl::upper1Name).toList())} {
+public sealed interface ${model.className} permits ${String.join(", ", model.impls.stream().map(InterfaceModel.Impl::className).toList())} {
 @else
 public interface ${model.className} {
 @endif

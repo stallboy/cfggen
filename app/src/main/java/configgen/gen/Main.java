@@ -62,16 +62,6 @@ public final class Main {
     record NamedGenerator(String name, Generator gen) {
     }
 
-    /**
-     * 命令行使用错误（缺参数取值、参数拼写错误等）。
-     * runWithCatch 捕获后打印简短原因和usage，不打印堆栈。
-     */
-    static class CliException extends RuntimeException {
-        public CliException(String message) {
-            super(message);
-        }
-    }
-
     @SuppressWarnings("SpellCheckingInspection")
     public static void registerAllProviders() {
         Tools.addProvider("xmltocfg", XmlToCfgTool::new);

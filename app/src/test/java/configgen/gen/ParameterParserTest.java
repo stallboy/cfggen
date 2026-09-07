@@ -25,7 +25,7 @@ class ParameterParserTest {
 
         // When & Then: 验证抛出异常（命令行使用错误，非程序断言失败）
         ParameterParser parser = new ParameterParser(arg);
-        assertThrows(Main.CliException.class, parser::assureNoExtra);
+        assertThrows(CliException.class, parser::assureNoExtra);
     }
 
     @Test
@@ -66,7 +66,7 @@ class ParameterParserTest {
     void shouldThrow_whenBooleanValueInvalid() {
         // yes/ok/ture这类垃圾值原来被Boolean.parseBoolean静默当false，必须报错
         ParameterParser parser = new ParameterParser("java,verbose=yes");
-        assertThrows(Main.CliException.class, () -> parser.has("verbose"));
+        assertThrows(CliException.class, () -> parser.has("verbose"));
     }
 
     @Test
@@ -76,6 +76,6 @@ class ParameterParserTest {
 
         // When & Then: 验证抛出异常（命令行使用错误，非程序断言失败）
         ParameterParser parser = new ParameterParser(arg);
-        assertThrows(Main.CliException.class, parser::assureNoExtra);
+        assertThrows(CliException.class, parser::assureNoExtra);
     }
 }

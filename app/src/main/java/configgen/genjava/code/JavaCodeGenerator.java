@@ -2,6 +2,7 @@ package configgen.genjava.code;
 
 import configgen.ctx.Context;
 import configgen.data.CfgData;
+import configgen.gen.CliException;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.genjava.GenJavaUtil;
@@ -30,6 +31,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private final String buildersFilename;
     private final String configgenDir; // 新增：configgen genjava 源文件复制目录
     private final boolean beautifulName; // 美化由 snake_case schema 名派生的标识符（类名/getter 转 PascalCase、enum 常量转 SCREAMING_SNAKE_CASE），默认 false 保持老行为
+    private final String prefix; // 生成类名的前缀，同 csharp 的 prefix，默认为空
     private Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
 
@@ -73,6 +75,16 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         configgenDir = parameter.get("configgenDir", null);
         schemaNumPerFile = Integer.parseInt(parameter.get("schemaNumPerFile", "100"));
         beautifulName = parameter.has("beautifulName");
+        prefix = parameter.get("prefix", "");
+        // 非法前缀（如 1a、my-c）会静默产出编不过的代码，这里直接报错，同 ParameterParser 对布尔取值的严格解析
+        for (int i = 0; i < prefix.length(); i++) {
+            char c = prefix.charAt(i);
+            boolean ok = i == 0 ? Character.isJavaIdentifierStart(c) : Character.isJavaIdentifierPart(c);
+            if (!ok) {
+                throw new CliException("invalid value for parameter 'prefix': '" + prefix
+                        + "' is not a valid java identifier fragment");
+            }
+        }
     }
 
 
@@ -85,7 +97,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
         // 一次生成的固定配置：不可变、随调用链显式传递，替代原先散落在 Name/TypeStr/NameableName 的
         // static 字段（并发生成时会互相踩踏）
-        GenCfg cfg = new GenCfg(pkg, sealed, beautifulName, ctx.nullableLangSwitch() != null);
+        GenCfg cfg = new GenCfg(pkg, sealed, beautifulName, ctx.nullableLangSwitch() != null, prefix);
 
         List<NameableName> tableDataNames = new ArrayList<>();
         List<String> setAllRefsInMgrLoader = new ArrayList<>();

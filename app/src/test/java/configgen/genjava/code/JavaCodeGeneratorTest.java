@@ -1,6 +1,7 @@
 package configgen.genjava.code;
 
 import configgen.ctx.Context;
+import configgen.gen.CliException;
 import configgen.gen.Parameter;
 import configgen.gen.ParameterParser;
 import configgen.Resources;
@@ -370,6 +371,48 @@ class JavaCodeGeneratorTest {
         assertTrue(new File(supportDir, "CodeDataPrinter.java").exists(), "应拷出 CodeDataPrinter.java");
         assertTrue(new File(supportDir, "JsonValue.java").exists(), "应拷出 JsonValue.java");
         assertTrue(new File(supportDir, "Repl.java").exists(), "应拷出 Repl.java");
+    }
+
+    @Test
+    void constructor_invalidPrefix_throws() {
+        // 非法前缀应 fail-fast，而不是静默产出编不过的代码
+        assertThrows(CliException.class, () -> new JavaCodeGenerator(new ParameterParser("javacode,prefix:1a")));
+        assertThrows(CliException.class, () -> new JavaCodeGenerator(new ParameterParser("javacode,prefix:my-c")));
+        // 合法值：空（默认）、字母、下划线、$（java 标识符允许）
+        assertDoesNotThrow(() -> new JavaCodeGenerator(new ParameterParser("javacode,prefix:")));
+        assertDoesNotThrow(() -> new JavaCodeGenerator(new ParameterParser("javacode,prefix:_x")));
+        assertDoesNotThrow(() -> new JavaCodeGenerator(new ParameterParser("javacode,prefix:$x")));
+    }
+
+    @Test
+    void generate_withPrefix() throws IOException {
+        String cfgStr = """
+                table user[id] {
+                    id:int;
+                    name:str;
+                }
+                """;
+        String csvData = """
+                用户ID,姓名
+                id,name
+                1,Alice
+                """;
+
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        Resources.addTempFileFromText("user.csv", tempDir, csvData);
+
+        File outputDir = generateJavaCode("config_prefix", "test.config.prefix", ",prefix:My");
+
+        File expectedFilesDir = new File(outputDir, "test/config/prefix");
+        File userFile = new File(expectedFilesDir, "MyUser.java");
+        assertTrue(userFile.exists(), "应生成带前缀的MyUser.java");
+        String content = Files.readString(userFile.toPath());
+        assertTrue(content.contains("class MyUser"), "类名应带前缀My");
+
+        // 固定名类不带前缀，但其引用指向带前缀的表类
+        String mgrContent = Files.readString(new File(expectedFilesDir, "ConfigMgr.java").toPath());
+        assertTrue(mgrContent.contains("test.config.prefix.MyUser"), "ConfigMgr 应引用带前缀的类全名");
+        assertFalse(new File(expectedFilesDir, "User.java").exists(), "不应再生成无前缀的User.java");
     }
 
     /**

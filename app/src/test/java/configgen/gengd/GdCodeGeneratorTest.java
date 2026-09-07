@@ -2,6 +2,7 @@ package configgen.gengd;
 
 import configgen.TestCtx;
 import configgen.ctx.Context;
+import configgen.gen.CliException;
 import configgen.gen.Parameter;
 import configgen.gen.ParameterParser;
 import configgen.util.Logger;
@@ -16,6 +17,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -94,5 +97,14 @@ class GdCodeGeneratorTest {
                     .filter(p -> p.getFileName().toString().toLowerCase().contains(namePart))
                     .findFirst().orElse(null);
         }
+    }
+
+    @Test
+    void constructor_invalidPrefix_throws() {
+        // 非法前缀应 fail-fast；标识符不允许 $ 和连字符、数字不能开头
+        assertThrows(CliException.class, () -> new GdCodeGenerator(new ParameterParser("gd,prefix:1a")));
+        assertThrows(CliException.class, () -> new GdCodeGenerator(new ParameterParser("gd,prefix:my-c")));
+        assertThrows(CliException.class, () -> new GdCodeGenerator(new ParameterParser("gd,prefix:$x")));
+        assertDoesNotThrow(() -> new GdCodeGenerator(new ParameterParser("gd,prefix:_Cfg")));
     }
 }

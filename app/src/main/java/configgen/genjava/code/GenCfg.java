@@ -7,5 +7,6 @@ package configgen.genjava.code;
  * 并发生成（多个 generator 实例、watch 触发的 postRun 线程）会互相踩踏。
  * 现改为 generate() 入口构造一份不可变实例，沿 model 链显式传递。
  */
-public record GenCfg(String codeTopPkg, boolean isSealedInterface, boolean beautifulName, boolean isLangSwitch) {
+public record GenCfg(String codeTopPkg, boolean isSealedInterface, boolean beautifulName, boolean isLangSwitch,
+                     String prefix) {
 }

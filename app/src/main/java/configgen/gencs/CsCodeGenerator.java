@@ -1,6 +1,7 @@
 package configgen.gencs;
 
 import configgen.ctx.Context;
+import configgen.gen.CliException;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.i18n.LangSwitchable;
@@ -39,6 +40,16 @@ public class CsCodeGenerator extends GeneratorWithTag {
         pkg = parameter.get("pkg", "Config");
         encoding = parameter.get("encoding", "UTF-8");
         prefix = parameter.get("prefix", "D");
+        // 非法前缀会静默产出编不过的代码，这里直接报错；C# 标识符片段：字母或_开头，后续字母/数字/_
+        for (int i = 0; i < prefix.length(); i++) {
+            char c = prefix.charAt(i);
+            boolean ok = i == 0 ? (Character.isLetter(c) || c == '_')
+                    : (Character.isLetterOrDigit(c) || c == '_');
+            if (!ok) {
+                throw new CliException("invalid value for parameter 'prefix': '" + prefix
+                        + "' is not a valid csharp identifier fragment");
+            }
+        }
         serverText = parameter.has("serverText");
         unity = parameter.has("unity");
     }

@@ -2,6 +2,7 @@ package configgen.gencs;
 
 import configgen.TestCtx;
 import configgen.ctx.Context;
+import configgen.gen.CliException;
 import configgen.gen.Parameter;
 import configgen.gen.ParameterParser;
 import configgen.util.Logger;
@@ -15,6 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -86,5 +89,15 @@ class CsCodeGeneratorTest {
         String content = Files.readString(abilityCs);
         assertTrue(content.contains("Fireball"), "枚举值应写入生成的枚举类型");
         assertTrue(content.contains("IceSpike"), "枚举值应写入生成的枚举类型");
+    }
+
+    @Test
+    void constructor_invalidPrefix_throws() {
+        // 非法前缀应 fail-fast；C# 标识符不允许 $ 和连字符、数字不能开头
+        assertThrows(CliException.class, () -> new CsCodeGenerator(new ParameterParser("cs,prefix:1a")));
+        assertThrows(CliException.class, () -> new CsCodeGenerator(new ParameterParser("cs,prefix:my-c")));
+        assertThrows(CliException.class, () -> new CsCodeGenerator(new ParameterParser("cs,prefix:$x")));
+        assertDoesNotThrow(() -> new CsCodeGenerator(new ParameterParser("cs,prefix:D")));
+        assertDoesNotThrow(() -> new CsCodeGenerator(new ParameterParser("cs,prefix:_Cfg")));
     }
 }

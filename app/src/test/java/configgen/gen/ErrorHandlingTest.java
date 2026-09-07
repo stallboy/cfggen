@@ -12,7 +12,7 @@ class ErrorHandlingTest {
 
         // When & Then: 验证参数验证失败（命令行使用错误，非程序断言失败）
         ParameterParser parser = new ParameterParser(arg);
-        assertThrows(Main.CliException.class, parser::assureNoExtra);
+        assertThrows(CliException.class, parser::assureNoExtra);
     }
 
     @Test

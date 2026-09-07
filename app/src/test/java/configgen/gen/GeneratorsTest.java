@@ -28,7 +28,7 @@ class GeneratorsTest {
 
         ParameterParser bad = new ParameterParser("go,dir:.,encoding:GBK");
         new GoCodeGenerator(bad);
-        assertThrows(Main.CliException.class, bad::assureNoExtra,
+        assertThrows(CliException.class, bad::assureNoExtra,
                 "encoding参数已移除，传入必须报错而非静默忽略");
     }
 

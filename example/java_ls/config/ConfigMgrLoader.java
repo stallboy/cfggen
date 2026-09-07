@@ -84,32 +84,32 @@ public class ConfigMgrLoader {
     }
 
     public static void applySetAllRefs(ConfigMgr mgr) {
-        config.equip.Equipconfig_Entry.setAllRefs(mgr);
-        config.equip.Jewelrysuit_Entry.setAllRefs(mgr);
-        config.equip.Rank.setAllRefs(mgr);
-        config.other.ArgCaptureMode.setAllRefs(mgr);
+        config.equip.CfgEquipconfig_Entry.setAllRefs(mgr);
+        config.equip.CfgJewelrysuit_Entry.setAllRefs(mgr);
+        config.equip.CfgRank.setAllRefs(mgr);
+        config.other.CfgArgCaptureMode.setAllRefs(mgr);
     }
 
     public static Map<String, ConfigLoader> getAllConfigLoaders() {
         Map<String, ConfigLoader> allConfigLoaders = new LinkedHashMap<>();
-        allConfigLoaders.put("ai.ai", new config.ai.Ai._ConfigLoader());
-        allConfigLoaders.put("ai.ai_action", new config.ai.Ai_action._ConfigLoader());
-        allConfigLoaders.put("ai.ai_condition", new config.ai.Ai_condition._ConfigLoader());
-        allConfigLoaders.put("equip.equipconfig", new config.equip.Equipconfig._ConfigLoader());
-        allConfigLoaders.put("equip.jewelry", new config.equip.Jewelry._ConfigLoader());
-        allConfigLoaders.put("equip.jewelryrandom", new config.equip.Jewelryrandom._ConfigLoader());
-        allConfigLoaders.put("equip.jewelrysuit", new config.equip.Jewelrysuit._ConfigLoader());
-        allConfigLoaders.put("equip.rank", new config.equip.Rank_Detail._ConfigLoader());
-        allConfigLoaders.put("other.ArgCaptureMode", new config.other.ArgCaptureMode_Detail._ConfigLoader());
-        allConfigLoaders.put("other.drop", new config.other.Drop._ConfigLoader());
-        allConfigLoaders.put("other.keytest", new config.other.Keytest._ConfigLoader());
-        allConfigLoaders.put("other.loot", new config.other.Loot._ConfigLoader());
-        allConfigLoaders.put("other.lootitem", new config.other.Lootitem._ConfigLoader());
-        allConfigLoaders.put("other.monster", new config.other.Monster._ConfigLoader());
-        allConfigLoaders.put("other.signin", new config.other.Signin._ConfigLoader());
-        allConfigLoaders.put("task.task", new config.task.Task._ConfigLoader());
-        allConfigLoaders.put("task.task2", new config.task.Task2._ConfigLoader());
-        allConfigLoaders.put("task.taskextraexp", new config.task.Taskextraexp._ConfigLoader());
+        allConfigLoaders.put("ai.ai", new config.ai.CfgAi._ConfigLoader());
+        allConfigLoaders.put("ai.ai_action", new config.ai.CfgAi_action._ConfigLoader());
+        allConfigLoaders.put("ai.ai_condition", new config.ai.CfgAi_condition._ConfigLoader());
+        allConfigLoaders.put("equip.equipconfig", new config.equip.CfgEquipconfig._ConfigLoader());
+        allConfigLoaders.put("equip.jewelry", new config.equip.CfgJewelry._ConfigLoader());
+        allConfigLoaders.put("equip.jewelryrandom", new config.equip.CfgJewelryrandom._ConfigLoader());
+        allConfigLoaders.put("equip.jewelrysuit", new config.equip.CfgJewelrysuit._ConfigLoader());
+        allConfigLoaders.put("equip.rank", new config.equip.CfgRank_Detail._ConfigLoader());
+        allConfigLoaders.put("other.ArgCaptureMode", new config.other.CfgArgCaptureMode_Detail._ConfigLoader());
+        allConfigLoaders.put("other.drop", new config.other.CfgDrop._ConfigLoader());
+        allConfigLoaders.put("other.keytest", new config.other.CfgKeytest._ConfigLoader());
+        allConfigLoaders.put("other.loot", new config.other.CfgLoot._ConfigLoader());
+        allConfigLoaders.put("other.lootitem", new config.other.CfgLootitem._ConfigLoader());
+        allConfigLoaders.put("other.monster", new config.other.CfgMonster._ConfigLoader());
+        allConfigLoaders.put("other.signin", new config.other.CfgSignin._ConfigLoader());
+        allConfigLoaders.put("task.task", new config.task.CfgTask._ConfigLoader());
+        allConfigLoaders.put("task.task2", new config.task.CfgTask2._ConfigLoader());
+        allConfigLoaders.put("task.taskextraexp", new config.task.CfgTaskextraexp._ConfigLoader());
         return allConfigLoaders;
     }
 }
