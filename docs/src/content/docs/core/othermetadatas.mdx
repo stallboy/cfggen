@@ -198,6 +198,32 @@ table LevelReward[level] (root) {
 
 ---
 
+## commentText - 枚举注释多语言
+
+### 功能描述
+在 enum 声明上设置 `(commentText)` 标记，表示该枚举的 comment 字段使用 `text` 类型（参与国际化）。
+
+### 默认行为
+enum 声明合成的 comment 字段默认为 `str`——枚举注释（如 `快照模式` 这类备注）是策划/开发向说明，默认不进入多语言体系。
+
+### 语法示例
+```cfg
+enum ArgCaptureMode (commentText) {
+    Snapshot; // 快照模式
+    Dynamic;  // 动态模式
+}
+```
+
+等价于 table 形式中的 `comment:text;`。仅当枚举描述需要展示给玩家并本地化时才使用。
+
+---
+
+## 保留元数据的位置校验
+
+上文的 `columnMode`、`json`、`seq`、`root`、`commentText` 等均为保留元数据名，只能出现在特定声明上（如 `json` 仅 table、`seq` 仅字段、`commentText` 仅 enum 声明）。配置放错位置、纯 tag 带值（如 `json='y'`）、或必带值的写法漏了值（如 `(sep)`、`(enum)`）时，解析阶段直接报错并提示允许的位置，不会再静默忽略。
+
+---
+
 ## CFG文件格式规范
 
 <details markdown="block">

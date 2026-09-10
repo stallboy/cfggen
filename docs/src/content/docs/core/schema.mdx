@@ -45,12 +45,22 @@ enum ArgCaptureMode {
 // 在.cfg中配置table
 table ArgCaptureMode[name] (enum='name') {
     name:str;
-    comment:text;
+    comment:str;
 }
 
 // 在excel中配置数据
 // Snapshot, 快照模式
 // Dynamic, 动态模式
+```
+
+comment 字段默认为 `str`——枚举注释是策划/开发向备注，不进入多语言体系。如果确实需要国际化（如展示给玩家的枚举描述），加 `commentText` 标记：
+
+```cfg
+enum ArgCaptureMode (commentText) {
+    Snapshot; // 快照模式
+    Dynamic;  // 动态模式
+}
+// 此时 comment 字段为 text 类型
 ```
 
 ### 有赋值形式
@@ -71,7 +81,7 @@ enum StatClampMode {
 table StatClampMode[name] (enum='name') {
     name:str;
     id:int;
-    comment:text;
+    comment:str;
 }
 ```
 
@@ -324,6 +334,7 @@ table task[taskid] (entry='entry') {
 | `defaultImpl='类名'` | interface | 指定默认实现 |
 | `enum='字段名'` | table | 指定枚举字段 |
 | `entry='字段名'` | table | 指定入口字段 |
+| `commentText` | enum 声明 | comment 字段用 text 类型（默认 str） |
 | `nullable` | 字段 | 允许为空 |
 | `mustFill` | 字段 | 必须填写 |
 | `seq` | 字段 (int) | 声明值为连续序列（0,1,2,...） |
@@ -331,6 +342,8 @@ table task[taskid] (entry='entry') {
 | `block=N` | 映射... | ... |
 | `pack` | 映射... | ... |
 | `sep='分隔符'` | 映射... | ... |
+
+> 上表属性均为保留名，只能出现在"位置"列标注的声明上；放错位置（如 `json` 写到 struct 上）、纯 tag 带值（`json='y'`）或必带值裸写（`(sep)`、`(enum)`）都会在解析时报错，不再静默忽略。
 
 ### 类型系统
 
