@@ -37,5 +37,21 @@ class CfgReaderWriterTest {
         assertEquals(cfg1, cfg2);
     }
 
+    @Test
+    public void enumCommentTextTagRoundTrips() {
+        // commentText tag要原样写回，丢失会导致重读后comment类型退回str
+        String cfgStr = """
+                enum ArgCaptureMode (commentText) {
+                    Snapshot; // 快照模式
+                }
+                """;
+        CfgSchema cfg1 = CfgReader.parse(cfgStr);
+        String out = CfgWriter.stringify(cfg1);
+        assertTrue(out.contains("(commentText)"), "写回的enum声明应保留commentText tag:\n" + out);
+
+        CfgSchema cfg2 = CfgReader.parse(out);
+        assertEquals(cfg1, cfg2);
+    }
+
 
 }

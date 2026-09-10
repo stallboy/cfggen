@@ -12,7 +12,7 @@ public class ArgCaptureMode_Detail {
         ArgCaptureMode_Detail self = new ArgCaptureMode_Detail();
         self.name = input.readStringInPool();
         self.id = input.readInt();
-        self.comment = input.readTextInPool();
+        self.comment = input.readStringInPool();
         return self;
     }
 

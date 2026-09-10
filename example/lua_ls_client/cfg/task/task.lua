@@ -45,13 +45,13 @@ A[3] = collectitem(11, 1)
 A[4] = testdefaultbean(0, false, "", position(0, 0, 0), E, E, E)
 A[5] = testnocolumn
 
-mk(1, {24, 25}, 2, A[1], 1000, A[4])
-mk(2, {26, 27}, 3, A[2], 2000, testdefaultbean(22, false, "text", position(3, 4, 5), {11, 22}, {3, 4, 5}, {[1] = "str in map"}))
-mk(3, {28, 29}, 0, A[3], 3000, A[4])
-mk(4, {30, 31}, 0, conditionand(A[1], A[3]), 4000, A[4])
-mk(5, {32, 33}, 0, conditionand(conditionand(A[1], A[2]), A[3]), 5000, A[4])
-mk(6, {34, 35}, 0, conditionand(chat("葵花宝典,123"), A[1]), 5000, A[4])
-mk(7, {36, 37}, 0, A[5], 2000, A[4])
-mk(8, {38, 39}, 0, A[5], 3000, A[4])
+mk(1, {22, 23}, 2, A[1], 1000, A[4])
+mk(2, {24, 25}, 3, A[2], 2000, testdefaultbean(22, false, "text", position(3, 4, 5), {11, 22}, {3, 4, 5}, {[1] = "str in map"}))
+mk(3, {26, 27}, 0, A[3], 3000, A[4])
+mk(4, {28, 29}, 0, conditionand(A[1], A[3]), 4000, A[4])
+mk(5, {30, 31}, 0, conditionand(conditionand(A[1], A[2]), A[3]), 5000, A[4])
+mk(6, {32, 33}, 0, conditionand(chat("葵花宝典,123"), A[1]), 5000, A[4])
+mk(7, {34, 35}, 0, A[5], 2000, A[4])
+mk(8, {36, 37}, 0, A[5], 3000, A[4])
 
 return this

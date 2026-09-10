@@ -55,7 +55,7 @@ static func _create(stream: ConfigStream) -> DataOther_ArgCaptureMode:
 	var instance = DataOther_ArgCaptureMode.new()
 	instance.name = stream.read_string_in_pool()
 	instance.id = stream.read_int32()
-	instance.comment = stream.read_text_in_pool()
+	instance.comment = stream.read_string_in_pool()
 	return instance
 
 

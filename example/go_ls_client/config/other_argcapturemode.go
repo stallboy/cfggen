@@ -5,14 +5,14 @@ import "fmt"
 type OtherArgCaptureMode struct {
     name string
     id int32
-    comment *Text
+    comment string
 }
 
 func createOtherArgCaptureMode(stream *Stream) *OtherArgCaptureMode {
     v := &OtherArgCaptureMode{}
     v.name = stream.ReadStringInPool()
     v.id = stream.ReadInt32()
-    v.comment = createText(stream)
+    v.comment = stream.ReadStringInPool()
     return v
 }
 
@@ -35,7 +35,7 @@ func (t *OtherArgCaptureMode) Id() int32 {
     return t.id
 }
 
-func (t *OtherArgCaptureMode) Comment() *Text {
+func (t *OtherArgCaptureMode) Comment() string {
     return t.comment
 }
 

@@ -3,7 +3,7 @@ class_name DataOther_ArgCaptureMode
 # 公开属性
 var name: String
 var id: int
-var comment: ConfigText
+var comment: String
 
 # 静态枚举实例
 static var Snapshot: DataOther_ArgCaptureMode
@@ -23,7 +23,7 @@ static func all() -> Array[DataOther_ArgCaptureMode]:
 
 # 字符串表示
 func _to_string() -> String:
-	return "DataOther_ArgCaptureMode{" + name + "," + str(id) + "," + str(comment) + "}"
+	return "DataOther_ArgCaptureMode{" + name + "," + str(id) + "," + comment + "}"
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
@@ -55,7 +55,7 @@ static func _create(stream: ConfigStream) -> DataOther_ArgCaptureMode:
 	var instance = DataOther_ArgCaptureMode.new()
 	instance.name = stream.read_string_in_pool()
 	instance.id = stream.read_int32()
-	instance.comment = ConfigText._create(stream)
+	instance.comment = stream.read_string_in_pool()
 	return instance
 
 

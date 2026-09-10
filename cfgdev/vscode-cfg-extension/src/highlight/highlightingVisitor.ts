@@ -459,7 +459,8 @@ export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implemen
                         // Check if this is a special metadata keyword
                         const specialMetadata = [
                             'nullable', 'mustFill', 'enumRef', 'enum',
-                            'entry', 'sep', 'pack', 'fix', 'block'
+                            'entry', 'sep', 'pack', 'fix', 'block',
+                            'commentText'
                         ];
 
                         if (specialMetadata.includes(metadataName)) {

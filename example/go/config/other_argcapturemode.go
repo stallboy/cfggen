@@ -12,7 +12,7 @@ func createOtherArgCaptureMode(stream *Stream) *OtherArgCaptureMode {
     v := &OtherArgCaptureMode{}
     v.name = stream.ReadStringInPool()
     v.id = stream.ReadInt32()
-    v.comment = stream.ReadTextInPool()
+    v.comment = stream.ReadStringInPool()
     return v
 }
 

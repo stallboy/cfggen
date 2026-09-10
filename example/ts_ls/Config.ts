@@ -1307,8 +1307,8 @@ export class Other_ArgCaptureMode {
     get Name(): string { return this._name; }
     private _id!: number;
     get Id(): number { return this._id; }
-    private _comment!: Text;
-    get Comment(): Text { return this._comment; }
+    private _comment!: string;
+    get Comment(): string { return this._comment; }
 
     toString() : string {
         return "(" + this._name + "," + this._id + "," + this._comment + ")";
@@ -1372,7 +1372,7 @@ export class Other_ArgCaptureMode {
         const self = new Other_ArgCaptureMode();
         self._name = os.ReadStringInPool();
         self._id = os.ReadInt32();
-        self._comment = Text._create(os);
+        self._comment = os.ReadStringInPool();
         return self;
     }
 

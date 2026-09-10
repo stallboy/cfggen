@@ -147,26 +147,49 @@ class VTableCreatorTest {
         // 验证虚拟数据
         assertEquals(2, vTable.valueList().size());
 
-        // 验证第一行
+        // 验证第一行：comment值类型跟随字段类型，默认str
         VStruct row1 = vTable.valueList().getFirst();
         assertEquals(2, row1.values().size());
         assertInstanceOf(VString.class, row1.values().get(0));
         assertEquals("Snapshot", ((VString) row1.values().get(0)).value());
-        assertInstanceOf(VText.class, row1.values().get(1));
-        assertEquals("快照模式", ((VText) row1.values().get(1)).value());
+        assertInstanceOf(VString.class, row1.values().get(1));
+        assertEquals("快照模式", ((VString) row1.values().get(1)).value());
 
         // 验证第二行
         VStruct row2 = vTable.valueList().get(1);
         assertEquals(2, row2.values().size());
         assertInstanceOf(VString.class, row2.values().get(0));
         assertEquals("Dynamic", ((VString) row2.values().get(0)).value());
-        assertInstanceOf(VText.class, row2.values().get(1));
-        assertEquals("动态模式", ((VText) row2.values().get(1)).value());
+        assertInstanceOf(VString.class, row2.values().get(1));
+        assertEquals("动态模式", ((VString) row2.values().get(1)).value());
 
         // 验证 enumNames
         assertNotNull(vTable.enumNames());
         assertTrue(vTable.enumNames().contains("Snapshot"));
         assertTrue(vTable.enumNames().contains("Dynamic"));
+    }
+
+    @Test
+    void create_schemaEnumVirtualData_commentText() {
+        // 标记commentText时虚拟数据的comment为VText
+        String str = """
+                enum ArgCaptureMode (commentText) {
+                    Snapshot; // 快照模式
+                    Dynamic;  // 动态模式
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve().checkErrors();
+        TableSchema enumTable = cfg.findTable("ArgCaptureMode");
+        assertNotNull(enumTable);
+
+        CfgValueErrs errs = CfgValueErrs.of();
+        VTable vTable = new VTableCreator(enumTable, errs).create(List.of());
+
+        assertEquals(2, vTable.valueList().size());
+        VStruct row1 = vTable.valueList().getFirst();
+        assertInstanceOf(VText.class, row1.values().get(1));
+        assertEquals("快照模式", ((VText) row1.values().get(1)).value());
     }
 
 }

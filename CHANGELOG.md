@@ -7,6 +7,11 @@
 ### [Unreleased]
 
 #### Added
+- enum 声明新增 `commentText` tag：`enum ArgCaptureMode (commentText) { ... }`，comment 字段用 text 类型（要国际化时使用）。
+- 保留 metadata tag 位置与形式校验：放错位置（如 table 专属的 `json` 写到 struct 上）解析时直接报错，不再静默忽略；纯 tag 带值（`json='y'`）与必须带值的裸写（`(sep)`、`(enum)`）也会报错，这两类错误原先都会静默不生效。用户自定义 filter tag（含 `-tag` 排除形式）不受影响。
+
+#### Changed
+- [破坏性] enum 声明合成的 comment 字段默认类型从 `text` 改为 `str`：enum 注释是策划/开发向备注，默认不应进入多语言体系。开 langSwitch 的项目生成代码中 `getComment()` 从 `Text` 变 `String`，语言文件中 enum comment 的翻译条目随之失效；确需国际化的 enum 请加 `(commentText)`。bytes 布局相应变化，各端需与生成器同步重生成。
 - Java 生成器新增 `beautifulName` 参数：开启后由 snake_case schema 名派生的标识符统一美化——类名/getter/all 函数名转 PascalCase（`factory_animation_type` -> `FactoryAnimationType`），enum/entry 常量转 SCREAMING_SNAKE_CASE（`ResetDuration`、`Reset_Duration` 都得到 `RESET_DURATION`）；生成器自带的后缀 `_Entry`/`_Detail` 原样保留以区隔包装类/详情类（`equip_config` 的 entry 类为 `EquipConfig_Entry`）；默认关闭保持原 `upper1`/`toUpperCase` 行为。
 
 ### [v1.4.0] - 2026-07-20

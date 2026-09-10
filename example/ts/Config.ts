@@ -1372,7 +1372,7 @@ export class Other_ArgCaptureMode {
         const self = new Other_ArgCaptureMode();
         self._name = os.ReadStringInPool();
         self._id = os.ReadInt32();
-        self._comment = os.ReadTextInPool();
+        self._comment = os.ReadStringInPool();
         return self;
     }
 

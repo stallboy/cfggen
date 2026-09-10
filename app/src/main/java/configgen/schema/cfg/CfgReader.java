@@ -113,6 +113,7 @@ public enum CfgReader {
         if (!fullComment.encode().isEmpty()) {
             meta.putComment(fullComment);
         }
+        validateMetadataPlacement(ctx, meta, Metadata.MetaPos.TABLE, name);
 
         EntryType entry = meta.removeEntry();
         boolean isColumnMode = meta.removeColumnMode();
@@ -141,6 +142,10 @@ public enum CfgReader {
         if (!fullComment.encode().isEmpty()) {
             meta.putComment(fullComment);
         }
+        validateMetadataPlacement(ctx.metadata(), meta, Metadata.MetaPos.ENUM_DECL, name);
+
+        // comment字段默认str（策划/开发向备注，不进多语言体系）；标记commentText时用text（要国际化）
+        Primitive commentType = meta.isCommentText() ? Primitive.TEXT : Primitive.STRING;
 
         // 解析 enum 值：语法保证要么全是 empty，要么全是 assigned
         List<Enum_value_assignedContext> assignedCtxs = ctx.enum_value_assigned();
@@ -166,7 +171,7 @@ public enum CfgReader {
                     List.of(
                             new FieldSchema("name", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
                             new FieldSchema("id", Primitive.INT, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
-                            new FieldSchema("comment", Primitive.TEXT, FieldFormat.AutoOrPack.AUTO, Metadata.of())
+                            new FieldSchema("comment", commentType, FieldFormat.AutoOrPack.AUTO, Metadata.of())
                     ),
                     List.of(),
                     List.of(new KeySchema(List.of("id")))
@@ -191,7 +196,7 @@ public enum CfgReader {
                     meta,
                     List.of(
                             new FieldSchema("name", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
-                            new FieldSchema("comment", Primitive.TEXT, FieldFormat.AutoOrPack.AUTO, Metadata.of())
+                            new FieldSchema("comment", commentType, FieldFormat.AutoOrPack.AUTO, Metadata.of())
                     ),
                     List.of(),
                     List.of()
@@ -221,6 +226,7 @@ public enum CfgReader {
         if (!fullComment.encode().isEmpty()) {
             meta.putComment(fullComment);
         }
+        validateMetadataPlacement(ctx, meta, Metadata.MetaPos.INTERFACE, name);
 
         String enumRef = meta.removeEnumRef();
         String defaultImpl = meta.removeDefaultImpl();
@@ -247,6 +253,7 @@ public enum CfgReader {
         if (!fullComment.encode().isEmpty()) {
             meta.putComment(fullComment);
         }
+        validateMetadataPlacement(ctx, meta, Metadata.MetaPos.STRUCT, name);
 
         FieldFormat fmt = meta.removeFmt();
         StructSpec ff = readStructSpec(ctx.field_decl(), ctx.foreign_decl());
@@ -282,6 +289,40 @@ public enum CfgReader {
         return meta;
     }
 
+    /**
+     * 校验保留tag的位置和形式：放错位置或纯tag带了值，直接报错而不是静默忽略。
+     * 必须在各read*消费（remove*）meta之前调用；'-'开头的用户filter排除tag和'_'开头的内部meta不校验。
+     */
+    private static void validateMetadataPlacement(org.antlr.v4.runtime.ParserRuleContext ctx,
+                                                  Metadata meta, Metadata.MetaPos pos, String declName) {
+        for (Map.Entry<String, Metadata.MetaValue> e : meta.data().entrySet()) {
+            String k = e.getKey();
+            char c = k.charAt(0);
+            if (c == '-' || c == '_') {
+                continue;
+            }
+            if (Metadata.isReservedTagNotAllowedAt(k, pos)) {
+                throw new CfgSyntaxException(
+                        String.format("line %d:%d metadata '%s' 不允许出现在%s '%s' 上，只允许: %s",
+                                ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine(),
+                                k, pos, declName, Metadata.allowedPositionsText(k)),
+                        ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+            }
+            if (Metadata.isTagOnlyName(k) && e.getValue() != TAG) {
+                throw new CfgSyntaxException(
+                        String.format("line %d:%d metadata '%s' 是tag，不能带值",
+                                ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine(), k),
+                        ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+            }
+            if (Metadata.isValueRequiredName(k) && e.getValue() == TAG) {
+                throw new CfgSyntaxException(
+                        String.format("line %d:%d metadata '%s' 需要带值",
+                                ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine(), k),
+                        ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+            }
+        }
+    }
+
     private static MetaValue readMetaValue(TerminalNode tn) {
         int type = tn.getSymbol().getType();
         String text = tn.getSymbol().getText();
@@ -313,6 +354,7 @@ public enum CfgReader {
             if (!comment.encode().isEmpty()) {
                 meta.putComment(comment);
             }
+            validateMetadataPlacement(ctx, meta, Metadata.MetaPos.FIELD, name);
 
             FieldFormat fmt = meta.removeFmt();
             FieldSchema fieldSchema = new FieldSchema(name, type, fmt, meta);
@@ -339,6 +381,7 @@ public enum CfgReader {
             if (!comment.encode().isEmpty()) {
                 meta.putComment(comment);
             }
+            validateMetadataPlacement(ctx, meta, Metadata.MetaPos.FOREIGN_KEY, name);
 
             boolean nullable = meta.removeNullable();
             ForeignKeySchema foreignKeySchema = readRef(ctx.ref(), name, localKey, meta, nullable);

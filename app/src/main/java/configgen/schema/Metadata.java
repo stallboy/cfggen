@@ -1,7 +1,9 @@
 package configgen.schema;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.SequencedMap;
 import java.util.Set;
@@ -91,6 +93,14 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return hasTag(SEQ);
     }
 
+    /**
+     * enum声明的comment字段是否用text类型（默认str）。
+     * tag保留在meta里不remove，CfgWriter还原enum声明时需要写回。
+     */
+    public boolean isCommentText() {
+        return hasTag(COMMENT_TEXT);
+    }
+
     public void putTag(String tag) {
         if (reservedTags.contains(tag)) {
             throw new IllegalArgumentException(String.format("'%s' reserved", tag));
@@ -173,12 +183,92 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String MUST_FILL = "mustFill";
     private static final String ROOT = "root";
     private static final String SEQ = "seq";
+    private static final String COMMENT_TEXT = "commentText"; // enum声明的comment字段用text类型（默认str）
 
     private static final Set<String> stateTags = Set.of(SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT);
 
     private static final Set<String> reservedTags = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK,
-            LOWER_CASE, MUST_FILL, ROOT, SEQ, ENUM_VALUES, FROM_ENUM_TYPE, FROM_CFG_FILEPATH);
+            LOWER_CASE, MUST_FILL, ROOT, SEQ, COMMENT_TEXT, ENUM_VALUES, FROM_ENUM_TYPE, FROM_CFG_FILEPATH);
+
+    /**
+     * 保留tag（metadata）允许出现的位置，用于解析时校验：
+     * 放错位置的保留tag直接报错，而不是静默忽略或被当成用户自定义filter tag。
+     */
+    public enum MetaPos {
+        ENUM_DECL("enum声明"),
+        TABLE("table"),
+        INTERFACE("interface"),
+        STRUCT("struct"),
+        FIELD("字段"),
+        FOREIGN_KEY("外键声明");
+
+        public final String cn;
+
+        MetaPos(String cn) {
+            this.cn = cn;
+        }
+
+        @Override
+        public String toString() {
+            return cn;
+        }
+    }
+
+    private static final Map<String, Set<MetaPos>> reservedTagPositions = Map.ofEntries(
+            Map.entry(COMMENT_TEXT, Set.of(MetaPos.ENUM_DECL)),
+            Map.entry(JSON, Set.of(MetaPos.TABLE)),
+            Map.entry(ENTRY, Set.of(MetaPos.TABLE)),
+            Map.entry(ENUM, Set.of(MetaPos.TABLE)),
+            Map.entry(COLUMN_MODE, Set.of(MetaPos.TABLE)),
+            Map.entry(ROOT, Set.of(MetaPos.TABLE)),
+            Map.entry(ENUM_REF, Set.of(MetaPos.INTERFACE)),
+            Map.entry(DEFAULT_IMPL, Set.of(MetaPos.INTERFACE)),
+            Map.entry(PACK, Set.of(MetaPos.INTERFACE, MetaPos.STRUCT, MetaPos.FIELD)),
+            Map.entry(SEP, Set.of(MetaPos.INTERFACE, MetaPos.STRUCT, MetaPos.FIELD)),
+            Map.entry(FIX, Set.of(MetaPos.INTERFACE, MetaPos.STRUCT, MetaPos.FIELD)),
+            Map.entry(BLOCK, Set.of(MetaPos.INTERFACE, MetaPos.STRUCT, MetaPos.FIELD)),
+            Map.entry(LOWER_CASE, Set.of(MetaPos.FIELD)),
+            Map.entry(MUST_FILL, Set.of(MetaPos.FIELD)),
+            Map.entry(SEQ, Set.of(MetaPos.FIELD)),
+            Map.entry(NULLABLE, Set.of(MetaPos.FIELD, MetaPos.FOREIGN_KEY)));
+
+    /**
+     * 只能是tag（不带值）的保留名。写成 (json='x') 这种带值形式时，hasTag为false，
+     * 行为会静默不生效，必须报错。
+     * 注意 nullable、columnMode、pack 是 remove()!=null 判定，带值也能工作，不在此列。
+     */
+    private static final Set<String> tagOnlyNames = Set.of(JSON, LOWER_CASE, MUST_FILL, ROOT, SEQ, COMMENT_TEXT);
+
+    /**
+     * 必须带值的保留名。裸写 (sep) 时 removeFmt 匹配不到值的类型，fmt静默退回auto，必须报错。
+     */
+    private static final Set<String> valueRequiredNames = Set.of(ENTRY, ENUM, ENUM_REF, DEFAULT_IMPL, SEP, FIX, BLOCK);
+
+    public static boolean isReservedTagNotAllowedAt(String name, MetaPos pos) {
+        Set<MetaPos> allowed = reservedTagPositions.get(name);
+        return allowed != null && !allowed.contains(pos);
+    }
+
+    public static String allowedPositionsText(String name) {
+        Set<MetaPos> allowed = reservedTagPositions.get(name);
+        if (allowed == null) {
+            return "";
+        }
+        List<String> parts = new ArrayList<>(allowed.size());
+        for (MetaPos pos : allowed) {
+            parts.add(pos.cn);
+        }
+        return String.join("、", parts);
+    }
+
+    public static boolean isTagOnlyName(String name) {
+        return tagOnlyNames.contains(name);
+    }
+
+    public static boolean isValueRequiredName(String name) {
+        return valueRequiredNames.contains(name);
+    }
 
     public CommentData getComment() {
         if (data.get(COMMENT) instanceof MetaComment(CommentData cd)) {

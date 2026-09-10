@@ -25,13 +25,16 @@ public class VTableCreator {
             // 生成虚拟数据
             valueList = new ArrayList<>();
             Source autoSource = Source.of();  // 自动生成的数据使用空 Source
+            // comment值类型跟随合成字段类型：默认str，标记commentText时为text
+            boolean commentAsText = tableSchema.findField("comment").type() == FieldType.Primitive.TEXT;
             switch (enumValues) {
                 case MetaEnumValues.OfEmpty empty -> {
                     for (Metadata.EnumValueEmpty ev : empty.values()) {
+                        Value comment = commentAsText ? new VText(ev.comment(), autoSource)
+                                : new VString(ev.comment(), autoSource);
                         VStruct vStruct = new VStruct(
                                 tableSchema,
-                                List.of(new VString(ev.name(), autoSource),
-                                        new VText(ev.comment(), autoSource)),
+                                List.of(new VString(ev.name(), autoSource), comment),
                                 autoSource
                         );
                         valueList.add(vStruct);
@@ -39,11 +42,13 @@ public class VTableCreator {
                 }
                 case MetaEnumValues.OfAssigned assigned -> {
                     for (Metadata.EnumValueAssigned ev : assigned.values()) {
+                        Value comment = commentAsText ? new VText(ev.comment(), autoSource)
+                                : new VString(ev.comment(), autoSource);
                         VStruct vStruct = new VStruct(
                                 tableSchema,
                                 List.of(new VString(ev.name(), autoSource),
                                         new VInt(ev.number(), autoSource),
-                                        new VText(ev.comment(), autoSource)),
+                                        comment),
                                 autoSource
                         );
                         valueList.add(vStruct);

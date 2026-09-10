@@ -31,7 +31,7 @@ public enum CfgArgCaptureMode {
         return ref.getId();
     }
 
-    public config.Text getComment() {
+    public String getComment() {
         return ref.getComment();
     }
 

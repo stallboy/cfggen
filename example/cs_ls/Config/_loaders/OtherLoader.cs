@@ -71,7 +71,7 @@ namespace Config.Other
         {
             var name = reader.ReadStringInPool();
             var id = reader.ReadInt32();
-            var comment = Config.Text._create(reader);
+            var comment = reader.ReadStringInPool();
             return new DArgCaptureModeInfo {
                 Name = name,
                 Id = id,

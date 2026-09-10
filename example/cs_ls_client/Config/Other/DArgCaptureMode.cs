@@ -13,7 +13,7 @@ public partial class DArgCaptureModeInfo
 {
     public string Name { get; init; } = null!;
     public int Id { get; init; }
-    public Config.Text Comment { get; init; } = null!;
+    public string Comment { get; init; } = null!;
     public DArgCaptureMode EEnum { get; init; }
     private static IReadOnlyList<DArgCaptureModeInfo> _allList = null!;
     

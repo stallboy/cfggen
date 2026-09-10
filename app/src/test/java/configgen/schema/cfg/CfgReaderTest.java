@@ -399,12 +399,115 @@ class CfgReaderTest {
         assertEquals("Dynamic", empty.values().get(1).name());
         assertEquals("动态模式", empty.values().get(1).comment());
 
-        // 验证自动生成的字段
+        // 验证自动生成的字段：comment默认str（策划/开发向备注，不进多语言体系）
         assertEquals(2, table.fields().size());
         assertEquals("name", table.fields().get(0).name());
         assertEquals(Primitive.STRING, table.fields().get(0).type());
         assertEquals("comment", table.fields().get(1).name());
+        assertEquals(Primitive.STRING, table.fields().get(1).type());
+    }
+
+    @Test
+    void parseEnumDeclWithCommentText() {
+        // 标记commentText时comment用text类型，且tag保留在meta里供CfgWriter还原
+        String str = """
+                enum ArgCaptureMode (commentText) {
+                    Snapshot; // 快照模式
+                    Dynamic;  // 动态模式
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        TableSchema table = (TableSchema) cfg.items().getFirst();
         assertEquals(Primitive.TEXT, table.fields().get(1).type());
+        assertTrue(table.meta().isCommentText());
+    }
+
+    @Test
+    void parseEnumDeclCommentTextWithValueRejected() {
+        // commentText是tag，带值会静默不生效，必须报错
+        String str = """
+                enum ArgCaptureMode (commentText='y') {
+                    Snapshot;
+                }
+                """;
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse(str));
+    }
+
+    @Test
+    void reservedTagAtWrongPositionRejected() {
+        // 保留tag放错位置直接报错，而不是静默忽略
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse("""
+                struct s (json) {
+                    x:int;
+                }
+                """));
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse("""
+                table t[id] (lowercase) {
+                    id:int;
+                }
+                """));
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse("""
+                table t[id] (commentText) {
+                    id:int;
+                }
+                """));
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse("""
+                struct s (entry='x') {
+                    x:int;
+                }
+                """));
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse("""
+                enum e (sep=',') {
+                    A;
+                }
+                """));
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse("""
+                struct s (mustFill) {
+                    x:int;
+                }
+                """));
+        // 纯tag带了值，hasTag为false会静默不生效，必须报错
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse("""
+                table t[id] (json='y') {
+                    id:int;
+                }
+                """));
+        // 必须带值的tag裸写会静默退回none/auto，必须报错
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse("""
+                table t[id] (enum) {
+                    id:int;
+                    name:str;
+                }
+                """));
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse("""
+                struct s {
+                    x:list<int> (sep);
+                }
+                """));
+    }
+
+    @Test
+    void reservedTagAtRightPositionAccepted() {
+        // 正确位置的保留tag不受影响；-开头的用户filter排除tag不校验；
+        // 普通字段上的(nullable)是现存被容忍的写法
+        CfgSchema cfg = CfgReader.parse("""
+                table t[id] (entry='name', columnMode, root) {
+                    id:int;
+                    name:str (lowercase, mustFill);
+                    n:str (nullable);
+                }
+                struct s (sep=';') {
+                    a:int;
+                    b:int;
+                }
+                struct s2 (-json) {
+                    x:int;
+                }
+                enum e (commentText) {
+                    A;
+                }
+                """);
+        assertEquals(4, cfg.items().size());
     }
 
     @Test
@@ -445,7 +548,7 @@ class CfgReaderTest {
         assertEquals("id", table.fields().get(1).name());
         assertEquals(Primitive.INT, table.fields().get(1).type());
         assertEquals("comment", table.fields().get(2).name());
-        assertEquals(Primitive.TEXT, table.fields().get(2).type());
+        assertEquals(Primitive.STRING, table.fields().get(2).type());
     }
 
     @Test
