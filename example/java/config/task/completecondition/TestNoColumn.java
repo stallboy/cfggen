@@ -2,8 +2,8 @@ package config.task.completecondition;
 
 public final class TestNoColumn implements config.task.completecondition.Completecondition {
     @Override
-    public config.task.Completeconditiontype type() {
-        return config.task.Completeconditiontype.TEST_NO_COLUMN;
+    public config.task.CompleteConditionType type() {
+        return config.task.CompleteConditionType.TEST_NO_COLUMN;
     }
 
     public TestNoColumn() {

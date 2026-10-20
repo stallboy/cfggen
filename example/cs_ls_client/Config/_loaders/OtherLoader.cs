@@ -172,41 +172,41 @@ namespace Config.Other
 
     }
 
-    public partial class DKeytest
+    public partial class DKeyTest
     {
-        internal static Id1Id2Key PrimaryKey(DKeytest self) => new Id1Id2Key(self.Id1, self.Id2);
-        internal static void InitializeAll(List<DKeytest> list, LoadErrors errors, ConfigMgr config)
+        internal static Id1Id2Key PrimaryKey(DKeyTest self) => new Id1Id2Key(self.Id1, self.Id2);
+        internal static void InitializeAll(List<DKeyTest> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<Id1Id2Key, DKeytest>(count);
-            var s_id1Id3Map = new Dictionary<Id1Id3Key, DKeytest>(count);
-            var s_id2Map = new Dictionary<long, DKeytest>(count);
-            var s_id2Id3Map = new Dictionary<Id2Id3Key, DKeytest>(count);
+            var s_all = new Dictionary<Id1Id2Key, DKeyTest>(count);
+            var s_id1Id3Map = new Dictionary<Id1Id3Key, DKeyTest>(count);
+            var s_id2Map = new Dictionary<long, DKeyTest>(count);
+            var s_id2Id3Map = new Dictionary<Id2Id3Key, DKeyTest>(count);
             foreach (var self in list)
             {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
                 {
                     var uniqueKey = new Id1Id3Key(self.Id1, self.Id3);
-                    if (!s_id1Id3Map.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.keytest", "id1,id3", key, uniqueKey, config.Explain("other.keytest", key));
+                    if (!s_id1Id3Map.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.key_test", "id1,id3", key, uniqueKey, config.Explain("other.key_test", key));
                 }
                 {
                     var uniqueKey = self.Id2;
-                    if (!s_id2Map.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.keytest", "id2", key, uniqueKey, config.Explain("other.keytest", key));
+                    if (!s_id2Map.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.key_test", "id2", key, uniqueKey, config.Explain("other.key_test", key));
                 }
                 {
                     var uniqueKey = new Id2Id3Key(self.Id2, self.Id3);
-                    if (!s_id2Id3Map.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.keytest", "id2,id3", key, uniqueKey, config.Explain("other.keytest", key));
+                    if (!s_id2Id3Map.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.key_test", "id2,id3", key, uniqueKey, config.Explain("other.key_test", key));
                 }
             }
-            config._other_dkeytest_All = new System.Collections.ObjectModel.ReadOnlyDictionary<Id1Id2Key, DKeytest>(s_all);
-            config._other_dkeytest_Id1Id3Map = new System.Collections.ObjectModel.ReadOnlyDictionary<Id1Id3Key, DKeytest>(s_id1Id3Map);
-            config._other_dkeytest_Id2Map = new System.Collections.ObjectModel.ReadOnlyDictionary<long, DKeytest>(s_id2Map);
-            config._other_dkeytest_Id2Id3Map = new System.Collections.ObjectModel.ReadOnlyDictionary<Id2Id3Key, DKeytest>(s_id2Id3Map);
-            config._other_dkeytest_Rows = list.AsReadOnly();
+            config._other_dkey_utest_All = new System.Collections.ObjectModel.ReadOnlyDictionary<Id1Id2Key, DKeyTest>(s_all);
+            config._other_dkey_utest_Id1Id3Map = new System.Collections.ObjectModel.ReadOnlyDictionary<Id1Id3Key, DKeyTest>(s_id1Id3Map);
+            config._other_dkey_utest_Id2Map = new System.Collections.ObjectModel.ReadOnlyDictionary<long, DKeyTest>(s_id2Map);
+            config._other_dkey_utest_Id2Id3Map = new System.Collections.ObjectModel.ReadOnlyDictionary<Id2Id3Key, DKeyTest>(s_id2Id3Map);
+            config._other_dkey_utest_Rows = list.AsReadOnly();
         }
 
-        internal static DKeytest _create(ConfigReader reader)
+        internal static DKeyTest _create(ConfigReader reader)
         {
             var valueId1 = reader.ReadInt32();
             var valueId2 = reader.ReadInt64();
@@ -228,7 +228,7 @@ namespace Config.Other
                 for (int i = 0; i < Count_valueEnumList; i++) values_valueEnumList.Add(reader.ReadStringInPool());
                 valueEnumList = values_valueEnumList.AsReadOnly();
             }
-            return new DKeytest {
+            return new DKeyTest {
                 Id1 = valueId1,
                 Id2 = valueId2,
                 Id3 = valueId3,
@@ -245,7 +245,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            return obj is DKeytest o && Id1.Equals(o.Id1) && Id2.Equals(o.Id2);
+            return obj is DKeyTest o && Id1.Equals(o.Id1) && Id2.Equals(o.Id2);
         }
 
         public override string ToString()
@@ -255,22 +255,22 @@ namespace Config.Other
 
         internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            var resolvedRefIds = new List<Other.DSignin>();
+            var resolvedRefIds = new List<Other.DSignIn>();
             foreach(var e in Ids)
             {
-                var r = Other.DSignin.Get(config, e);
-                if (r == null) errors.MissingReference("other.keytest", "ids", "other.signin", e);
+                var r = Other.DSignIn.Get(config, e);
+                if (r == null) errors.MissingReference("other.key_test", "ids", "other.sign_in", e);
                 else resolvedRefIds.Add(r);
             }
-            RefIds = resolvedRefIds.Count == 0 ? Array.Empty<Other.DSignin>() : resolvedRefIds.AsReadOnly();
+            RefIds = resolvedRefIds.Count == 0 ? Array.Empty<Other.DSignIn>() : resolvedRefIds.AsReadOnly();
             var rRefEnumTest = Other.DArgCaptureModeInfo.Get(config, EnumTest);
-            if (rRefEnumTest == null) errors.MissingReference("other.keytest", "enumTest", "other.ArgCaptureMode", this.EnumTest);
+            if (rRefEnumTest == null) errors.MissingReference("other.key_test", "enumTest", "other.ArgCaptureMode", this.EnumTest);
             else RefEnumTest = rRefEnumTest.EEnum;
             var resolvedRefEnumList = new List<Other.DArgCaptureMode>();
             foreach(var e in EnumList)
             {
                 var r = Other.DArgCaptureModeInfo.Get(config, e);
-                if (r == null) errors.MissingReference("other.keytest", "enumList", "other.ArgCaptureMode", e);
+                if (r == null) errors.MissingReference("other.key_test", "enumList", "other.ArgCaptureMode", e);
                 else resolvedRefEnumList.Add(r.EEnum);
             }
             RefEnumList = resolvedRefEnumList.Count == 0 ? Array.Empty<Other.DArgCaptureMode>() : resolvedRefEnumList.AsReadOnly();
@@ -332,48 +332,48 @@ namespace Config.Other
 
         internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            var resolvedListRefLootid = new List<Other.DLootitem>();
-            foreach (var v in Other.DLootitem.All(config))
+            var resolvedListRefLootid = new List<Other.DLootItem>();
+            foreach (var v in Other.DLootItem.All(config))
             {
                 if (v.Lootid.Equals(Lootid))
                     resolvedListRefLootid.Add(v);
             }
-            ListRefLootid = resolvedListRefLootid.Count == 0 ? Array.Empty<Other.DLootitem>() : resolvedListRefLootid.AsReadOnly();
-            var resolvedListRefAnotherWay = new List<Other.DLootitem>();
-            foreach (var v in Other.DLootitem.All(config))
+            ListRefLootid = resolvedListRefLootid.Count == 0 ? Array.Empty<Other.DLootItem>() : resolvedListRefLootid.AsReadOnly();
+            var resolvedListRefAnotherWay = new List<Other.DLootItem>();
+            foreach (var v in Other.DLootItem.All(config))
             {
                 if (v.Lootid.Equals(Lootid))
                     resolvedListRefAnotherWay.Add(v);
             }
-            ListRefAnotherWay = resolvedListRefAnotherWay.Count == 0 ? Array.Empty<Other.DLootitem>() : resolvedListRefAnotherWay.AsReadOnly();
+            ListRefAnotherWay = resolvedListRefAnotherWay.Count == 0 ? Array.Empty<Other.DLootItem>() : resolvedListRefAnotherWay.AsReadOnly();
         }
 
     }
 
-    public partial class DLootitem
+    public partial class DLootItem
     {
-        internal static LootidItemidKey PrimaryKey(DLootitem self) => new LootidItemidKey(self.Lootid, self.Itemid);
-        internal static void InitializeAll(List<DLootitem> list, LoadErrors errors, ConfigMgr config)
+        internal static LootidItemidKey PrimaryKey(DLootItem self) => new LootidItemidKey(self.Lootid, self.Itemid);
+        internal static void InitializeAll(List<DLootItem> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<LootidItemidKey, DLootitem>(count);
+            var s_all = new Dictionary<LootidItemidKey, DLootItem>(count);
             foreach (var self in list)
             {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
-            config._other_dlootitem_All = new System.Collections.ObjectModel.ReadOnlyDictionary<LootidItemidKey, DLootitem>(s_all);
-            config._other_dlootitem_Rows = list.AsReadOnly();
+            config._other_dloot_uitem_All = new System.Collections.ObjectModel.ReadOnlyDictionary<LootidItemidKey, DLootItem>(s_all);
+            config._other_dloot_uitem_Rows = list.AsReadOnly();
         }
 
-        internal static DLootitem _create(ConfigReader reader)
+        internal static DLootItem _create(ConfigReader reader)
         {
             var valueLootid = reader.ReadInt32();
             var valueItemid = reader.ReadInt32();
             var valueChance = reader.ReadInt32();
             var valueCountmin = reader.ReadInt32();
             var valueCountmax = reader.ReadInt32();
-            return new DLootitem {
+            return new DLootItem {
                 Lootid = valueLootid,
                 Itemid = valueItemid,
                 Chance = valueChance,
@@ -389,7 +389,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            return obj is DLootitem o && Lootid.Equals(o.Lootid) && Itemid.Equals(o.Itemid);
+            return obj is DLootItem o && Lootid.Equals(o.Lootid) && Itemid.Equals(o.Itemid);
         }
 
         public override string ToString()
@@ -470,8 +470,8 @@ namespace Config.Other
 
         internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            var rRefLoot = Other.DLootitem.Get(config, LootId, LootItemId);
-            if (rRefLoot == null) errors.MissingReference("other.monster", "Loot", "other.lootitem", (this.LootId, this.LootItemId));
+            var rRefLoot = Other.DLootItem.Get(config, LootId, LootItemId);
+            if (rRefLoot == null) errors.MissingReference("other.monster", "Loot", "other.loot_item", (this.LootId, this.LootItemId));
             else RefLoot = rRefLoot;
             var rRefAllLoot = Other.DLoot.Get(config, LootId);
             if (rRefAllLoot == null) errors.MissingReference("other.monster", "AllLoot", "other.loot", this.LootId);
@@ -489,23 +489,23 @@ namespace Config.Other
 
     }
 
-    public partial class DSignin
+    public partial class DSignIn
     {
-        internal static int PrimaryKey(DSignin self) => self.Id;
-        internal static void InitializeAll(List<DSignin> list, LoadErrors errors, ConfigMgr config)
+        internal static int PrimaryKey(DSignIn self) => self.Id;
+        internal static void InitializeAll(List<DSignIn> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<int, DSignin>(count);
+            var s_all = new Dictionary<int, DSignIn>(count);
             foreach (var self in list)
             {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
-            config._other_dsignin_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DSignin>(s_all);
-            config._other_dsignin_Rows = list.AsReadOnly();
+            config._other_dsign_uin_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DSignIn>(s_all);
+            config._other_dsign_uin_Rows = list.AsReadOnly();
         }
 
-        internal static DSignin _create(ConfigReader reader)
+        internal static DSignIn _create(ConfigReader reader)
         {
             var valueId = reader.ReadInt32();
             int Count_valueItem2countMap = reader.ReadCount(0);
@@ -513,18 +513,18 @@ namespace Config.Other
             for (int i = 0; i < Count_valueItem2countMap; i++) {
                 var key = reader.ReadInt32();
                 var value = reader.ReadInt32();
-                if (!valueItem2countMap.TryAdd(key, value)) reader.Errors.DuplicateKey("other.signin.item2countMap", key);
+                if (!valueItem2countMap.TryAdd(key, value)) reader.Errors.DuplicateKey("other.sign_in.item2countMap", key);
             }
             int Count_valueVipitem2vipcountMap = reader.ReadCount(0);
             var valueVipitem2vipcountMap = Count_valueVipitem2vipcountMap == 0 ? ConfigMap<int, int>.Empty : new ConfigMap<int, int>(Count_valueVipitem2vipcountMap);
             for (int i = 0; i < Count_valueVipitem2vipcountMap; i++) {
                 var key = reader.ReadInt32();
                 var value = reader.ReadInt32();
-                if (!valueVipitem2vipcountMap.TryAdd(key, value)) reader.Errors.DuplicateKey("other.signin.vipitem2vipcountMap", key);
+                if (!valueVipitem2vipcountMap.TryAdd(key, value)) reader.Errors.DuplicateKey("other.sign_in.vipitem2vipcountMap", key);
             }
             var valueViplevel = reader.ReadInt32();
             var valueIconFile = reader.ReadStringInPool();
-            return new DSignin {
+            return new DSignIn {
                 Id = valueId,
                 Item2countMap = valueItem2countMap,
                 Vipitem2vipcountMap = valueVipitem2vipcountMap,
@@ -540,7 +540,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            return obj is DSignin o && Id.Equals(o.Id);
+            return obj is DSignIn o && Id.Equals(o.Id);
         }
 
         public override string ToString()
@@ -555,7 +555,7 @@ namespace Config.Other
             {
                 var k = kv.Key;
                 var v = Other.DLoot.Get(config, kv.Value);
-                if (v == null) errors.MissingReference("other.signin", "vipitem2vipcountMap", "other.loot", kv.Value);
+                if (v == null) errors.MissingReference("other.sign_in", "vipitem2vipcountMap", "other.loot", kv.Value);
                 else resolvedRefVipitem2vipcountMap.TryAdd(k, v);
             }
             RefVipitem2vipcountMap = resolvedRefVipitem2vipcountMap;

@@ -25,6 +25,5 @@ static func _create(stream: ConfigStream) -> DataTask_Completecondition:
 			return DataTaskCompletecondition_CollectItem._create(stream)
 		"aa":
 			return DataTaskCompletecondition_Aa._create(stream)
-		_:
-			push_error("Unknown type: " + type_name)
-			return null
+	stream.fail("Unknown type: " + type_name)
+	return null

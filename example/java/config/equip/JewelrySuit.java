@@ -1,7 +1,7 @@
 package config.equip;
 
-// 来自：equip/jewelrysuit.csv
-public class Jewelrysuit {
+// 来自：equip/jewelry_suit.csv
+public class JewelrySuit {
     private int suitID;
     private String ename;
     private String name;
@@ -12,11 +12,11 @@ public class Jewelrysuit {
     private int ability3;
     private int ability3Value;
     private java.util.List<Integer> suitList;
-    private Jewelrysuit() {
+    private JewelrySuit() {
     }
 
-    public static Jewelrysuit _create(configgen.genjava.ConfigInput input) {
-        Jewelrysuit self = new Jewelrysuit();
+    public static JewelrySuit _create(configgen.genjava.ConfigInput input) {
+        JewelrySuit self = new JewelrySuit();
         self.suitID = input.readInt();
         self.ename = input.readStringInPool();
         self.name = input.readTextInPool();
@@ -113,14 +113,14 @@ public class Jewelrysuit {
         return "(" + suitID + "," + ename + "," + name + "," + ability1 + "," + ability1Value + "," + ability2 + "," + ability2Value + "," + ability3 + "," + ability3Value + "," + suitList + ")";
     }
 
-    public static Jewelrysuit get(int suitID) {
+    public static JewelrySuit get(int suitID) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getEquipJewelrysuit(suitID);
+        return mgr.getEquipJewelrySuit(suitID);
     }
 
-    public static java.util.Collection<Jewelrysuit> all() {
+    public static java.util.Collection<JewelrySuit> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.allEquipJewelrysuit();
+        return mgr.allEquipJewelrySuit();
     }
 
 

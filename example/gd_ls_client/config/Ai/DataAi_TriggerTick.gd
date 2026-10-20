@@ -11,6 +11,5 @@ static func _create(stream: ConfigStream) -> DataAi_TriggerTick:
 			return DataAiTriggerTick_ByLevel._create(stream)
 		"ByServerUpDay":
 			return DataAiTriggerTick_ByServerUpDay._create(stream)
-		_:
-			push_error("Unknown type: " + type_name)
-			return null
+	stream.fail("Unknown type: " + type_name)
+	return null

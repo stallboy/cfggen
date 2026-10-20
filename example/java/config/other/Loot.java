@@ -8,8 +8,8 @@ public class Loot {
     private String ename;
     private String name;
     private java.util.List<Integer> chanceList;
-    private java.util.List<config.other.Lootitem> ListRefLootid;
-    private java.util.List<config.other.Lootitem> ListRefAnotherWay;
+    private java.util.List<config.other.LootItem> ListRefLootid;
+    private java.util.List<config.other.LootItem> ListRefAnotherWay;
 
     private Loot() {
     }
@@ -59,11 +59,11 @@ public class Loot {
         return chanceList;
     }
 
-    public java.util.List<config.other.Lootitem> listRefLootid() {
+    public java.util.List<config.other.LootItem> listRefLootid() {
         return ListRefLootid;
     }
 
-    public java.util.List<config.other.Lootitem> listRefAnotherWay() {
+    public java.util.List<config.other.LootItem> listRefAnotherWay() {
         return ListRefAnotherWay;
     }
 
@@ -74,13 +74,13 @@ public class Loot {
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.ListRefLootid = new java.util.ArrayList<>();
-        for (config.other.Lootitem v : mgr._get_other_lootitem_All().values()) {
+        for (config.other.LootItem v : mgr._get_other_loot_item_All().values()) {
             if (v.getLootid() == this.lootid)
                 this.ListRefLootid.add(v);
         }
         this.ListRefLootid = java.util.Collections.unmodifiableList(this.ListRefLootid);
         this.ListRefAnotherWay = new java.util.ArrayList<>();
-        for (config.other.Lootitem v : mgr._get_other_lootitem_All().values()) {
+        for (config.other.LootItem v : mgr._get_other_loot_item_All().values()) {
             if (v.getLootid() == this.lootid)
                 this.ListRefAnotherWay.add(v);
         }

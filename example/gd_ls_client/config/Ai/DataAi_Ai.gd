@@ -38,7 +38,7 @@ static func _create(stream: ConfigStream) -> DataAi_Ai:
 	instance.condID = stream.read_string_in_pool()
 	instance.trigTick = DataAi_TriggerTick._create(stream)
 	instance.trigOdds = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.actionID.append(stream.read_int32())
 	instance.deathRemove = stream.read_bool()
 	return instance

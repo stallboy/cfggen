@@ -14,7 +14,7 @@ public class Task2 {
     private java.util.List<Integer> testList;
     private java.util.List<config.Position> testListStruct;
     private java.util.List<config.ai.triggertick.TriggerTick> testListInterface;
-    private config.task.Taskextraexp NullableRefTaskid;
+    private config.task.TaskExtraExp NullableRefTaskid;
     private config.task.Task NullableRefNexttask;
 
     private Task2() {
@@ -127,7 +127,7 @@ public class Task2 {
         return testListInterface;
     }
 
-    public config.task.Taskextraexp nullableRefTaskid() {
+    public config.task.TaskExtraExp nullableRefTaskid() {
         return NullableRefTaskid;
     }
 
@@ -142,7 +142,7 @@ public class Task2 {
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.completecondition._resolve(mgr, errors);
-        this.NullableRefTaskid = mgr.getTaskTaskextraexp(this.taskid);
+        this.NullableRefTaskid = mgr.getTaskTaskExtraExp(this.taskid);
         this.NullableRefNexttask = mgr.getTaskTask(this.nexttask);
 
     }

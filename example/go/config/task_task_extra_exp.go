@@ -2,7 +2,7 @@ package config
 
 import "fmt"
 
-type TaskTaskextraexp struct {
+type TaskTask_extra_exp struct {
     taskid int32 //任务完成条件类型（id的范围为1-100）
     extraexp int32 //额外奖励经验
     test1 string
@@ -13,8 +13,8 @@ type TaskTaskextraexp struct {
     fieldd string
 }
 
-func createTaskTaskextraexp(stream *Stream) *TaskTaskextraexp {
-    v := &TaskTaskextraexp{}
+func createTaskTask_extra_exp(stream *Stream) *TaskTask_extra_exp {
+    v := &TaskTask_extra_exp{}
     v.taskid = stream.ReadInt32()
     v.extraexp = stream.ReadInt32()
     v.test1 = stream.ReadStringInPool()
@@ -26,62 +26,62 @@ func createTaskTaskextraexp(stream *Stream) *TaskTaskextraexp {
     return v
 }
 
-func (t *TaskTaskextraexp) String() string {
-    return fmt.Sprintf("TaskTaskextraexp{taskid=%v, extraexp=%v, test1=%v, test2=%v, fielda=%v, fieldb=%v, fieldc=%v, fieldd=%v}", t.taskid, t.extraexp, t.test1, t.test2, t.fielda, t.fieldb, t.fieldc, t.fieldd)
+func (t *TaskTask_extra_exp) String() string {
+    return fmt.Sprintf("TaskTask_extra_exp{taskid=%v, extraexp=%v, test1=%v, test2=%v, fielda=%v, fieldb=%v, fieldc=%v, fieldd=%v}", t.taskid, t.extraexp, t.test1, t.test2, t.fielda, t.fieldb, t.fieldc, t.fieldd)
 }
 
 //getters
-func (t *TaskTaskextraexp) Taskid() int32 {
+func (t *TaskTask_extra_exp) Taskid() int32 {
     return t.taskid
 }
 
-func (t *TaskTaskextraexp) Extraexp() int32 {
+func (t *TaskTask_extra_exp) Extraexp() int32 {
     return t.extraexp
 }
 
-func (t *TaskTaskextraexp) Test1() string {
+func (t *TaskTask_extra_exp) Test1() string {
     return t.test1
 }
 
-func (t *TaskTaskextraexp) Test2() string {
+func (t *TaskTask_extra_exp) Test2() string {
     return t.test2
 }
 
-func (t *TaskTaskextraexp) Fielda() string {
+func (t *TaskTask_extra_exp) Fielda() string {
     return t.fielda
 }
 
-func (t *TaskTaskextraexp) Fieldb() string {
+func (t *TaskTask_extra_exp) Fieldb() string {
     return t.fieldb
 }
 
-func (t *TaskTaskextraexp) Fieldc() string {
+func (t *TaskTask_extra_exp) Fieldc() string {
     return t.fieldc
 }
 
-func (t *TaskTaskextraexp) Fieldd() string {
+func (t *TaskTask_extra_exp) Fieldd() string {
     return t.fieldd
 }
 
-type TaskTaskextraexpMgr struct {
-    all []*TaskTaskextraexp
-    taskidMap map[int32]*TaskTaskextraexp
+type TaskTask_extra_expMgr struct {
+    all []*TaskTask_extra_exp
+    taskidMap map[int32]*TaskTask_extra_exp
 }
 
-func(t *TaskTaskextraexpMgr) GetAll() []*TaskTaskextraexp {
+func(t *TaskTask_extra_expMgr) GetAll() []*TaskTask_extra_exp {
     return t.all
 }
 
-func(t *TaskTaskextraexpMgr) Get(taskid int32) *TaskTaskextraexp {
+func(t *TaskTask_extra_expMgr) Get(taskid int32) *TaskTask_extra_exp {
     return t.taskidMap[taskid]
 }
 
-func (t *TaskTaskextraexpMgr) Init(stream *Stream) {
+func (t *TaskTask_extra_expMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
-    t.all = make([]*TaskTaskextraexp, 0, cnt)
-    t.taskidMap = make(map[int32]*TaskTaskextraexp, cnt)
+    t.all = make([]*TaskTask_extra_exp, 0, cnt)
+    t.taskidMap = make(map[int32]*TaskTask_extra_exp, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := createTaskTaskextraexp(stream)
+        v := createTaskTask_extra_exp(stream)
         t.all = append(t.all, v)
         t.taskidMap[v.taskid] = v
     }

@@ -14,9 +14,9 @@ public class CfgJewelry {
     private int keyAbilityValue;
     private int salePrice;
     private String description;
-    private config.equip.CfgJewelryrandom RefLvlRank;
-    private config.equip.CfgJewelrytype RefJType;
-    private config.equip.CfgJewelrysuit NullableRefSuitID;
+    private config.equip.CfgJewelry_random RefLvlRank;
+    private config.equip.CfgJewelry_type RefJType;
+    private config.equip.CfgJewelry_suit NullableRefSuitID;
     private config.equip.CfgAbility RefKeyAbility;
 
     private CfgJewelry() {
@@ -107,15 +107,15 @@ public class CfgJewelry {
         return description;
     }
 
-    public config.equip.CfgJewelryrandom refLvlRank() {
+    public config.equip.CfgJewelry_random refLvlRank() {
         return RefLvlRank;
     }
 
-    public config.equip.CfgJewelrytype refJType() {
+    public config.equip.CfgJewelry_type refJType() {
         return RefJType;
     }
 
-    public config.equip.CfgJewelrysuit nullableRefSuitID() {
+    public config.equip.CfgJewelry_suit nullableRefSuitID() {
         return NullableRefSuitID;
     }
 
@@ -130,11 +130,11 @@ public class CfgJewelry {
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.lvlRank._resolve(mgr, errors);
-        this.RefLvlRank = mgr.getEquipJewelryrandom(this.lvlRank);
-        if (this.RefLvlRank == null) errors.missingReference("equip.jewelry", "LvlRank", "equip.jewelryrandom", this.lvlRank);
-        this.RefJType = config.equip.CfgJewelrytype.get(this.jType);
-        if (this.RefJType == null) errors.missingReference("equip.jewelry", "JType", "equip.jewelrytype", this.jType);
-        this.NullableRefSuitID = mgr.getEquipJewelrysuit(this.suitID);
+        this.RefLvlRank = mgr.getEquipJewelry_random(this.lvlRank);
+        if (this.RefLvlRank == null) errors.missingReference("equip.jewelry", "LvlRank", "equip.jewelry_random", this.lvlRank);
+        this.RefJType = config.equip.CfgJewelry_type.get(this.jType);
+        if (this.RefJType == null) errors.missingReference("equip.jewelry", "JType", "equip.jewelry_type", this.jType);
+        this.NullableRefSuitID = mgr.getEquipJewelry_suit(this.suitID);
         this.RefKeyAbility = config.equip.CfgAbility.get(this.keyAbility);
         if (this.RefKeyAbility == null) errors.missingReference("equip.jewelry", "KeyAbility", "equip.ability", this.keyAbility);
 

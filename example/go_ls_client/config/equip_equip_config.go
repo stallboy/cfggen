@@ -2,7 +2,7 @@ package config
 
 import "fmt"
 
-type EquipEquipconfig struct {
+type EquipEquip_config struct {
     entry string //入口，程序填
     stone_count_for_set int32 //形成套装的音石数量
     draw_protect_name string //保底策略名称
@@ -11,8 +11,8 @@ type EquipEquipconfig struct {
     week_reward_mailid int32 //抽卡周奖励的邮件id
 }
 
-func createEquipEquipconfig(stream *Stream) *EquipEquipconfig {
-    v := &EquipEquipconfig{}
+func createEquipEquip_config(stream *Stream) *EquipEquip_config {
+    v := &EquipEquip_config{}
     v.entry = stream.ReadStringInPool()
     v.stone_count_for_set = stream.ReadInt32()
     v.draw_protect_name = stream.ReadStringInPool()
@@ -22,68 +22,68 @@ func createEquipEquipconfig(stream *Stream) *EquipEquipconfig {
     return v
 }
 
-func (t *EquipEquipconfig) String() string {
-    return fmt.Sprintf("EquipEquipconfig{entry=%v, stone_count_for_set=%v, draw_protect_name=%v, broadcastid=%v, broadcast_least_quality=%v, week_reward_mailid=%v}", t.entry, t.stone_count_for_set, t.draw_protect_name, t.broadcastid, t.broadcast_least_quality, t.week_reward_mailid)
+func (t *EquipEquip_config) String() string {
+    return fmt.Sprintf("EquipEquip_config{entry=%v, stone_count_for_set=%v, draw_protect_name=%v, broadcastid=%v, broadcast_least_quality=%v, week_reward_mailid=%v}", t.entry, t.stone_count_for_set, t.draw_protect_name, t.broadcastid, t.broadcast_least_quality, t.week_reward_mailid)
 }
 
 //entries
 var (
-    instance EquipEquipconfig
-    instance2 EquipEquipconfig
+    instance EquipEquip_config
+    instance2 EquipEquip_config
 )
 
 //getters
-func (t *EquipEquipconfig) Entry() string {
+func (t *EquipEquip_config) Entry() string {
     return t.entry
 }
 
-func (t *EquipEquipconfig) Stone_count_for_set() int32 {
+func (t *EquipEquip_config) Stone_count_for_set() int32 {
     return t.stone_count_for_set
 }
 
-func (t *EquipEquipconfig) Draw_protect_name() string {
+func (t *EquipEquip_config) Draw_protect_name() string {
     return t.draw_protect_name
 }
 
-func (t *EquipEquipconfig) Broadcastid() int32 {
+func (t *EquipEquip_config) Broadcastid() int32 {
     return t.broadcastid
 }
 
-func (t *EquipEquipconfig) Broadcast_least_quality() int32 {
+func (t *EquipEquip_config) Broadcast_least_quality() int32 {
     return t.broadcast_least_quality
 }
 
-func (t *EquipEquipconfig) Week_reward_mailid() int32 {
+func (t *EquipEquip_config) Week_reward_mailid() int32 {
     return t.week_reward_mailid
 }
 
-func (t *EquipEquipconfigMgr) GetInstance() *EquipEquipconfig {
+func (t *EquipEquip_configMgr) GetInstance() *EquipEquip_config {
 	return &instance
 }
 
-func (t *EquipEquipconfigMgr) GetInstance2() *EquipEquipconfig {
+func (t *EquipEquip_configMgr) GetInstance2() *EquipEquip_config {
 	return &instance2
 }
 
-type EquipEquipconfigMgr struct {
-    all []*EquipEquipconfig
-    entryMap map[string]*EquipEquipconfig
+type EquipEquip_configMgr struct {
+    all []*EquipEquip_config
+    entryMap map[string]*EquipEquip_config
 }
 
-func(t *EquipEquipconfigMgr) GetAll() []*EquipEquipconfig {
+func(t *EquipEquip_configMgr) GetAll() []*EquipEquip_config {
     return t.all
 }
 
-func(t *EquipEquipconfigMgr) Get(entry string) *EquipEquipconfig {
+func(t *EquipEquip_configMgr) Get(entry string) *EquipEquip_config {
     return t.entryMap[entry]
 }
 
-func (t *EquipEquipconfigMgr) Init(stream *Stream) {
+func (t *EquipEquip_configMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
-    t.all = make([]*EquipEquipconfig, 0, cnt)
-    t.entryMap = make(map[string]*EquipEquipconfig, cnt)
+    t.all = make([]*EquipEquip_config, 0, cnt)
+    t.entryMap = make(map[string]*EquipEquip_config, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := createEquipEquipconfig(stream)
+        v := createEquipEquip_config(stream)
         t.all = append(t.all, v)
         t.entryMap[v.entry] = v
         switch v.entry {

@@ -8,7 +8,7 @@ public partial class DMonster
     public required int LootItemId { get; init; } /* item */
     public required IReadOnlyDictionary<string, int> EnumMap1 { get; init; }
     public required IReadOnlyDictionary<int, string> EnumMap2 { get; init; }
-    public Other.DLootitem RefLoot { get; private set; } = null!;
+    public Other.DLootItem RefLoot { get; private set; } = null!;
     public Other.DLoot RefAllLoot { get; private set; } = null!;
     public IReadOnlyDictionary<int, Other.DArgCaptureMode> RefEnumMap2 { get; private set; } = null!;
 

@@ -9,7 +9,7 @@ type TaskTask struct {
     completecondition TaskCompletecondition
     exp int32
     testDefaultBean *TaskTestDefaultBean //测试
-    nullableRefTaskid *TaskTaskextraexp
+    nullableRefTaskid *TaskTask_extra_exp
     nullableRefNexttask *TaskTask
 }
 
@@ -57,9 +57,9 @@ func (t *TaskTask) TestDefaultBean() *TaskTestDefaultBean {
     return t.testDefaultBean
 }
 
-func (t *TaskTask) NullableRefTaskid() *TaskTaskextraexp {
+func (t *TaskTask) NullableRefTaskid() *TaskTask_extra_exp {
     if t.nullableRefTaskid == nil {
-        t.nullableRefTaskid = GetTaskTaskextraexpMgr().Get(t.taskid)
+        t.nullableRefTaskid = GetTaskTask_extra_expMgr().Get(t.taskid)
     }
     return t.nullableRefTaskid
 }

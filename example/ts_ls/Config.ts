@@ -245,7 +245,7 @@ export class Task_TestDefaultBean {
 
 
 export abstract class Task_Completecondition {
-    abstract type() : Task_Completeconditiontype;
+    abstract type() : Task_Complete_condition_type;
     _resolve(errors: LoadErrors) {
     }
     static _create(os: Stream) : Task_Completecondition {
@@ -274,8 +274,8 @@ export abstract class Task_Completecondition {
 
 
 export class Task_Completecondition_KillMonster extends Task_Completecondition {
-    type() : Task_Completeconditiontype {
-        return Task_Completeconditiontype.KillMonster;
+    type() : Task_Complete_condition_type {
+        return Task_Complete_condition_type.KillMonster;
     }
 
     private _monsterid!: number;
@@ -306,8 +306,8 @@ export class Task_Completecondition_KillMonster extends Task_Completecondition {
 }
 
 export class Task_Completecondition_TalkNpc extends Task_Completecondition {
-    type() : Task_Completeconditiontype {
-        return Task_Completeconditiontype.TalkNpc;
+    type() : Task_Complete_condition_type {
+        return Task_Complete_condition_type.TalkNpc;
     }
 
     private _npcid!: number;
@@ -326,8 +326,8 @@ export class Task_Completecondition_TalkNpc extends Task_Completecondition {
 }
 
 export class Task_Completecondition_TestNoColumn extends Task_Completecondition {
-    type() : Task_Completeconditiontype {
-        return Task_Completeconditiontype.TestNoColumn;
+    type() : Task_Complete_condition_type {
+        return Task_Complete_condition_type.TestNoColumn;
     }
 
 
@@ -343,8 +343,8 @@ export class Task_Completecondition_TestNoColumn extends Task_Completecondition 
 }
 
 export class Task_Completecondition_Chat extends Task_Completecondition {
-    type() : Task_Completeconditiontype {
-        return Task_Completeconditiontype.Chat;
+    type() : Task_Complete_condition_type {
+        return Task_Complete_condition_type.Chat;
     }
 
     private _msg!: string;
@@ -363,8 +363,8 @@ export class Task_Completecondition_Chat extends Task_Completecondition {
 }
 
 export class Task_Completecondition_ConditionAnd extends Task_Completecondition {
-    type() : Task_Completeconditiontype {
-        return Task_Completeconditiontype.ConditionAnd;
+    type() : Task_Complete_condition_type {
+        return Task_Complete_condition_type.ConditionAnd;
     }
 
     private _cond1!: Task_Completecondition;
@@ -390,8 +390,8 @@ export class Task_Completecondition_ConditionAnd extends Task_Completecondition 
 }
 
 export class Task_Completecondition_CollectItem extends Task_Completecondition {
-    type() : Task_Completeconditiontype {
-        return Task_Completeconditiontype.CollectItem;
+    type() : Task_Complete_condition_type {
+        return Task_Complete_condition_type.CollectItem;
     }
 
     private _itemid!: number;
@@ -413,8 +413,8 @@ export class Task_Completecondition_CollectItem extends Task_Completecondition {
 }
 
 export class Task_Completecondition_Aa extends Task_Completecondition {
-    type() : Task_Completeconditiontype {
-        return Task_Completeconditiontype.Aa;
+    type() : Task_Complete_condition_type {
+        return Task_Complete_condition_type.Aa;
     }
 
 
@@ -741,12 +741,12 @@ export class Equip_Ability {
 
 }
 
-export class Equip_Equipconfig {
-    private static _Instance : Equip_Equipconfig;
-    static get Instance() :Equip_Equipconfig { return this._Instance; }
+export class Equip_Equip_config {
+    private static _Instance : Equip_Equip_config;
+    static get Instance() :Equip_Equip_config { return this._Instance; }
 
-    private static _Instance2 : Equip_Equipconfig;
-    static get Instance2() :Equip_Equipconfig { return this._Instance2; }
+    private static _Instance2 : Equip_Equip_config;
+    static get Instance2() :Equip_Equip_config { return this._Instance2; }
 
     private _entry!: string;
     /* 入口，程序填 */
@@ -772,20 +772,20 @@ export class Equip_Equipconfig {
     }
 
     
-    private static all: Map<string, Equip_Equipconfig>;
+    private static all: Map<string, Equip_Equip_config>;
 
-    static Get(entry: string) : Equip_Equipconfig | undefined {
+    static Get(entry: string) : Equip_Equip_config | undefined {
         return this.all.get(entry)
     }
 
-    static All() : Map<string, Equip_Equipconfig> {
+    static All() : Map<string, Equip_Equip_config> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this._Instance = undefined!;
         this._Instance2 = undefined!;
-        this.all = new Map<string, Equip_Equipconfig>();
+        this.all = new Map<string, Equip_Equip_config>();
         for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
@@ -796,30 +796,30 @@ export class Equip_Equipconfig {
             switch(self._entry.trim()) {
                 case "Instance":
                     if (this._Instance != null)
-                        errors.EnumDup("equip.equipconfig", "Instance");
+                        errors.EnumDup("equip.equip_config", "Instance");
                     this._Instance = self;
                     break;
                 case "Instance2":
                     if (this._Instance2 != null)
-                        errors.EnumDup("equip.equipconfig", "Instance2");
+                        errors.EnumDup("equip.equip_config", "Instance2");
                     this._Instance2 = self;
                     break;
                 default:
-                    errors.EnumDataAdd("equip.equipconfig", self._entry);
+                    errors.EnumDataAdd("equip.equip_config", self._entry);
                     break;
             }
         }
 
         if (this._Instance == null) {
-            errors.EnumNull("equip.equipconfig", "Instance");
+            errors.EnumNull("equip.equip_config", "Instance");
         }
         if (this._Instance2 == null) {
-            errors.EnumNull("equip.equipconfig", "Instance2");
+            errors.EnumNull("equip.equip_config", "Instance2");
         }
     }
 
-    static _create(os: Stream) : Equip_Equipconfig {
-        const self = new Equip_Equipconfig();
+    static _create(os: Stream) : Equip_Equip_config {
+        const self = new Equip_Equip_config();
         self._entry = os.ReadStringInPool();
         self._stone_count_for_set = os.ReadInt32();
         self._draw_protect_name = os.ReadStringInPool();
@@ -863,12 +863,12 @@ export class Equip_Jewelry {
     /* 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。 */
     get Description(): string { return this._Description; }
 
-    private _RefLvlRank!: Equip_Jewelryrandom;
-    get RefLvlRank(): Equip_Jewelryrandom { return this._RefLvlRank; }
-    private _RefJType!: Equip_Jewelrytype;
-    get RefJType(): Equip_Jewelrytype { return this._RefJType; }
-    private _NullableRefSuitID: Equip_Jewelrysuit | undefined;
-    get NullableRefSuitID(): Equip_Jewelrysuit | undefined { return this._NullableRefSuitID; }
+    private _RefLvlRank!: Equip_Jewelry_random;
+    get RefLvlRank(): Equip_Jewelry_random { return this._RefLvlRank; }
+    private _RefJType!: Equip_Jewelry_type;
+    get RefJType(): Equip_Jewelry_type { return this._RefJType; }
+    private _NullableRefSuitID: Equip_Jewelry_suit | undefined;
+    get NullableRefSuitID(): Equip_Jewelry_suit | undefined { return this._NullableRefSuitID; }
     private _RefKeyAbility!: Equip_Ability;
     get RefKeyAbility(): Equip_Ability { return this._RefKeyAbility; }
     toString() : string {
@@ -918,17 +918,17 @@ export class Equip_Jewelry {
 
     _resolve(errors: LoadErrors) {
         this._LvlRank._resolve(errors);
-        const _tmpRefLvlRank = Equip_Jewelryrandom.Get(this._LvlRank);
+        const _tmpRefLvlRank = Equip_Jewelry_random.Get(this._LvlRank);
         if (_tmpRefLvlRank === undefined) {
             errors.RefNull("equip.jewelry", this.toString(), "LvlRank");
         }
         this._RefLvlRank = _tmpRefLvlRank!;
-        const _tmpRefJType = Equip_Jewelrytype.Get(this._JType);
+        const _tmpRefJType = Equip_Jewelry_type.Get(this._JType);
         if (_tmpRefJType === undefined) {
             errors.RefNull("equip.jewelry", this.toString(), "JType");
         }
         this._RefJType = _tmpRefJType!;
-        this._NullableRefSuitID = Equip_Jewelrysuit.Get(this._SuitID);
+        this._NullableRefSuitID = Equip_Jewelry_suit.Get(this._SuitID);
         const _tmpRefKeyAbility = Equip_Ability.Get(this._KeyAbility);
         if (_tmpRefKeyAbility === undefined) {
             errors.RefNull("equip.jewelry", this.toString(), "KeyAbility");
@@ -937,7 +937,7 @@ export class Equip_Jewelry {
     }
 }
 
-export class Equip_Jewelryrandom {
+export class Equip_Jewelry_random {
     private _LvlRank!: LevelRank;
     /* 等级 */
     get LvlRank(): LevelRank { return this._LvlRank; }
@@ -956,18 +956,18 @@ export class Equip_Jewelryrandom {
     }
 
     
-    private static all: Map<number, Equip_Jewelryrandom>;
+    private static all: Map<number, Equip_Jewelry_random>;
 
-    static Get(LvlRank: LevelRank) : Equip_Jewelryrandom | undefined {
+    static Get(LvlRank: LevelRank) : Equip_Jewelry_random | undefined {
         return this.all.get(LvlRank.Level + LvlRank.Rank * 100000000)
     }
 
-    static All() : Map<number, Equip_Jewelryrandom> {
+    static All() : Map<number, Equip_Jewelry_random> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
-        this.all = new Map<number, Equip_Jewelryrandom>();
+        this.all = new Map<number, Equip_Jewelry_random>();
         for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
@@ -981,8 +981,8 @@ export class Equip_Jewelryrandom {
             v._resolve(errors);
         }
     }
-    static _create(os: Stream) : Equip_Jewelryrandom {
-        const self = new Equip_Jewelryrandom();
+    static _create(os: Stream) : Equip_Jewelry_random {
+        const self = new Equip_Jewelry_random();
         self._LvlRank = LevelRank._create(os);
         self._AttackRange = Range._create(os);
         self._OtherRange = [];
@@ -999,9 +999,9 @@ export class Equip_Jewelryrandom {
     }
 }
 
-export class Equip_Jewelrysuit {
-    private static _SpecialSuit : Equip_Jewelrysuit;
-    static get SpecialSuit() :Equip_Jewelrysuit { return this._SpecialSuit; }
+export class Equip_Jewelry_suit {
+    private static _SpecialSuit : Equip_Jewelry_suit;
+    static get SpecialSuit() :Equip_Jewelry_suit { return this._SpecialSuit; }
 
     private _SuitID!: number;
     /* 饰品套装ID */
@@ -1038,19 +1038,19 @@ export class Equip_Jewelrysuit {
     }
 
     
-    private static all: Map<number, Equip_Jewelrysuit>;
+    private static all: Map<number, Equip_Jewelry_suit>;
 
-    static Get(SuitID: number) : Equip_Jewelrysuit | undefined {
+    static Get(SuitID: number) : Equip_Jewelry_suit | undefined {
         return this.all.get(SuitID)
     }
 
-    static All() : Map<number, Equip_Jewelrysuit> {
+    static All() : Map<number, Equip_Jewelry_suit> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this._SpecialSuit = undefined!;
-        this.all = new Map<number, Equip_Jewelrysuit>();
+        this.all = new Map<number, Equip_Jewelry_suit>();
         for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
@@ -1061,22 +1061,22 @@ export class Equip_Jewelrysuit {
             switch(self._Ename.trim()) {
                 case "SpecialSuit":
                     if (this._SpecialSuit != null)
-                        errors.EnumDup("equip.jewelrysuit", "SpecialSuit");
+                        errors.EnumDup("equip.jewelry_suit", "SpecialSuit");
                     this._SpecialSuit = self;
                     break;
                 default:
-                    errors.EnumDataAdd("equip.jewelrysuit", self._Ename);
+                    errors.EnumDataAdd("equip.jewelry_suit", self._Ename);
                     break;
             }
         }
 
         if (this._SpecialSuit == null) {
-            errors.EnumNull("equip.jewelrysuit", "SpecialSuit");
+            errors.EnumNull("equip.jewelry_suit", "SpecialSuit");
         }
     }
 
-    static _create(os: Stream) : Equip_Jewelrysuit {
-        const self = new Equip_Jewelrysuit();
+    static _create(os: Stream) : Equip_Jewelry_suit {
+        const self = new Equip_Jewelry_suit();
         self._SuitID = os.ReadInt32();
         self._Ename = os.ReadStringInPool();
         self._Name = Text._create(os);
@@ -1094,18 +1094,18 @@ export class Equip_Jewelrysuit {
 
 }
 
-export class Equip_Jewelrytype {
-    private static _Jade : Equip_Jewelrytype;
-    static get Jade() :Equip_Jewelrytype { return this._Jade; }
+export class Equip_Jewelry_type {
+    private static _Jade : Equip_Jewelry_type;
+    static get Jade() :Equip_Jewelry_type { return this._Jade; }
 
-    private static _Bracelet : Equip_Jewelrytype;
-    static get Bracelet() :Equip_Jewelrytype { return this._Bracelet; }
+    private static _Bracelet : Equip_Jewelry_type;
+    static get Bracelet() :Equip_Jewelry_type { return this._Bracelet; }
 
-    private static _Magic : Equip_Jewelrytype;
-    static get Magic() :Equip_Jewelrytype { return this._Magic; }
+    private static _Magic : Equip_Jewelry_type;
+    static get Magic() :Equip_Jewelry_type { return this._Magic; }
 
-    private static _Bottle : Equip_Jewelrytype;
-    static get Bottle() :Equip_Jewelrytype { return this._Bottle; }
+    private static _Bottle : Equip_Jewelry_type;
+    static get Bottle() :Equip_Jewelry_type { return this._Bottle; }
 
     private _TypeName!: string;
     /* 程序用名字 */
@@ -1116,13 +1116,13 @@ export class Equip_Jewelrytype {
     }
 
     
-    private static all: Map<string, Equip_Jewelrytype>;
+    private static all: Map<string, Equip_Jewelry_type>;
 
-    static Get(TypeName: string) : Equip_Jewelrytype | undefined {
+    static Get(TypeName: string) : Equip_Jewelry_type | undefined {
         return this.all.get(TypeName)
     }
 
-    static All() : Map<string, Equip_Jewelrytype> {
+    static All() : Map<string, Equip_Jewelry_type> {
         return this.all;
     }
 
@@ -1131,7 +1131,7 @@ export class Equip_Jewelrytype {
         this._Bracelet = undefined!;
         this._Magic = undefined!;
         this._Bottle = undefined!;
-        this.all = new Map<string, Equip_Jewelrytype>();
+        this.all = new Map<string, Equip_Jewelry_type>();
         for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
@@ -1142,46 +1142,46 @@ export class Equip_Jewelrytype {
             switch(self._TypeName.trim()) {
                 case "Jade":
                     if (this._Jade != null)
-                        errors.EnumDup("equip.jewelrytype", "Jade");
+                        errors.EnumDup("equip.jewelry_type", "Jade");
                     this._Jade = self;
                     break;
                 case "Bracelet":
                     if (this._Bracelet != null)
-                        errors.EnumDup("equip.jewelrytype", "Bracelet");
+                        errors.EnumDup("equip.jewelry_type", "Bracelet");
                     this._Bracelet = self;
                     break;
                 case "Magic":
                     if (this._Magic != null)
-                        errors.EnumDup("equip.jewelrytype", "Magic");
+                        errors.EnumDup("equip.jewelry_type", "Magic");
                     this._Magic = self;
                     break;
                 case "Bottle":
                     if (this._Bottle != null)
-                        errors.EnumDup("equip.jewelrytype", "Bottle");
+                        errors.EnumDup("equip.jewelry_type", "Bottle");
                     this._Bottle = self;
                     break;
                 default:
-                    errors.EnumDataAdd("equip.jewelrytype", self._TypeName);
+                    errors.EnumDataAdd("equip.jewelry_type", self._TypeName);
                     break;
             }
         }
 
         if (this._Jade == null) {
-            errors.EnumNull("equip.jewelrytype", "Jade");
+            errors.EnumNull("equip.jewelry_type", "Jade");
         }
         if (this._Bracelet == null) {
-            errors.EnumNull("equip.jewelrytype", "Bracelet");
+            errors.EnumNull("equip.jewelry_type", "Bracelet");
         }
         if (this._Magic == null) {
-            errors.EnumNull("equip.jewelrytype", "Magic");
+            errors.EnumNull("equip.jewelry_type", "Magic");
         }
         if (this._Bottle == null) {
-            errors.EnumNull("equip.jewelrytype", "Bottle");
+            errors.EnumNull("equip.jewelry_type", "Bottle");
         }
     }
 
-    static _create(os: Stream) : Equip_Jewelrytype {
-        const self = new Equip_Jewelrytype();
+    static _create(os: Stream) : Equip_Jewelry_type {
+        const self = new Equip_Jewelry_type();
         self._TypeName = os.ReadStringInPool();
         return self;
     }
@@ -1453,7 +1453,7 @@ export class Other_Drop {
 
 }
 
-export class Other_Keytest {
+export class Other_Key_test {
     private _id1!: number;
     get Id1(): number { return this._id1; }
     private _id2!: number;
@@ -1467,8 +1467,8 @@ export class Other_Keytest {
     private _enumList!: string[];
     get EnumList(): string[] { return this._enumList; }
 
-    private _RefIds!: Other_Signin[];
-    get RefIds(): Other_Signin[] { return this._RefIds; }
+    private _RefIds!: Other_Sign_in[];
+    get RefIds(): Other_Sign_in[] { return this._RefIds; }
     private _RefEnumTest!: Other_ArgCaptureMode;
     get RefEnumTest(): Other_ArgCaptureMode { return this._RefEnumTest; }
     private _RefEnumList!: Other_ArgCaptureMode[];
@@ -1478,42 +1478,42 @@ export class Other_Keytest {
     }
 
     
-    private static all: Map<number, Other_Keytest>;
+    private static all: Map<number, Other_Key_test>;
 
-    static Get(id1: number, id2: number) : Other_Keytest | undefined {
+    static Get(id1: number, id2: number) : Other_Key_test | undefined {
         return this.all.get(id1 + id2 * 100000000)
     }
 
     
-    private static id1Id3Map: Map<number, Other_Keytest>;
+    private static id1Id3Map: Map<number, Other_Key_test>;
 
-    static GetById1Id3(id1: number, id3: number) : Other_Keytest | undefined {
+    static GetById1Id3(id1: number, id3: number) : Other_Key_test | undefined {
         return this.id1Id3Map.get(id1 + id3 * 100000000)
     }
 
     
-    private static id2Map: Map<number, Other_Keytest>;
+    private static id2Map: Map<number, Other_Key_test>;
 
-    static GetById2(id2: number) : Other_Keytest | undefined {
+    static GetById2(id2: number) : Other_Key_test | undefined {
         return this.id2Map.get(id2)
     }
 
     
-    private static id2Id3Map: Map<number, Other_Keytest>;
+    private static id2Id3Map: Map<number, Other_Key_test>;
 
-    static GetById2Id3(id2: number, id3: number) : Other_Keytest | undefined {
+    static GetById2Id3(id2: number, id3: number) : Other_Key_test | undefined {
         return this.id2Id3Map.get(id2 + id3 * 100000000)
     }
 
-    static All() : Map<number, Other_Keytest> {
+    static All() : Map<number, Other_Key_test> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
-        this.all = new Map<number, Other_Keytest>();
-        this.id1Id3Map = new Map<number, Other_Keytest>();
-        this.id2Map = new Map<number, Other_Keytest>();
-        this.id2Id3Map = new Map<number, Other_Keytest>();
+        this.all = new Map<number, Other_Key_test>();
+        this.id1Id3Map = new Map<number, Other_Key_test>();
+        this.id2Map = new Map<number, Other_Key_test>();
+        this.id2Id3Map = new Map<number, Other_Key_test>();
         for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
@@ -1530,8 +1530,8 @@ export class Other_Keytest {
             v._resolve(errors);
         }
     }
-    static _create(os: Stream) : Other_Keytest {
-        const self = new Other_Keytest();
+    static _create(os: Stream) : Other_Key_test {
+        const self = new Other_Key_test();
         self._id1 = os.ReadInt32();
         self._id2 = os.ReadInt64();
         self._id3 = os.ReadInt32();
@@ -1548,23 +1548,23 @@ export class Other_Keytest {
     _resolve(errors: LoadErrors) {
         this._RefIds = [];
         for (const e of this._ids) {
-            const r = Other_Signin.Get(e);
+            const r = Other_Sign_in.Get(e);
             if (r === undefined) {
-                errors.RefNull("other.keytest", this.toString(), "ids");
+                errors.RefNull("other.key_test", this.toString(), "ids");
                 continue;
             }
             this._RefIds.push(r);
         }
         const _tmpRefEnumTest = Other_ArgCaptureMode.Get(this._enumTest);
         if (_tmpRefEnumTest === undefined) {
-            errors.RefNull("other.keytest", this.toString(), "enumTest");
+            errors.RefNull("other.key_test", this.toString(), "enumTest");
         }
         this._RefEnumTest = _tmpRefEnumTest!;
         this._RefEnumList = [];
         for (const e of this._enumList) {
             const r = Other_ArgCaptureMode.Get(e);
             if (r === undefined) {
-                errors.RefNull("other.keytest", this.toString(), "enumList");
+                errors.RefNull("other.key_test", this.toString(), "enumList");
                 continue;
             }
             this._RefEnumList.push(r);
@@ -1585,10 +1585,10 @@ export class Other_Loot {
     /* 掉落0件物品的概率 */
     get ChanceList(): number[] { return this._chanceList; }
 
-    private _ListRefLootid!: Other_Lootitem[];
-    get ListRefLootid(): Other_Lootitem[] { return this._ListRefLootid; }
-    private _ListRefAnotherWay!: Other_Lootitem[];
-    get ListRefAnotherWay(): Other_Lootitem[] { return this._ListRefAnotherWay; }
+    private _ListRefLootid!: Other_Loot_item[];
+    get ListRefLootid(): Other_Loot_item[] { return this._ListRefLootid; }
+    private _ListRefAnotherWay!: Other_Loot_item[];
+    get ListRefAnotherWay(): Other_Loot_item[] { return this._ListRefAnotherWay; }
     toString() : string {
         return "(" + this._lootid + "," + this._ename + "," + this._name + "," + ToStringList(this._chanceList) + ")";
     }
@@ -1632,13 +1632,13 @@ export class Other_Loot {
 
     _resolve(errors: LoadErrors) {
         this._ListRefLootid = [];
-        for (const v of Other_Lootitem.All().values())
+        for (const v of Other_Loot_item.All().values())
         {
             if (v.Lootid === this._lootid)
                 this._ListRefLootid.push(v);
         }
         this._ListRefAnotherWay = [];
-        for (const v of Other_Lootitem.All().values())
+        for (const v of Other_Loot_item.All().values())
         {
             if (v.Lootid === this._lootid)
                 this._ListRefAnotherWay.push(v);
@@ -1646,7 +1646,7 @@ export class Other_Loot {
     }
 }
 
-export class Other_Lootitem {
+export class Other_Loot_item {
     private _lootid!: number;
     /* 掉落id */
     get Lootid(): number { return this._lootid; }
@@ -1668,18 +1668,18 @@ export class Other_Lootitem {
     }
 
     
-    private static all: Map<number, Other_Lootitem>;
+    private static all: Map<number, Other_Loot_item>;
 
-    static Get(lootid: number, itemid: number) : Other_Lootitem | undefined {
+    static Get(lootid: number, itemid: number) : Other_Loot_item | undefined {
         return this.all.get(lootid + itemid * 100000000)
     }
 
-    static All() : Map<number, Other_Lootitem> {
+    static All() : Map<number, Other_Loot_item> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
-        this.all = new Map<number, Other_Lootitem>();
+        this.all = new Map<number, Other_Loot_item>();
         for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
@@ -1688,8 +1688,8 @@ export class Other_Lootitem {
 
     }
 
-    static _create(os: Stream) : Other_Lootitem {
-        const self = new Other_Lootitem();
+    static _create(os: Stream) : Other_Loot_item {
+        const self = new Other_Loot_item();
         self._lootid = os.ReadInt32();
         self._itemid = os.ReadInt32();
         self._chance = os.ReadInt32();
@@ -1716,8 +1716,8 @@ export class Other_Monster {
     private _enumMap2!: Map<number, string>;
     get EnumMap2(): Map<number, string> { return this._enumMap2; }
 
-    private _RefLoot!: Other_Lootitem;
-    get RefLoot(): Other_Lootitem { return this._RefLoot; }
+    private _RefLoot!: Other_Loot_item;
+    get RefLoot(): Other_Loot_item { return this._RefLoot; }
     private _RefAllLoot!: Other_Loot;
     get RefAllLoot(): Other_Loot { return this._RefAllLoot; }
     private _RefEnumMap2!: Map<number, Other_ArgCaptureMode>;
@@ -1772,7 +1772,7 @@ export class Other_Monster {
     }
 
     _resolve(errors: LoadErrors) {
-        const _tmpRefLoot = Other_Lootitem.Get(this._lootId, this._lootItemId);
+        const _tmpRefLoot = Other_Loot_item.Get(this._lootId, this._lootItemId);
         if (_tmpRefLoot === undefined) {
             errors.RefNull("other.monster", this.toString(), "Loot");
         }
@@ -1794,7 +1794,7 @@ export class Other_Monster {
     }
 }
 
-export class Other_Signin {
+export class Other_Sign_in {
     private _id!: number;
     /* 礼包ID */
     get Id(): number { return this._id; }
@@ -1818,18 +1818,18 @@ export class Other_Signin {
     }
 
     
-    private static all: Map<number, Other_Signin>;
+    private static all: Map<number, Other_Sign_in>;
 
-    static Get(id: number) : Other_Signin | undefined {
+    static Get(id: number) : Other_Sign_in | undefined {
         return this.all.get(id)
     }
 
-    static All() : Map<number, Other_Signin> {
+    static All() : Map<number, Other_Sign_in> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
-        this.all = new Map<number, Other_Signin>();
+        this.all = new Map<number, Other_Sign_in>();
         for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
@@ -1843,8 +1843,8 @@ export class Other_Signin {
             v._resolve(errors);
         }
     }
-    static _create(os: Stream) : Other_Signin {
-        const self = new Other_Signin();
+    static _create(os: Stream) : Other_Sign_in {
+        const self = new Other_Sign_in();
         self._id = os.ReadInt32();
         self._item2countMap  = new Map<number, number>();
         for (let c = os.ReadCount(0); c > 0; c--) {
@@ -1864,7 +1864,7 @@ export class Other_Signin {
         for (const e of this._vipitem2vipcountMap.entries()) {
             const v = Other_Loot.Get(e[1]);
             if (v === undefined) {
-                errors.RefNull("other.signin", this.toString(), "vipitem2vipcountMap");
+                errors.RefNull("other.sign_in", this.toString(), "vipitem2vipcountMap");
                 continue;
             }
             this._RefVipitem2vipcountMap.set(e[0], v);
@@ -1872,27 +1872,27 @@ export class Other_Signin {
     }
 }
 
-export class Task_Completeconditiontype {
-    private static _KillMonster : Task_Completeconditiontype;
-    static get KillMonster() :Task_Completeconditiontype { return this._KillMonster; }
+export class Task_Complete_condition_type {
+    private static _KillMonster : Task_Complete_condition_type;
+    static get KillMonster() :Task_Complete_condition_type { return this._KillMonster; }
 
-    private static _TalkNpc : Task_Completeconditiontype;
-    static get TalkNpc() :Task_Completeconditiontype { return this._TalkNpc; }
+    private static _TalkNpc : Task_Complete_condition_type;
+    static get TalkNpc() :Task_Complete_condition_type { return this._TalkNpc; }
 
-    private static _CollectItem : Task_Completeconditiontype;
-    static get CollectItem() :Task_Completeconditiontype { return this._CollectItem; }
+    private static _CollectItem : Task_Complete_condition_type;
+    static get CollectItem() :Task_Complete_condition_type { return this._CollectItem; }
 
-    private static _ConditionAnd : Task_Completeconditiontype;
-    static get ConditionAnd() :Task_Completeconditiontype { return this._ConditionAnd; }
+    private static _ConditionAnd : Task_Complete_condition_type;
+    static get ConditionAnd() :Task_Complete_condition_type { return this._ConditionAnd; }
 
-    private static _Chat : Task_Completeconditiontype;
-    static get Chat() :Task_Completeconditiontype { return this._Chat; }
+    private static _Chat : Task_Complete_condition_type;
+    static get Chat() :Task_Complete_condition_type { return this._Chat; }
 
-    private static _TestNoColumn : Task_Completeconditiontype;
-    static get TestNoColumn() :Task_Completeconditiontype { return this._TestNoColumn; }
+    private static _TestNoColumn : Task_Complete_condition_type;
+    static get TestNoColumn() :Task_Complete_condition_type { return this._TestNoColumn; }
 
-    private static _aa : Task_Completeconditiontype;
-    static get Aa() :Task_Completeconditiontype { return this._aa; }
+    private static _aa : Task_Complete_condition_type;
+    static get Aa() :Task_Complete_condition_type { return this._aa; }
 
     private _id!: number;
     /* 任务完成条件类型（id的范围为1-100） */
@@ -1906,13 +1906,13 @@ export class Task_Completeconditiontype {
     }
 
     
-    private static all: Map<number, Task_Completeconditiontype>;
+    private static all: Map<number, Task_Complete_condition_type>;
 
-    static Get(id: number) : Task_Completeconditiontype | undefined {
+    static Get(id: number) : Task_Complete_condition_type | undefined {
         return this.all.get(id)
     }
 
-    static All() : Map<number, Task_Completeconditiontype> {
+    static All() : Map<number, Task_Complete_condition_type> {
         return this.all;
     }
 
@@ -1924,7 +1924,7 @@ export class Task_Completeconditiontype {
         this._Chat = undefined!;
         this._TestNoColumn = undefined!;
         this._aa = undefined!;
-        this.all = new Map<number, Task_Completeconditiontype>();
+        this.all = new Map<number, Task_Complete_condition_type>();
         for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
@@ -1935,70 +1935,70 @@ export class Task_Completeconditiontype {
             switch(self._name.trim()) {
                 case "KillMonster":
                     if (this._KillMonster != null)
-                        errors.EnumDup("task.completeconditiontype", "KillMonster");
+                        errors.EnumDup("task.complete_condition_type", "KillMonster");
                     this._KillMonster = self;
                     break;
                 case "TalkNpc":
                     if (this._TalkNpc != null)
-                        errors.EnumDup("task.completeconditiontype", "TalkNpc");
+                        errors.EnumDup("task.complete_condition_type", "TalkNpc");
                     this._TalkNpc = self;
                     break;
                 case "CollectItem":
                     if (this._CollectItem != null)
-                        errors.EnumDup("task.completeconditiontype", "CollectItem");
+                        errors.EnumDup("task.complete_condition_type", "CollectItem");
                     this._CollectItem = self;
                     break;
                 case "ConditionAnd":
                     if (this._ConditionAnd != null)
-                        errors.EnumDup("task.completeconditiontype", "ConditionAnd");
+                        errors.EnumDup("task.complete_condition_type", "ConditionAnd");
                     this._ConditionAnd = self;
                     break;
                 case "Chat":
                     if (this._Chat != null)
-                        errors.EnumDup("task.completeconditiontype", "Chat");
+                        errors.EnumDup("task.complete_condition_type", "Chat");
                     this._Chat = self;
                     break;
                 case "TestNoColumn":
                     if (this._TestNoColumn != null)
-                        errors.EnumDup("task.completeconditiontype", "TestNoColumn");
+                        errors.EnumDup("task.complete_condition_type", "TestNoColumn");
                     this._TestNoColumn = self;
                     break;
                 case "aa":
                     if (this._aa != null)
-                        errors.EnumDup("task.completeconditiontype", "aa");
+                        errors.EnumDup("task.complete_condition_type", "aa");
                     this._aa = self;
                     break;
                 default:
-                    errors.EnumDataAdd("task.completeconditiontype", self._name);
+                    errors.EnumDataAdd("task.complete_condition_type", self._name);
                     break;
             }
         }
 
         if (this._KillMonster == null) {
-            errors.EnumNull("task.completeconditiontype", "KillMonster");
+            errors.EnumNull("task.complete_condition_type", "KillMonster");
         }
         if (this._TalkNpc == null) {
-            errors.EnumNull("task.completeconditiontype", "TalkNpc");
+            errors.EnumNull("task.complete_condition_type", "TalkNpc");
         }
         if (this._CollectItem == null) {
-            errors.EnumNull("task.completeconditiontype", "CollectItem");
+            errors.EnumNull("task.complete_condition_type", "CollectItem");
         }
         if (this._ConditionAnd == null) {
-            errors.EnumNull("task.completeconditiontype", "ConditionAnd");
+            errors.EnumNull("task.complete_condition_type", "ConditionAnd");
         }
         if (this._Chat == null) {
-            errors.EnumNull("task.completeconditiontype", "Chat");
+            errors.EnumNull("task.complete_condition_type", "Chat");
         }
         if (this._TestNoColumn == null) {
-            errors.EnumNull("task.completeconditiontype", "TestNoColumn");
+            errors.EnumNull("task.complete_condition_type", "TestNoColumn");
         }
         if (this._aa == null) {
-            errors.EnumNull("task.completeconditiontype", "aa");
+            errors.EnumNull("task.complete_condition_type", "aa");
         }
     }
 
-    static _create(os: Stream) : Task_Completeconditiontype {
-        const self = new Task_Completeconditiontype();
+    static _create(os: Stream) : Task_Complete_condition_type {
+        const self = new Task_Complete_condition_type();
         self._id = os.ReadInt32();
         self._name = os.ReadStringInPool();
         return self;
@@ -2023,8 +2023,8 @@ export class Task_Task {
     /* 测试 */
     get TestDefaultBean(): Task_TestDefaultBean { return this._testDefaultBean; }
 
-    private _NullableRefTaskid: Task_Taskextraexp | undefined;
-    get NullableRefTaskid(): Task_Taskextraexp | undefined { return this._NullableRefTaskid; }
+    private _NullableRefTaskid: Task_Task_extra_exp | undefined;
+    get NullableRefTaskid(): Task_Task_extra_exp | undefined { return this._NullableRefTaskid; }
     private _NullableRefNexttask: Task_Task | undefined;
     get NullableRefNexttask(): Task_Task | undefined { return this._NullableRefNexttask; }
     toString() : string {
@@ -2072,7 +2072,7 @@ export class Task_Task {
 
     _resolve(errors: LoadErrors) {
         this._completecondition._resolve(errors);
-        this._NullableRefTaskid = Task_Taskextraexp.Get(this._taskid);
+        this._NullableRefTaskid = Task_Task_extra_exp.Get(this._taskid);
         this._NullableRefNexttask = Task_Task.Get(this._nexttask);
     }
 }
@@ -2102,8 +2102,8 @@ export class Task_Task2 {
     private _testListInterface!: Ai_TriggerTick[];
     get TestListInterface(): Ai_TriggerTick[] { return this._testListInterface; }
 
-    private _NullableRefTaskid: Task_Taskextraexp | undefined;
-    get NullableRefTaskid(): Task_Taskextraexp | undefined { return this._NullableRefTaskid; }
+    private _NullableRefTaskid: Task_Task_extra_exp | undefined;
+    get NullableRefTaskid(): Task_Task_extra_exp | undefined { return this._NullableRefTaskid; }
     private _NullableRefNexttask: Task_Task | undefined;
     get NullableRefNexttask(): Task_Task | undefined { return this._NullableRefNexttask; }
     toString() : string {
@@ -2162,12 +2162,12 @@ export class Task_Task2 {
 
     _resolve(errors: LoadErrors) {
         this._completecondition._resolve(errors);
-        this._NullableRefTaskid = Task_Taskextraexp.Get(this._taskid);
+        this._NullableRefTaskid = Task_Task_extra_exp.Get(this._taskid);
         this._NullableRefNexttask = Task_Task.Get(this._nexttask);
     }
 }
 
-export class Task_Taskextraexp {
+export class Task_Task_extra_exp {
     private _taskid!: number;
     /* 任务完成条件类型（id的范围为1-100） */
     get Taskid(): number { return this._taskid; }
@@ -2192,18 +2192,18 @@ export class Task_Taskextraexp {
     }
 
     
-    private static all: Map<number, Task_Taskextraexp>;
+    private static all: Map<number, Task_Task_extra_exp>;
 
-    static Get(taskid: number) : Task_Taskextraexp | undefined {
+    static Get(taskid: number) : Task_Task_extra_exp | undefined {
         return this.all.get(taskid)
     }
 
-    static All() : Map<number, Task_Taskextraexp> {
+    static All() : Map<number, Task_Task_extra_exp> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
-        this.all = new Map<number, Task_Taskextraexp>();
+        this.all = new Map<number, Task_Task_extra_exp>();
         for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
@@ -2212,8 +2212,8 @@ export class Task_Taskextraexp {
 
     }
 
-    static _create(os: Stream) : Task_Taskextraexp {
-        const self = new Task_Taskextraexp();
+    static _create(os: Stream) : Task_Task_extra_exp {
+        const self = new Task_Task_extra_exp();
         self._taskid = os.ReadInt32();
         self._extraexp = os.ReadInt32();
         self._test1 = os.ReadStringInPool();
@@ -2259,23 +2259,23 @@ export class Processor {
         "ai.ai_action",
         "ai.ai_condition",
         "equip.ability",
-        "equip.equipconfig",
+        "equip.equip_config",
         "equip.jewelry",
-        "equip.jewelryrandom",
-        "equip.jewelrysuit",
-        "equip.jewelrytype",
+        "equip.jewelry_random",
+        "equip.jewelry_suit",
+        "equip.jewelry_type",
         "equip.rank",
         "other.ArgCaptureMode",
         "other.drop",
-        "other.keytest",
+        "other.key_test",
         "other.loot",
-        "other.lootitem",
+        "other.loot_item",
         "other.monster",
-        "other.signin",
-        "task.completeconditiontype",
+        "other.sign_in",
+        "task.complete_condition_type",
         "task.task",
         "task.task2",
-        "task.taskextraexp",
+        "task.task_extra_exp",
     ];
 
     static ProcessPackage(pack: ConfigPackage, errors: LoadErrors): Stream {
@@ -2307,24 +2307,24 @@ export class Processor {
                     Equip_Ability.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
-                case "equip.equipconfig":
-                    Equip_Equipconfig.Initialize(tableInput, errors);
+                case "equip.equip_config":
+                    Equip_Equip_config.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
                 case "equip.jewelry":
                     Equip_Jewelry.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
-                case "equip.jewelryrandom":
-                    Equip_Jewelryrandom.Initialize(tableInput, errors);
+                case "equip.jewelry_random":
+                    Equip_Jewelry_random.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
-                case "equip.jewelrysuit":
-                    Equip_Jewelrysuit.Initialize(tableInput, errors);
+                case "equip.jewelry_suit":
+                    Equip_Jewelry_suit.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
-                case "equip.jewelrytype":
-                    Equip_Jewelrytype.Initialize(tableInput, errors);
+                case "equip.jewelry_type":
+                    Equip_Jewelry_type.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
                 case "equip.rank":
@@ -2339,28 +2339,28 @@ export class Processor {
                     Other_Drop.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
-                case "other.keytest":
-                    Other_Keytest.Initialize(tableInput, errors);
+                case "other.key_test":
+                    Other_Key_test.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
                 case "other.loot":
                     Other_Loot.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
-                case "other.lootitem":
-                    Other_Lootitem.Initialize(tableInput, errors);
+                case "other.loot_item":
+                    Other_Loot_item.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
                 case "other.monster":
                     Other_Monster.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
-                case "other.signin":
-                    Other_Signin.Initialize(tableInput, errors);
+                case "other.sign_in":
+                    Other_Sign_in.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
-                case "task.completeconditiontype":
-                    Task_Completeconditiontype.Initialize(tableInput, errors);
+                case "task.complete_condition_type":
+                    Task_Complete_condition_type.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
                 case "task.task":
@@ -2371,8 +2371,8 @@ export class Processor {
                     Task_Task2.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
-                case "task.taskextraexp":
-                    Task_Taskextraexp.Initialize(tableInput, errors);
+                case "task.task_extra_exp":
+                    Task_Task_extra_exp.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
                 default:
@@ -2383,11 +2383,11 @@ export class Processor {
 
         // 解析外键引用
         Equip_Jewelry.Resolve(errors);
-        Equip_Jewelryrandom.Resolve(errors);
-        Other_Keytest.Resolve(errors);
+        Equip_Jewelry_random.Resolve(errors);
+        Other_Key_test.Resolve(errors);
         Other_Loot.Resolve(errors);
         Other_Monster.Resolve(errors);
-        Other_Signin.Resolve(errors);
+        Other_Sign_in.Resolve(errors);
         Task_Task.Resolve(errors);
         Task_Task2.Resolve(errors);
     }

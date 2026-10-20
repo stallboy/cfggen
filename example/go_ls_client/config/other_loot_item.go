@@ -2,7 +2,7 @@ package config
 
 import "fmt"
 
-type OtherLootitem struct {
+type OtherLoot_item struct {
     lootid int32 //掉落id
     itemid int32 //掉落物品
     chance int32 //掉落概率
@@ -10,8 +10,8 @@ type OtherLootitem struct {
     countmax int32 //数量上限
 }
 
-func createOtherLootitem(stream *Stream) *OtherLootitem {
-    v := &OtherLootitem{}
+func createOtherLoot_item(stream *Stream) *OtherLoot_item {
+    v := &OtherLoot_item{}
     v.lootid = stream.ReadInt32()
     v.itemid = stream.ReadInt32()
     v.chance = stream.ReadInt32()
@@ -20,28 +20,28 @@ func createOtherLootitem(stream *Stream) *OtherLootitem {
     return v
 }
 
-func (t *OtherLootitem) String() string {
-    return fmt.Sprintf("OtherLootitem{lootid=%v, itemid=%v, chance=%v, countmin=%v, countmax=%v}", t.lootid, t.itemid, t.chance, t.countmin, t.countmax)
+func (t *OtherLoot_item) String() string {
+    return fmt.Sprintf("OtherLoot_item{lootid=%v, itemid=%v, chance=%v, countmin=%v, countmax=%v}", t.lootid, t.itemid, t.chance, t.countmin, t.countmax)
 }
 
 //getters
-func (t *OtherLootitem) Lootid() int32 {
+func (t *OtherLoot_item) Lootid() int32 {
     return t.lootid
 }
 
-func (t *OtherLootitem) Itemid() int32 {
+func (t *OtherLoot_item) Itemid() int32 {
     return t.itemid
 }
 
-func (t *OtherLootitem) Chance() int32 {
+func (t *OtherLoot_item) Chance() int32 {
     return t.chance
 }
 
-func (t *OtherLootitem) Countmin() int32 {
+func (t *OtherLoot_item) Countmin() int32 {
     return t.countmin
 }
 
-func (t *OtherLootitem) Countmax() int32 {
+func (t *OtherLoot_item) Countmax() int32 {
     return t.countmax
 }
 
@@ -50,45 +50,45 @@ type KeyLootidItemid struct {
     itemid int32
 }
 
-type OtherLootitemMgr struct {
-    all []*OtherLootitem
-    lootidItemidMap map[KeyLootidItemid]*OtherLootitem
-    lootidMapList map[int32][]*OtherLootitem
-    itemidMapList map[int32][]*OtherLootitem
+type OtherLoot_itemMgr struct {
+    all []*OtherLoot_item
+    lootidItemidMap map[KeyLootidItemid]*OtherLoot_item
+    lootidMapList map[int32][]*OtherLoot_item
+    itemidMapList map[int32][]*OtherLoot_item
 }
 
-func(t *OtherLootitemMgr) GetAll() []*OtherLootitem {
+func(t *OtherLoot_itemMgr) GetAll() []*OtherLoot_item {
     return t.all
 }
 
-func(t *OtherLootitemMgr) Get(lootid int32, itemid int32) *OtherLootitem {
+func(t *OtherLoot_itemMgr) Get(lootid int32, itemid int32) *OtherLoot_item {
     return t.lootidItemidMap[KeyLootidItemid{lootid, itemid}]
 }
 
-func (t *OtherLootitemMgr) GetAllByLootid(lootid int32) []*OtherLootitem {
+func (t *OtherLoot_itemMgr) GetAllByLootid(lootid int32) []*OtherLoot_item {
     if t.lootidMapList == nil {
-        t.lootidMapList = make(map[int32][]*OtherLootitem)
+        t.lootidMapList = make(map[int32][]*OtherLoot_item)
         for _, item := range t.all {
             t.lootidMapList[item.lootid] = append(t.lootidMapList[item.lootid], item)
         }
     }
     return t.lootidMapList[lootid]
 }
-func (t *OtherLootitemMgr) GetAllByItemid(itemid int32) []*OtherLootitem {
+func (t *OtherLoot_itemMgr) GetAllByItemid(itemid int32) []*OtherLoot_item {
     if t.itemidMapList == nil {
-        t.itemidMapList = make(map[int32][]*OtherLootitem)
+        t.itemidMapList = make(map[int32][]*OtherLoot_item)
         for _, item := range t.all {
             t.itemidMapList[item.itemid] = append(t.itemidMapList[item.itemid], item)
         }
     }
     return t.itemidMapList[itemid]
 }
-func (t *OtherLootitemMgr) Init(stream *Stream) {
+func (t *OtherLoot_itemMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
-    t.all = make([]*OtherLootitem, 0, cnt)
-    t.lootidItemidMap = make(map[KeyLootidItemid]*OtherLootitem, cnt)
+    t.all = make([]*OtherLoot_item, 0, cnt)
+    t.lootidItemidMap = make(map[KeyLootidItemid]*OtherLoot_item, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := createOtherLootitem(stream)
+        v := createOtherLoot_item(stream)
         t.all = append(t.all, v)
         t.lootidItemidMap[KeyLootidItemid{v.lootid, v.itemid}] = v
     }

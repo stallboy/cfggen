@@ -1,25 +1,25 @@
-class_name DataEquip_Jewelrytype
-## equip.jewelrytype
+class_name DataEquip_Jewelry_type
+## equip.jewelry_type
 # 公开属性
 var typeName: String  # 程序用名字
 
 # 静态枚举实例
-static var Jade: DataEquip_Jewelrytype
-static var Bracelet: DataEquip_Jewelrytype
-static var Magic: DataEquip_Jewelrytype
-static var Bottle: DataEquip_Jewelrytype
+static var Jade: DataEquip_Jewelry_type
+static var Bracelet: DataEquip_Jewelry_type
+static var Magic: DataEquip_Jewelry_type
+static var Bottle: DataEquip_Jewelry_type
 # 内部存储
-static var _data: Dictionary[String, DataEquip_Jewelrytype] = {}
+static var _data: Dictionary[String, DataEquip_Jewelry_type] = {}
 # 主键查询
-static func find(id: String) -> DataEquip_Jewelrytype:
+static func find(id: String) -> DataEquip_Jewelry_type:
 	return _data.get(id)
 # 获取所有数据
-static func all() -> Array[DataEquip_Jewelrytype]:
+static func all() -> Array[DataEquip_Jewelry_type]:
 	return _data.values()
 
 # 字符串表示
 func _to_string() -> String:
-	return "DataEquip_Jewelrytype{" + typeName + "}"
+	return "DataEquip_Jewelry_type{" + typeName + "}"
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
@@ -36,34 +36,34 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 			match item.typeName.strip_edges():
 				"Jade":
 					if Jade != null:
-						_errors.enum_dup("equip.jewelrytype", str(item))
+						_errors.enum_dup("equip.jewelry_type", str(item))
 					Jade = item
 				"Bracelet":
 					if Bracelet != null:
-						_errors.enum_dup("equip.jewelrytype", str(item))
+						_errors.enum_dup("equip.jewelry_type", str(item))
 					Bracelet = item
 				"Magic":
 					if Magic != null:
-						_errors.enum_dup("equip.jewelrytype", str(item))
+						_errors.enum_dup("equip.jewelry_type", str(item))
 					Magic = item
 				"Bottle":
 					if Bottle != null:
-						_errors.enum_dup("equip.jewelrytype", str(item))
+						_errors.enum_dup("equip.jewelry_type", str(item))
 					Bottle = item
 				_:
-					_errors.enum_data_add("equip.jewelrytype", str(item))
+					_errors.enum_data_add("equip.jewelry_type", str(item))
 	if Jade == null:
-		_errors.enum_null("equip.jewelrytype", "Jade")
+		_errors.enum_null("equip.jewelry_type", "Jade")
 	if Bracelet == null:
-		_errors.enum_null("equip.jewelrytype", "Bracelet")
+		_errors.enum_null("equip.jewelry_type", "Bracelet")
 	if Magic == null:
-		_errors.enum_null("equip.jewelrytype", "Magic")
+		_errors.enum_null("equip.jewelry_type", "Magic")
 	if Bottle == null:
-		_errors.enum_null("equip.jewelrytype", "Bottle")
+		_errors.enum_null("equip.jewelry_type", "Bottle")
 
 # 创建实例
-static func _create(stream: ConfigStream) -> DataEquip_Jewelrytype:
-	var instance = DataEquip_Jewelrytype.new()
+static func _create(stream: ConfigStream) -> DataEquip_Jewelry_type:
+	var instance = DataEquip_Jewelry_type.new()
 	instance.typeName = stream.read_string_in_pool()
 	return instance
 

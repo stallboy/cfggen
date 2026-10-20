@@ -3,17 +3,17 @@ package config.equip;
 import configgen.genjava.LoadValueErrs;
 
 // struct 作为key，有些生成代码是不支持的
-// 来自：equip/jewelryrandom.csv
-public class CfgJewelryrandom {
+// 来自：equip/jewelry_random.csv
+public class CfgJewelry_random {
     private config.CfgLevelRank lvlRank;
     private config.CfgRange attackRange;
     private java.util.List<config.CfgRange> otherRange;
     private java.util.List<config.equip.CfgTestPackBean> testPack;
-    private CfgJewelryrandom() {
+    private CfgJewelry_random() {
     }
 
-    public static CfgJewelryrandom _create(configgen.genjava.ConfigInput input) {
-        CfgJewelryrandom self = new CfgJewelryrandom();
+    public static CfgJewelry_random _create(configgen.genjava.ConfigInput input) {
+        CfgJewelry_random self = new CfgJewelry_random();
         self.lvlRank = config.CfgLevelRank._create(input);
         self.attackRange = config.CfgRange._create(input);
         {
@@ -80,14 +80,14 @@ public class CfgJewelryrandom {
         this.lvlRank._resolve(mgr, errors);
     }
 
-    public static CfgJewelryrandom get(config.CfgLevelRank lvlRank) {
+    public static CfgJewelry_random get(config.CfgLevelRank lvlRank) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getEquipJewelryrandom(lvlRank);
+        return mgr.getEquipJewelry_random(lvlRank);
     }
 
-    public static java.util.Collection<CfgJewelryrandom> all() {
+    public static java.util.Collection<CfgJewelry_random> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.allEquipJewelryrandom();
+        return mgr.allEquipJewelry_random();
     }
 
 

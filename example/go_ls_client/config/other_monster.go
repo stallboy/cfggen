@@ -9,7 +9,7 @@ type OtherMonster struct {
     lootItemId int32 //item
     enumMap1 map[string]int32
     enumMap2 map[int32]string
-    refLoot *OtherLootitem
+    refLoot *OtherLoot_item
     refAllLoot *OtherLoot
     refEnumMap2 map[int32]*OtherArgCaptureMode
 }
@@ -78,9 +78,9 @@ func (t *OtherMonster) RefEnumMap2() map[int32]*OtherArgCaptureMode {
     }
     return t.refEnumMap2
 }
-func (t *OtherMonster) RefLoot() *OtherLootitem {
+func (t *OtherMonster) RefLoot() *OtherLoot_item {
     if t.refLoot == nil {
-        t.refLoot = GetOtherLootitemMgr().Get(t.lootId, t.lootItemId)
+        t.refLoot = GetOtherLoot_itemMgr().Get(t.lootId, t.lootItemId)
     }
     return t.refLoot
 }

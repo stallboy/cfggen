@@ -4,8 +4,8 @@ import configgen.genjava.LoadValueErrs;
 
 public final class KillMonster implements config.task.completecondition.Completecondition {
     @Override
-    public config.task.Completeconditiontype type() {
-        return config.task.Completeconditiontype.KILL_MONSTER;
+    public config.task.CompleteConditionType type() {
+        return config.task.CompleteConditionType.KILL_MONSTER;
     }
 
     private int monsterid;

@@ -31,7 +31,7 @@ local function testToString()
             '{taskid=2,name=[和npc对话,和npc对话],nexttask=3,completecondition=TalkNpc{npcid=1},exp=2000,testDefaultBean={testInt=22,testBool=false,testString=text,testSubBean={x=3,y=4,z=5},testList=[11,22],testList2=[3,4,5],testMap=[str in map]}}')
     --print(t2)
 
-    local s1 = cfg.other.signin.get(1)
+    local s1 = cfg.other.sign_in.get(1)
     --print(tostring(s4))
     assertEqual(tostring(s1),'{id=1,item2countMap={10001=1},vipitem2vipcountMap=[],viplevel=0,iconFile=texture/t_i10005.bundle}')
 
@@ -56,8 +56,8 @@ local function testAllAndGet()
 end
 
 local function testMultiColumnAsPrimaryKeyGet()
-    local t = cfg.other.lootitem.get(2, 40007)
-    local all = cfg.other.lootitem.all
+    local t = cfg.other.loot_item.get(2, 40007)
+    local all = cfg.other.loot_item.all
     assert(t.lootid == 2, "主键可以是2个int字段，get(k1, k2)")
     assert(t.itemid == 40007)
     local rawT = all[2 + 40007 * 100000000]
@@ -65,8 +65,8 @@ local function testMultiColumnAsPrimaryKeyGet()
 end
 
 -- local function testUniqueKeyGet()
---     local t = cfg.other.signin.get(1)
---     local ut = cfg.other.signin.getByIdViplevel(1, 0)
+--     local t = cfg.other.sign_in.get(1)
+--     local ut = cfg.other.sign_in.getByIdViplevel(1, 0)
 --     assert(ut == t, "可以有主键，也可以有唯一键，接口为getByXxx")
 -- end
 
@@ -87,7 +87,7 @@ local function testListField()
 end
 
 local function testMapField()
-    local t = cfg.other.signin.get(4)
+    local t = cfg.other.sign_in.get(4)
     local cnt = 0
     for _, _ in pairs(t.item2countMap) do
         cnt = cnt + 1
@@ -123,7 +123,7 @@ local function testNullableRef()
     local t = cfg.task.task.get(1)
     assert(t.nexttask == 2)
     assert(t.NullableRefNexttask == cfg.task.task.get(2), "refType=nullable，如果为空，就==nil")
-    assert(t.NullableRefTaskid == cfg.task.taskextraexp.get(1))
+    assert(t.NullableRefTaskid == cfg.task.task_extra_exp.get(1))
     t = cfg.task.task.get(3)
     assert(t.NullableRefNexttask == nil)
     assert(t.NullableRefTaskid == nil)
@@ -136,8 +136,8 @@ local function testListRef()
 
     assert(#t.ListRefLootid == 7, "t.ListRefLootid")
     local itemids = {}
-    for _, lootitem in ipairs(t.ListRefLootid) do
-        itemids[lootitem.itemid] = true
+    for _, loot_item in ipairs(t.ListRefLootid) do
+        itemids[loot_item.itemid] = true
     end
 
     assert(itemids[40007], "t.ListRefLootid[x].itemid contains 40007")
@@ -147,40 +147,40 @@ local function testListRef()
 end
 
 local function testEnum()
-    local t = cfg.task.completeconditiontype
+    local t = cfg.task.complete_condition_type
     print(t.KillMonster.id, t.KillMonster.name, t.Chat.name, t.CollectItem.name)
     assert(t.get(1) == t.KillMonster)
-    assert(t.KillMonster.id == 1, "配置为枚举，可以直接completeconditiontype.KillMonster访问，不用字符串")
+    assert(t.KillMonster.id == 1, "配置为枚举，可以直接complete_condition_type.KillMonster访问，不用字符串")
     assert(t.KillMonster.name == "KillMonster")
 end
 
 local function testEntry()
-    local t = cfg.equip.equipconfig.Instance
-    local gt = cfg.equip.equipconfig.get("Instance")
+    local t = cfg.equip.equip_config.Instance
+    local gt = cfg.equip.equip_config.get("Instance")
     print(t.broadcastid, t.draw_protect_name)
-    assert(t.broadcastid == 9500, "配置为入口，也可以直接tequipconfig.Instance访问，不用字符串")
+    assert(t.broadcastid == 9500, "配置为入口，也可以直接equip_config.Instance访问，不用字符串")
     assert(gt == t, "entry")
 end
 
 local function testCsvColumnMode()
-    local t = cfg.equip.equipconfig.Instance2
+    local t = cfg.equip.equip_config.Instance2
     assert(t.week_reward_mailid == 33, "csv可以一列一列配置，而不用一行一行")
 end
 
 local function testBeanAsPrimaryKeyGetError()
-    local all = cfg.equip.jewelryrandom.all
+    local all = cfg.equip.jewelry_random.all
     local firstK
     for k, _ in pairs(all) do
         firstK = k
         break
     end
-    local t = cfg.equip.jewelryrandom.get(Beans.levelrank(5, 1))
+    local t = cfg.equip.jewelry_random.get(Beans.levelrank(5, 1))
     assert(t == nil, "bean做为主键，虽然能生成，但不好取到，因为lua的table的key如果是table，比较用的是引用比较")
-    assert(cfg.equip.jewelryrandom.get(firstK) ~= nil, "只能先拿到引用")
+    assert(cfg.equip.jewelry_random.get(firstK) ~= nil, "只能先拿到引用")
 end
 
 -- local function testCsvPack()
---     local all = cfg.equip.jewelryrandom.all
+--     local all = cfg.equip.jewelry_random.all
 --     local tv
 --     for k, v in pairs(all) do
 --         if k.level == 5 and k.rank == 1 then
@@ -212,7 +212,7 @@ local function testExtraSplit()
 end
 
 local function testCsvSplit()
-    local t = cfg.other.lootitem.get(10, 20853)
+    local t = cfg.other.loot_item.get(10, 20853)
     assert(t.lootid == 10, "同一个表可以放到多个csv里")
     assert(t.itemid == 20853)
 end
@@ -230,7 +230,7 @@ local function testCsvBlock()
 end
 
 local function testMapValueRef()
-    local t = cfg.other.signin.get(4)
+    local t = cfg.other.sign_in.get(4)
     assert(t.vipitem2vipcountMap[10001] == 10)
     assert(t.RefVipitem2vipcountMap[10001] == cfg.other.loot.get(10))
 end
@@ -284,7 +284,7 @@ local function testMetadata()
     local refs = cfg.equip.jewelry.Metadata.refs
     assert(#refs == 4)
 
-    local enumidx = cfg.equip.jewelrytype.Metadata.enumidx
+    local enumidx = cfg.equip.jewelry_type.Metadata.enumidx
     assert(enumidx == 1)
 end
 

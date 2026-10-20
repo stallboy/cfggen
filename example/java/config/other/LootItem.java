@@ -1,17 +1,17 @@
 package config.other;
 
-// 来自：other/lootitem.csv, other/lootitem_1.csv, other/lootitem_2.csv
-public class Lootitem {
+// 来自：other/loot_item.csv, other/loot_item_1.csv, other/loot_item_2.csv
+public class LootItem {
     private int lootid;
     private int itemid;
     private int chance;
     private int countmin;
     private int countmax;
-    private Lootitem() {
+    private LootItem() {
     }
 
-    public static Lootitem _create(configgen.genjava.ConfigInput input) {
-        Lootitem self = new Lootitem();
+    public static LootItem _create(configgen.genjava.ConfigInput input) {
+        LootItem self = new LootItem();
         self.lootid = input.readInt();
         self.itemid = input.readInt();
         self.chance = input.readInt();
@@ -87,14 +87,14 @@ public class Lootitem {
         }
     }
 
-    public static Lootitem get(int lootid, int itemid) {
+    public static LootItem get(int lootid, int itemid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getOtherLootitem(lootid, itemid);
+        return mgr.getOtherLootItem(lootid, itemid);
     }
 
-    public static java.util.Collection<Lootitem> all() {
+    public static java.util.Collection<LootItem> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.allOtherLootitem();
+        return mgr.allOtherLootItem();
     }
 
 

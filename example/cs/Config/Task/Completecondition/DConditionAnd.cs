@@ -2,8 +2,8 @@ namespace Config.Task.Completecondition;
 
 public partial class DConditionAnd : Task.DCompletecondition
 {
-    public Task.DCompleteconditiontype type() {
-        return Task.DCompleteconditiontype.ConditionAnd;
+    public Task.DCompleteConditionType type() {
+        return Task.DCompleteConditionType.ConditionAnd;
     }
 
     public required Task.DCompletecondition Cond1 { get; init; }

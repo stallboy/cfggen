@@ -6,8 +6,8 @@ public partial class DLoot
     public required string Ename { get; init; }
     public required string Name { get; init; } /* 名字 */
     public required IReadOnlyList<int> ChanceList { get; init; } /* 掉落0件物品的概率 */
-    public IReadOnlyList<Other.DLootitem> ListRefLootid { get; private set; } = null!;
-    public IReadOnlyList<Other.DLootitem> ListRefAnotherWay { get; private set; } = null!;
+    public IReadOnlyList<Other.DLootItem> ListRefLootid { get; private set; } = null!;
+    public IReadOnlyList<Other.DLootItem> ListRefAnotherWay { get; private set; } = null!;
 
     public static DLoot? Get(int lootid)
         => Get(ConfigMgr.GetMgr(), lootid);

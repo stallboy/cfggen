@@ -1,9 +1,9 @@
 namespace Config.Equip;
 
-public partial class DJewelrysuit
+public partial class DJewelrySuit
 {
-    public static DJewelrysuit SpecialSuit => SpecialSuitIn(ConfigMgr.GetMgr());
-    public static DJewelrysuit SpecialSuitIn(ConfigMgr config) => config._equip_djewelrysuit_Symbol_SpecialSuit!;
+    public static DJewelrySuit SpecialSuit => SpecialSuitIn(ConfigMgr.GetMgr());
+    public static DJewelrySuit SpecialSuitIn(ConfigMgr config) => config._equip_djewelry_usuit_Symbol_SpecialSuit!;
 
     public required int SuitID { get; init; } /* 饰品套装ID */
     public required string Ename { get; init; }
@@ -16,18 +16,18 @@ public partial class DJewelrysuit
     public required int Ability3Value { get; init; } /* 套装属性3 */
     public required IReadOnlyList<int> SuitList { get; init; } /* 部件1 */
 
-    public static DJewelrysuit? Get(int suitID)
+    public static DJewelrySuit? Get(int suitID)
         => Get(ConfigMgr.GetMgr(), suitID);
 
-    public static DJewelrysuit? Get(ConfigMgr config, int suitID)
+    public static DJewelrySuit? Get(ConfigMgr config, int suitID)
     {
-        var index = config._equip_djewelrysuit_All;
+        var index = config._equip_djewelry_usuit_All;
         return index.TryGetValue(suitID, out var result) ? result : null;
     }
 
-    public static IReadOnlyList<DJewelrysuit> All()
+    public static IReadOnlyList<DJewelrySuit> All()
         => All(ConfigMgr.GetMgr());
 
-    public static IReadOnlyList<DJewelrysuit> All(ConfigMgr config)
-        => config._equip_djewelrysuit_Rows;
+    public static IReadOnlyList<DJewelrySuit> All(ConfigMgr config)
+        => config._equip_djewelry_usuit_Rows;
 }

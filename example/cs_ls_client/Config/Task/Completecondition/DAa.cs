@@ -3,8 +3,8 @@ namespace Config.Task.Completecondition
 
 public partial class DAa : Task.DCompletecondition
 {
-    public Task.DCompleteconditiontype type() {
-        return Task.DCompleteconditiontype.Aa;
+    public Task.DCompleteConditionType type() {
+        return Task.DCompleteConditionType.Aa;
     }
 
 }

@@ -58,7 +58,7 @@ struct Position (sep=';') {
 ```cfg
 // 饰品套装配置表
 // 演示fix属性的使用，将列表固定为4列
-table jewelrysuit[SuitID] (entry='Ename') {
+table jewelry_suit[SuitID] (entry='Ename') {
     SuitID:int; // 饰品套装ID
     Ename:str;
     Name:text; // 策划用名字
@@ -70,7 +70,7 @@ table jewelrysuit[SuitID] (entry='Ename') {
 
 - **方案1：固定列数** - 占用过多列数
 ```cfg
-table jewelrysuit[SuitID] (entry='Ename') {
+table jewelry_suit[SuitID] (entry='Ename') {
     ...
     SuitList:list<int> (fix=12);
 }
@@ -78,14 +78,14 @@ table jewelrysuit[SuitID] (entry='Ename') {
 
 - **方案2：单列压缩** - 仅占用1列
 ```cfg
-table jewelrysuit[SuitID] (entry='Ename') {
+table jewelry_suit[SuitID] (entry='Ename') {
     ...
     SuitList:list<int> (pack);
 }
 ```
 
 ```cfg
-table jewelrysuit[SuitID] (entry='Ename') {
+table jewelry_suit[SuitID] (entry='Ename') {
     ...
     SuitList:list<int> (sep=';');
 }
@@ -93,7 +93,7 @@ table jewelrysuit[SuitID] (entry='Ename') {
 
 - **方案3：块状布局** - 占用4列，支持多行扩展
 ```cfg
-table jewelrysuit[SuitID] (entry='Ename') {
+table jewelry_suit[SuitID] (entry='Ename') {
     ...
     SuitList:list<int> (block=4);
 }
@@ -262,7 +262,7 @@ table xx ...{
 ```cfg
 // 任务完成条件接口
 // 演示多态类型使用pack压缩后的配置格式
-interface completecondition (enumRef='completeconditiontype') {
+interface completecondition (enumRef='complete_condition_type') {
     struct KillMonster {
         monsterid:int ->other.monster;
         count:int;
@@ -344,7 +344,7 @@ table task...{
 ```cfg
 // 装备系统参数配置表
 // 使用columnMode将表格旋转90度，适用于参数多但记录少的场景
-table equipconfig[entry] (entry='entry', columnMode) {
+table equip_config[entry] (entry='entry', columnMode) {
     entry:str; // 入口，程序填
     stone_count_for_set:int; // 形成套装的音石数量
     draw_protect_name:str; // 保底策略名称

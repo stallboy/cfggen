@@ -3,7 +3,7 @@ package config.task.completecondition;
 import configgen.genjava.LoadValueErrs;
 
 public sealed interface Completecondition permits KillMonster, TalkNpc, TestNoColumn, Chat, ConditionAnd, CollectItem, Aa {
-    config.task.Completeconditiontype type();
+    config.task.CompleteConditionType type();
 
     default void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
     }

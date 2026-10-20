@@ -2,15 +2,15 @@ package config.equip;
 
 import configgen.genjava.LoadValueErrs;
 
-// 来自：equip/jewelrysuit.csv
-public class CfgJewelrysuit_Entry {
-    public static final CfgJewelrysuit_Entry SPECIALSUIT = new CfgJewelrysuit_Entry(0, "SpecialSuit", 4);
+// 来自：equip/jewelry_suit.csv
+public class CfgJewelry_suit_Entry {
+    public static final CfgJewelry_suit_Entry SPECIALSUIT = new CfgJewelry_suit_Entry(0, "SpecialSuit", 4);
 
     private final String name;
     private final int value;
 
 
-    CfgJewelrysuit_Entry(int index, String name, int value) {
+    CfgJewelry_suit_Entry(int index, String name, int value) {
         this.index = index;
         this.name = name;
         this.value = value;
@@ -18,33 +18,33 @@ public class CfgJewelrysuit_Entry {
 
     private final int index;
 
-    public config.equip.CfgJewelrysuit ref() {
+    public config.equip.CfgJewelry_suit ref() {
         return ref(config.ConfigMgr.getMgr());
     }
 
-    public config.equip.CfgJewelrysuit ref(config.ConfigMgr mgr) {
-        return mgr._get_equip_jewelrysuit_Refs(index);
+    public config.equip.CfgJewelry_suit ref(config.ConfigMgr mgr) {
+        return mgr._get_equip_jewelry_suit_Refs(index);
     }
 
     public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
-        mgr._set_equip_jewelrysuit_Refs(new config.equip.CfgJewelrysuit[] {
-            mgr.getEquipJewelrysuit(SPECIALSUIT.value),
+        mgr._set_equip_jewelry_suit_Refs(new config.equip.CfgJewelry_suit[] {
+            mgr.getEquipJewelry_suit(SPECIALSUIT.value),
         });
-        for (var row : mgr._get_equip_jewelrysuit_All().values()) {
+        for (var row : mgr._get_equip_jewelry_suit_All().values()) {
             var key = row.getSuitID();
             String symbol = row.getEname();
             if (symbol.isEmpty()) continue;
-            CfgJewelrysuit_Entry expected = switch (symbol) {
+            CfgJewelry_suit_Entry expected = switch (symbol) {
                 case "SpecialSuit" -> SPECIALSUIT;
                 default -> null;
             };
             if (expected == null) {
-                errors.unknownSymbol("equip.jewelrysuit", symbol, key, mgr.explain("equip.jewelrysuit", key));
+                errors.unknownSymbol("equip.jewelry_suit", symbol, key, mgr.explain("equip.jewelry_suit", key));
                 continue;
             }
-            if (key != expected.value) errors.changedSymbolId("equip.jewelrysuit", symbol, expected.value, key, mgr.explain("equip.jewelrysuit", key));
+            if (key != expected.value) errors.changedSymbolId("equip.jewelry_suit", symbol, expected.value, key, mgr.explain("equip.jewelry_suit", key));
         }
-        if (SPECIALSUIT.ref(mgr) == null) errors.missingSymbol("equip.jewelrysuit", "SpecialSuit", SPECIALSUIT.value);
+        if (SPECIALSUIT.ref(mgr) == null) errors.missingSymbol("equip.jewelry_suit", "SpecialSuit", SPECIALSUIT.value);
     }
 
 }

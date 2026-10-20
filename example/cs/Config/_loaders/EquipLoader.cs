@@ -105,13 +105,13 @@ namespace Config.Equip
 
     }
 
-    public partial class DEquipconfig
+    public partial class DEquipConfig
     {
-        internal static string PrimaryKey(DEquipconfig self) => self.Entry;
-        internal static void InitializeAll(List<DEquipconfig> list, LoadErrors errors, ConfigMgr config)
+        internal static string PrimaryKey(DEquipConfig self) => self.Entry;
+        internal static void InitializeAll(List<DEquipConfig> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<string, DEquipconfig>(count);
+            var s_all = new Dictionary<string, DEquipConfig>(count);
             foreach (var self in list)
             {
                 var key = PrimaryKey(self);
@@ -123,17 +123,17 @@ namespace Config.Equip
                     "Instance2" => 1,
                     _ => -1
                 };
-                if (symbol < 0) errors.UnknownSymbol("equip.equipconfig", name, key, config.Explain("equip.equipconfig", key));
+                if (symbol < 0) errors.UnknownSymbol("equip.equip_config", name, key, config.Explain("equip.equip_config", key));
             }
-            config._equip_dequipconfig_All = new System.Collections.ObjectModel.ReadOnlyDictionary<string, DEquipconfig>(s_all);
-            config._equip_dequipconfig_Symbol_Instance = Get(config, "Instance");
-            if (config._equip_dequipconfig_Symbol_Instance == null) errors.MissingSymbol("equip.equipconfig", "Instance", "Instance");
-            config._equip_dequipconfig_Symbol_Instance2 = Get(config, "Instance2");
-            if (config._equip_dequipconfig_Symbol_Instance2 == null) errors.MissingSymbol("equip.equipconfig", "Instance2", "Instance2");
-            config._equip_dequipconfig_Rows = list.AsReadOnly();
+            config._equip_dequip_uconfig_All = new System.Collections.ObjectModel.ReadOnlyDictionary<string, DEquipConfig>(s_all);
+            config._equip_dequip_uconfig_Symbol_Instance = Get(config, "Instance");
+            if (config._equip_dequip_uconfig_Symbol_Instance == null) errors.MissingSymbol("equip.equip_config", "Instance", "Instance");
+            config._equip_dequip_uconfig_Symbol_Instance2 = Get(config, "Instance2");
+            if (config._equip_dequip_uconfig_Symbol_Instance2 == null) errors.MissingSymbol("equip.equip_config", "Instance2", "Instance2");
+            config._equip_dequip_uconfig_Rows = list.AsReadOnly();
         }
 
-        internal static DEquipconfig _create(ConfigReader reader)
+        internal static DEquipConfig _create(ConfigReader reader)
         {
             var valueEntry = reader.ReadStringInPool();
             var valueStone_count_for_set = reader.ReadInt32();
@@ -141,7 +141,7 @@ namespace Config.Equip
             var valueBroadcastid = reader.ReadInt32();
             var valueBroadcast_least_quality = reader.ReadInt32();
             var valueWeek_reward_mailid = reader.ReadInt32();
-            return new DEquipconfig {
+            return new DEquipConfig {
                 Entry = valueEntry,
                 Stone_count_for_set = valueStone_count_for_set,
                 Draw_protect_name = valueDraw_protect_name,
@@ -158,7 +158,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            return obj is DEquipconfig o && Entry.Equals(o.Entry);
+            return obj is DEquipConfig o && Entry.Equals(o.Entry);
         }
 
         public override string ToString()
@@ -229,13 +229,13 @@ namespace Config.Equip
         internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
             LvlRank._resolve(errors, config);
-            var rRefLvlRank = Equip.DJewelryrandom.Get(config, LvlRank);
-            if (rRefLvlRank == null) errors.MissingReference("equip.jewelry", "LvlRank", "equip.jewelryrandom", this.LvlRank);
+            var rRefLvlRank = Equip.DJewelryRandom.Get(config, LvlRank);
+            if (rRefLvlRank == null) errors.MissingReference("equip.jewelry", "LvlRank", "equip.jewelry_random", this.LvlRank);
             else RefLvlRank = rRefLvlRank;
-            var rRefJType = Equip.DJewelrytypeInfo.Get(config, JType);
-            if (rRefJType == null) errors.MissingReference("equip.jewelry", "JType", "equip.jewelrytype", this.JType);
+            var rRefJType = Equip.DJewelryTypeInfo.Get(config, JType);
+            if (rRefJType == null) errors.MissingReference("equip.jewelry", "JType", "equip.jewelry_type", this.JType);
             else RefJType = rRefJType.EEnum;
-            NullableRefSuitID = Equip.DJewelrysuit.Get(config, SuitID);
+            NullableRefSuitID = Equip.DJewelrySuit.Get(config, SuitID);
             var rRefKeyAbility = Equip.DAbilityInfo.Get(config, KeyAbility);
             if (rRefKeyAbility == null) errors.MissingReference("equip.jewelry", "KeyAbility", "equip.ability", this.KeyAbility);
             else RefKeyAbility = rRefKeyAbility.EEnum;
@@ -243,23 +243,23 @@ namespace Config.Equip
 
     }
 
-    public partial class DJewelryrandom
+    public partial class DJewelryRandom
     {
-        internal static DLevelRank PrimaryKey(DJewelryrandom self) => self.LvlRank;
-        internal static void InitializeAll(List<DJewelryrandom> list, LoadErrors errors, ConfigMgr config)
+        internal static DLevelRank PrimaryKey(DJewelryRandom self) => self.LvlRank;
+        internal static void InitializeAll(List<DJewelryRandom> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<DLevelRank, DJewelryrandom>(count);
+            var s_all = new Dictionary<DLevelRank, DJewelryRandom>(count);
             foreach (var self in list)
             {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
-            config._equip_djewelryrandom_All = new System.Collections.ObjectModel.ReadOnlyDictionary<DLevelRank, DJewelryrandom>(s_all);
-            config._equip_djewelryrandom_Rows = list.AsReadOnly();
+            config._equip_djewelry_urandom_All = new System.Collections.ObjectModel.ReadOnlyDictionary<DLevelRank, DJewelryRandom>(s_all);
+            config._equip_djewelry_urandom_Rows = list.AsReadOnly();
         }
 
-        internal static DJewelryrandom _create(ConfigReader reader)
+        internal static DJewelryRandom _create(ConfigReader reader)
         {
             var valueLvlRank = DLevelRank._create(reader);
             var valueAttackRange = DRange._create(reader);
@@ -279,7 +279,7 @@ namespace Config.Equip
                 for (int i = 0; i < Count_valueTestPack; i++) values_valueTestPack.Add(Equip.DTestPackBean._create(reader));
                 valueTestPack = values_valueTestPack.AsReadOnly();
             }
-            return new DJewelryrandom {
+            return new DJewelryRandom {
                 LvlRank = valueLvlRank,
                 AttackRange = valueAttackRange,
                 OtherRange = valueOtherRange,
@@ -294,7 +294,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            return obj is DJewelryrandom o && LvlRank.Equals(o.LvlRank);
+            return obj is DJewelryRandom o && LvlRank.Equals(o.LvlRank);
         }
 
         public override string ToString()
@@ -309,14 +309,14 @@ namespace Config.Equip
 
     }
 
-    public partial class DJewelrysuit
+    public partial class DJewelrySuit
     {
         private static readonly int[] _symbolKeys = { 4 };
-        internal static int PrimaryKey(DJewelrysuit self) => self.SuitID;
-        internal static void InitializeAll(List<DJewelrysuit> list, LoadErrors errors, ConfigMgr config)
+        internal static int PrimaryKey(DJewelrySuit self) => self.SuitID;
+        internal static void InitializeAll(List<DJewelrySuit> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<int, DJewelrysuit>(count);
+            var s_all = new Dictionary<int, DJewelrySuit>(count);
             foreach (var self in list)
             {
                 var key = PrimaryKey(self);
@@ -324,18 +324,18 @@ namespace Config.Equip
                 string name = self.Ename;
                 if (name.Length == 0) continue;
                 int symbol = name == "SpecialSuit" ? 0 : -1;
-                if (symbol < 0) errors.UnknownSymbol("equip.jewelrysuit", name, key, config.Explain("equip.jewelrysuit", key));
+                if (symbol < 0) errors.UnknownSymbol("equip.jewelry_suit", name, key, config.Explain("equip.jewelry_suit", key));
                 else {
-                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("equip.jewelrysuit", name, _symbolKeys[symbol], key, config.Explain("equip.jewelrysuit", key));
+                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("equip.jewelry_suit", name, _symbolKeys[symbol], key, config.Explain("equip.jewelry_suit", key));
                 }
             }
-            config._equip_djewelrysuit_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DJewelrysuit>(s_all);
-            config._equip_djewelrysuit_Symbol_SpecialSuit = Get(config, 4);
-            if (config._equip_djewelrysuit_Symbol_SpecialSuit == null) errors.MissingSymbol("equip.jewelrysuit", "SpecialSuit", 4);
-            config._equip_djewelrysuit_Rows = list.AsReadOnly();
+            config._equip_djewelry_usuit_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DJewelrySuit>(s_all);
+            config._equip_djewelry_usuit_Symbol_SpecialSuit = Get(config, 4);
+            if (config._equip_djewelry_usuit_Symbol_SpecialSuit == null) errors.MissingSymbol("equip.jewelry_suit", "SpecialSuit", 4);
+            config._equip_djewelry_usuit_Rows = list.AsReadOnly();
         }
 
-        internal static DJewelrysuit _create(ConfigReader reader)
+        internal static DJewelrySuit _create(ConfigReader reader)
         {
             var valueSuitID = reader.ReadInt32();
             var valueEname = reader.ReadStringInPool();
@@ -354,7 +354,7 @@ namespace Config.Equip
                 for (int i = 0; i < Count_valueSuitList; i++) values_valueSuitList.Add(reader.ReadInt32());
                 valueSuitList = values_valueSuitList.AsReadOnly();
             }
-            return new DJewelrysuit {
+            return new DJewelrySuit {
                 SuitID = valueSuitID,
                 Ename = valueEname,
                 Name = valueName,
@@ -375,7 +375,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            return obj is DJewelrysuit o && SuitID.Equals(o.SuitID);
+            return obj is DJewelrySuit o && SuitID.Equals(o.SuitID);
         }
 
         public override string ToString()
@@ -386,44 +386,44 @@ namespace Config.Equip
 
     }
 
-    public partial class DJewelrytypeInfo
+    public partial class DJewelryTypeInfo
     {
-        internal static string PrimaryKey(DJewelrytypeInfo self) => self.TypeName;
-        internal static void InitializeAll(List<DJewelrytypeInfo> list, LoadErrors errors, ConfigMgr config)
+        internal static string PrimaryKey(DJewelryTypeInfo self) => self.TypeName;
+        internal static void InitializeAll(List<DJewelryTypeInfo> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<string, DJewelrytypeInfo>(count);
+            var s_all = new Dictionary<string, DJewelryTypeInfo>(count);
             foreach (var self in list)
             {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
                 string name = self.TypeName;
                 int symbol = (int)self.EEnum;
-                if (symbol < 0) errors.UnknownSymbol("equip.jewelrytype", name, key, config.Explain("equip.jewelrytype", key));
+                if (symbol < 0) errors.UnknownSymbol("equip.jewelry_type", name, key, config.Explain("equip.jewelry_type", key));
             }
-            config._equip_djewelrytype_All = new System.Collections.ObjectModel.ReadOnlyDictionary<string, DJewelrytypeInfo>(s_all);
-            config._equip_djewelrytype_Symbols[(int)DJewelrytype.Jade] = Get(config, "Jade");
-            if (config._equip_djewelrytype_Symbols[(int)DJewelrytype.Jade] == null) errors.MissingSymbol("equip.jewelrytype", "Jade", "Jade");
-            config._equip_djewelrytype_Symbols[(int)DJewelrytype.Bracelet] = Get(config, "Bracelet");
-            if (config._equip_djewelrytype_Symbols[(int)DJewelrytype.Bracelet] == null) errors.MissingSymbol("equip.jewelrytype", "Bracelet", "Bracelet");
-            config._equip_djewelrytype_Symbols[(int)DJewelrytype.Magic] = Get(config, "Magic");
-            if (config._equip_djewelrytype_Symbols[(int)DJewelrytype.Magic] == null) errors.MissingSymbol("equip.jewelrytype", "Magic", "Magic");
-            config._equip_djewelrytype_Symbols[(int)DJewelrytype.Bottle] = Get(config, "Bottle");
-            if (config._equip_djewelrytype_Symbols[(int)DJewelrytype.Bottle] == null) errors.MissingSymbol("equip.jewelrytype", "Bottle", "Bottle");
-            config._equip_djewelrytype_Rows = list.AsReadOnly();
+            config._equip_djewelry_utype_All = new System.Collections.ObjectModel.ReadOnlyDictionary<string, DJewelryTypeInfo>(s_all);
+            config._equip_djewelry_utype_Symbols[(int)DJewelryType.Jade] = Get(config, "Jade");
+            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Jade] == null) errors.MissingSymbol("equip.jewelry_type", "Jade", "Jade");
+            config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bracelet] = Get(config, "Bracelet");
+            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bracelet] == null) errors.MissingSymbol("equip.jewelry_type", "Bracelet", "Bracelet");
+            config._equip_djewelry_utype_Symbols[(int)DJewelryType.Magic] = Get(config, "Magic");
+            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Magic] == null) errors.MissingSymbol("equip.jewelry_type", "Magic", "Magic");
+            config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bottle] = Get(config, "Bottle");
+            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bottle] == null) errors.MissingSymbol("equip.jewelry_type", "Bottle", "Bottle");
+            config._equip_djewelry_utype_Rows = list.AsReadOnly();
         }
 
-        internal static DJewelrytypeInfo _create(ConfigReader reader)
+        internal static DJewelryTypeInfo _create(ConfigReader reader)
         {
             var valueTypeName = reader.ReadStringInPool();
-            return new DJewelrytypeInfo {
+            return new DJewelryTypeInfo {
                 TypeName = valueTypeName,
                 EEnum = valueTypeName switch {
-                    "Jade" => DJewelrytype.Jade,
-                    "Bracelet" => DJewelrytype.Bracelet,
-                    "Magic" => DJewelrytype.Magic,
-                    "Bottle" => DJewelrytype.Bottle,
-                    _ => (DJewelrytype)(-1)
+                    "Jade" => DJewelryType.Jade,
+                    "Bracelet" => DJewelryType.Bracelet,
+                    "Magic" => DJewelryType.Magic,
+                    "Bottle" => DJewelryType.Bottle,
+                    _ => (DJewelryType)(-1)
                 }
             };
         }
@@ -435,7 +435,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            return obj is DJewelrytypeInfo o && TypeName.Equals(o.TypeName);
+            return obj is DJewelryTypeInfo o && TypeName.Equals(o.TypeName);
         }
 
         public override string ToString()

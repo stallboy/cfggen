@@ -62,59 +62,59 @@ namespace Config.Task
 
     }
 
-    public partial class DCompleteconditiontypeInfo
+    public partial class DCompleteConditionTypeInfo
     {
         private static readonly int[] _symbolKeys = { 1, 2, 3, 4, 5, 6, 7 };
-        internal static int PrimaryKey(DCompleteconditiontypeInfo self) => self.Id;
-        internal static void InitializeAll(List<DCompleteconditiontypeInfo> list, LoadErrors errors, ConfigMgr config)
+        internal static int PrimaryKey(DCompleteConditionTypeInfo self) => self.Id;
+        internal static void InitializeAll(List<DCompleteConditionTypeInfo> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<int, DCompleteconditiontypeInfo>(count);
+            var s_all = new Dictionary<int, DCompleteConditionTypeInfo>(count);
             foreach (var self in list)
             {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
                 string name = self.Name;
                 int symbol = (int)self.EEnum;
-                if (symbol < 0) errors.UnknownSymbol("task.completeconditiontype", name, key, config.Explain("task.completeconditiontype", key));
+                if (symbol < 0) errors.UnknownSymbol("task.complete_condition_type", name, key, config.Explain("task.complete_condition_type", key));
                 else {
-                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("task.completeconditiontype", name, _symbolKeys[symbol], key, config.Explain("task.completeconditiontype", key));
+                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("task.complete_condition_type", name, _symbolKeys[symbol], key, config.Explain("task.complete_condition_type", key));
                 }
             }
-            config._task_dcompleteconditiontype_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DCompleteconditiontypeInfo>(s_all);
-            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.KillMonster] = Get(config, 1);
-            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.KillMonster] == null) errors.MissingSymbol("task.completeconditiontype", "KillMonster", 1);
-            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.TalkNpc] = Get(config, 2);
-            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.TalkNpc] == null) errors.MissingSymbol("task.completeconditiontype", "TalkNpc", 2);
-            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.CollectItem] = Get(config, 3);
-            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.CollectItem] == null) errors.MissingSymbol("task.completeconditiontype", "CollectItem", 3);
-            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.ConditionAnd] = Get(config, 4);
-            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.ConditionAnd] == null) errors.MissingSymbol("task.completeconditiontype", "ConditionAnd", 4);
-            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.Chat] = Get(config, 5);
-            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.Chat] == null) errors.MissingSymbol("task.completeconditiontype", "Chat", 5);
-            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.TestNoColumn] = Get(config, 6);
-            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.TestNoColumn] == null) errors.MissingSymbol("task.completeconditiontype", "TestNoColumn", 6);
-            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.Aa] = Get(config, 7);
-            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.Aa] == null) errors.MissingSymbol("task.completeconditiontype", "aa", 7);
-            config._task_dcompleteconditiontype_Rows = list.AsReadOnly();
+            config._task_dcomplete_ucondition_utype_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DCompleteConditionTypeInfo>(s_all);
+            config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.KillMonster] = Get(config, 1);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.KillMonster] == null) errors.MissingSymbol("task.complete_condition_type", "KillMonster", 1);
+            config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TalkNpc] = Get(config, 2);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TalkNpc] == null) errors.MissingSymbol("task.complete_condition_type", "TalkNpc", 2);
+            config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.CollectItem] = Get(config, 3);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.CollectItem] == null) errors.MissingSymbol("task.complete_condition_type", "CollectItem", 3);
+            config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.ConditionAnd] = Get(config, 4);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.ConditionAnd] == null) errors.MissingSymbol("task.complete_condition_type", "ConditionAnd", 4);
+            config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Chat] = Get(config, 5);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Chat] == null) errors.MissingSymbol("task.complete_condition_type", "Chat", 5);
+            config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TestNoColumn] = Get(config, 6);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TestNoColumn] == null) errors.MissingSymbol("task.complete_condition_type", "TestNoColumn", 6);
+            config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Aa] = Get(config, 7);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Aa] == null) errors.MissingSymbol("task.complete_condition_type", "aa", 7);
+            config._task_dcomplete_ucondition_utype_Rows = list.AsReadOnly();
         }
 
-        internal static DCompleteconditiontypeInfo _create(ConfigReader reader)
+        internal static DCompleteConditionTypeInfo _create(ConfigReader reader)
         {
             var valueId = reader.ReadInt32();
             var valueName = reader.ReadStringInPool();
-            return new DCompleteconditiontypeInfo {
+            return new DCompleteConditionTypeInfo {
                 Id = valueId,
                 Name = valueName,
                 EEnum = valueName switch {
-                    "KillMonster" => DCompleteconditiontype.KillMonster,
-                    "TalkNpc" => DCompleteconditiontype.TalkNpc,
-                    "CollectItem" => DCompleteconditiontype.CollectItem,
-                    "ConditionAnd" => DCompleteconditiontype.ConditionAnd,
-                    "Chat" => DCompleteconditiontype.Chat,
-                    "TestNoColumn" => DCompleteconditiontype.TestNoColumn,
-                    "aa" => DCompleteconditiontype.Aa,
-                    _ => (DCompleteconditiontype)(-1)
+                    "KillMonster" => DCompleteConditionType.KillMonster,
+                    "TalkNpc" => DCompleteConditionType.TalkNpc,
+                    "CollectItem" => DCompleteConditionType.CollectItem,
+                    "ConditionAnd" => DCompleteConditionType.ConditionAnd,
+                    "Chat" => DCompleteConditionType.Chat,
+                    "TestNoColumn" => DCompleteConditionType.TestNoColumn,
+                    "aa" => DCompleteConditionType.Aa,
+                    _ => (DCompleteConditionType)(-1)
                 }
             };
         }
@@ -126,7 +126,7 @@ namespace Config.Task
 
         public override bool Equals(object? obj)
         {
-            return obj is DCompleteconditiontypeInfo o && Id.Equals(o.Id);
+            return obj is DCompleteConditionTypeInfo o && Id.Equals(o.Id);
         }
 
         public override string ToString()
@@ -196,7 +196,7 @@ namespace Config.Task
         internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
             Completecondition._resolve(errors, config);
-            NullableRefTaskid = Task.DTaskextraexp.Get(config, Taskid);
+            NullableRefTaskid = Task.DTaskExtraExp.Get(config, Taskid);
             NullableRefNexttask = Task.DTask.Get(config, Nexttask);
         }
 
@@ -292,29 +292,29 @@ namespace Config.Task
         internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
             Completecondition._resolve(errors, config);
-            NullableRefTaskid = Task.DTaskextraexp.Get(config, Taskid);
+            NullableRefTaskid = Task.DTaskExtraExp.Get(config, Taskid);
             NullableRefNexttask = Task.DTask.Get(config, Nexttask);
         }
 
     }
 
-    public partial class DTaskextraexp
+    public partial class DTaskExtraExp
     {
-        internal static int PrimaryKey(DTaskextraexp self) => self.Taskid;
-        internal static void InitializeAll(List<DTaskextraexp> list, LoadErrors errors, ConfigMgr config)
+        internal static int PrimaryKey(DTaskExtraExp self) => self.Taskid;
+        internal static void InitializeAll(List<DTaskExtraExp> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<int, DTaskextraexp>(count);
+            var s_all = new Dictionary<int, DTaskExtraExp>(count);
             foreach (var self in list)
             {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
-            config._task_dtaskextraexp_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DTaskextraexp>(s_all);
-            config._task_dtaskextraexp_Rows = list.AsReadOnly();
+            config._task_dtask_uextra_uexp_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DTaskExtraExp>(s_all);
+            config._task_dtask_uextra_uexp_Rows = list.AsReadOnly();
         }
 
-        internal static DTaskextraexp _create(ConfigReader reader)
+        internal static DTaskExtraExp _create(ConfigReader reader)
         {
             var valueTaskid = reader.ReadInt32();
             var valueExtraexp = reader.ReadInt32();
@@ -324,7 +324,7 @@ namespace Config.Task
             var valueFieldb = reader.ReadStringInPool();
             var valueFieldc = reader.ReadStringInPool();
             var valueFieldd = reader.ReadStringInPool();
-            return new DTaskextraexp {
+            return new DTaskExtraExp {
                 Taskid = valueTaskid,
                 Extraexp = valueExtraexp,
                 Test1 = valueTest1,
@@ -343,7 +343,7 @@ namespace Config.Task
 
         public override bool Equals(object? obj)
         {
-            return obj is DTaskextraexp o && Taskid.Equals(o.Taskid);
+            return obj is DTaskExtraExp o && Taskid.Equals(o.Taskid);
         }
 
         public override string ToString()

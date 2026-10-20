@@ -24,13 +24,13 @@ func testAllAndGet() {
 }
 
 func testMultiColumnAsPrimaryKeyGet() {
-	// local t = cfg.other.lootitem.get(2, 40007)
-	// local all = cfg.other.lootitem.all
+	// local t = cfg.other.loot_item.get(2, 40007)
+	// local all = cfg.other.loot_item.all
 	// assert(t.lootid == 2, "主键可以是2个int字段，get(k1, k2)")
 	// assert(t.itemid == 40007)
 	// local rawT = all[2 + 40007 * 100000000]
 	// assert(rawT == t, "主键是k + j * 100000000")
-	t := config.GetOtherLootitemMgr().Get(2, 40007)
+	t := config.GetOtherLoot_itemMgr().Get(2, 40007)
 	if t.Lootid() != 2 {
 		println("fail: testMultiColumnAsPrimaryKeyGet")
 	}
@@ -44,11 +44,11 @@ func testMultiColumnAsPrimaryKeyGet() {
 }
 
 func testUniqueKeyGet() {
-	// local t = cfg.other.lootitem.get(40007)
+	// local t = cfg.other.loot_item.get(40007)
 	// assert(t.itemid == 40007, "主键是一个int字段，get(k)")
-	// local rawT = cfg.other.lootitem.all[40007]
+	// local rawT = cfg.other.loot_item.all[40007]
 	// assert(rawT == t, "主键是k")
-	t := config.GetOtherLootitemMgr().Get(4, 22)
+	t := config.GetOtherLoot_itemMgr().Get(4, 22)
 	if t.Itemid() != 22 {
 		println("fail: testUniqueKeyGet")
 	} else {
@@ -88,7 +88,7 @@ func testListField() {
 }
 
 func testMapField() {
-	// local t = cfg.other.signin.get(4)
+	// local t = cfg.other.sign_in.get(4)
 	// local cnt = 0
 	// for _, _ in pairs(t.item2countMap) do
 	//     cnt = cnt + 1
@@ -96,7 +96,7 @@ func testMapField() {
 
 	// assert(cnt == 3, "支持字典map")
 	// assert(t.item2countMap[10001] == 5)
-	t := config.GetOtherSigninMgr().Get(4)
+	t := config.GetOtherSign_inMgr().Get(4)
 	if len(t.Item2countMap()) != 3 || t.Item2countMap()[10001] != 5 {
 		println("fail: testMapField")
 	} else {
@@ -162,7 +162,7 @@ func testNullableRef() {
 	// local t = cfg.task.task.get(1)
 	// assert(t.nexttask == 2)
 	// assert(t.NullableRefNexttask == cfg.task.task.get(2), "refType=nullable，如果为空，就==nil")
-	// assert(t.NullableRefTaskid == cfg.task.taskextraexp.get(1))
+	// assert(t.NullableRefTaskid == cfg.task.task_extra_exp.get(1))
 	// t = cfg.task.task.get(3)
 	// assert(t.NullableRefNexttask == nil)
 	// assert(t.NullableRefTaskid == nil)
@@ -175,7 +175,7 @@ func testNullableRef() {
 		println("fail: testNullableRef")
 		return
 	}
-	if t.NullableRefTaskid() != config.GetTaskTaskextraexpMgr().Get(1) {
+	if t.NullableRefTaskid() != config.GetTaskTask_extra_expMgr().Get(1) {
 		println("fail: testNullableRef")
 		return
 	}
@@ -198,8 +198,8 @@ func testListRef() {
 
 	// assert(#t.ListRefLootid == 7, "t.ListRefLootid")
 	// local itemids = {}
-	// for _, lootitem in ipairs(t.ListRefLootid) do
-	//     itemids[lootitem.itemid] = true
+	// for _, loot_item in ipairs(t.ListRefLootid) do
+	//     itemids[loot_item.itemid] = true
 	// end
 
 	// assert(itemids[40007], "t.ListRefLootid[x].itemid contains 40007")
@@ -220,12 +220,12 @@ func testListRef() {
 }
 
 func testEnum() {
-	// local t = cfg.task.completeconditiontype
+	// local t = cfg.task.complete_condition_type
 	// print(t.KillMonster.id, t.KillMonster.name, t.Chat.name, t.CollectItem.name)
 	// assert(t.get(1) == t.KillMonster)
-	// assert(t.KillMonster.id == 1, "配置为枚举，可以直接completeconditiontype.KillMonster访问，不用字符串")
+	// assert(t.KillMonster.id == 1, "配置为枚举，可以直接complete_condition_type.KillMonster访问，不用字符串")
 	// assert(t.KillMonster.name == "KillMonster")
-	var t = config.GetTaskCompleteconditiontypeMgr()
+	var t = config.GetTaskComplete_condition_typeMgr()
 	var killMonster = t.GetKillMonster()
 	if killMonster.Id() != 1 || killMonster.Name() != "KillMonster" {
 		println("fail: testEnum")
@@ -235,12 +235,12 @@ func testEnum() {
 }
 
 func testEntry() {
-	// local t = cfg.equip.equipconfig.Instance
-	// local gt = cfg.equip.equipconfig.get("Instance")
+	// local t = cfg.equip.equip_config.Instance
+	// local gt = cfg.equip.equip_config.get("Instance")
 	// print(t.broadcastid, t.draw_protect_name)
-	// assert(t.broadcastid == 9500, "配置为入口，也可以直接tequipconfig.Instance访问，不用字符串")
+	// assert(t.broadcastid == 9500, "配置为入口，也可以直接equip_config.Instance访问，不用字符串")
 	// assert(gt == t, "entry")
-	var t = config.GetEquipEquipconfigMgr().GetInstance()
+	var t = config.GetEquipEquip_configMgr().GetInstance()
 	if t.Broadcastid() != 9500 || t.Draw_protect_name() != "测试" {
 		println("fail: testEntry")
 		return
@@ -249,10 +249,10 @@ func testEntry() {
 }
 
 func testCsvColumnMode() {
-	// local t = cfg.equip.equipconfig.Instance2
+	// local t = cfg.equip.equip_config.Instance2
 	// assert(t.week_reward_mailid == 33, "csv可以一列一列配置，而不用一行一行")
 
-	t := config.GetEquipEquipconfigMgr().GetInstance2()
+	t := config.GetEquipEquip_configMgr().GetInstance2()
 	if t.Week_reward_mailid() != 33 {
 		println("fail: testCsvColumnMode")
 		return
@@ -261,21 +261,21 @@ func testCsvColumnMode() {
 }
 
 func testBeanAsPrimaryKey() {
-	// local all = cfg.equip.jewelryrandom.all
+	// local all = cfg.equip.jewelry_random.all
 	// local firstK
 	// for k, _ in pairs(all) do
 	//     firstK = k
 	//     break
 	// end
-	// local t = cfg.equip.jewelryrandom.get(Beans.levelrank(5, 1))
+	// local t = cfg.equip.jewelry_random.get(Beans.levelrank(5, 1))
 	// assert(t == nil, "bean做为主键，虽然能生成，但不好取到，因为lua的table的key如果是table，比较用的是引用比较")
-	// assert(cfg.equip.jewelryrandom.get(firstK) ~= nil, "只能先拿到引用")
+	// assert(cfg.equip.jewelry_random.get(firstK) ~= nil, "只能先拿到引用")
 
 	var lv *config.LevelRank
 	lv = config.GetEquipJewelryMgr().Get(1).LvlRank()
-	var t = config.GetEquipJewelryrandomMgr().Get(lv)
+	var t = config.GetEquipJewelry_randomMgr().Get(lv)
 	var s *config.LevelRank
-	s = config.GetEquipJewelryrandomMgr().GetAll()[0].LvlRank()
+	s = config.GetEquipJewelry_randomMgr().GetAll()[0].LvlRank()
 	println(s.Level(), s.Rank(), lv.Level(), lv.Rank(), lv, s, lv == s)
 	// println(lv.GetLevel(), lv.GetRank())
 	// println(lv, s, lv == s)
@@ -287,10 +287,10 @@ func testBeanAsPrimaryKey() {
 }
 
 func testMapValueRef() {
-	// local t = cfg.other.signin.get(4)
+	// local t = cfg.other.sign_in.get(4)
 	// assert(t.vipitem2vipcountMap[10001] == 10)
 	// assert(t.RefVipitem2vipcountMap[10001] == cfg.other.loot.get(10))
-	t := config.GetOtherSigninMgr().Get(4)
+	t := config.GetOtherSign_inMgr().Get(4)
 	if t.Vipitem2vipcountMap()[10001] != 10 {
 		println("fail: testMapValueRef")
 		return
@@ -379,7 +379,7 @@ func testCellNumberAsInterface() {
 }
 
 func testRefList() {
-	if config.GetOtherKeytestMgr().Get(1, 2).RefIds()[1].Id() == 12 {
+	if config.GetOtherKey_testMgr().Get(1, 2).RefIds()[1].Id() == 12 {
 		println("pass: testRefList")
 	} else {
 		println("fail: testRefList")

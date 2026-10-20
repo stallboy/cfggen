@@ -10,13 +10,13 @@ local Beans = cfg._beans
 ---@field testDefaultBean Beans.task.testdefaultbean , 测试
 ---@field get fun(taskid:number):cfg.task.task
 ---@field all table<any,cfg.task.task>
----@field NullableRefTaskid cfg.task.taskextraexp
+---@field NullableRefTaskid cfg.task.task_extra_exp
 ---@field NullableRefNexttask cfg.task.task
 
 local this = cfg.task.task
 
 local mk = cfg._mk.i18n_table(this, { { 'all', 'get', 1 }, }, nil, { 
-    { 'NullableRefTaskid', 0, cfg.task.taskextraexp, 'get', 1 }, 
+    { 'NullableRefTaskid', 0, cfg.task.task_extra_exp, 'get', 1 }, 
     { 'NullableRefNexttask', 0, cfg.task.task, 'get', 3 }, }, 
     { name = 2 },
     'taskid', -- int, 任务完成条件类型（id的范围为1-100）

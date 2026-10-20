@@ -2,7 +2,7 @@ package config
 
 import "fmt"
 
-type OtherSignin struct {
+type OtherSign_in struct {
     id int32 //礼包ID
     item2countMap map[int32]int32 //普通奖励
     vipitem2vipcountMap map[int32]int32 //vip奖励
@@ -11,8 +11,8 @@ type OtherSignin struct {
     refVipitem2vipcountMap map[int32]*OtherLoot
 }
 
-func createOtherSignin(stream *Stream) *OtherSignin {
-    v := &OtherSignin{}
+func createOtherSign_in(stream *Stream) *OtherSign_in {
+    v := &OtherSign_in{}
     v.id = stream.ReadInt32()
     item2countMapSize := stream.ReadCount(0)
     v.item2countMap = make(map[int32]int32, item2countMapSize)
@@ -31,33 +31,33 @@ func createOtherSignin(stream *Stream) *OtherSignin {
     return v
 }
 
-func (t *OtherSignin) String() string {
-    return fmt.Sprintf("OtherSignin{id=%v, item2countMap=%v, vipitem2vipcountMap=%v, viplevel=%v, iconFile=%v}", t.id, fmt.Sprintf("%v", t.item2countMap), fmt.Sprintf("%v", t.vipitem2vipcountMap), t.viplevel, t.iconFile)
+func (t *OtherSign_in) String() string {
+    return fmt.Sprintf("OtherSign_in{id=%v, item2countMap=%v, vipitem2vipcountMap=%v, viplevel=%v, iconFile=%v}", t.id, fmt.Sprintf("%v", t.item2countMap), fmt.Sprintf("%v", t.vipitem2vipcountMap), t.viplevel, t.iconFile)
 }
 
 //getters
-func (t *OtherSignin) Id() int32 {
+func (t *OtherSign_in) Id() int32 {
     return t.id
 }
 
-func (t *OtherSignin) Item2countMap() map[int32]int32 {
+func (t *OtherSign_in) Item2countMap() map[int32]int32 {
     return t.item2countMap
 }
 
-func (t *OtherSignin) Vipitem2vipcountMap() map[int32]int32 {
+func (t *OtherSign_in) Vipitem2vipcountMap() map[int32]int32 {
     return t.vipitem2vipcountMap
 }
 
-func (t *OtherSignin) Viplevel() int32 {
+func (t *OtherSign_in) Viplevel() int32 {
     return t.viplevel
 }
 
-func (t *OtherSignin) IconFile() string {
+func (t *OtherSign_in) IconFile() string {
     return t.iconFile
 }
 
 //map ref
-func (t *OtherSignin) RefVipitem2vipcountMap() map[int32]*OtherLoot {
+func (t *OtherSign_in) RefVipitem2vipcountMap() map[int32]*OtherLoot {
     if t.refVipitem2vipcountMap == nil {
         t.refVipitem2vipcountMap = make(map[int32]*OtherLoot, len(t.vipitem2vipcountMap))
         for k, v := range t.vipitem2vipcountMap {
@@ -66,25 +66,25 @@ func (t *OtherSignin) RefVipitem2vipcountMap() map[int32]*OtherLoot {
     }
     return t.refVipitem2vipcountMap
 }
-type OtherSigninMgr struct {
-    all []*OtherSignin
-    idMap map[int32]*OtherSignin
+type OtherSign_inMgr struct {
+    all []*OtherSign_in
+    idMap map[int32]*OtherSign_in
 }
 
-func(t *OtherSigninMgr) GetAll() []*OtherSignin {
+func(t *OtherSign_inMgr) GetAll() []*OtherSign_in {
     return t.all
 }
 
-func(t *OtherSigninMgr) Get(id int32) *OtherSignin {
+func(t *OtherSign_inMgr) Get(id int32) *OtherSign_in {
     return t.idMap[id]
 }
 
-func (t *OtherSigninMgr) Init(stream *Stream) {
+func (t *OtherSign_inMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
-    t.all = make([]*OtherSignin, 0, cnt)
-    t.idMap = make(map[int32]*OtherSignin, cnt)
+    t.all = make([]*OtherSign_in, 0, cnt)
+    t.idMap = make(map[int32]*OtherSign_in, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := createOtherSignin(stream)
+        v := createOtherSign_in(stream)
         t.all = append(t.all, v)
         t.idMap[v.id] = v
     }

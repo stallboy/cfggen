@@ -14,7 +14,7 @@ type TaskTask2 struct {
     testList []int32
     testListStruct []*Position
     testListInterface []AiTriggerTick
-    nullableRefTaskid *TaskTaskextraexp
+    nullableRefTaskid *TaskTask_extra_exp
     nullableRefNexttask *TaskTask
 }
 
@@ -99,9 +99,9 @@ func (t *TaskTask2) TestListInterface() []AiTriggerTick {
     return t.testListInterface
 }
 
-func (t *TaskTask2) NullableRefTaskid() *TaskTaskextraexp {
+func (t *TaskTask2) NullableRefTaskid() *TaskTask_extra_exp {
     if t.nullableRefTaskid == nil {
-        t.nullableRefTaskid = GetTaskTaskextraexpMgr().Get(t.taskid)
+        t.nullableRefTaskid = GetTaskTask_extra_expMgr().Get(t.taskid)
     }
     return t.nullableRefTaskid
 }

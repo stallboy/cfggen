@@ -10,7 +10,7 @@ public partial class DTask
     public Task.DCompletecondition Completecondition { get; init; } = null!;
     public int Exp { get; init; }
     public Task.DTestDefaultBean TestDefaultBean { get; init; } = null!; /* 测试 */
-    public Task.DTaskextraexp? NullableRefTaskid { get; private set; }
+    public Task.DTaskExtraExp? NullableRefTaskid { get; private set; }
     public Task.DTask? NullableRefNexttask { get; private set; }
 
     public static DTask? Get(int taskid)

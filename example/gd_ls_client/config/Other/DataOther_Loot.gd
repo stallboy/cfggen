@@ -33,7 +33,7 @@ static func _create(stream: ConfigStream) -> DataOther_Loot:
 	instance.lootid = stream.read_int32()
 	instance.ename = stream.read_string_in_pool()
 	instance.name = ConfigText._create(stream)
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.chanceList.append(stream.read_int32())
 	return instance
 

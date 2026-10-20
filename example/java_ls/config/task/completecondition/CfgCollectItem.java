@@ -2,8 +2,8 @@ package config.task.completecondition;
 
 public final class CfgCollectItem implements config.task.completecondition.CfgCompletecondition {
     @Override
-    public config.task.CfgCompleteconditiontype type() {
-        return config.task.CfgCompleteconditiontype.COLLECTITEM;
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.COLLECTITEM;
     }
 
     private int itemid;

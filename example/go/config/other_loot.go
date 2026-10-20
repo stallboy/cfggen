@@ -7,8 +7,8 @@ type OtherLoot struct {
     ename string
     name string //名字
     chanceList []int32 //掉落0件物品的概率
-    listRefLootid []*OtherLootitem
-    listRefAnotherWay []*OtherLootitem
+    listRefLootid []*OtherLoot_item
+    listRefAnotherWay []*OtherLoot_item
 }
 
 func createOtherLoot(stream *Stream) *OtherLoot {
@@ -45,16 +45,16 @@ func (t *OtherLoot) ChanceList() []int32 {
     return t.chanceList
 }
 
-func (t *OtherLoot) ListRefLootid() []*OtherLootitem {
+func (t *OtherLoot) ListRefLootid() []*OtherLoot_item {
     if t.listRefLootid == nil {
-        t.listRefLootid = GetOtherLootitemMgr().GetAllByLootid(t.lootid)
+        t.listRefLootid = GetOtherLoot_itemMgr().GetAllByLootid(t.lootid)
     }
     return t.listRefLootid
 }
 
-func (t *OtherLoot) ListRefAnotherWay() []*OtherLootitem {
+func (t *OtherLoot) ListRefAnotherWay() []*OtherLoot_item {
     if t.listRefAnotherWay == nil {
-        t.listRefAnotherWay = GetOtherLootitemMgr().GetAllByLootid(t.lootid)
+        t.listRefAnotherWay = GetOtherLoot_itemMgr().GetAllByLootid(t.lootid)
     }
     return t.listRefAnotherWay
 }

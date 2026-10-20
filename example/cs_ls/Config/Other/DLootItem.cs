@@ -1,6 +1,6 @@
 namespace Config.Other;
 
-public partial class DLootitem
+public partial class DLootItem
 {
     public required int Lootid { get; init; } /* 掉落id */
     public required int Itemid { get; init; } /* 掉落物品 */
@@ -10,18 +10,18 @@ public partial class DLootitem
 
     public sealed record LootidItemidKey(int Lootid, int Itemid);
 
-    public static DLootitem? Get(int lootid, int itemid)
+    public static DLootItem? Get(int lootid, int itemid)
         => Get(ConfigMgr.GetMgr(), lootid, itemid);
 
-    public static DLootitem? Get(ConfigMgr config, int lootid, int itemid)
+    public static DLootItem? Get(ConfigMgr config, int lootid, int itemid)
     {
-        var index = config._other_dlootitem_All;
+        var index = config._other_dloot_uitem_All;
         return index.TryGetValue(new LootidItemidKey(lootid, itemid), out var result) ? result : null;
     }
 
-    public static IReadOnlyList<DLootitem> All()
+    public static IReadOnlyList<DLootItem> All()
         => All(ConfigMgr.GetMgr());
 
-    public static IReadOnlyList<DLootitem> All(ConfigMgr config)
-        => config._other_dlootitem_Rows;
+    public static IReadOnlyList<DLootItem> All(ConfigMgr config)
+        => config._other_dloot_uitem_Rows;
 }

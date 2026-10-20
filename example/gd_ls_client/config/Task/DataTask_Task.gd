@@ -8,7 +8,7 @@ var completecondition: DataTask_Completecondition
 var exp: int
 var testDefaultBean: DataTask_TestDefaultBean  # 测试
 # 外键引用属性
-var NullableRefTaskid: DataTask_Taskextraexp
+var NullableRefTaskid: DataTask_Task_extra_exp
 var NullableRefNexttask: DataTask_Task
 
 # 内部存储
@@ -36,7 +36,7 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 static func _create(stream: ConfigStream) -> DataTask_Task:
 	var instance = DataTask_Task.new()
 	instance.taskid = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.name.append(ConfigText._create(stream))
 	instance.nexttask = stream.read_int32()
 	instance.completecondition = DataTask_Completecondition._create(stream)
@@ -49,7 +49,7 @@ static func _create(stream: ConfigStream) -> DataTask_Task:
 func _resolve(errors: ConfigErrors):
 	if completecondition != null:
 		completecondition._resolve(errors)
-	NullableRefTaskid = DataTask_Taskextraexp.find(taskid)
+	NullableRefTaskid = DataTask_Task_extra_exp.find(taskid)
 	NullableRefNexttask = DataTask_Task.find(nexttask)
 
 static func _resolve_refs(errors: ConfigErrors):

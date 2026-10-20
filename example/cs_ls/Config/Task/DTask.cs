@@ -8,7 +8,7 @@ public partial class DTask
     public required Task.DCompletecondition Completecondition { get; init; }
     public required int Exp { get; init; }
     public required Task.DTestDefaultBean TestDefaultBean { get; init; } /* 测试 */
-    public Task.DTaskextraexp? NullableRefTaskid { get; private set; }
+    public Task.DTaskExtraExp? NullableRefTaskid { get; private set; }
     public Task.DTask? NullableRefNexttask { get; private set; }
 
     public static DTask? Get(int taskid)

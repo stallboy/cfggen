@@ -29,7 +29,8 @@ public class GoName {
 
             _className.append(StringUtil.upper1(seps[i]));
         }
-        filePath = _filePath + ".go";
+        // Go excludes *_test.go from ordinary builds; the dot also avoids schema-name collisions.
+        filePath = _filePath + (_filePath.toString().endsWith("_test") ? ".cfg.go" : ".go");
         className = _className.toString();
     }
 }

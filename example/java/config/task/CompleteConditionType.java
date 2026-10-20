@@ -1,8 +1,8 @@
 package config.task;
 
 // 任务完成条件类型
-// 来自：task/completeconditiontype任务完成条件类型.csv
-public enum Completeconditiontype {
+// 来自：task/complete_condition_type任务完成条件类型.csv
+public enum CompleteConditionType {
     KILL_MONSTER("KillMonster", 1),
     TALK_NPC("TalkNpc", 2),
     COLLECT_ITEM("CollectItem", 3),
@@ -15,22 +15,22 @@ public enum Completeconditiontype {
     private final int value;
 
 
-    Completeconditiontype(String name, int value) {
+    CompleteConditionType(String name, int value) {
         this.name = name;
         this.value = value;
     }
 
-    public static final java.util.Map<Integer, Completeconditiontype> map;
+    public static final java.util.Map<Integer, CompleteConditionType> map;
 
     static {
-        var symbols = new java.util.LinkedHashMap<Integer, Completeconditiontype>();
-        for(Completeconditiontype e : Completeconditiontype.values()) {
+        var symbols = new java.util.LinkedHashMap<Integer, CompleteConditionType>();
+        for(CompleteConditionType e : CompleteConditionType.values()) {
             symbols.put(e.value, e);
         }
         map = java.util.Collections.unmodifiableMap(symbols);
     }
 
-    public static Completeconditiontype get(int value) {
+    public static CompleteConditionType get(int value) {
         return map.get(value);
     }
 

@@ -1,15 +1,15 @@
 local cfg = require "cfg._cfgs"
 
----@class cfg.other.lootitem
+---@class cfg.other.loot_item
 ---@field lootid number , 掉落id
 ---@field itemid number , 掉落物品
 ---@field chance number , 掉落概率
 ---@field countmin number , 数量下限
 ---@field countmax number , 数量上限
----@field get fun(lootid:number,itemid:number):cfg.other.lootitem
----@field all table<any,cfg.other.lootitem>
+---@field get fun(lootid:number,itemid:number):cfg.other.loot_item
+---@field all table<any,cfg.other.loot_item>
 
-local this = cfg.other.lootitem
+local this = cfg.other.loot_item
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1, 2 }, }, nil, nil, 
     'lootid', -- int, 掉落id

@@ -2,8 +2,8 @@ package config.other;
 
 import configgen.genjava.LoadValueErrs;
 
-// 来自：other/signin.csv
-public class Signin {
+// 来自：other/sign_in.csv
+public class SignIn {
     private int id;
     private java.util.Map<Integer, Integer> item2countMap;
     private java.util.Map<Integer, Integer> vipitem2vipcountMap;
@@ -11,10 +11,10 @@ public class Signin {
     private String iconFile;
     private java.util.Map<Integer, config.other.Loot> RefVipitem2vipcountMap;
 
-    private Signin() {
+    private SignIn() {
     }
 
-    Signin(SigninBuilder b) {
+    SignIn(SignInBuilder b) {
         this.id = b.id;
         this.item2countMap = b.item2countMap;
         this.vipitem2vipcountMap = b.vipitem2vipcountMap;
@@ -22,8 +22,8 @@ public class Signin {
         this.iconFile = b.iconFile;
     }
 
-    public static Signin _create(configgen.genjava.ConfigInput input) {
-        Signin self = new Signin();
+    public static SignIn _create(configgen.genjava.ConfigInput input) {
+        SignIn self = new SignIn();
         self.id = input.readInt();
         {
             int c = input.readCount(0);
@@ -34,7 +34,7 @@ public class Signin {
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readInt();
-                    if (self.item2countMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.signin.item2countMap", key);
+                    if (self.item2countMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.sign_in.item2countMap", key);
                 }
                 self.item2countMap = java.util.Collections.unmodifiableMap(self.item2countMap);
             }
@@ -48,7 +48,7 @@ public class Signin {
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readInt();
-                    if (self.vipitem2vipcountMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.signin.vipitem2vipcountMap", key);
+                    if (self.vipitem2vipcountMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.sign_in.vipitem2vipcountMap", key);
                 }
                 self.vipitem2vipcountMap = java.util.Collections.unmodifiableMap(self.vipitem2vipcountMap);
             }
@@ -109,7 +109,7 @@ public class Signin {
             this.RefVipitem2vipcountMap = new java.util.LinkedHashMap<>(this.vipitem2vipcountMap.size());
             for (java.util.Map.Entry<Integer, Integer> e : this.vipitem2vipcountMap.entrySet()) {
                 var ref = mgr.getOtherLoot(e.getValue());
-                if (ref == null) errors.missingReference("other.signin", "vipitem2vipcountMap", "other.loot", e.getValue());
+                if (ref == null) errors.missingReference("other.sign_in", "vipitem2vipcountMap", "other.loot", e.getValue());
                 this.RefVipitem2vipcountMap.put(e.getKey(), ref);
             }
         }
@@ -117,14 +117,14 @@ public class Signin {
 
     }
 
-    public static Signin get(int id) {
+    public static SignIn get(int id) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getOtherSignin(id);
+        return mgr.getOtherSignIn(id);
     }
 
-    public static java.util.Collection<Signin> all() {
+    public static java.util.Collection<SignIn> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.allOtherSignin();
+        return mgr.allOtherSignIn();
     }
 
 

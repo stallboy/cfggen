@@ -1,5 +1,5 @@
-class_name DataOther_Signin
-## other.signin
+class_name DataOther_Sign_in
+## other.sign_in
 # 公开属性
 var id: int  # 礼包ID
 var item2countMap: Dictionary[int, int]  # 普通奖励
@@ -10,17 +10,17 @@ var iconFile: String  # 礼包图标
 var RefVipitem2vipcountMap: Dictionary[int, DataOther_Loot]
 
 # 内部存储
-static var _data: Dictionary[int, DataOther_Signin] = {}
+static var _data: Dictionary[int, DataOther_Sign_in] = {}
 # 主键查询
-static func find(id: int) -> DataOther_Signin:
+static func find(id: int) -> DataOther_Sign_in:
 	return _data.get(id)
 # 获取所有数据
-static func all() -> Array[DataOther_Signin]:
+static func all() -> Array[DataOther_Sign_in]:
 	return _data.values()
 
 # 字符串表示
 func _to_string() -> String:
-	return "DataOther_Signin{" + str(id) + "," + str(item2countMap) + "," + str(vipitem2vipcountMap) + "," + str(viplevel) + "," + iconFile + "}"
+	return "DataOther_Sign_in{" + str(id) + "," + str(item2countMap) + "," + str(vipitem2vipcountMap) + "," + str(viplevel) + "," + iconFile + "}"
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
@@ -31,8 +31,8 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 		_data[item.id] = item
 
 # 创建实例
-static func _create(stream: ConfigStream) -> DataOther_Signin:
-	var instance = DataOther_Signin.new()
+static func _create(stream: ConfigStream) -> DataOther_Sign_in:
+	var instance = DataOther_Sign_in.new()
 	instance.id = stream.read_int32()
 	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
@@ -52,7 +52,7 @@ func _resolve(errors: ConfigErrors):
 	for k in vipitem2vipcountMap.keys():
 		var v = DataOther_Loot.find(vipitem2vipcountMap[k])
 		if v == null:
-			errors.ref_null("other.signin", "vipitem2vipcountMap")
+			errors.ref_null("other.sign_in", "vipitem2vipcountMap")
 		RefVipitem2vipcountMap[k] = v
 
 static func _resolve_refs(errors: ConfigErrors):

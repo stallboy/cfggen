@@ -7,14 +7,14 @@ local cfg = require "cfg._cfgs"
 ---@field chanceList table<number,number> , 掉落0件物品的概率
 ---@field get fun(lootid:number):cfg.other.loot
 ---@field all table<any,cfg.other.loot>
----@field ListRefLootid table<number,cfg.other.lootitem>
----@field ListRefAnotherWay table<number,cfg.other.lootitem>
+---@field ListRefLootid table<number,cfg.other.loot_item>
+---@field ListRefAnotherWay table<number,cfg.other.loot_item>
 
 local this = cfg.other.loot
 
 local mk = cfg._mk.i18n_table(this, { { 'all', 'get', 1 }, }, nil, { 
-    { 'ListRefLootid', 2, cfg.other.lootitem, 'all', 1, 1 }, 
-    { 'ListRefAnotherWay', 2, cfg.other.lootitem, 'all', 1, 1 }, }, 
+    { 'ListRefLootid', 2, cfg.other.loot_item, 'all', 1, 1 }, 
+    { 'ListRefAnotherWay', 2, cfg.other.loot_item, 'all', 1, 1 }, }, 
     { name = 1 },
     'lootid', -- int, 序号
     'ename', -- str

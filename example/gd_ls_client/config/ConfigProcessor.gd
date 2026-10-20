@@ -1,34 +1,36 @@
 class_name ConfigProcessor
 
+const TABLE_NAMES: Array[String] = [
+	"ai.ai",
+	"ai.ai_action",
+	"ai.ai_condition",
+	"equip.ability",
+	"equip.equip_config",
+	"equip.jewelry",
+	"equip.jewelry_suit",
+	"equip.jewelry_type",
+	"equip.rank",
+	"other.ArgCaptureMode",
+	"other.drop",
+	"other.loot",
+	"other.monster",
+	"other.sign_in",
+	"task.complete_condition_type",
+	"task.task",
+	"task.task2",
+	"task.task_extra_exp",
+]
+
 func load_from_package(package: ConfigPackage, errors: ConfigErrors) -> ConfigStream:
 	return ConfigLoader.load_package(package, load_from_stream, errors, ["zh_cn", "en", "tw"])
 
 # 从流加载所有配置（新格式）
 func load_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var config_nulls: Array[String] = []
-	config_nulls.append("ai.ai")
-	config_nulls.append("ai.ai_action")
-	config_nulls.append("ai.ai_condition")
-	config_nulls.append("equip.ability")
-	config_nulls.append("equip.equipconfig")
-	config_nulls.append("equip.jewelry")
-	config_nulls.append("equip.jewelrysuit")
-	config_nulls.append("equip.jewelrytype")
-	config_nulls.append("equip.rank")
-	config_nulls.append("other.ArgCaptureMode")
-	config_nulls.append("other.drop")
-	config_nulls.append("other.loot")
-	config_nulls.append("other.monster")
-	config_nulls.append("other.signin")
-	config_nulls.append("task.completeconditiontype")
-	config_nulls.append("task.task")
-	config_nulls.append("task.task2")
-	config_nulls.append("task.taskextraexp")
 	# 读取表数量
 	var tables = stream.read_tables()
 	if not stream.valid():
 		return
-	for table_name in config_nulls:
+	for table_name in TABLE_NAMES:
 		if not tables.has(table_name):
 			stream.fail("Missing table in standalone package: " + table_name)
 			return
@@ -37,110 +39,92 @@ func load_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 
 		match table_name:
 			"ai.ai":
-				config_nulls.erase("ai.ai")
 				DataAi_Ai._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"ai.ai_action":
-				config_nulls.erase("ai.ai_action")
 				DataAi_Ai_action._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"ai.ai_condition":
-				config_nulls.erase("ai.ai_condition")
 				DataAi_Ai_condition._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"equip.ability":
-				config_nulls.erase("equip.ability")
 				DataEquip_Ability._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
-			"equip.equipconfig":
-				config_nulls.erase("equip.equipconfig")
-				DataEquip_Equipconfig._init_from_stream(table_input, _errors)
+			"equip.equip_config":
+				DataEquip_Equip_config._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"equip.jewelry":
-				config_nulls.erase("equip.jewelry")
 				DataEquip_Jewelry._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
-			"equip.jewelrysuit":
-				config_nulls.erase("equip.jewelrysuit")
-				DataEquip_Jewelrysuit._init_from_stream(table_input, _errors)
+			"equip.jewelry_suit":
+				DataEquip_Jewelry_suit._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
-			"equip.jewelrytype":
-				config_nulls.erase("equip.jewelrytype")
-				DataEquip_Jewelrytype._init_from_stream(table_input, _errors)
+			"equip.jewelry_type":
+				DataEquip_Jewelry_type._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"equip.rank":
-				config_nulls.erase("equip.rank")
 				DataEquip_Rank._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"other.ArgCaptureMode":
-				config_nulls.erase("other.ArgCaptureMode")
 				DataOther_ArgCaptureMode._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"other.drop":
-				config_nulls.erase("other.drop")
 				DataOther_Drop._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"other.loot":
-				config_nulls.erase("other.loot")
 				DataOther_Loot._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"other.monster":
-				config_nulls.erase("other.monster")
 				DataOther_Monster._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
-			"other.signin":
-				config_nulls.erase("other.signin")
-				DataOther_Signin._init_from_stream(table_input, _errors)
+			"other.sign_in":
+				DataOther_Sign_in._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
-			"task.completeconditiontype":
-				config_nulls.erase("task.completeconditiontype")
-				DataTask_Completeconditiontype._init_from_stream(table_input, _errors)
+			"task.complete_condition_type":
+				DataTask_Complete_condition_type._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"task.task":
-				config_nulls.erase("task.task")
 				DataTask_Task._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
 			"task.task2":
-				config_nulls.erase("task.task2")
 				DataTask_Task2._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
-			"task.taskextraexp":
-				config_nulls.erase("task.taskextraexp")
-				DataTask_Taskextraexp._init_from_stream(table_input, _errors)
+			"task.task_extra_exp":
+				DataTask_Task_extra_exp._init_from_stream(table_input, _errors)
 				if not table_input.require_end():
 					stream.fail("Invalid table: " + table_name)
 					return
@@ -148,13 +132,9 @@ func load_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 				# 未知表，跳过
 				pass
 
-	# 检查缺失的配置表
-	for table_name in config_nulls:
-		_errors.config_null(table_name)
-
 	# 解析外键引用
 	DataEquip_Jewelry._resolve_refs(_errors)
 	DataOther_Monster._resolve_refs(_errors)
-	DataOther_Signin._resolve_refs(_errors)
+	DataOther_Sign_in._resolve_refs(_errors)
 	DataTask_Task._resolve_refs(_errors)
 	DataTask_Task2._resolve_refs(_errors)

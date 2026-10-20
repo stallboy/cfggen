@@ -10,7 +10,7 @@ public class CfgMonster {
     private int lootItemId;
     private java.util.Map<String, Integer> enumMap1;
     private java.util.Map<Integer, String> enumMap2;
-    private config.other.CfgLootitem RefLoot;
+    private config.other.CfgLoot_item RefLoot;
     private config.other.CfgLoot RefAllLoot;
     private java.util.Map<Integer, config.other.CfgArgCaptureMode> RefEnumMap2;
 
@@ -95,7 +95,7 @@ public class CfgMonster {
         return enumMap2;
     }
 
-    public config.other.CfgLootitem refLoot() {
+    public config.other.CfgLoot_item refLoot() {
         return RefLoot;
     }
 
@@ -113,8 +113,8 @@ public class CfgMonster {
     }
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
-        this.RefLoot = mgr.getOtherLootitem(this.lootId, this.lootItemId);
-        if (this.RefLoot == null) errors.missingReference("other.monster", "Loot", "other.lootitem", java.util.List.of(this.lootId, this.lootItemId));
+        this.RefLoot = mgr.getOtherLoot_item(this.lootId, this.lootItemId);
+        if (this.RefLoot == null) errors.missingReference("other.monster", "Loot", "other.loot_item", java.util.List.of(this.lootId, this.lootItemId));
         this.RefAllLoot = mgr.getOtherLoot(this.lootId);
         if (this.RefAllLoot == null) errors.missingReference("other.monster", "AllLoot", "other.loot", this.lootId);
         if (this.enumMap2.isEmpty()) {

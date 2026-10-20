@@ -96,7 +96,7 @@ public class LoadConfig {
             CodeDataInspector inspector = new CodeDataInspector(ConfigMgr.getMgr(), ConfigCodeSchema.getCodeSchema());
             CodeDataPrinter printer = new CodeDataPrinter(inspector);
             System.out.println(printer.get("other.monster", "1"));
-            System.out.println(printer.get("other.keytest", "1,2"));
+            System.out.println(printer.get("other.key_test", "1,2"));
             System.out.println(printer.query("1234", ""));
             System.out.println(printer.schema("monster"));
 

@@ -1,15 +1,15 @@
 local cfg = require "cfg._cfgs"
 local Beans = cfg._beans
 
----@class cfg.equip.jewelryrandom
+---@class cfg.equip.jewelry_random
 ---@field lvlRank Beans.levelrank , 等级
 ---@field attackRange Beans.range , 最小攻击力
 ---@field otherRange table<number,Beans.range> , 最小防御力
 ---@field testPack table<number,Beans.equip.testpackbean> , 测试pack
----@field get fun(LvlRank:Beans.levelrank):cfg.equip.jewelryrandom
----@field all table<any,cfg.equip.jewelryrandom>
+---@field get fun(LvlRank:Beans.levelrank):cfg.equip.jewelry_random
+---@field all table<any,cfg.equip.jewelry_random>
 
-local this = cfg.equip.jewelryrandom
+local this = cfg.equip.jewelry_random
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil, 
     'lvlRank', -- LevelRank, 等级

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 namespace Config.Other
 {
 
-public partial class DSignin
+public partial class DSignIn
 {
     public int Id { get; init; } /* 礼包ID */
     public IReadOnlyDictionary<int, int> Item2countMap { get; init; } = null!; /* 普通奖励 */
@@ -11,19 +11,19 @@ public partial class DSignin
     public string IconFile { get; init; } = null!; /* 礼包图标 */
     public IReadOnlyDictionary<int, Other.DLoot> RefVipitem2vipcountMap { get; private set; } = null!;
 
-    public static DSignin? Get(int id)
+    public static DSignIn? Get(int id)
         => Get(ConfigMgr.GetMgr(), id);
 
-    public static DSignin? Get(ConfigMgr config, int id)
+    public static DSignIn? Get(ConfigMgr config, int id)
     {
-        var index = config._other_dsignin_All;
+        var index = config._other_dsign_uin_All;
         return index.TryGetValue(id, out var result) ? result : null;
     }
 
-    public static IReadOnlyList<DSignin> All()
+    public static IReadOnlyList<DSignIn> All()
         => All(ConfigMgr.GetMgr());
 
-    public static IReadOnlyList<DSignin> All(ConfigMgr config)
-        => config._other_dsignin_Rows;
+    public static IReadOnlyList<DSignIn> All(ConfigMgr config)
+        => config._other_dsign_uin_Rows;
 }
 }

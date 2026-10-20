@@ -14,9 +14,9 @@ public partial class DJewelry
     public int KeyAbilityValue { get; init; } /* 关键属性数值 */
     public int SalePrice { get; init; } /* 售卖价格 */
     public string Description { get; init; } = null!; /* 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。 */
-    public Equip.DJewelryrandom RefLvlRank { get; private set; } = null!;
-    public Equip.DJewelrytype RefJType { get; private set; }
-    public Equip.DJewelrysuit? NullableRefSuitID { get; private set; }
+    public Equip.DJewelryRandom RefLvlRank { get; private set; } = null!;
+    public Equip.DJewelryType RefJType { get; private set; }
+    public Equip.DJewelrySuit? NullableRefSuitID { get; private set; }
     public Equip.DAbility RefKeyAbility { get; private set; }
 
     public static DJewelry? Get(int iD)

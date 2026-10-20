@@ -13,7 +13,7 @@ public partial class DTask2
     public required IReadOnlyList<int> TestList { get; init; }
     public required IReadOnlyList<DPosition> TestListStruct { get; init; }
     public required IReadOnlyList<Ai.DTriggerTick> TestListInterface { get; init; }
-    public Task.DTaskextraexp? NullableRefTaskid { get; private set; }
+    public Task.DTaskExtraExp? NullableRefTaskid { get; private set; }
     public Task.DTask? NullableRefNexttask { get; private set; }
 
     public static DTask2? Get(int taskid)

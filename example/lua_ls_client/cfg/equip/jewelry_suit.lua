@@ -1,6 +1,6 @@
 local cfg = require "cfg._cfgs"
 
----@class cfg.equip.jewelrysuit
+---@class cfg.equip.jewelry_suit
 ---@field suitID number , 饰品套装ID
 ---@field ename string 
 ---@field name text , 策划用名字
@@ -11,11 +11,11 @@ local cfg = require "cfg._cfgs"
 ---@field ability3 number , 套装属性类型3（装备套装中的四件时增加的属性）
 ---@field ability3Value number , 套装属性3
 ---@field suitList table<number,number> , 部件1
----@field get fun(SuitID:number):cfg.equip.jewelrysuit
----@field SpecialSuit cfg.equip.jewelrysuit
----@field all table<any,cfg.equip.jewelrysuit>
+---@field get fun(SuitID:number):cfg.equip.jewelry_suit
+---@field SpecialSuit cfg.equip.jewelry_suit
+---@field all table<any,cfg.equip.jewelry_suit>
 
-local this = cfg.equip.jewelrysuit
+local this = cfg.equip.jewelry_suit
 
 local mk = cfg._mk.i18n_table(this, { { 'all', 'get', 1 }, }, 2, nil, 
     { name = 1 },

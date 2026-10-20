@@ -45,7 +45,7 @@ struct LevelRank {
     rank:int;
 }
 
-table jewelryrandom[lvlRank] {
+table jewelry_random[lvlRank] {
     lvlRank:LevelRank;
     attack:int;
 }
@@ -60,7 +60,7 @@ table jewelryrandom[lvlRank] {
 使用多个字段组合作为主键。
 
 ```cfg
-table jewelryrandom[level,rank] {
+table jewelry_random[level,rank] {
     level:int;
     rank:int;
     attack:int;
@@ -195,17 +195,17 @@ table monster[id] {
     id:int;
     lootId:int; // loot
     lootItemId:int; // item
-    ->Loot:[lootId,lootItemId] ->lootitem;
+    ->Loot:[lootId,lootItemId] ->loot_item;
     ->AllLoot:[lootId] ->loot[id];
 }
 ```
 
 **语法解析**：
-- `->Loot:[lootId,lootItemId] ->lootitem`
+- `->Loot:[lootId,lootItemId] ->loot_item`
   - `->`：外键定义标识
   - `Loot`：外键名称
   - `[lootId,lootItemId]`：本地键由两个字段组成
-  - `->lootitem`：引用目标表
+  - `->loot_item`：引用目标表
 
 ```cfg
 table drop[dropid] {
@@ -276,7 +276,7 @@ struct MonsterDrops {
 
 ```cfg
 table task[taskid] (entry='entry') {
-    taskid:int ->task.taskextraexp (nullable); // 任务id
+    taskid:int ->task.task_extra_exp (nullable); // 任务id
     entry:str;
     text:text;
     nexttask:int ->task (nullable);

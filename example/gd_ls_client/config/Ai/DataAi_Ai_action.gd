@@ -34,9 +34,9 @@ static func _create(stream: ConfigStream) -> DataAi_Ai_action:
 	instance.iD = stream.read_int32()
 	instance.desc = stream.read_string_in_pool()
 	instance.formulaID = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.argIList.append(stream.read_int32())
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.argSList.append(stream.read_int32())
 	return instance
 

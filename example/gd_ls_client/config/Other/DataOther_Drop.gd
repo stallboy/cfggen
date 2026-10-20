@@ -32,9 +32,9 @@ static func _create(stream: ConfigStream) -> DataOther_Drop:
 	var instance = DataOther_Drop.new()
 	instance.dropid = stream.read_int32()
 	instance.name = ConfigText._create(stream)
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.items.append(DataOther_DropItem._create(stream))
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_int32()
 		instance.testmap[k] = v

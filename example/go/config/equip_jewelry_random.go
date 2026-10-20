@@ -2,15 +2,15 @@ package config
 
 import "fmt"
 
-type EquipJewelryrandom struct {
+type EquipJewelry_random struct {
     lvlRank *LevelRank //等级
     attackRange *Range //最小攻击力
     otherRange []*Range //最小防御力
     testPack []*EquipTestPackBean //测试pack
 }
 
-func createEquipJewelryrandom(stream *Stream) *EquipJewelryrandom {
-    v := &EquipJewelryrandom{}
+func createEquipJewelry_random(stream *Stream) *EquipJewelry_random {
+    v := &EquipJewelry_random{}
     v.lvlRank = createLevelRank(stream)
     v.attackRange = createRange(stream)
     otherRangeSize := stream.ReadCount(0)
@@ -26,46 +26,46 @@ func createEquipJewelryrandom(stream *Stream) *EquipJewelryrandom {
     return v
 }
 
-func (t *EquipJewelryrandom) String() string {
-    return fmt.Sprintf("EquipJewelryrandom{lvlRank=%v, attackRange=%v, otherRange=%v, testPack=%v}", fmt.Sprintf("%v", t.lvlRank), fmt.Sprintf("%v", t.attackRange), fmt.Sprintf("%v", t.otherRange), fmt.Sprintf("%v", t.testPack))
+func (t *EquipJewelry_random) String() string {
+    return fmt.Sprintf("EquipJewelry_random{lvlRank=%v, attackRange=%v, otherRange=%v, testPack=%v}", fmt.Sprintf("%v", t.lvlRank), fmt.Sprintf("%v", t.attackRange), fmt.Sprintf("%v", t.otherRange), fmt.Sprintf("%v", t.testPack))
 }
 
 //getters
-func (t *EquipJewelryrandom) LvlRank() *LevelRank {
+func (t *EquipJewelry_random) LvlRank() *LevelRank {
     return t.lvlRank
 }
 
-func (t *EquipJewelryrandom) AttackRange() *Range {
+func (t *EquipJewelry_random) AttackRange() *Range {
     return t.attackRange
 }
 
-func (t *EquipJewelryrandom) OtherRange() []*Range {
+func (t *EquipJewelry_random) OtherRange() []*Range {
     return t.otherRange
 }
 
-func (t *EquipJewelryrandom) TestPack() []*EquipTestPackBean {
+func (t *EquipJewelry_random) TestPack() []*EquipTestPackBean {
     return t.testPack
 }
 
-type EquipJewelryrandomMgr struct {
-    all []*EquipJewelryrandom
-    lvlRankMap map[*LevelRank]*EquipJewelryrandom
+type EquipJewelry_randomMgr struct {
+    all []*EquipJewelry_random
+    lvlRankMap map[*LevelRank]*EquipJewelry_random
 }
 
-func(t *EquipJewelryrandomMgr) GetAll() []*EquipJewelryrandom {
+func(t *EquipJewelry_randomMgr) GetAll() []*EquipJewelry_random {
     return t.all
 }
 
-func(t *EquipJewelryrandomMgr) Get(lvlRank *LevelRank) *EquipJewelryrandom {
+func(t *EquipJewelry_randomMgr) Get(lvlRank *LevelRank) *EquipJewelry_random {
     return t.lvlRankMap[lvlRank]
 }
 
-func (t *EquipJewelryrandomMgr) Init(stream *Stream) {
+func (t *EquipJewelry_randomMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
-    t.all = make([]*EquipJewelryrandom, 0, cnt)
-    t.lvlRankMap = make(map[*LevelRank]*EquipJewelryrandom, cnt)
+    t.all = make([]*EquipJewelry_random, 0, cnt)
+    t.lvlRankMap = make(map[*LevelRank]*EquipJewelry_random, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := createEquipJewelryrandom(stream)
+        v := createEquipJewelry_random(stream)
         t.all = append(t.all, v)
         t.lvlRankMap[v.lvlRank] = v
     }

@@ -1,5 +1,5 @@
-class_name DataTask_Taskextraexp
-## task.taskextraexp
+class_name DataTask_Task_extra_exp
+## task.task_extra_exp
 # 公开属性
 var taskid: int  # 任务完成条件类型（id的范围为1-100）
 var extraexp: int  # 额外奖励经验
@@ -11,17 +11,17 @@ var fieldc: String
 var fieldd: String
 
 # 内部存储
-static var _data: Dictionary[int, DataTask_Taskextraexp] = {}
+static var _data: Dictionary[int, DataTask_Task_extra_exp] = {}
 # 主键查询
-static func find(id: int) -> DataTask_Taskextraexp:
+static func find(id: int) -> DataTask_Task_extra_exp:
 	return _data.get(id)
 # 获取所有数据
-static func all() -> Array[DataTask_Taskextraexp]:
+static func all() -> Array[DataTask_Task_extra_exp]:
 	return _data.values()
 
 # 字符串表示
 func _to_string() -> String:
-	return "DataTask_Taskextraexp{" + str(taskid) + "," + str(extraexp) + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + "," + fieldd + "}"
+	return "DataTask_Task_extra_exp{" + str(taskid) + "," + str(extraexp) + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + "," + fieldd + "}"
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
@@ -32,8 +32,8 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 		_data[item.taskid] = item
 
 # 创建实例
-static func _create(stream: ConfigStream) -> DataTask_Taskextraexp:
-	var instance = DataTask_Taskextraexp.new()
+static func _create(stream: ConfigStream) -> DataTask_Task_extra_exp:
+	var instance = DataTask_Task_extra_exp.new()
 	instance.taskid = stream.read_int32()
 	instance.extraexp = stream.read_int32()
 	instance.test1 = stream.read_string_in_pool()

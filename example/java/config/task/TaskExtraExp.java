@@ -1,7 +1,7 @@
 package config.task;
 
-// 来自：task/taskextraexp.csv
-public class Taskextraexp {
+// 来自：task/task_extra_exp.csv
+public class TaskExtraExp {
     private int taskid;
     private int extraexp;
     private String test1;
@@ -9,11 +9,11 @@ public class Taskextraexp {
     private String fielda;
     private String fieldb;
     private String fieldc;
-    private Taskextraexp() {
+    private TaskExtraExp() {
     }
 
-    public static Taskextraexp _create(configgen.genjava.ConfigInput input) {
-        Taskextraexp self = new Taskextraexp();
+    public static TaskExtraExp _create(configgen.genjava.ConfigInput input) {
+        TaskExtraExp self = new TaskExtraExp();
         self.taskid = input.readInt();
         self.extraexp = input.readInt();
         self.test1 = input.readStringInPool();
@@ -63,14 +63,14 @@ public class Taskextraexp {
         return "(" + taskid + "," + extraexp + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + ")";
     }
 
-    public static Taskextraexp get(int taskid) {
+    public static TaskExtraExp get(int taskid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getTaskTaskextraexp(taskid);
+        return mgr.getTaskTaskExtraExp(taskid);
     }
 
-    public static java.util.Collection<Taskextraexp> all() {
+    public static java.util.Collection<TaskExtraExp> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.allTaskTaskextraexp();
+        return mgr.allTaskTaskExtraExp();
     }
 
 

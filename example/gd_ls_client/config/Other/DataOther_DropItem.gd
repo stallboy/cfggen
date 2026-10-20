@@ -14,7 +14,7 @@ func _to_string() -> String:
 static func _create(stream: ConfigStream) -> DataOther_DropItem:
 	var instance = DataOther_DropItem.new()
 	instance.chance = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.itemids.append(stream.read_int32())
 	instance.countmin = stream.read_int32()
 	instance.countmax = stream.read_int32()

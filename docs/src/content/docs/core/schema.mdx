@@ -176,8 +176,8 @@ struct Time (sep=':'){
 
 ```cfg
 // 任务完成条件接口
-// 定义多种任务完成条件的实现方式，通过枚举表completeconditiontype选择
-interface completecondition (enumRef='completeconditiontype') {
+// 定义多种任务完成条件的实现方式，通过枚举表complete_condition_type选择
+interface completecondition (enumRef='complete_condition_type') {
 	// 击杀怪物条件
 	struct KillMonster {
 		monsterid:int ->npc.monster; // 怪物ID，外键指向npc表
@@ -260,7 +260,7 @@ interface taskexp (enumRef='taskexptype', defaultImpl='ConstValue') {
 ```cfg
 // 任务完成条件类型枚举表
 // 为completecondition接口提供下拉选项
-table completeconditiontype[id] (enum='name') {
+table complete_condition_type[id] (enum='name') {
 	id:int;   // 任务完成条件类型ID
 	name:str; // 程序用名称（必须包含completecondition接口的所有实现类名）
 }
@@ -276,7 +276,7 @@ table taskexptype[id] (enum='name') {
 // 存储所有任务数据和完成条件
 table task[taskid] (entry='entry') {
 	[nexttask];                           // 定义唯一键
-	taskid:int ->task.taskextraexp (nullable); // 任务ID，外键（可空）
+	taskid:int ->task.task_extra_exp (nullable); // 任务ID，外键（可空）
 	entry:str;                           // 入口标识，程序代码直接访问
 	text:text;                           // 国际化文本
 	nexttask:int ->task (nullable);      // 下一个任务ID，外键（可空）
@@ -288,7 +288,7 @@ table task[taskid] (entry='entry') {
 ```
 
 **表设计说明：**
-- **completeconditiontype**：枚举表，定义任务完成条件类型
+- **complete_condition_type**：枚举表，定义任务完成条件类型
 - **taskexptype**：枚举表，定义经验公式类型
 - **task**：主任务表，包含复杂的数据结构和关联关系
 - **唯一键**：`[nexttask]`会生成`GetByNextTask`访问方法

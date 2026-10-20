@@ -2,7 +2,7 @@ using System.Collections.Generic;
 namespace Config.Equip
 {
 
-public enum DJewelrytype
+public enum DJewelryType
 {
     Jade,
     Bracelet,
@@ -10,33 +10,33 @@ public enum DJewelrytype
     Bottle,
 }
 
-public partial class DJewelrytypeInfo
+public partial class DJewelryTypeInfo
 {
     public string TypeName { get; init; } = null!; /* 程序用名字 */
-    public DJewelrytype EEnum { get; init; }
+    public DJewelryType EEnum { get; init; }
 
-    public static DJewelrytypeInfo? Get(string typeName)
+    public static DJewelryTypeInfo? Get(string typeName)
         => Get(ConfigMgr.GetMgr(), typeName);
 
-    public static DJewelrytypeInfo? Get(ConfigMgr config, string typeName)
+    public static DJewelryTypeInfo? Get(ConfigMgr config, string typeName)
     {
-        var index = config._equip_djewelrytype_All;
+        var index = config._equip_djewelry_utype_All;
         return index.TryGetValue(typeName, out var result) ? result : null;
     }
 
-    public static IReadOnlyList<DJewelrytypeInfo> All()
+    public static IReadOnlyList<DJewelryTypeInfo> All()
         => All(ConfigMgr.GetMgr());
 
-    public static IReadOnlyList<DJewelrytypeInfo> All(ConfigMgr config)
-        => config._equip_djewelrytype_Rows;
+    public static IReadOnlyList<DJewelryTypeInfo> All(ConfigMgr config)
+        => config._equip_djewelry_utype_Rows;
 }
 
-public static class DJewelrytypeExtensions
+public static class DJewelryTypeExtensions
 {
-    public static DJewelrytypeInfo Info(this DJewelrytype e)
+    public static DJewelryTypeInfo Info(this DJewelryType e)
         => e.Info(ConfigMgr.GetMgr());
 
-    public static DJewelrytypeInfo Info(this DJewelrytype e, ConfigMgr config)
-        => config._equip_djewelrytype_Symbols[(int)e]!;
+    public static DJewelryTypeInfo Info(this DJewelryType e, ConfigMgr config)
+        => config._equip_djewelry_utype_Symbols[(int)e]!;
 }
 }

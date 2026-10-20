@@ -36,15 +36,15 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 static func _create(stream: ConfigStream) -> DataOther_Monster:
 	var instance = DataOther_Monster.new()
 	instance.id = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.posList.append(DataPosition._create(stream))
 	instance.lootId = stream.read_int32()
 	instance.lootItemId = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		var k = stream.read_string_in_pool()
 		var v = stream.read_int32()
 		instance.enumMap1[k] = v
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_string_in_pool()
 		instance.enumMap2[k] = v

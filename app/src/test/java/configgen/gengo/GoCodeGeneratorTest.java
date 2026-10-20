@@ -32,6 +32,22 @@ class GoCodeGeneratorTest {
 
     private @TempDir Path tempDir;
 
+    @Test
+    void testSuffixDoesNotTurnGeneratedTablesIntoGoTestFiles() throws IOException {
+        var context = TestCtx.newContext(tempDir, """
+                table key_test[id] { id:int; }
+                table key_test_cfg[id] { id:int; }
+                """, Map.of("key_test", "id\nid\n1\n", "key_test_cfg", "id\nid\n2\n"));
+        Path output = tempDir.resolve("output");
+        new GoCodeGenerator(new ParameterParser("go,dir:" + output)).generate(context);
+        try (var files = Files.list(output.resolve("config"))) {
+            assertTrue(files.noneMatch(path -> path.getFileName().toString().endsWith("_test.go")),
+                    "Generated tables must be included in ordinary Go builds");
+        }
+        assertTrue(Files.readString(output.resolve("config/key_test.cfg.go")).contains("type Key_test struct"));
+        assertTrue(Files.readString(output.resolve("config/key_test_cfg.go")).contains("type Key_test_cfg struct"));
+    }
+
     @BeforeAll
     static void setupLogger() {
         Logger.setPrinter(Logger.Printer.nullPrinter);

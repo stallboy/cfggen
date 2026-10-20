@@ -3,7 +3,7 @@ package config.task.completecondition;
 import configgen.genjava.LoadValueErrs;
 
 public sealed interface CfgCompletecondition permits CfgKillMonster, CfgTalkNpc, CfgTestNoColumn, CfgChat, CfgConditionAnd, CfgCollectItem, CfgAa {
-    config.task.CfgCompleteconditiontype type();
+    config.task.CfgComplete_condition_type type();
 
     default void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
     }

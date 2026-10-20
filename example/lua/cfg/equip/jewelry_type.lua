@@ -1,15 +1,15 @@
 local cfg = require "cfg._cfgs"
 
----@class cfg.equip.jewelrytype
+---@class cfg.equip.jewelry_type
 ---@field typeName string , 程序用名字
----@field get fun(TypeName:string):cfg.equip.jewelrytype
----@field Jade cfg.equip.jewelrytype
----@field Bracelet cfg.equip.jewelrytype
----@field Magic cfg.equip.jewelrytype
----@field Bottle cfg.equip.jewelrytype
----@field all table<any,cfg.equip.jewelrytype>
+---@field get fun(TypeName:string):cfg.equip.jewelry_type
+---@field Jade cfg.equip.jewelry_type
+---@field Bracelet cfg.equip.jewelry_type
+---@field Magic cfg.equip.jewelry_type
+---@field Bottle cfg.equip.jewelry_type
+---@field all table<any,cfg.equip.jewelry_type>
 
-local this = cfg.equip.jewelrytype
+local this = cfg.equip.jewelry_type
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 1, nil, 
     'typeName' -- str, 程序用名字

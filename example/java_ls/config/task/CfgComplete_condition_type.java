@@ -1,8 +1,8 @@
 package config.task;
 
 // 任务完成条件类型
-// 来自：task/completeconditiontype任务完成条件类型.csv
-public enum CfgCompleteconditiontype {
+// 来自：task/complete_condition_type任务完成条件类型.csv
+public enum CfgComplete_condition_type {
     KILLMONSTER("KillMonster", 1),
     TALKNPC("TalkNpc", 2),
     COLLECTITEM("CollectItem", 3),
@@ -15,22 +15,22 @@ public enum CfgCompleteconditiontype {
     private final int value;
 
 
-    CfgCompleteconditiontype(String name, int value) {
+    CfgComplete_condition_type(String name, int value) {
         this.name = name;
         this.value = value;
     }
 
-    public static final java.util.Map<Integer, CfgCompleteconditiontype> map;
+    public static final java.util.Map<Integer, CfgComplete_condition_type> map;
 
     static {
-        var symbols = new java.util.LinkedHashMap<Integer, CfgCompleteconditiontype>();
-        for(CfgCompleteconditiontype e : CfgCompleteconditiontype.values()) {
+        var symbols = new java.util.LinkedHashMap<Integer, CfgComplete_condition_type>();
+        for(CfgComplete_condition_type e : CfgComplete_condition_type.values()) {
             symbols.put(e.value, e);
         }
         map = java.util.Collections.unmodifiableMap(symbols);
     }
 
-    public static CfgCompleteconditiontype get(int value) {
+    public static CfgComplete_condition_type get(int value) {
         return map.get(value);
     }
 

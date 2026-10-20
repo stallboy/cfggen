@@ -1,18 +1,18 @@
 local cfg = require "cfg._cfgs"
 
----@class cfg.equip.equipconfig
+---@class cfg.equip.equip_config
 ---@field entry string , 入口，程序填
 ---@field stone_count_for_set number , 形成套装的音石数量
 ---@field draw_protect_name string , 保底策略名称
 ---@field broadcastid number , 公告Id
 ---@field broadcast_least_quality number , 公告的最低品质
 ---@field week_reward_mailid number , 抽卡周奖励的邮件id
----@field get fun(entry:string):cfg.equip.equipconfig
----@field Instance cfg.equip.equipconfig
----@field Instance2 cfg.equip.equipconfig
----@field all table<any,cfg.equip.equipconfig>
+---@field get fun(entry:string):cfg.equip.equip_config
+---@field Instance cfg.equip.equip_config
+---@field Instance2 cfg.equip.equip_config
+---@field all table<any,cfg.equip.equip_config>
 
-local this = cfg.equip.equipconfig
+local this = cfg.equip.equip_config
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 1, nil, 
     'entry', -- str, 入口，程序填

@@ -1,13 +1,13 @@
 package config.other;
 
-public class SigninBuilder {
+public class SignInBuilder {
     public int id;
     public java.util.Map<Integer, Integer> item2countMap;
     public java.util.Map<Integer, Integer> vipitem2vipcountMap;
     public int viplevel;
     public String iconFile;
 
-    public Signin build() {
+    public SignIn build() {
         if (item2countMap == null) {
             item2countMap = new java.util.LinkedHashMap<>();
         }
@@ -17,7 +17,7 @@ public class SigninBuilder {
         if (iconFile == null) {
             iconFile = "";
         }
-        return new Signin(this);
+        return new SignIn(this);
     }
 
 }

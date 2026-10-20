@@ -2,8 +2,8 @@ package config.task.completecondition;
 
 public final class CfgTalkNpc implements config.task.completecondition.CfgCompletecondition {
     @Override
-    public config.task.CfgCompleteconditiontype type() {
-        return config.task.CfgCompleteconditiontype.TALKNPC;
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.TALKNPC;
     }
 
     private int npcid;

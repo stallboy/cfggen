@@ -8,8 +8,8 @@ public class CfgLoot {
     private String ename;
     private config.Text name;
     private java.util.List<Integer> chanceList;
-    private java.util.List<config.other.CfgLootitem> ListRefLootid;
-    private java.util.List<config.other.CfgLootitem> ListRefAnotherWay;
+    private java.util.List<config.other.CfgLoot_item> ListRefLootid;
+    private java.util.List<config.other.CfgLoot_item> ListRefAnotherWay;
 
     private CfgLoot() {
     }
@@ -59,11 +59,11 @@ public class CfgLoot {
         return chanceList;
     }
 
-    public java.util.List<config.other.CfgLootitem> listRefLootid() {
+    public java.util.List<config.other.CfgLoot_item> listRefLootid() {
         return ListRefLootid;
     }
 
-    public java.util.List<config.other.CfgLootitem> listRefAnotherWay() {
+    public java.util.List<config.other.CfgLoot_item> listRefAnotherWay() {
         return ListRefAnotherWay;
     }
 
@@ -74,13 +74,13 @@ public class CfgLoot {
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.ListRefLootid = new java.util.ArrayList<>();
-        for (config.other.CfgLootitem v : mgr._get_other_lootitem_All().values()) {
+        for (config.other.CfgLoot_item v : mgr._get_other_loot_item_All().values()) {
             if (v.getLootid() == this.lootid)
                 this.ListRefLootid.add(v);
         }
         this.ListRefLootid = java.util.Collections.unmodifiableList(this.ListRefLootid);
         this.ListRefAnotherWay = new java.util.ArrayList<>();
-        for (config.other.CfgLootitem v : mgr._get_other_lootitem_All().values()) {
+        for (config.other.CfgLoot_item v : mgr._get_other_loot_item_All().values()) {
             if (v.getLootid() == this.lootid)
                 this.ListRefAnotherWay.add(v);
         }

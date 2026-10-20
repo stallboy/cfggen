@@ -10,7 +10,7 @@ public class Task {
     private config.task.completecondition.Completecondition completecondition;
     private int exp;
     private config.task.TestDefaultBean testDefaultBean;
-    private config.task.Taskextraexp NullableRefTaskid;
+    private config.task.TaskExtraExp NullableRefTaskid;
     private config.task.Task NullableRefNexttask;
 
     private Task() {
@@ -71,7 +71,7 @@ public class Task {
         return testDefaultBean;
     }
 
-    public config.task.Taskextraexp nullableRefTaskid() {
+    public config.task.TaskExtraExp nullableRefTaskid() {
         return NullableRefTaskid;
     }
 
@@ -86,7 +86,7 @@ public class Task {
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.completecondition._resolve(mgr, errors);
-        this.NullableRefTaskid = mgr.getTaskTaskextraexp(this.taskid);
+        this.NullableRefTaskid = mgr.getTaskTaskExtraExp(this.taskid);
         this.NullableRefNexttask = mgr.getTaskTask(this.nexttask);
 
     }

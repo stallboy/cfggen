@@ -1,7 +1,7 @@
 package config.task;
 
-// 来自：task/taskextraexp.csv
-public class CfgTaskextraexp {
+// 来自：task/task_extra_exp.csv
+public class CfgTask_extra_exp {
     private int taskid;
     private int extraexp;
     private String test1;
@@ -9,11 +9,11 @@ public class CfgTaskextraexp {
     private String fielda;
     private String fieldb;
     private String fieldc;
-    private CfgTaskextraexp() {
+    private CfgTask_extra_exp() {
     }
 
-    public static CfgTaskextraexp _create(configgen.genjava.ConfigInput input) {
-        CfgTaskextraexp self = new CfgTaskextraexp();
+    public static CfgTask_extra_exp _create(configgen.genjava.ConfigInput input) {
+        CfgTask_extra_exp self = new CfgTask_extra_exp();
         self.taskid = input.readInt();
         self.extraexp = input.readInt();
         self.test1 = input.readStringInPool();
@@ -63,14 +63,14 @@ public class CfgTaskextraexp {
         return "(" + taskid + "," + extraexp + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + ")";
     }
 
-    public static CfgTaskextraexp get(int taskid) {
+    public static CfgTask_extra_exp get(int taskid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getTaskTaskextraexp(taskid);
+        return mgr.getTaskTask_extra_exp(taskid);
     }
 
-    public static java.util.Collection<CfgTaskextraexp> all() {
+    public static java.util.Collection<CfgTask_extra_exp> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.allTaskTaskextraexp();
+        return mgr.allTaskTask_extra_exp();
     }
 
 

@@ -13,9 +13,9 @@ type EquipJewelry struct {
     keyAbilityValue int32 //关键属性数值
     salePrice int32 //售卖价格
     description string //描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
-    refLvlRank *EquipJewelryrandom
-    refJType *EquipJewelrytype
-    nullableRefSuitID *EquipJewelrysuit
+    refLvlRank *EquipJewelry_random
+    refJType *EquipJewelry_type
+    nullableRefSuitID *EquipJewelry_suit
     refKeyAbility *EquipAbility
 }
 
@@ -79,23 +79,23 @@ func (t *EquipJewelry) Description() string {
     return t.description
 }
 
-func (t *EquipJewelry) RefLvlRank() *EquipJewelryrandom {
+func (t *EquipJewelry) RefLvlRank() *EquipJewelry_random {
     if t.refLvlRank == nil {
-        t.refLvlRank = GetEquipJewelryrandomMgr().Get(t.lvlRank)
+        t.refLvlRank = GetEquipJewelry_randomMgr().Get(t.lvlRank)
     }
     return t.refLvlRank
 }
 
-func (t *EquipJewelry) RefJType() *EquipJewelrytype {
+func (t *EquipJewelry) RefJType() *EquipJewelry_type {
     if t.refJType == nil {
-        t.refJType = GetEquipJewelrytypeMgr().Get(t.jType)
+        t.refJType = GetEquipJewelry_typeMgr().Get(t.jType)
     }
     return t.refJType
 }
 
-func (t *EquipJewelry) NullableRefSuitID() *EquipJewelrysuit {
+func (t *EquipJewelry) NullableRefSuitID() *EquipJewelry_suit {
     if t.nullableRefSuitID == nil {
-        t.nullableRefSuitID = GetEquipJewelrysuitMgr().Get(t.suitID)
+        t.nullableRefSuitID = GetEquipJewelry_suitMgr().Get(t.suitID)
     }
     return t.nullableRefSuitID
 }

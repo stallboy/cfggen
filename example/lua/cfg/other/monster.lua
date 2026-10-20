@@ -10,14 +10,14 @@ local Beans = cfg._beans
 ---@field enumMap2 table<number,string> 
 ---@field get fun(id:number):cfg.other.monster
 ---@field all table<any,cfg.other.monster>
----@field RefLoot cfg.other.lootitem
+---@field RefLoot cfg.other.loot_item
 ---@field RefAllLoot cfg.other.loot
 ---@field RefEnumMap2 cfg.other.argcapturemode
 
 local this = cfg.other.monster
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, { 
-    { 'RefLoot', 0, cfg.other.lootitem, 'get', 3, 4 }, 
+    { 'RefLoot', 0, cfg.other.loot_item, 'get', 3, 4 }, 
     { 'RefAllLoot', 0, cfg.other.loot, 'get', 3 }, 
     { 'RefEnumMap2', 3, cfg.other.argcapturemode, 'get', 6 }, }, 
     'id', -- int

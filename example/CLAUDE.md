@@ -24,7 +24,7 @@ config/
 │   └── *.csv           # 掉落、怪物、签到等
 └── task/               # 任务系统配置
     ├── task_任务.csv   # 任务数据
-    └── taskextraexp.csv
+    └── task_extra_exp.csv
 ```
 
 ### 生成的代码目录

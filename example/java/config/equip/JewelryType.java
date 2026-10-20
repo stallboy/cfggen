@@ -1,7 +1,7 @@
 package config.equip;
 
-// 来自：equip/jewelrytype.csv
-public enum Jewelrytype {
+// 来自：equip/jewelry_type.csv
+public enum JewelryType {
     JADE("Jade"),
     BRACELET("Bracelet"),
     MAGIC("Magic"),
@@ -10,21 +10,21 @@ public enum Jewelrytype {
     private final String value;
 
 
-    Jewelrytype(String value) {
+    JewelryType(String value) {
         this.value = value;
     }
 
-    public static final java.util.Map<String, Jewelrytype> map;
+    public static final java.util.Map<String, JewelryType> map;
 
     static {
-        var symbols = new java.util.LinkedHashMap<String, Jewelrytype>();
-        for(Jewelrytype e : Jewelrytype.values()) {
+        var symbols = new java.util.LinkedHashMap<String, JewelryType>();
+        for(JewelryType e : JewelryType.values()) {
             symbols.put(e.value, e);
         }
         map = java.util.Collections.unmodifiableMap(symbols);
     }
 
-    public static Jewelrytype get(String value) {
+    public static JewelryType get(String value) {
         return map.get(value);
     }
 

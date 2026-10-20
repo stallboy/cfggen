@@ -13,16 +13,16 @@ cfg.ai.ai_condition = pre("cfg.ai.ai_condition")
 cfg.equip = {}
 ---@type cfg.equip.ability
 cfg.equip.ability = pre("cfg.equip.ability")
----@type cfg.equip.equipconfig
-cfg.equip.equipconfig = pre("cfg.equip.equipconfig")
+---@type cfg.equip.equip_config
+cfg.equip.equip_config = pre("cfg.equip.equip_config")
 ---@type cfg.equip.jewelry
 cfg.equip.jewelry = pre("cfg.equip.jewelry")
----@type cfg.equip.jewelryrandom
-cfg.equip.jewelryrandom = pre("cfg.equip.jewelryrandom")
----@type cfg.equip.jewelrysuit
-cfg.equip.jewelrysuit = pre("cfg.equip.jewelrysuit")
----@type cfg.equip.jewelrytype
-cfg.equip.jewelrytype = pre("cfg.equip.jewelrytype")
+---@type cfg.equip.jewelry_random
+cfg.equip.jewelry_random = pre("cfg.equip.jewelry_random")
+---@type cfg.equip.jewelry_suit
+cfg.equip.jewelry_suit = pre("cfg.equip.jewelry_suit")
+---@type cfg.equip.jewelry_type
+cfg.equip.jewelry_type = pre("cfg.equip.jewelry_type")
 ---@type cfg.equip.rank
 cfg.equip.rank = pre("cfg.equip.rank")
 cfg.other = {}
@@ -30,24 +30,24 @@ cfg.other = {}
 cfg.other.argcapturemode = pre("cfg.other.argcapturemode")
 ---@type cfg.other.drop
 cfg.other.drop = pre("cfg.other.drop")
----@type cfg.other.keytest
-cfg.other.keytest = pre("cfg.other.keytest")
+---@type cfg.other.key_test
+cfg.other.key_test = pre("cfg.other.key_test")
 ---@type cfg.other.loot
 cfg.other.loot = pre("cfg.other.loot")
----@type cfg.other.lootitem
-cfg.other.lootitem = pre("cfg.other.lootitem")
+---@type cfg.other.loot_item
+cfg.other.loot_item = pre("cfg.other.loot_item")
 ---@type cfg.other.monster
 cfg.other.monster = pre("cfg.other.monster")
----@type cfg.other.signin
-cfg.other.signin = pre("cfg.other.signin")
+---@type cfg.other.sign_in
+cfg.other.sign_in = pre("cfg.other.sign_in")
 cfg.task = {}
----@type cfg.task.completeconditiontype
-cfg.task.completeconditiontype = pre("cfg.task.completeconditiontype")
+---@type cfg.task.complete_condition_type
+cfg.task.complete_condition_type = pre("cfg.task.complete_condition_type")
 ---@type cfg.task.task
 cfg.task.task = pre("cfg.task.task")
 ---@type cfg.task.task2
 cfg.task.task2 = pre("cfg.task.task2")
----@type cfg.task.taskextraexp
-cfg.task.taskextraexp = pre("cfg.task.taskextraexp")
+---@type cfg.task.task_extra_exp
+cfg.task.task_extra_exp = pre("cfg.task.task_extra_exp")
 
 return cfg

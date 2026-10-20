@@ -2,8 +2,8 @@ namespace Config.Task.Completecondition;
 
 public partial class DKillMonster : Task.DCompletecondition
 {
-    public Task.DCompleteconditiontype type() {
-        return Task.DCompleteconditiontype.KillMonster;
+    public Task.DCompleteConditionType type() {
+        return Task.DCompleteConditionType.KillMonster;
     }
 
     public required int Monsterid { get; init; }

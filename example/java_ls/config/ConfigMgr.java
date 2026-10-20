@@ -52,17 +52,17 @@ public class ConfigMgr {
 
     public java.util.Collection<config.ai.CfgAi_condition> allAiAi_condition() { return ai_ai_condition_All.values(); }
 
-    private config.equip.CfgEquipconfig[] equip_equipconfig_Refs;
-    public config.equip.CfgEquipconfig _get_equip_equipconfig_Refs(int index) { return equip_equipconfig_Refs[index]; }
-    public void _set_equip_equipconfig_Refs(config.equip.CfgEquipconfig[] refs) { requireBuilding(); equip_equipconfig_Refs = refs; }
+    private config.equip.CfgEquip_config[] equip_equip_config_Refs;
+    public config.equip.CfgEquip_config _get_equip_equip_config_Refs(int index) { return equip_equip_config_Refs[index]; }
+    public void _set_equip_equip_config_Refs(config.equip.CfgEquip_config[] refs) { requireBuilding(); equip_equip_config_Refs = refs; }
 
-    private java.util.Map<String, config.equip.CfgEquipconfig> equip_equipconfig_All;
-    public java.util.Map<String, config.equip.CfgEquipconfig> _get_equip_equipconfig_All() { return equip_equipconfig_All; }
-    public void _set_equip_equipconfig_All(java.util.Map<String, config.equip.CfgEquipconfig> rows) { requireBuilding(); equip_equipconfig_All = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<String, config.equip.CfgEquip_config> equip_equip_config_All;
+    public java.util.Map<String, config.equip.CfgEquip_config> _get_equip_equip_config_All() { return equip_equip_config_All; }
+    public void _set_equip_equip_config_All(java.util.Map<String, config.equip.CfgEquip_config> rows) { requireBuilding(); equip_equip_config_All = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.equip.CfgEquipconfig getEquipEquipconfig(String entry) { return equip_equipconfig_All.get(entry); }
+    public config.equip.CfgEquip_config getEquipEquip_config(String entry) { return equip_equip_config_All.get(entry); }
 
-    public java.util.Collection<config.equip.CfgEquipconfig> allEquipEquipconfig() { return equip_equipconfig_All.values(); }
+    public java.util.Collection<config.equip.CfgEquip_config> allEquipEquip_config() { return equip_equip_config_All.values(); }
 
     private java.util.Map<Integer, config.equip.CfgJewelry> equip_jewelry_All;
     public java.util.Map<Integer, config.equip.CfgJewelry> _get_equip_jewelry_All() { return equip_jewelry_All; }
@@ -72,25 +72,25 @@ public class ConfigMgr {
 
     public java.util.Collection<config.equip.CfgJewelry> allEquipJewelry() { return equip_jewelry_All.values(); }
 
-    private java.util.Map<config.CfgLevelRank, config.equip.CfgJewelryrandom> equip_jewelryrandom_All;
-    public java.util.Map<config.CfgLevelRank, config.equip.CfgJewelryrandom> _get_equip_jewelryrandom_All() { return equip_jewelryrandom_All; }
-    public void _set_equip_jewelryrandom_All(java.util.Map<config.CfgLevelRank, config.equip.CfgJewelryrandom> rows) { requireBuilding(); equip_jewelryrandom_All = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<config.CfgLevelRank, config.equip.CfgJewelry_random> equip_jewelry_random_All;
+    public java.util.Map<config.CfgLevelRank, config.equip.CfgJewelry_random> _get_equip_jewelry_random_All() { return equip_jewelry_random_All; }
+    public void _set_equip_jewelry_random_All(java.util.Map<config.CfgLevelRank, config.equip.CfgJewelry_random> rows) { requireBuilding(); equip_jewelry_random_All = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.equip.CfgJewelryrandom getEquipJewelryrandom(config.CfgLevelRank lvlRank) { return equip_jewelryrandom_All.get(lvlRank); }
+    public config.equip.CfgJewelry_random getEquipJewelry_random(config.CfgLevelRank lvlRank) { return equip_jewelry_random_All.get(lvlRank); }
 
-    public java.util.Collection<config.equip.CfgJewelryrandom> allEquipJewelryrandom() { return equip_jewelryrandom_All.values(); }
+    public java.util.Collection<config.equip.CfgJewelry_random> allEquipJewelry_random() { return equip_jewelry_random_All.values(); }
 
-    private config.equip.CfgJewelrysuit[] equip_jewelrysuit_Refs;
-    public config.equip.CfgJewelrysuit _get_equip_jewelrysuit_Refs(int index) { return equip_jewelrysuit_Refs[index]; }
-    public void _set_equip_jewelrysuit_Refs(config.equip.CfgJewelrysuit[] refs) { requireBuilding(); equip_jewelrysuit_Refs = refs; }
+    private config.equip.CfgJewelry_suit[] equip_jewelry_suit_Refs;
+    public config.equip.CfgJewelry_suit _get_equip_jewelry_suit_Refs(int index) { return equip_jewelry_suit_Refs[index]; }
+    public void _set_equip_jewelry_suit_Refs(config.equip.CfgJewelry_suit[] refs) { requireBuilding(); equip_jewelry_suit_Refs = refs; }
 
-    private java.util.Map<Integer, config.equip.CfgJewelrysuit> equip_jewelrysuit_All;
-    public java.util.Map<Integer, config.equip.CfgJewelrysuit> _get_equip_jewelrysuit_All() { return equip_jewelrysuit_All; }
-    public void _set_equip_jewelrysuit_All(java.util.Map<Integer, config.equip.CfgJewelrysuit> rows) { requireBuilding(); equip_jewelrysuit_All = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<Integer, config.equip.CfgJewelry_suit> equip_jewelry_suit_All;
+    public java.util.Map<Integer, config.equip.CfgJewelry_suit> _get_equip_jewelry_suit_All() { return equip_jewelry_suit_All; }
+    public void _set_equip_jewelry_suit_All(java.util.Map<Integer, config.equip.CfgJewelry_suit> rows) { requireBuilding(); equip_jewelry_suit_All = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.equip.CfgJewelrysuit getEquipJewelrysuit(int suitID) { return equip_jewelrysuit_All.get(suitID); }
+    public config.equip.CfgJewelry_suit getEquipJewelry_suit(int suitID) { return equip_jewelry_suit_All.get(suitID); }
 
-    public java.util.Collection<config.equip.CfgJewelrysuit> allEquipJewelrysuit() { return equip_jewelrysuit_All.values(); }
+    public java.util.Collection<config.equip.CfgJewelry_suit> allEquipJewelry_suit() { return equip_jewelry_suit_All.values(); }
 
     private config.equip.CfgRank_Detail[] equip_rank_Refs;
     public config.equip.CfgRank_Detail _get_equip_rank_Refs(int index) { return equip_rank_Refs[index]; }
@@ -130,31 +130,31 @@ public class ConfigMgr {
 
     public java.util.Collection<config.other.CfgDrop> allOtherDrop() { return other_drop_All.values(); }
 
-    private java.util.Map<config.other.CfgKeytest.Id1Id2Key, config.other.CfgKeytest> other_keytest_All;
-    public java.util.Map<config.other.CfgKeytest.Id1Id2Key, config.other.CfgKeytest> _get_other_keytest_All() { return other_keytest_All; }
-    public void _set_other_keytest_All(java.util.Map<config.other.CfgKeytest.Id1Id2Key, config.other.CfgKeytest> rows) { requireBuilding(); other_keytest_All = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<config.other.CfgKey_test.Id1Id2Key, config.other.CfgKey_test> other_key_test_All;
+    public java.util.Map<config.other.CfgKey_test.Id1Id2Key, config.other.CfgKey_test> _get_other_key_test_All() { return other_key_test_All; }
+    public void _set_other_key_test_All(java.util.Map<config.other.CfgKey_test.Id1Id2Key, config.other.CfgKey_test> rows) { requireBuilding(); other_key_test_All = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.other.CfgKeytest getOtherKeytest(int id1, long id2) { return other_keytest_All.get(new config.other.CfgKeytest.Id1Id2Key(id1, id2)); }
+    public config.other.CfgKey_test getOtherKey_test(int id1, long id2) { return other_key_test_All.get(new config.other.CfgKey_test.Id1Id2Key(id1, id2)); }
 
-    private java.util.Map<config.other.CfgKeytest.Id1Id3Key, config.other.CfgKeytest> other_keytest_Id1Id3Map;
-    public java.util.Map<config.other.CfgKeytest.Id1Id3Key, config.other.CfgKeytest> _get_other_keytest_Id1Id3Map() { return other_keytest_Id1Id3Map; }
-    public void _set_other_keytest_Id1Id3Map(java.util.Map<config.other.CfgKeytest.Id1Id3Key, config.other.CfgKeytest> rows) { requireBuilding(); other_keytest_Id1Id3Map = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<config.other.CfgKey_test.Id1Id3Key, config.other.CfgKey_test> other_key_test_Id1Id3Map;
+    public java.util.Map<config.other.CfgKey_test.Id1Id3Key, config.other.CfgKey_test> _get_other_key_test_Id1Id3Map() { return other_key_test_Id1Id3Map; }
+    public void _set_other_key_test_Id1Id3Map(java.util.Map<config.other.CfgKey_test.Id1Id3Key, config.other.CfgKey_test> rows) { requireBuilding(); other_key_test_Id1Id3Map = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.other.CfgKeytest getOtherKeytestById1Id3(int id1, int id3) { return other_keytest_Id1Id3Map.get(new config.other.CfgKeytest.Id1Id3Key(id1, id3)); }
+    public config.other.CfgKey_test getOtherKey_testById1Id3(int id1, int id3) { return other_key_test_Id1Id3Map.get(new config.other.CfgKey_test.Id1Id3Key(id1, id3)); }
 
-    private java.util.Map<Long, config.other.CfgKeytest> other_keytest_Id2Map;
-    public java.util.Map<Long, config.other.CfgKeytest> _get_other_keytest_Id2Map() { return other_keytest_Id2Map; }
-    public void _set_other_keytest_Id2Map(java.util.Map<Long, config.other.CfgKeytest> rows) { requireBuilding(); other_keytest_Id2Map = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<Long, config.other.CfgKey_test> other_key_test_Id2Map;
+    public java.util.Map<Long, config.other.CfgKey_test> _get_other_key_test_Id2Map() { return other_key_test_Id2Map; }
+    public void _set_other_key_test_Id2Map(java.util.Map<Long, config.other.CfgKey_test> rows) { requireBuilding(); other_key_test_Id2Map = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.other.CfgKeytest getOtherKeytestById2(long id2) { return other_keytest_Id2Map.get(id2); }
+    public config.other.CfgKey_test getOtherKey_testById2(long id2) { return other_key_test_Id2Map.get(id2); }
 
-    private java.util.Map<config.other.CfgKeytest.Id2Id3Key, config.other.CfgKeytest> other_keytest_Id2Id3Map;
-    public java.util.Map<config.other.CfgKeytest.Id2Id3Key, config.other.CfgKeytest> _get_other_keytest_Id2Id3Map() { return other_keytest_Id2Id3Map; }
-    public void _set_other_keytest_Id2Id3Map(java.util.Map<config.other.CfgKeytest.Id2Id3Key, config.other.CfgKeytest> rows) { requireBuilding(); other_keytest_Id2Id3Map = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<config.other.CfgKey_test.Id2Id3Key, config.other.CfgKey_test> other_key_test_Id2Id3Map;
+    public java.util.Map<config.other.CfgKey_test.Id2Id3Key, config.other.CfgKey_test> _get_other_key_test_Id2Id3Map() { return other_key_test_Id2Id3Map; }
+    public void _set_other_key_test_Id2Id3Map(java.util.Map<config.other.CfgKey_test.Id2Id3Key, config.other.CfgKey_test> rows) { requireBuilding(); other_key_test_Id2Id3Map = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.other.CfgKeytest getOtherKeytestById2Id3(long id2, int id3) { return other_keytest_Id2Id3Map.get(new config.other.CfgKeytest.Id2Id3Key(id2, id3)); }
+    public config.other.CfgKey_test getOtherKey_testById2Id3(long id2, int id3) { return other_key_test_Id2Id3Map.get(new config.other.CfgKey_test.Id2Id3Key(id2, id3)); }
 
-    public java.util.Collection<config.other.CfgKeytest> allOtherKeytest() { return other_keytest_All.values(); }
+    public java.util.Collection<config.other.CfgKey_test> allOtherKey_test() { return other_key_test_All.values(); }
 
     private java.util.Map<Integer, config.other.CfgLoot> other_loot_All;
     public java.util.Map<Integer, config.other.CfgLoot> _get_other_loot_All() { return other_loot_All; }
@@ -164,13 +164,13 @@ public class ConfigMgr {
 
     public java.util.Collection<config.other.CfgLoot> allOtherLoot() { return other_loot_All.values(); }
 
-    private java.util.Map<config.other.CfgLootitem.LootidItemidKey, config.other.CfgLootitem> other_lootitem_All;
-    public java.util.Map<config.other.CfgLootitem.LootidItemidKey, config.other.CfgLootitem> _get_other_lootitem_All() { return other_lootitem_All; }
-    public void _set_other_lootitem_All(java.util.Map<config.other.CfgLootitem.LootidItemidKey, config.other.CfgLootitem> rows) { requireBuilding(); other_lootitem_All = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<config.other.CfgLoot_item.LootidItemidKey, config.other.CfgLoot_item> other_loot_item_All;
+    public java.util.Map<config.other.CfgLoot_item.LootidItemidKey, config.other.CfgLoot_item> _get_other_loot_item_All() { return other_loot_item_All; }
+    public void _set_other_loot_item_All(java.util.Map<config.other.CfgLoot_item.LootidItemidKey, config.other.CfgLoot_item> rows) { requireBuilding(); other_loot_item_All = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.other.CfgLootitem getOtherLootitem(int lootid, int itemid) { return other_lootitem_All.get(new config.other.CfgLootitem.LootidItemidKey(lootid, itemid)); }
+    public config.other.CfgLoot_item getOtherLoot_item(int lootid, int itemid) { return other_loot_item_All.get(new config.other.CfgLoot_item.LootidItemidKey(lootid, itemid)); }
 
-    public java.util.Collection<config.other.CfgLootitem> allOtherLootitem() { return other_lootitem_All.values(); }
+    public java.util.Collection<config.other.CfgLoot_item> allOtherLoot_item() { return other_loot_item_All.values(); }
 
     private java.util.Map<Integer, config.other.CfgMonster> other_monster_All;
     public java.util.Map<Integer, config.other.CfgMonster> _get_other_monster_All() { return other_monster_All; }
@@ -180,13 +180,13 @@ public class ConfigMgr {
 
     public java.util.Collection<config.other.CfgMonster> allOtherMonster() { return other_monster_All.values(); }
 
-    private java.util.Map<Integer, config.other.CfgSignin> other_signin_All;
-    public java.util.Map<Integer, config.other.CfgSignin> _get_other_signin_All() { return other_signin_All; }
-    public void _set_other_signin_All(java.util.Map<Integer, config.other.CfgSignin> rows) { requireBuilding(); other_signin_All = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<Integer, config.other.CfgSign_in> other_sign_in_All;
+    public java.util.Map<Integer, config.other.CfgSign_in> _get_other_sign_in_All() { return other_sign_in_All; }
+    public void _set_other_sign_in_All(java.util.Map<Integer, config.other.CfgSign_in> rows) { requireBuilding(); other_sign_in_All = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.other.CfgSignin getOtherSignin(int id) { return other_signin_All.get(id); }
+    public config.other.CfgSign_in getOtherSign_in(int id) { return other_sign_in_All.get(id); }
 
-    public java.util.Collection<config.other.CfgSignin> allOtherSignin() { return other_signin_All.values(); }
+    public java.util.Collection<config.other.CfgSign_in> allOtherSign_in() { return other_sign_in_All.values(); }
 
     private java.util.Map<Integer, config.task.CfgTask> task_task_All;
     public java.util.Map<Integer, config.task.CfgTask> _get_task_task_All() { return task_task_All; }
@@ -204,12 +204,12 @@ public class ConfigMgr {
 
     public java.util.Collection<config.task.CfgTask2> allTaskTask2() { return task_task2_All.values(); }
 
-    private java.util.Map<Integer, config.task.CfgTaskextraexp> task_taskextraexp_All;
-    public java.util.Map<Integer, config.task.CfgTaskextraexp> _get_task_taskextraexp_All() { return task_taskextraexp_All; }
-    public void _set_task_taskextraexp_All(java.util.Map<Integer, config.task.CfgTaskextraexp> rows) { requireBuilding(); task_taskextraexp_All = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.Map<Integer, config.task.CfgTask_extra_exp> task_task_extra_exp_All;
+    public java.util.Map<Integer, config.task.CfgTask_extra_exp> _get_task_task_extra_exp_All() { return task_task_extra_exp_All; }
+    public void _set_task_task_extra_exp_All(java.util.Map<Integer, config.task.CfgTask_extra_exp> rows) { requireBuilding(); task_task_extra_exp_All = java.util.Collections.unmodifiableMap(rows); }
 
-    public config.task.CfgTaskextraexp getTaskTaskextraexp(int taskid) { return task_taskextraexp_All.get(taskid); }
+    public config.task.CfgTask_extra_exp getTaskTask_extra_exp(int taskid) { return task_task_extra_exp_All.get(taskid); }
 
-    public java.util.Collection<config.task.CfgTaskextraexp> allTaskTaskextraexp() { return task_taskextraexp_All.values(); }
+    public java.util.Collection<config.task.CfgTask_extra_exp> allTaskTask_extra_exp() { return task_task_extra_exp_All.values(); }
 
 }

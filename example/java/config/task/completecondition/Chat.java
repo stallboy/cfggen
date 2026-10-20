@@ -2,8 +2,8 @@ package config.task.completecondition;
 
 public final class Chat implements config.task.completecondition.Completecondition {
     @Override
-    public config.task.Completeconditiontype type() {
-        return config.task.Completeconditiontype.CHAT;
+    public config.task.CompleteConditionType type() {
+        return config.task.CompleteConditionType.CHAT;
     }
 
     private String msg;

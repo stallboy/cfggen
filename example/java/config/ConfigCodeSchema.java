@@ -21,29 +21,29 @@ public class ConfigCodeSchema {
         schema.addImp("ai.ai_condition", ai_ai_condition());
         schema.addImp("equip.ability", equip_ability());
         if (packageLayout) schema.addImp("equip.ability_Detail", equip_ability_Detail());
-        schema.addImp("equip.equipconfig", equip_equipconfig());
-        schema.addImp("equip.equipconfig_Entry", equip_equipconfig_Entry());
+        schema.addImp("equip.equip_config", equip_equip_config());
+        schema.addImp("equip.equip_config_Entry", equip_equip_config_Entry());
         schema.addImp("equip.jewelry", equip_jewelry());
-        schema.addImp("equip.jewelryrandom", equip_jewelryrandom());
-        schema.addImp("equip.jewelrysuit", equip_jewelrysuit());
-        schema.addImp("equip.jewelrysuit_Entry", equip_jewelrysuit_Entry());
-        schema.addImp("equip.jewelrytype", equip_jewelrytype());
-        if (packageLayout) schema.addImp("equip.jewelrytype_Detail", equip_jewelrytype_Detail());
+        schema.addImp("equip.jewelry_random", equip_jewelry_random());
+        schema.addImp("equip.jewelry_suit", equip_jewelry_suit());
+        schema.addImp("equip.jewelry_suit_Entry", equip_jewelry_suit_Entry());
+        schema.addImp("equip.jewelry_type", equip_jewelry_type());
+        if (packageLayout) schema.addImp("equip.jewelry_type_Detail", equip_jewelry_type_Detail());
         schema.addImp("equip.rank", equip_rank());
         schema.addImp("equip.rank_Detail", equip_rank_Detail());
         schema.addImp("other.ArgCaptureMode", other_ArgCaptureMode());
         schema.addImp("other.ArgCaptureMode_Detail", other_ArgCaptureMode_Detail());
         schema.addImp("other.drop", other_drop());
-        schema.addImp("other.keytest", other_keytest());
+        schema.addImp("other.key_test", other_key_test());
         schema.addImp("other.loot", other_loot());
-        schema.addImp("other.lootitem", other_lootitem());
+        schema.addImp("other.loot_item", other_loot_item());
         schema.addImp("other.monster", other_monster());
-        schema.addImp("other.signin", other_signin());
-        schema.addImp("task.completeconditiontype", task_completeconditiontype());
-        if (packageLayout) schema.addImp("task.completeconditiontype_Detail", task_completeconditiontype_Detail());
+        schema.addImp("other.sign_in", other_sign_in());
+        schema.addImp("task.complete_condition_type", task_complete_condition_type());
+        if (packageLayout) schema.addImp("task.complete_condition_type_Detail", task_complete_condition_type_Detail());
         schema.addImp("task.task", task_task());
         schema.addImp("task.task2", task_task2());
-        schema.addImp("task.taskextraexp", task_taskextraexp());
+        schema.addImp("task.task_extra_exp", task_task_extra_exp());
         return schema;
     }
 
@@ -212,7 +212,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema equip_equipconfig() {
+    static Schema equip_equip_config() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("entry", SchemaPrimitive.SStr);
         s2.addColumn("stone_count_for_set", SchemaPrimitive.SInt);
@@ -223,7 +223,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema equip_equipconfig_Entry() {
+    static Schema equip_equip_config_Entry() {
         SchemaEnum s2 = new SchemaEnum(true, false);
         s2.addValue("Instance");
         s2.addValue("Instance2");
@@ -245,7 +245,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema equip_jewelryrandom() {
+    static Schema equip_jewelry_random() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("LvlRank", new SchemaRef("LevelRank"));
         s2.addColumn("AttackRange", new SchemaRef("Range"));
@@ -254,7 +254,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema equip_jewelrysuit() {
+    static Schema equip_jewelry_suit() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("SuitID", SchemaPrimitive.SInt);
         s2.addColumn("Ename", SchemaPrimitive.SStr);
@@ -269,13 +269,13 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema equip_jewelrysuit_Entry() {
+    static Schema equip_jewelry_suit_Entry() {
         SchemaEnum s2 = new SchemaEnum(true, true);
         s2.addValue("SpecialSuit", 4);
         return s2;
     }
 
-    static Schema equip_jewelrytype() {
+    static Schema equip_jewelry_type() {
         SchemaEnum s2 = new SchemaEnum(false, false);
         s2.addValue("Jade");
         s2.addValue("Bracelet");
@@ -284,7 +284,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema equip_jewelrytype_Detail() {
+    static Schema equip_jewelry_type_Detail() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("TypeName", SchemaPrimitive.SStr);
         return s2;
@@ -333,7 +333,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema other_keytest() {
+    static Schema other_key_test() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("id1", SchemaPrimitive.SInt);
         s2.addColumn("id2", SchemaPrimitive.SLong);
@@ -353,7 +353,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema other_lootitem() {
+    static Schema other_loot_item() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("lootid", SchemaPrimitive.SInt);
         s2.addColumn("itemid", SchemaPrimitive.SInt);
@@ -374,7 +374,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema other_signin() {
+    static Schema other_sign_in() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("id", SchemaPrimitive.SInt);
         s2.addColumn("item2countMap", new SchemaMap(SchemaPrimitive.SInt, SchemaPrimitive.SInt));
@@ -384,7 +384,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema task_completeconditiontype() {
+    static Schema task_complete_condition_type() {
         SchemaEnum s2 = new SchemaEnum(false, true);
         s2.addValue("KillMonster", 1);
         s2.addValue("TalkNpc", 2);
@@ -396,7 +396,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema task_completeconditiontype_Detail() {
+    static Schema task_complete_condition_type_Detail() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("id", SchemaPrimitive.SInt);
         s2.addColumn("name", SchemaPrimitive.SStr);
@@ -430,7 +430,7 @@ public class ConfigCodeSchema {
         return s2;
     }
 
-    static Schema task_taskextraexp() {
+    static Schema task_task_extra_exp() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("taskid", SchemaPrimitive.SInt);
         s2.addColumn("extraexp", SchemaPrimitive.SInt);

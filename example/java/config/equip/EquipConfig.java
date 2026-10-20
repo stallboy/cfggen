@@ -1,18 +1,18 @@
 package config.equip;
 
-// 来自：equip/equipconfig.csv
-public class Equipconfig {
+// 来自：equip/equip_config.csv
+public class EquipConfig {
     private String entry;
     private int stone_count_for_set;
     private String draw_protect_name;
     private int broadcastid;
     private int broadcast_least_quality;
     private int week_reward_mailid;
-    private Equipconfig() {
+    private EquipConfig() {
     }
 
-    public static Equipconfig _create(configgen.genjava.ConfigInput input) {
-        Equipconfig self = new Equipconfig();
+    public static EquipConfig _create(configgen.genjava.ConfigInput input) {
+        EquipConfig self = new EquipConfig();
         self.entry = input.readStringInPool();
         self.stone_count_for_set = input.readInt();
         self.draw_protect_name = input.readStringInPool();
@@ -69,14 +69,14 @@ public class Equipconfig {
         return "(" + entry + "," + stone_count_for_set + "," + draw_protect_name + "," + broadcastid + "," + broadcast_least_quality + "," + week_reward_mailid + ")";
     }
 
-    public static Equipconfig get(String entry) {
+    public static EquipConfig get(String entry) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getEquipEquipconfig(entry);
+        return mgr.getEquipEquipConfig(entry);
     }
 
-    public static java.util.Collection<Equipconfig> all() {
+    public static java.util.Collection<EquipConfig> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.allEquipEquipconfig();
+        return mgr.allEquipEquipConfig();
     }
 
 

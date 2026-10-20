@@ -12,8 +12,8 @@ var keyAbilityValue: int  # 关键属性数值
 var salePrice: int  # 售卖价格
 var description: String  # 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
 # 外键引用属性
-var RefJType: DataEquip_Jewelrytype
-var NullableRefSuitID: DataEquip_Jewelrysuit
+var RefJType: DataEquip_Jewelry_type
+var NullableRefSuitID: DataEquip_Jewelry_suit
 var RefKeyAbility: DataEquip_Ability
 
 # 内部存储
@@ -57,10 +57,10 @@ static func _create(stream: ConfigStream) -> DataEquip_Jewelry:
 func _resolve(errors: ConfigErrors):
 	if lvlRank != null:
 		lvlRank._resolve(errors)
-	RefJType = DataEquip_Jewelrytype.find(jType)
+	RefJType = DataEquip_Jewelry_type.find(jType)
 	if RefJType == null:
 		errors.ref_null("equip.jewelry", "JType")
-	NullableRefSuitID = DataEquip_Jewelrysuit.find(suitID)
+	NullableRefSuitID = DataEquip_Jewelry_suit.find(suitID)
 	RefKeyAbility = DataEquip_Ability.find(keyAbility)
 	if RefKeyAbility == null:
 		errors.ref_null("equip.jewelry", "KeyAbility")

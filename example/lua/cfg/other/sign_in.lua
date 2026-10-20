@@ -1,16 +1,16 @@
 local cfg = require "cfg._cfgs"
 
----@class cfg.other.signin
+---@class cfg.other.sign_in
 ---@field id number , 礼包ID
 ---@field item2countMap table<number,number> , 普通奖励
 ---@field vipitem2vipcountMap table<number,number> , vip奖励
 ---@field viplevel number , 领取vip奖励的最低等级
 ---@field iconFile string , 礼包图标
----@field get fun(id:number):cfg.other.signin
----@field all table<any,cfg.other.signin>
+---@field get fun(id:number):cfg.other.sign_in
+---@field all table<any,cfg.other.sign_in>
 ---@field RefVipitem2vipcountMap cfg.other.loot
 
-local this = cfg.other.signin
+local this = cfg.other.sign_in
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, { 
     { 'RefVipitem2vipcountMap', 3, cfg.other.loot, 'get', 3 }, }, 

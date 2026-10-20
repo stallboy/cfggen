@@ -4,8 +4,8 @@ import configgen.genjava.LoadValueErrs;
 
 public final class CfgConditionAnd implements config.task.completecondition.CfgCompletecondition {
     @Override
-    public config.task.CfgCompleteconditiontype type() {
-        return config.task.CfgCompleteconditiontype.CONDITIONAND;
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.CONDITIONAND;
     }
 
     private config.task.completecondition.CfgCompletecondition cond1;
