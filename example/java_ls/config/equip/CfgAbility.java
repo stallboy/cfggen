@@ -13,17 +13,20 @@ public enum CfgAbility {
     private final String name;
     private final int value;
 
+
     CfgAbility(String name, int value) {
         this.name = name;
         this.value = value;
     }
 
-    public static final java.util.Map<Integer, CfgAbility> map = new java.util.HashMap<>();
+    public static final java.util.Map<Integer, CfgAbility> map;
 
     static {
+        var symbols = new java.util.LinkedHashMap<Integer, CfgAbility>();
         for(CfgAbility e : CfgAbility.values()) {
-            map.put(e.value, e);
+            symbols.put(e.value, e);
         }
+        map = java.util.Collections.unmodifiableMap(symbols);
     }
 
     public static CfgAbility get(int value) {

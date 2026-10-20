@@ -1,3 +1,4 @@
+
 namespace Config;
 
 public partial class Text
@@ -14,12 +15,13 @@ public partial class Text
 
     internal static Text _create(ConfigReader reader)
     {
-        string[] texts = reader.ReadTextsInPool();
+        int index = reader.ReadTextIndex();
+        var pool = reader.CaptureTextPool();
         return new Text
         {
-        Zh_cn = texts[0],
-        En = texts[1],
-        Tw = texts[2],
+        Zh_cn = pool.Texts[0][index],
+        En = pool.Texts[1][index],
+        Tw = pool.Texts[2][index],
         };
     }
 }

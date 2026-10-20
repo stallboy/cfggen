@@ -81,7 +81,7 @@ Parameters can be in any order, but -datadir is required when using generators.
         q=null
             int <num> [num]...      : Search for integers (supports hex 0x)
             str <substring>         : Search for strings containing substring
-            ref <table[key]> [skip] : Search references to a table/key
+            ref <table[key]> [skip] : Search references to a .key
             sl  [name]              : List matching schema names
             sll [name]              : List matching schemas with data (limit 100)
             slljson [name]          : List matching schemas in JSON format
@@ -112,11 +112,14 @@ Parameters can be in any order, but -datadir is required when using generators.
         prefix=D             生成类的前缀
         serverText           ,默认为false
         unity                ,默认为false
+        implicitUsings       项目已启用 .NET 隐式 using 时省略对应指令，默认false
     -gen bytes       生成c#/ts/go代码需要的数据
         own=null
         dir=.
         cipher=              xor加密
-        schema               ,默认为false
+        pack=base            新格式默认包名，Mod 应指定独立包名
+        requires=            多个直接依赖用分号分隔
+        deps=                按加载顺序给出依赖包路径，多个用分号分隔
         langSeparated        ,默认为false
     -gen lua         生成lua代码（数据也是代码）
         own=null

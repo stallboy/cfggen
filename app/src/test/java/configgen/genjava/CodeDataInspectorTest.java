@@ -89,6 +89,18 @@ class CodeDataInspectorTest {
 
     // ---------- inspector: get ----------
 
+    public static class ReadOnlyMgr {
+        public Map<Integer, User> _get_test_user_All() { return Map.of(1, new User(1, "readonly")); }
+        public List<Point> _get_test_point_All() { return List.of(new Point(0, 5)); }
+    }
+
+    @Test
+    void discoversReadOnlyIndexGettersAndLooksUpSeqLists() {
+        var inspector = new CodeDataInspector(new ReadOnlyMgr(), buildSchema());
+        assertEquals("readonly", ((Str) memberValue(inspector.getJson("test.user", "1"), "name")).value());
+        assertEquals(5, ((Num) memberValue(inspector.getJson("test.point", "0"), "y")).value().intValue());
+    }
+
     @Test
     void getMap_byIntKey() {
         CodeDataInspector ins = new CodeDataInspector(buildMgr(), buildSchema());

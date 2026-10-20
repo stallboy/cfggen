@@ -3,7 +3,6 @@ package config.equip;
 public class CfgTestPackBean {
     private String name;
     private config.CfgRange iRange;
-
     private CfgTestPackBean() {
     }
 
@@ -34,9 +33,8 @@ public class CfgTestPackBean {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgTestPackBean))
+        if (!(other instanceof CfgTestPackBean o))
             return false;
-        CfgTestPackBean o = (CfgTestPackBean) other;
         return name.equals(o.name) && iRange.equals(o.iRange);
     }
 

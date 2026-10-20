@@ -28,7 +28,15 @@ func _to_string() -> String:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
+	_data = {}
+	KillMonster = null
+	TalkNpc = null
+	CollectItem = null
+	ConditionAnd = null
+	Chat = null
+	TestNoColumn = null
+	Aa = null
+	var count = stream.read_count(1)
 	for i in range(count):
 		var item = _create(stream)
 		_data[item.id] = item

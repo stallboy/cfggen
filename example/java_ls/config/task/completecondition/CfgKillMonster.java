@@ -1,5 +1,7 @@
 package config.task.completecondition;
 
+import configgen.genjava.LoadValueErrs;
+
 public final class CfgKillMonster implements config.task.completecondition.CfgCompletecondition {
     @Override
     public config.task.CfgCompleteconditiontype type() {
@@ -44,9 +46,8 @@ public final class CfgKillMonster implements config.task.completecondition.CfgCo
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgKillMonster))
+        if (!(other instanceof CfgKillMonster o))
             return false;
-        CfgKillMonster o = (CfgKillMonster) other;
         return monsterid == o.monsterid && count == o.count;
     }
 
@@ -55,14 +56,11 @@ public final class CfgKillMonster implements config.task.completecondition.CfgCo
         return "CfgKillMonster(" + monsterid + "," + count + ")";
     }
 
-    public void _resolveDirect(config.ConfigMgr mgr) {
-        RefMonsterid = mgr.other_monster_All.get(monsterid);
-        configgen.genjava.LoadValueErrs.requireNonNull(RefMonsterid, "KillMonster.monsterid -> other.monster", monsterid);
-    }
-
     @Override
-    public void _resolve(config.ConfigMgr mgr) {
-        _resolveDirect(mgr);
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        this.RefMonsterid = mgr.getOtherMonster(this.monsterid);
+        if (this.RefMonsterid == null) errors.missingReference("KillMonster", "monsterid", "other.monster", this.monsterid);
+
     }
 
 }

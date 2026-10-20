@@ -71,12 +71,17 @@
         }
 
         static Initialize(os: Stream, errors: LoadErrors) {
+            @if(table.entry() instanceof EntryType.EntryBase)
+                @for(String enumName : model._vTable.enumNames())
+                    this._${enumName} = undefined!;
+                @endfor
+            @endif
             this.all = new Map<${model.mapKeyType(table.primaryKey())}, ${className}>();
             @for(KeySchema uk : table.uniqueKeys())
                 this.${model.uniqueKeyMapName(uk)} = new Map<${model.mapKeyType(uk)}, ${className}>();
             @endfor
 
-            for (let c = os.ReadInt32(); c > 0; c--)
+            for (let c = os.ReadCount(1); c > 0; c--)
             {
                 let self = this._create(os);
                 this.all.set(${model.actualParamsKeySelf(table.primaryKey())}, self);
@@ -131,11 +136,11 @@
             !{FieldType t = field.type();}
             @if(t instanceof FList(SimpleType item))
                 self._${(n)} = [];
-                for (let c = os.ReadInt32(); c > 0; c--)
+                for (let c = os.ReadCount(0); c > 0; c--)
                     self._${n}.push(${model.create(item)});
             @elseif(field.type() instanceof FMap(SimpleType key, SimpleType value))
                 self._${(n)}  = new ${model.type(t)}();
-                for (let c = os.ReadInt32(); c > 0; c--) {
+                for (let c = os.ReadCount(0); c > 0; c--) {
                     self._${n}.set(${model.create(key)}, ${model.create(value)});
                 }
             @else
@@ -158,10 +163,13 @@
                         for (const e of this._${n}) {
                             e._resolve(errors);
                         }
-                    @elseif(t instanceof FMap)
-                        for (const e of this._${n}.values()) {
-                            e._resolve(errors);
-                        }
+                    @elseif(t instanceof FMap map)
+                        @if(HasRef.hasRef(map.key()))
+                            for (const key of this._${n}.keys()) key._resolve(errors);
+                        @endif
+                        @if(HasRef.hasRef(map.value()))
+                            for (const value of this._${n}.values()) value._resolve(errors);
+                        @endif
                     @endif
                 @endif
             @endfor
@@ -187,6 +195,7 @@
                             const r = ${model.tableGet(fk.refTableSchema(), refSimple, "e")};
                             if (r === undefined) {
                                 errors.RefNull("${model.structural.name()}", this.toString(), "${fk.name()}");
+                                continue;
                             }
                             this._${refName}.push(r);
                         }
@@ -196,6 +205,7 @@
                             const v = ${model.tableGet(fk.refTableSchema(), refSimple, "e[1]")};
                             if (v === undefined) {
                                 errors.RefNull("${model.structural.name()}", this.toString(), "${fk.name()}");
+                                continue;
                             }
                             this._${refName}.set(e[0], v);
                         }

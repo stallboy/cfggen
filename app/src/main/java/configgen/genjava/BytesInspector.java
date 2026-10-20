@@ -36,38 +36,21 @@ public class BytesInspector {
      */
     public String match(String tableMatch) {
         out.setLength(0);
+        printedSchemas.clear();
         try (ConfigInput input = new ConfigInput(Path.of(bytesFilename))) {
-            // 1. 读取 Schema 长度标记
-            int schemaLength = input.readInt();
-            if (schemaLength > 0) {
-                byte[] schemaBytes = input.readRawBytes(schemaLength);
-                rootSchema = (SchemaInterface) SchemaDeserializer.deserialize(new ConfigInput(schemaBytes));
-            } else {
-                println("no schema in data file");
-                return out.toString();
-            }
-
-            // 2. 读取 StringPool
-            input.readStringPool();
-
-            // 3. 读取 LangTextPool
-            input.readLangTextPool();
-
-            // 4. 读取表数据
-            int tableCount = input.readInt();
-            for (int i = 0; i < tableCount; i++) {
-                String tableName = input.readString();
-                int tableSize = input.readInt();
-                if (tableMatch == null || tableName.startsWith(tableMatch)) {
-                    boolean read = printTableInfo(tableName, tableSize, input);
-                    if (read) {
-                        println("");
-                    } else {
-                        input.skipBytes(tableSize);
-                    }
-
-                } else {
-                    input.skipBytes(tableSize);
+            ConfigPackage pack = ConfigPackage.read(input);
+            var schema = pack.block("schema");
+            rootSchema = (SchemaInterface) SchemaDeserializer.deserialize(schema);
+            schema.requireEnd();
+            println("metadata: %s", pack.metadata());
+            for (String block : pack.blockNames()) {
+                if (!block.startsWith(".")) continue;
+                String table = block.substring(1);
+                if (tableMatch != null && !table.startsWith(tableMatch)) continue;
+                var tableInput = pack.block(block);
+                if (printTableInfo(table, (int) tableInput.remaining(), tableInput)) {
+                    tableInput.requireEnd();
+                    println("");
                 }
             }
         } catch (IOException e) {
@@ -279,24 +262,12 @@ public class BytesInspector {
             }
             case SchemaPrimitive schemaPrimitive -> {
                 switch (schemaPrimitive) {
-                    case SBool:
-                        sb.append(input.readBool());
-                        break;
-                    case SInt:
-                        sb.append(input.readInt());
-                        break;
-                    case SLong:
-                        sb.append(input.readLong());
-                        break;
-                    case SFloat:
-                        sb.append(input.readFloat());
-                        break;
-                    case SStr:
-                        sb.append(input.readStringInPool());
-                        break;
-                    case SText:
-                        sb.append(input.readTextInPool());
-                        break;
+                    case SBool -> sb.append(input.readBool());
+                    case SInt -> sb.append(input.readInt());
+                    case SLong -> sb.append(input.readLong());
+                    case SFloat -> sb.append(input.readFloat());
+                    case SStr -> sb.append(input.readStringInPool());
+                    case SText -> sb.append(input.readTextInPool());
                 }
             }
             case SchemaRef schemaRef -> {

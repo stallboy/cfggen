@@ -1,5 +1,7 @@
 package config.other;
 
+import configgen.genjava.LoadValueErrs;
+
 // 来自：other/signin.csv
 public class Signin {
     private int id;
@@ -7,6 +9,8 @@ public class Signin {
     private java.util.Map<Integer, Integer> vipitem2vipcountMap;
     private int viplevel;
     private String iconFile;
+    private java.util.Map<Integer, config.other.Loot> RefVipitem2vipcountMap;
+
     private Signin() {
     }
 
@@ -22,25 +26,31 @@ public class Signin {
         Signin self = new Signin();
         self.id = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.item2countMap = java.util.Collections.emptyMap();
             } else {
                 self.item2countMap = new java.util.LinkedHashMap<>(c);
                 for (; c > 0; c--) {
-                    self.item2countMap.put(input.readInt(), input.readInt());
+                    var key = input.readInt();
+                    var value = input.readInt();
+                    if (self.item2countMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.signin.item2countMap", key);
                 }
+                self.item2countMap = java.util.Collections.unmodifiableMap(self.item2countMap);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.vipitem2vipcountMap = java.util.Collections.emptyMap();
             } else {
                 self.vipitem2vipcountMap = new java.util.LinkedHashMap<>(c);
                 for (; c > 0; c--) {
-                    self.vipitem2vipcountMap.put(input.readInt(), input.readInt());
+                    var key = input.readInt();
+                    var value = input.readInt();
+                    if (self.vipitem2vipcountMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.signin.vipitem2vipcountMap", key);
                 }
+                self.vipitem2vipcountMap = java.util.Collections.unmodifiableMap(self.vipitem2vipcountMap);
             }
         }
         self.viplevel = input.readInt();
@@ -83,9 +93,28 @@ public class Signin {
         return iconFile;
     }
 
+    public java.util.Map<Integer, config.other.Loot> refVipitem2vipcountMap() {
+        return RefVipitem2vipcountMap;
+    }
+
     @Override
     public String toString() {
         return "(" + id + "," + item2countMap + "," + vipitem2vipcountMap + "," + viplevel + "," + iconFile + ")";
+    }
+
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        if (this.vipitem2vipcountMap.isEmpty()) {
+            this.RefVipitem2vipcountMap = java.util.Collections.emptyMap();
+        } else {
+            this.RefVipitem2vipcountMap = new java.util.LinkedHashMap<>(this.vipitem2vipcountMap.size());
+            for (java.util.Map.Entry<Integer, Integer> e : this.vipitem2vipcountMap.entrySet()) {
+                var ref = mgr.getOtherLoot(e.getValue());
+                if (ref == null) errors.missingReference("other.signin", "vipitem2vipcountMap", "other.loot", e.getValue());
+                this.RefVipitem2vipcountMap.put(e.getKey(), ref);
+            }
+        }
+        this.RefVipitem2vipcountMap = java.util.Collections.unmodifiableMap(this.RefVipitem2vipcountMap);
+
     }
 
     public static Signin get(int id) {
@@ -97,23 +126,6 @@ public class Signin {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherSignin();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.other_signin_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                Signin self = Signin._create(input);
-                mgr.other_signin_All.put(self.id, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

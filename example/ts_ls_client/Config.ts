@@ -1,6 +1,6 @@
 // noinspection UnnecessaryLocalVariableJS,JSUnusedLocalSymbols,JSUnusedGlobalSymbols,DuplicatedCode,SpellCheckingInspection
 
-import {Stream, LoadErrors, ToStringList, ToStringMap, TextPoolManager} from "./ConfigUtil";
+import {Stream, LoadErrors, ToStringList, ToStringMap, TextPoolManager, ConfigPackage, Loader} from "./ConfigUtil";
 export namespace Config {
 
 export class LevelRank {
@@ -87,9 +87,8 @@ export abstract class Ai_TriggerTick {
                 return Ai_TriggerTick_ByLevel._create(os);
             case "ByServerUpDay":
                 return Ai_TriggerTick_ByServerUpDay._create(os);
-            default:
-                throw new Error("Unknown type: " + typeName);
         }
+        throw new Error("Unknown type: " + typeName);
     }
 
     abstract toString() : string;
@@ -194,7 +193,7 @@ export class Other_DropItem {
         const self = new Other_DropItem();
         self._chance = os.ReadInt32();
         self._itemids = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._itemids.push(os.ReadInt32());
         self._countmin = os.ReadInt32();
         self._countmax = os.ReadInt32();
@@ -230,13 +229,13 @@ export class Task_TestDefaultBean {
         self._testString = os.ReadStringInPool();
         self._testSubBean = Position._create(os);
         self._testList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._testList.push(os.ReadInt32());
         self._testList2 = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._testList2.push(os.ReadInt32());
         self._testMap  = new Map<number, string>();
-        for (let c = os.ReadInt32(); c > 0; c--) {
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._testMap.set(os.ReadInt32(), os.ReadStringInPool());
         }
         return self;
@@ -266,9 +265,8 @@ export abstract class Task_Completecondition {
                 return Task_Completecondition_CollectItem._create(os);
             case "aa":
                 return Task_Completecondition_Aa._create(os);
-            default:
-                throw new Error("Unknown type: " + typeName);
         }
+        throw new Error("Unknown type: " + typeName);
     }
 
     abstract toString() : string;
@@ -471,7 +469,7 @@ export class Ai_Ai {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Ai_Ai>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._ID, self);
@@ -487,7 +485,7 @@ export class Ai_Ai {
         self._TrigTick = Ai_TriggerTick._create(os);
         self._TrigOdds = os.ReadInt32();
         self._ActionID = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._ActionID.push(os.ReadInt32());
         self._DeathRemove = os.ReadBool();
         return self;
@@ -528,7 +526,7 @@ export class Ai_Ai_action {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Ai_Ai_action>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._ID, self);
@@ -542,10 +540,10 @@ export class Ai_Ai_action {
         self._Desc = os.ReadStringInPool();
         self._FormulaID = os.ReadInt32();
         self._ArgIList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._ArgIList.push(os.ReadInt32());
         self._ArgSList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._ArgSList.push(os.ReadInt32());
         return self;
     }
@@ -585,7 +583,7 @@ export class Ai_Ai_condition {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Ai_Ai_condition>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._ID, self);
@@ -599,10 +597,10 @@ export class Ai_Ai_condition {
         self._Desc = os.ReadStringInPool();
         self._FormulaID = os.ReadInt32();
         self._ArgIList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._ArgIList.push(os.ReadInt32());
         self._ArgSList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._ArgSList.push(os.ReadInt32());
         return self;
     }
@@ -654,8 +652,15 @@ export class Equip_Ability {
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
+        this._attack = undefined!;
+        this._defence = undefined!;
+        this._hp = undefined!;
+        this._critical = undefined!;
+        this._critical_resist = undefined!;
+        this._block = undefined!;
+        this._break_armor = undefined!;
         this.all = new Map<number, Equip_Ability>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._id, self);
@@ -778,8 +783,10 @@ export class Equip_Equipconfig {
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
+        this._Instance = undefined!;
+        this._Instance2 = undefined!;
         this.all = new Map<string, Equip_Equipconfig>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._entry, self);
@@ -881,7 +888,7 @@ export class Equip_Jewelry {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Equip_Jewelry>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._ID, self);
@@ -961,7 +968,7 @@ export class Equip_Jewelryrandom {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Equip_Jewelryrandom>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._LvlRank.Level + self._LvlRank.Rank * 100000000, self);
@@ -979,10 +986,10 @@ export class Equip_Jewelryrandom {
         self._LvlRank = LevelRank._create(os);
         self._AttackRange = Range._create(os);
         self._OtherRange = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._OtherRange.push(Range._create(os));
         self._TestPack = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._TestPack.push(Equip_TestPackBean._create(os));
         return self;
     }
@@ -1042,8 +1049,9 @@ export class Equip_Jewelrysuit {
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
+        this._SpecialSuit = undefined!;
         this.all = new Map<number, Equip_Jewelrysuit>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._SuitID, self);
@@ -1079,7 +1087,7 @@ export class Equip_Jewelrysuit {
         self._Ability3 = os.ReadInt32();
         self._Ability3Value = os.ReadInt32();
         self._SuitList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._SuitList.push(os.ReadInt32());
         return self;
     }
@@ -1119,8 +1127,12 @@ export class Equip_Jewelrytype {
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
+        this._Jade = undefined!;
+        this._Bracelet = undefined!;
+        this._Magic = undefined!;
+        this._Bottle = undefined!;
         this.all = new Map<string, Equip_Jewelrytype>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._TypeName, self);
@@ -1221,8 +1233,14 @@ export class Equip_Rank {
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
+        this._white = undefined!;
+        this._green = undefined!;
+        this._blue = undefined!;
+        this._purple = undefined!;
+        this._yellow = undefined!;
+        this._red = undefined!;
         this.all = new Map<number, Equip_Rank>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._RankID, self);
@@ -1333,9 +1351,11 @@ export class Other_ArgCaptureMode {
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
+        this._Snapshot = undefined!;
+        this._Dynamic = undefined!;
         this.all = new Map<string, Other_ArgCaptureMode>();
         this.idMap = new Map<number, Other_ArgCaptureMode>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._name, self);
@@ -1409,7 +1429,7 @@ export class Other_Drop {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Drop>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._dropid, self);
@@ -1422,10 +1442,10 @@ export class Other_Drop {
         self._dropid = os.ReadInt32();
         self._name = Text._create(os);
         self._items = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._items.push(Other_DropItem._create(os));
         self._testmap  = new Map<number, number>();
-        for (let c = os.ReadInt32(); c > 0; c--) {
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._testmap.set(os.ReadInt32(), os.ReadInt32());
         }
         return self;
@@ -1494,7 +1514,7 @@ export class Other_Keytest {
         this.id1Id3Map = new Map<number, Other_Keytest>();
         this.id2Map = new Map<number, Other_Keytest>();
         this.id2Id3Map = new Map<number, Other_Keytest>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._id1 + self._id2 * 100000000, self);
@@ -1516,11 +1536,11 @@ export class Other_Keytest {
         self._id2 = os.ReadInt64();
         self._id3 = os.ReadInt32();
         self._ids = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._ids.push(os.ReadInt32());
         self._enumTest = os.ReadStringInPool();
         self._enumList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._enumList.push(os.ReadStringInPool());
         return self;
     }
@@ -1531,6 +1551,7 @@ export class Other_Keytest {
             const r = Other_Signin.Get(e);
             if (r === undefined) {
                 errors.RefNull("other.keytest", this.toString(), "ids");
+                continue;
             }
             this._RefIds.push(r);
         }
@@ -1544,6 +1565,7 @@ export class Other_Keytest {
             const r = Other_ArgCaptureMode.Get(e);
             if (r === undefined) {
                 errors.RefNull("other.keytest", this.toString(), "enumList");
+                continue;
             }
             this._RefEnumList.push(r);
         }
@@ -1584,7 +1606,7 @@ export class Other_Loot {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Loot>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._lootid, self);
@@ -1603,7 +1625,7 @@ export class Other_Loot {
         self._ename = os.ReadStringInPool();
         self._name = Text._create(os);
         self._chanceList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._chanceList.push(os.ReadInt32());
         return self;
     }
@@ -1658,7 +1680,7 @@ export class Other_Lootitem {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Lootitem>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._lootid + self._itemid * 100000000, self);
@@ -1717,7 +1739,7 @@ export class Other_Monster {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Monster>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._id, self);
@@ -1734,16 +1756,16 @@ export class Other_Monster {
         const self = new Other_Monster();
         self._id = os.ReadInt32();
         self._posList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._posList.push(Position._create(os));
         self._lootId = os.ReadInt32();
         self._lootItemId = os.ReadInt32();
         self._enumMap1  = new Map<string, number>();
-        for (let c = os.ReadInt32(); c > 0; c--) {
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._enumMap1.set(os.ReadStringInPool(), os.ReadInt32());
         }
         self._enumMap2  = new Map<number, string>();
-        for (let c = os.ReadInt32(); c > 0; c--) {
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._enumMap2.set(os.ReadInt32(), os.ReadStringInPool());
         }
         return self;
@@ -1765,6 +1787,7 @@ export class Other_Monster {
             const v = Other_ArgCaptureMode.Get(e[1]);
             if (v === undefined) {
                 errors.RefNull("other.monster", this.toString(), "enumMap2");
+                continue;
             }
             this._RefEnumMap2.set(e[0], v);
         }
@@ -1807,7 +1830,7 @@ export class Other_Signin {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Signin>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._id, self);
@@ -1824,11 +1847,11 @@ export class Other_Signin {
         const self = new Other_Signin();
         self._id = os.ReadInt32();
         self._item2countMap  = new Map<number, number>();
-        for (let c = os.ReadInt32(); c > 0; c--) {
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._item2countMap.set(os.ReadInt32(), os.ReadInt32());
         }
         self._vipitem2vipcountMap  = new Map<number, number>();
-        for (let c = os.ReadInt32(); c > 0; c--) {
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._vipitem2vipcountMap.set(os.ReadInt32(), os.ReadInt32());
         }
         self._viplevel = os.ReadInt32();
@@ -1842,6 +1865,7 @@ export class Other_Signin {
             const v = Other_Loot.Get(e[1]);
             if (v === undefined) {
                 errors.RefNull("other.signin", this.toString(), "vipitem2vipcountMap");
+                continue;
             }
             this._RefVipitem2vipcountMap.set(e[0], v);
         }
@@ -1893,8 +1917,15 @@ export class Task_Completeconditiontype {
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
+        this._KillMonster = undefined!;
+        this._TalkNpc = undefined!;
+        this._CollectItem = undefined!;
+        this._ConditionAnd = undefined!;
+        this._Chat = undefined!;
+        this._TestNoColumn = undefined!;
+        this._aa = undefined!;
         this.all = new Map<number, Task_Completeconditiontype>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._id, self);
@@ -2013,7 +2044,7 @@ export class Task_Task {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Task_Task>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._taskid, self);
@@ -2030,7 +2061,7 @@ export class Task_Task {
         const self = new Task_Task();
         self._taskid = os.ReadInt32();
         self._name = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._name.push(Text._create(os));
         self._nexttask = os.ReadInt32();
         self._completecondition = Task_Completecondition._create(os);
@@ -2092,7 +2123,7 @@ export class Task_Task2 {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Task_Task2>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._taskid, self);
@@ -2109,7 +2140,7 @@ export class Task_Task2 {
         const self = new Task_Task2();
         self._taskid = os.ReadInt32();
         self._name = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._name.push(Text._create(os));
         self._nexttask = os.ReadInt32();
         self._completecondition = Task_Completecondition._create(os);
@@ -2118,13 +2149,13 @@ export class Task_Task2 {
         self._testString = os.ReadStringInPool();
         self._testStruct = Position._create(os);
         self._testList = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._testList.push(os.ReadInt32());
         self._testListStruct = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._testListStruct.push(Position._create(os));
         self._testListInterface = [];
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--)
             self._testListInterface.push(Ai_TriggerTick._create(os));
         return self;
     }
@@ -2173,7 +2204,7 @@ export class Task_Taskextraexp {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Task_Taskextraexp>();
-        for (let c = os.ReadInt32(); c > 0; c--)
+        for (let c = os.ReadCount(1); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._taskid, self);
@@ -2219,138 +2250,131 @@ export class Text
 
 
 export class Processor {
+    private static readonly TableNames = [
+        "ai.ai",
+        "ai.ai_action",
+        "ai.ai_condition",
+        "equip.ability",
+        "equip.equipconfig",
+        "equip.jewelry",
+        "equip.jewelryrandom",
+        "equip.jewelrysuit",
+        "equip.jewelrytype",
+        "equip.rank",
+        "other.ArgCaptureMode",
+        "other.drop",
+        "other.keytest",
+        "other.loot",
+        "other.lootitem",
+        "other.monster",
+        "other.signin",
+        "task.completeconditiontype",
+        "task.task",
+        "task.task2",
+        "task.taskextraexp",
+    ];
+
+    static ProcessPackage(pack: ConfigPackage, errors: LoadErrors): Stream {
+        return Loader.LoadPackage(pack, Processor.Process, errors, ["zh_cn", "en", "tw"]);
+    }
 
     // 从 bytes 文件加载（新格式）
     static Process(os: Stream, errors: LoadErrors): void {
-        const configNulls = new Set<string>([
-            "ai.ai",
-            "ai.ai_action",
-            "ai.ai_condition",
-            "equip.ability",
-            "equip.equipconfig",
-            "equip.jewelry",
-            "equip.jewelryrandom",
-            "equip.jewelrysuit",
-            "equip.jewelrytype",
-            "equip.rank",
-            "other.ArgCaptureMode",
-            "other.drop",
-            "other.keytest",
-            "other.loot",
-            "other.lootitem",
-            "other.monster",
-            "other.signin",
-            "task.completeconditiontype",
-            "task.task",
-            "task.task2",
-            "task.taskextraexp",
-        ]);
-
         // 读取表数量
-        const tableCount = os.ReadSize();
-
-        for (let i = 0; i < tableCount; i++) {
-            // 读取表名
-            const tableName = os.ReadString();
-            // 读取表大小
-            const tableSize = os.ReadSize();
+        const tables = os.ReadTables();
+        for (const name of Processor.TableNames) if (!tables.has(name)) throw new Error("Missing table in standalone package: " + name);
+        for (const [tableName, tableInput] of tables) {
 
             // 根据表名分发到对应的 Initialize 方法
             switch(tableName) {
                 case "ai.ai":
-                    configNulls.delete(tableName);
-                    Ai_Ai.Initialize(os, errors);
+                    Ai_Ai.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "ai.ai_action":
-                    configNulls.delete(tableName);
-                    Ai_Ai_action.Initialize(os, errors);
+                    Ai_Ai_action.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "ai.ai_condition":
-                    configNulls.delete(tableName);
-                    Ai_Ai_condition.Initialize(os, errors);
+                    Ai_Ai_condition.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "equip.ability":
-                    configNulls.delete(tableName);
-                    Equip_Ability.Initialize(os, errors);
+                    Equip_Ability.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "equip.equipconfig":
-                    configNulls.delete(tableName);
-                    Equip_Equipconfig.Initialize(os, errors);
+                    Equip_Equipconfig.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "equip.jewelry":
-                    configNulls.delete(tableName);
-                    Equip_Jewelry.Initialize(os, errors);
+                    Equip_Jewelry.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "equip.jewelryrandom":
-                    configNulls.delete(tableName);
-                    Equip_Jewelryrandom.Initialize(os, errors);
+                    Equip_Jewelryrandom.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "equip.jewelrysuit":
-                    configNulls.delete(tableName);
-                    Equip_Jewelrysuit.Initialize(os, errors);
+                    Equip_Jewelrysuit.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "equip.jewelrytype":
-                    configNulls.delete(tableName);
-                    Equip_Jewelrytype.Initialize(os, errors);
+                    Equip_Jewelrytype.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "equip.rank":
-                    configNulls.delete(tableName);
-                    Equip_Rank.Initialize(os, errors);
+                    Equip_Rank.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "other.ArgCaptureMode":
-                    configNulls.delete(tableName);
-                    Other_ArgCaptureMode.Initialize(os, errors);
+                    Other_ArgCaptureMode.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "other.drop":
-                    configNulls.delete(tableName);
-                    Other_Drop.Initialize(os, errors);
+                    Other_Drop.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "other.keytest":
-                    configNulls.delete(tableName);
-                    Other_Keytest.Initialize(os, errors);
+                    Other_Keytest.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "other.loot":
-                    configNulls.delete(tableName);
-                    Other_Loot.Initialize(os, errors);
+                    Other_Loot.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "other.lootitem":
-                    configNulls.delete(tableName);
-                    Other_Lootitem.Initialize(os, errors);
+                    Other_Lootitem.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "other.monster":
-                    configNulls.delete(tableName);
-                    Other_Monster.Initialize(os, errors);
+                    Other_Monster.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "other.signin":
-                    configNulls.delete(tableName);
-                    Other_Signin.Initialize(os, errors);
+                    Other_Signin.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "task.completeconditiontype":
-                    configNulls.delete(tableName);
-                    Task_Completeconditiontype.Initialize(os, errors);
+                    Task_Completeconditiontype.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "task.task":
-                    configNulls.delete(tableName);
-                    Task_Task.Initialize(os, errors);
+                    Task_Task.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "task.task2":
-                    configNulls.delete(tableName);
-                    Task_Task2.Initialize(os, errors);
+                    Task_Task2.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 case "task.taskextraexp":
-                    configNulls.delete(tableName);
-                    Task_Taskextraexp.Initialize(os, errors);
+                    Task_Taskextraexp.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
                     break;
                 default:
                     // 未知表，跳过
-                    os.SkipBytes(tableSize);
                     break;
             }
-        }
-
-        // 检查缺失的表
-        for (const t of configNulls) {
-            errors.ConfigNull(t);
         }
 
         // 解析外键引用

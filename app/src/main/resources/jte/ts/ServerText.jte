@@ -12,9 +12,10 @@ export class Text
     static _create(os: Stream): Text
     {
         const self = new Text();
-        const texts = os.ReadTextsInPool();
+        const index = os.ReadTextIndex();
+        const pools = os.GetLangTextPools();
         @for(int i = 0; i < languages.size(); i++)
-            self._${languages.get(i)} = texts[${i}];
+            self._${languages.get(i)} = pools[${i}][index];
         @endfor
         return self;
     }

@@ -8,9 +8,9 @@
 // noinspection UnnecessaryLocalVariableJS,JSUnusedLocalSymbols,JSUnusedGlobalSymbols,DuplicatedCode,SpellCheckingInspection
 
 @if(model.nullableLanguageSwitch != null && !model.serverText)
-    import {Stream, LoadErrors, ToStringList, ToStringMap, TextPoolManager} from "./ConfigUtil";
+    import {Stream, LoadErrors, ToStringList, ToStringMap, TextPoolManager, ConfigPackage, Loader} from "./ConfigUtil";
 @else
-    import {Stream, LoadErrors, ToStringList, ToStringMap} from "./ConfigUtil";
+    import {Stream, LoadErrors, ToStringList, ToStringMap, ConfigPackage, Loader} from "./ConfigUtil";
 @endif
 
 export namespace ${model.pkg} {

@@ -18,19 +18,19 @@ func createTaskTestDefaultBean(stream *Stream) *TaskTestDefaultBean {
     v.testBool = stream.ReadBool()
     v.testString = stream.ReadStringInPool()
     v.testSubBean = createPosition(stream)
-    testListSize := stream.ReadInt32()
+    testListSize := stream.ReadCount(0)
     v.testList = make([]int32, testListSize)
-    for i := 0; i < int(testListSize); i++ {
+    for i := 0; i < testListSize; i++ {
         v.testList[i] = stream.ReadInt32()
     }
-    testList2Size := stream.ReadInt32()
+    testList2Size := stream.ReadCount(0)
     v.testList2 = make([]int32, testList2Size)
-    for i := 0; i < int(testList2Size); i++ {
+    for i := 0; i < testList2Size; i++ {
         v.testList2[i] = stream.ReadInt32()
     }
-    testMapSize := stream.ReadInt32()
+    testMapSize := stream.ReadCount(0)
     v.testMap = make(map[int32]string, testMapSize)
-    for i := 0; i < int(testMapSize); i++ {
+    for i := 0; i < testMapSize; i++ {
         var k = stream.ReadInt32()
         v.testMap[k] = stream.ReadStringInPool()
     }

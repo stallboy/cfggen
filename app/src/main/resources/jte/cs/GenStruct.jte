@@ -3,9 +3,8 @@
 @import configgen.gencs.StructModel
 @import configgen.util.StringUtil
 @param StructModel model
-@if(model.unity)
-using System;
-using System.Collections.Generic;
+@if(!model.implicitUsings && model.usesCollections())
+    using System.Collections.Generic;
 @endif
 
 ${model.nsLine()}
@@ -42,7 +41,8 @@ ${model.nsLine()}
         !{boolean hasEntry = model.hasEntry();}
         @if(hasEntry)
             @for(String enumName : model._vTable.enumNames())
-                public static ${className} ${model.upper1(enumName)} { get; private set; } = null!;
+                public static ${className} ${model.upper1(enumName)} => ${model.upper1(enumName)}In(ConfigMgr.GetMgr());
+                public static ${className} ${model.upper1(enumName)}In(ConfigMgr config) => config.${model.tableField("Symbol_" + model.upper1(enumName))}!;
             @endfor
         @endif
         @if(hasEntry)
@@ -68,26 +68,16 @@ ${model.nsLine()}
     @if(model._vTable != null)
         !{TableSchema table = model._vTable.schema();}
         !{boolean primarySeq = model.isSeqKey(table.primaryKey());}
-        @if(model.unity && !primarySeq)
-            private static IReadOnlyList<${model.dictValueType()}> _allList = null!;
-        @endif
-        @template.cs.GenMapGetBy(model = model, keySchema = table.primaryKey(), isPrimaryKey = true)
+@template.cs.GenMapGetBy(model = model, keySchema = table.primaryKey(), isPrimaryKey = true)
         @for(KeySchema uk : table.uniqueKeys())
-            @template.cs.GenMapGetBy(model = model, keySchema = uk, isPrimaryKey = false)
+@template.cs.GenMapGetBy(model = model, keySchema = uk, isPrimaryKey = false)
         @endfor
 
         public static IReadOnlyList<${className}${isEnum?"Info" : ""}> All()
-        {
-            @if(primarySeq)
-                return _all;
-            @else
-                @if(model.unity)
-                    return _allList;
-                @else
-                    return _all.Values;
-                @endif
-            @endif
-        }
+            => All(ConfigMgr.GetMgr());
+
+        public static IReadOnlyList<${className}${isEnum?"Info" : ""}> All(ConfigMgr config)
+            => config.${model.tableField("Rows")};
     @endif
 }
 @if(isEnum)
@@ -95,12 +85,11 @@ ${model.nsLine()}
 
 public static class ${className}Extensions
 {
-    internal static readonly ${className}Info[] _infos = new ${className}Info[${model._vTable.enumNames().size()}];
-
     public static ${className}Info Info(this ${className} e)
-    {
-        return _infos[(int)e];
-    }
+        => e.Info(ConfigMgr.GetMgr());
+
+    public static ${className}Info Info(this ${className} e, ConfigMgr config)
+        => config.${model.tableField("Symbols")}[(int)e]!;
 }
 @endif
 @if(model.unity)

@@ -10,16 +10,19 @@ public partial class DTaskextraexp
     public required string Fieldb { get; init; }
     public required string Fieldc { get; init; }
     public required string Fieldd { get; init; }
-    
-    private static System.Collections.Frozen.FrozenDictionary<int, DTaskextraexp> _all = null!;
 
     public static DTaskextraexp? Get(int taskid)
+        => Get(ConfigMgr.GetMgr(), taskid);
+
+    public static DTaskextraexp? Get(ConfigMgr config, int taskid)
     {
-        return _all.GetValueOrDefault(taskid);
+        var index = config._task_dtaskextraexp_All;
+        return index.TryGetValue(taskid, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DTaskextraexp> All()
-    {
-        return _all.Values;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DTaskextraexp> All(ConfigMgr config)
+        => config._task_dtaskextraexp_Rows;
 }

@@ -12,34 +12,38 @@ public partial class DArgCaptureModeInfo
     public required int Id { get; init; }
     public required string Comment { get; init; }
     public required DArgCaptureMode EEnum { get; init; }
-    
-    private static System.Collections.Frozen.FrozenDictionary<string, DArgCaptureModeInfo> _all = null!;
 
     public static DArgCaptureModeInfo? Get(string name)
+        => Get(ConfigMgr.GetMgr(), name);
+
+    public static DArgCaptureModeInfo? Get(ConfigMgr config, string name)
     {
-        return _all.GetValueOrDefault(name);
+        var index = config._other_dArgCaptureMode_All;
+        return index.TryGetValue(name, out var result) ? result : null;
     }
 
-    
-    private static System.Collections.Frozen.FrozenDictionary<int, DArgCaptureModeInfo> _idMap = null!;
 
     public static DArgCaptureModeInfo? GetById(int id)
+        => GetById(ConfigMgr.GetMgr(), id);
+
+    public static DArgCaptureModeInfo? GetById(ConfigMgr config, int id)
     {
-        return _idMap.GetValueOrDefault(id);
+        var index = config._other_dArgCaptureMode_IdMap;
+        return index.TryGetValue(id, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DArgCaptureModeInfo> All()
-    {
-        return _all.Values;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DArgCaptureModeInfo> All(ConfigMgr config)
+        => config._other_dArgCaptureMode_Rows;
 }
 
 public static class DArgCaptureModeExtensions
 {
-    internal static readonly DArgCaptureModeInfo[] _infos = new DArgCaptureModeInfo[2];
-
     public static DArgCaptureModeInfo Info(this DArgCaptureMode e)
-    {
-        return _infos[(int)e];
-    }
+        => e.Info(ConfigMgr.GetMgr());
+
+    public static DArgCaptureModeInfo Info(this DArgCaptureMode e, ConfigMgr config)
+        => config._other_dArgCaptureMode_Symbols[(int)e]!;
 }

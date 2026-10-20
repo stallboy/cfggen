@@ -1,5 +1,7 @@
 package config.other;
 
+import configgen.genjava.LoadValueErrs;
+
 // 来自：other/signin.csv
 public class CfgSignin {
     private int id;
@@ -16,25 +18,31 @@ public class CfgSignin {
         CfgSignin self = new CfgSignin();
         self.id = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.item2countMap = java.util.Collections.emptyMap();
             } else {
                 self.item2countMap = new java.util.LinkedHashMap<>(c);
                 for (; c > 0; c--) {
-                    self.item2countMap.put(input.readInt(), input.readInt());
+                    var key = input.readInt();
+                    var value = input.readInt();
+                    if (self.item2countMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.signin.item2countMap", key);
                 }
+                self.item2countMap = java.util.Collections.unmodifiableMap(self.item2countMap);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.vipitem2vipcountMap = java.util.Collections.emptyMap();
             } else {
                 self.vipitem2vipcountMap = new java.util.LinkedHashMap<>(c);
                 for (; c > 0; c--) {
-                    self.vipitem2vipcountMap.put(input.readInt(), input.readInt());
+                    var key = input.readInt();
+                    var value = input.readInt();
+                    if (self.vipitem2vipcountMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.signin.vipitem2vipcountMap", key);
                 }
+                self.vipitem2vipcountMap = java.util.Collections.unmodifiableMap(self.vipitem2vipcountMap);
             }
         }
         self.viplevel = input.readInt();
@@ -86,21 +94,19 @@ public class CfgSignin {
         return "(" + id + "," + item2countMap + "," + vipitem2vipcountMap + "," + viplevel + "," + iconFile + ")";
     }
 
-    public void _resolveDirect(config.ConfigMgr mgr) {
-        if (vipitem2vipcountMap.isEmpty()) {
-            RefVipitem2vipcountMap = java.util.Collections.emptyMap();
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        if (this.vipitem2vipcountMap.isEmpty()) {
+            this.RefVipitem2vipcountMap = java.util.Collections.emptyMap();
         } else {
-            RefVipitem2vipcountMap = new java.util.LinkedHashMap<>(vipitem2vipcountMap.size());
-            for (java.util.Map.Entry<Integer, Integer> e : vipitem2vipcountMap.entrySet()) {
-                config.other.CfgLoot rv = mgr.other_loot_All.get(e.getValue());
-                configgen.genjava.LoadValueErrs.requireNonNull(rv, "other.signin.vipitem2vipcountMap -> other.loot", e.getValue());
-                RefVipitem2vipcountMap.put(e.getKey(), rv);
+            this.RefVipitem2vipcountMap = new java.util.LinkedHashMap<>(this.vipitem2vipcountMap.size());
+            for (java.util.Map.Entry<Integer, Integer> e : this.vipitem2vipcountMap.entrySet()) {
+                var ref = mgr.getOtherLoot(e.getValue());
+                if (ref == null) errors.missingReference("other.signin", "vipitem2vipcountMap", "other.loot", e.getValue());
+                this.RefVipitem2vipcountMap.put(e.getKey(), ref);
             }
         }
-    }
+        this.RefVipitem2vipcountMap = java.util.Collections.unmodifiableMap(this.RefVipitem2vipcountMap);
 
-    public void _resolve(config.ConfigMgr mgr) {
-        _resolveDirect(mgr);
     }
 
     public static CfgSignin get(int id) {
@@ -112,25 +118,6 @@ public class CfgSignin {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherSignin();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.other_signin_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgSignin self = CfgSignin._create(input);
-                mgr.other_signin_All.put(self.id, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            for (CfgSignin e : mgr.other_signin_All.values()) {
-                e._resolve(mgr);
-            }
-        }
-
-    }
 
 }

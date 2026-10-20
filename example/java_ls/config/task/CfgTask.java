@@ -1,5 +1,7 @@
 package config.task;
 
+import configgen.genjava.LoadValueErrs;
+
 // 来自：task/task_任务.csv
 public class CfgTask {
     private int taskid;
@@ -18,7 +20,7 @@ public class CfgTask {
         CfgTask self = new CfgTask();
         self.taskid = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.name = java.util.Collections.emptyList();
             } else {
@@ -26,6 +28,7 @@ public class CfgTask {
                 for (; c > 0; c--) {
                     self.name.add(config.Text._create(input));
                 }
+                self.name = java.util.Collections.unmodifiableList(self.name);
             }
         }
         self.nexttask = input.readInt();
@@ -81,14 +84,11 @@ public class CfgTask {
         return "(" + taskid + "," + name + "," + nexttask + "," + completecondition + "," + exp + "," + testDefaultBean + ")";
     }
 
-    public void _resolveDirect(config.ConfigMgr mgr) {
-        NullableRefTaskid = mgr.task_taskextraexp_All.get(taskid);
-        NullableRefNexttask = mgr.task_task_All.get(nexttask);
-    }
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        this.completecondition._resolve(mgr, errors);
+        this.NullableRefTaskid = mgr.getTaskTaskextraexp(this.taskid);
+        this.NullableRefNexttask = mgr.getTaskTask(this.nexttask);
 
-    public void _resolve(config.ConfigMgr mgr) {
-        completecondition._resolve(mgr);
-        _resolveDirect(mgr);
     }
 
     public static CfgTask get(int taskid) {
@@ -100,25 +100,6 @@ public class CfgTask {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allTaskTask();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.task_task_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgTask self = CfgTask._create(input);
-                mgr.task_task_All.put(self.taskid, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            for (CfgTask e : mgr.task_task_All.values()) {
-                e._resolve(mgr);
-            }
-        }
-
-    }
 
 }

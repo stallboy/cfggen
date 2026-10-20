@@ -16,9 +16,9 @@ func createOtherLoot(stream *Stream) *OtherLoot {
     v.lootid = stream.ReadInt32()
     v.ename = stream.ReadStringInPool()
     v.name = createText(stream)
-    chanceListSize := stream.ReadInt32()
+    chanceListSize := stream.ReadCount(0)
     v.chanceList = make([]int32, chanceListSize)
-    for i := 0; i < int(chanceListSize); i++ {
+    for i := 0; i < chanceListSize; i++ {
         v.chanceList[i] = stream.ReadInt32()
     }
     return v
@@ -73,7 +73,7 @@ func(t *OtherLootMgr) Get(lootid int32) *OtherLoot {
 }
 
 func (t *OtherLootMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*OtherLoot, 0, cnt)
     t.lootidMap = make(map[int32]*OtherLoot, cnt)
     for i := 0; i < int(cnt); i++ {

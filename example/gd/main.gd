@@ -95,7 +95,7 @@ func _load_config():
 	var processor = ConfigProcessor.new()
 
 	# 加载配置数据
-	ConfigLoader.load_bytes(bytes, processor.load_from_stream, errors)
+	processor.load_from_package(ConfigPackage.read(bytes), errors)
 
 	print("配置加载完成！")
 

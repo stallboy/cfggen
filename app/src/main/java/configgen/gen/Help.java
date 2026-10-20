@@ -55,6 +55,7 @@ public class Help {
         Logger.log("-----schema & data");
         Logger.log("    -datadir          " + LocaleUtil.getLocaleString("Usage.DataDir",
                 "configuration data directory, must contains file:config.cfg"));
+        Logger.log("    -schema           shared config.cfg or schema directory; read fixed schema without aligning or writing it");
         Logger.log("    -headrow          " + LocaleUtil.getLocaleString("Usage.HeadRow",
                 "csv/txt/excel file head row type, default 2"));
         Logger.log("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",

@@ -1,5 +1,7 @@
 package config.task.completecondition;
 
+import configgen.genjava.LoadValueErrs;
+
 public final class CfgConditionAnd implements config.task.completecondition.CfgCompletecondition {
     @Override
     public config.task.CfgCompleteconditiontype type() {
@@ -8,7 +10,6 @@ public final class CfgConditionAnd implements config.task.completecondition.CfgC
 
     private config.task.completecondition.CfgCompletecondition cond1;
     private config.task.completecondition.CfgCompletecondition cond2;
-
     private CfgConditionAnd() {
     }
 
@@ -39,9 +40,8 @@ public final class CfgConditionAnd implements config.task.completecondition.CfgC
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgConditionAnd))
+        if (!(other instanceof CfgConditionAnd o))
             return false;
-        CfgConditionAnd o = (CfgConditionAnd) other;
         return cond1.equals(o.cond1) && cond2.equals(o.cond2);
     }
 
@@ -51,9 +51,9 @@ public final class CfgConditionAnd implements config.task.completecondition.CfgC
     }
 
     @Override
-    public void _resolve(config.ConfigMgr mgr) {
-        cond1._resolve(mgr);
-        cond2._resolve(mgr);
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        this.cond1._resolve(mgr, errors);
+        this.cond2._resolve(mgr, errors);
     }
 
 }

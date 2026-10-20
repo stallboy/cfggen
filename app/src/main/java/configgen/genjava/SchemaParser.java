@@ -19,6 +19,14 @@ import static configgen.value.CfgValue.*;
 public final class SchemaParser {
 
     public static SchemaInterface parse(CfgValue cfgValue, LangSwitchable langSwitch) {
+        return parse(cfgValue, langSwitch, false);
+    }
+
+    public static SchemaInterface parsePackage(CfgValue cfgValue, LangSwitchable langSwitch) {
+        return parse(cfgValue, langSwitch, true);
+    }
+
+    private static SchemaInterface parse(CfgValue cfgValue, LangSwitchable langSwitch, boolean completeTableLayouts) {
         SchemaInterface root = new SchemaInterface();
         if (langSwitch != null) {
             root.addImp("Text", parseLangSwitch(langSwitch)); //这里国际化的字段当作一个Bean
@@ -40,7 +48,7 @@ public final class SchemaParser {
 
             if (entry instanceof EntryType.EEnum) {
                 root.addImp(name, parseEntry(vTable, false));
-                if (!GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(tableSchema)) {
+                if (completeTableLayouts || !GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(tableSchema)) {
                     root.addImp(name + "_Detail", parseStructural(tableSchema));
                 }
             } else {

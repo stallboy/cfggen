@@ -2,7 +2,6 @@ package configgen.genjava;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -116,7 +115,7 @@ public class CodeDataInspector {
     }
 
     /**
-     * 枚举所有有数据的表：schema 里 isTable 的 SchemaBean，按表名推 ConfigMgr 的 {@code *_All} 字段。
+     * 按表名访问 ConfigMgr 的只读索引 getter，同时兼容旧版 {@code *_All} 公开字段。
      * enum 表的数据 bean 在 {@code <table>_Detail}，去掉后缀得到表名。
      */
     private List<TableData> discoverTables() {
@@ -134,13 +133,17 @@ public class CodeDataInspector {
                         : key;
                 String fieldName = base.replace('.', '_') + "_All";
                 try {
-                    Field f = cls.getField(fieldName);
-                    Object data = f.get(mgr);
+                    Object data;
+                    try {
+                        data = cls.getMethod("_get_" + fieldName).invoke(mgr);
+                    } catch (NoSuchMethodException ignored) {
+                        data = cls.getField(fieldName).get(mgr);
+                    }
                     if (data == null) continue;
                     list.add(new TableData(base, bean, data, data.getClass().isArray()));
                 } catch (NoSuchFieldException ignored) {
                     // 纯枚举表等无 _All 字段，跳过
-                } catch (IllegalAccessException ex) {
+                } catch (ReflectiveOperationException ex) {
                     throw new RuntimeException(ex);
                 }
             }
@@ -172,16 +175,16 @@ public class CodeDataInspector {
     // ==================== 取记录 ====================
 
     private Object getByKey(TableData td, String keyStr) {
-        if (td.isArray) {
+        if (td.isArray || td.data instanceof List<?>) {
             int idx;
             try {
                 idx = Integer.parseInt(keyStr.trim());
             } catch (NumberFormatException ex) {
                 return null;
             }
-            int len = Array.getLength(td.data);
+            int len = td.isArray ? Array.getLength(td.data) : ((List<?>) td.data).size();
             if (idx < 0 || idx >= len) return null;
-            return Array.get(td.data, idx);
+            return td.isArray ? Array.get(td.data, idx) : ((List<?>) td.data).get(idx);
         }
         if (!(td.data instanceof Map<?, ?> map)) return null;
         if (map.isEmpty()) return null;

@@ -5,7 +5,6 @@ public class CfgDropItem {
     private java.util.List<Integer> itemids;
     private int countmin;
     private int countmax;
-
     private CfgDropItem() {
     }
 
@@ -20,7 +19,7 @@ public class CfgDropItem {
         CfgDropItem self = new CfgDropItem();
         self.chance = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.itemids = java.util.Collections.emptyList();
             } else {
@@ -28,6 +27,7 @@ public class CfgDropItem {
                 for (; c > 0; c--) {
                     self.itemids.add(input.readInt());
                 }
+                self.itemids = java.util.Collections.unmodifiableList(self.itemids);
             }
         }
         self.countmin = input.readInt();
@@ -70,9 +70,8 @@ public class CfgDropItem {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgDropItem))
+        if (!(other instanceof CfgDropItem o))
             return false;
-        CfgDropItem o = (CfgDropItem) other;
         return chance == o.chance && itemids.equals(o.itemids) && countmin == o.countmin && countmax == o.countmax;
     }
 

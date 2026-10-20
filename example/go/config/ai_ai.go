@@ -19,9 +19,9 @@ func createAiAi(stream *Stream) *AiAi {
     v.condID = stream.ReadStringInPool()
     v.trigTick = createAiTriggerTick(stream)
     v.trigOdds = stream.ReadInt32()
-    actionIDSize := stream.ReadInt32()
+    actionIDSize := stream.ReadCount(0)
     v.actionID = make([]int32, actionIDSize)
-    for i := 0; i < int(actionIDSize); i++ {
+    for i := 0; i < actionIDSize; i++ {
         v.actionID[i] = stream.ReadInt32()
     }
     v.deathRemove = stream.ReadBool()
@@ -75,7 +75,7 @@ func(t *AiAiMgr) Get(iD int32) *AiAi {
 }
 
 func (t *AiAiMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*AiAi, 0, cnt)
     t.iDMap = make(map[int32]*AiAi, cnt)
     for i := 0; i < int(cnt); i++ {

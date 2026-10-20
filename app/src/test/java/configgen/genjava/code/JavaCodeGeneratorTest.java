@@ -23,6 +23,50 @@ class JavaCodeGeneratorTest {
     @TempDir
     Path tempDir;
 
+    @Test
+    void importsLoadValueErrsOnlyWhenTheGeneratedClassUsesIt() throws Exception {
+        var context = configgen.TestCtx.newContext(Files.createDirectories(tempDir.resolve("data")), """
+                struct Plain { value:int; }
+                struct WithMap { values:map<int,int> (pack); }
+                struct Required { id:int ->target; mgr:int ->target; errors:int ->target; }
+                struct Optional { id:int ->target (nullable); }
+                struct Nested { value:Required; }
+                interface Choice { struct Empty {} }
+                table target[id] { id:int; }
+                table indexed[id] { id:int (seq); }
+                table state[id] (enum='name') { id:int; name:str; power:int; }
+                table flag[id] (enum='name') { id:int; name:str; }
+                table empty[id] (entry='name') { id:int; name:str; }
+                """, java.util.Map.of("target", "id\nid\n1\n", "indexed", "id\nid\n0\n",
+                "state", "id,name,power\nid,name,power\n1,LoadValueErrs,2\n", "flag", "id,name\nid,name\n1,On\n",
+                "empty", "id,name\nid,name\n1,\n"));
+        Path generated = tempDir.resolve("generated");
+        new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",pkg:config")).generate(context);
+        for (String className : java.util.List.of("Plain", "WithMap", "Required", "Optional", "Nested", "choice/Choice", "Target", "Indexed", "State_Detail", "Flag")) {
+            String code = Files.readString(generated.resolve("config/" + className + ".java"));
+            boolean needsErrors = java.util.Set.of("Required", "Optional", "Nested", "Indexed").contains(className);
+            assertEquals(needsErrors, code.contains("import configgen.genjava.LoadValueErrs;"), className);
+            assertFalse(code.contains("configgen.genjava.LoadValueErrs."), className);
+            assertFalse(code.contains("_resolveDirect"), className);
+            assertFalse(code.contains("errors.requireNonNull("), className);
+            if (className.equals("Required")) assertTrue(code.contains(" == null) errors.missingReference("));
+            if (className.equals("Optional")) assertFalse(code.contains("errors.missingReference("));
+        }
+        String symbols = Files.readString(generated.resolve("config/State.java"));
+        assertFalse(symbols.contains("requireSymbol("));
+        assertTrue(symbols.contains("if (e.ref(mgr) == null) errors.missingSymbol("));
+        assertTrue(symbols.contains("State expected = switch (symbol)"));
+        assertTrue(symbols.contains("key != expected.value"));
+        var classes = Files.createDirectories(tempDir.resolve("classes"));
+        var args = new java.util.ArrayList<>(java.util.List.of("--release", "25", "-d", classes.toString(), "-classpath",
+                Path.of(configgen.genjava.ConfigInput.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString()));
+        try (var files = Files.walk(generated)) {
+            files.filter(path -> path.toString().endsWith(".java")).forEach(path -> args.add(path.toString()));
+        }
+        assertEquals(0, javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null, args.toArray(String[]::new)),
+                "Imports must compile even when an enum constant is named LoadValueErrs");
+    }
+
     @BeforeAll
     static void setupLogger() {
         Logger.setPrinter(Logger.Printer.nullPrinter);
@@ -74,7 +118,7 @@ class JavaCodeGeneratorTest {
 
         assertTrue(userEntryFile.exists(), "应该生成User.java文件");
         assertTrue(configMgrFile.exists(), "应该生成ConfigMgr.java文件");
-        assertTrue(configLoaderFile.exists(), "应该生成ConfigLoader.java文件");
+        assertFalse(configLoaderFile.exists(), "ConfigLoader belongs to the shared configgen.genjava runtime");
         assertTrue(configMgrLoaderFile.exists(), "应该生成ConfigMgrLoader.java文件");
 
         // 验证文件内容
@@ -84,6 +128,8 @@ class JavaCodeGeneratorTest {
         assertTrue(userEntryContent.contains("id"), "应该包含id字段");
         assertTrue(userEntryContent.contains("name"), "应该包含name字段");
         assertTrue(userEntryContent.contains("age"), "应该包含age字段");
+        assertFalse(new File(expectedFilesDir, "ConfigNode.java").exists());
+        assertFalse(userEntryContent.contains("_collectExtensions"), "普通类型不需要扩展收集协议");
     }
 
     @Test

@@ -15,4 +15,8 @@ public class ProcessorModel {
     public String fullName(Nameable nameable) {
         return new Name(gen.prefix, nameable).className;
     }
+
+    public String languageArguments() {
+        return gen.languageNames.stream().map(name -> "\"" + name + "\"").collect(java.util.stream.Collectors.joining(", "));
+    }
 }

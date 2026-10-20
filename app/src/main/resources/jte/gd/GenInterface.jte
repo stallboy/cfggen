@@ -26,11 +26,16 @@ class_name ${model.name.className}
 # 创建实例（静态工厂方法）
 static func _create(stream: ConfigStream) -> ${model.name.className}:
 	var type_name = stream.read_string_in_pool()
-	match type_name:
-		@for(StructSchema impl : model.sInterface.impls())
-			"${impl.name()}":
-				return ${model.fullName(impl)}._create(stream)
-		@endfor
-		_:
-			push_error("Unknown type: " + type_name)
-			return null
+	@if(model.sInterface.impls().size() == 1)
+		!{var impl = model.sInterface.impls().getFirst();}
+		if type_name == "${impl.name()}":
+			return ${model.fullName(impl)}._create(stream)
+	@elseif(model.sInterface.impls().size() > 1)
+		match type_name:
+			@for(StructSchema impl : model.sInterface.impls())
+				"${impl.name()}":
+					return ${model.fullName(impl)}._create(stream)
+			@endfor
+	@endif
+	stream.fail("Unknown type: " + type_name)
+	return null

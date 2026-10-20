@@ -8,7 +8,6 @@ import configgen.genjava.*;
 import java.io.IOException;
 import java.nio.file.*;
 //import java.util.concurrent.Executors;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -18,29 +17,11 @@ public class LoadConfig {
     private static final Logger logger = Logger.getLogger("LoadConfig");
 
     public static void load(String fn) throws IOException {
-        Schema codeSchema = ConfigCodeSchema.getCodeSchema();
         try (ConfigInput input = new ConfigInput(Path.of(fn))) {
-            Schema dataSchema = ConfigMgrLoader.loadSchema(input);
-            boolean compatible = codeSchema.compatible(dataSchema);
-            if (compatible) {
-                ConfigMgr mgr = ConfigMgrLoader.load(input);
-                LoadValueErrs.start(true);
-                ConfigMgr.setMgr(mgr);
-            } else {
-                throw new SchemaCompatibleException("schema not compatible, ignore load configdata");
-            }
-        }
-    }
-
-    public static void loadPartial(String fn) throws IOException {
-        try (ConfigInput input = new ConfigInput(Path.of(fn))) {
-            ConfigMgrLoader.loadSchema(input);
-            LoadValueErrs.start(false);
-            ConfigMgrLoader.loadPartialAndSetMgr(input, ConfigMgr.getMgr(), Set.of("ai.ai"));
-            for (LoadValueErrs.Error error : LoadValueErrs.getErrors()) {
-                System.out.println(error);
-            }
-
+            ConfigPackage pack = ConfigPackage.read(input);
+            // Schema/引用校验、扩展初始化全部成功后，才发布新的默认实例。
+            ConfigMgr configMgr = ConfigMgrLoader.loadPackagesAndSetMgr(pack);
+            System.out.println("config.bytes version=" + ConfigPackage.FORMAT_VERSION + ", metadata=" + pack.metadata());
         }
     }
 
@@ -101,7 +82,15 @@ public class LoadConfig {
 
         } else {
 
-            loadPartial(fn);
+            ConfigMgr original = ConfigMgr.getMgr();
+            Task originalTask = original.getTaskTask(1);
+            load(fn);
+            ConfigMgr reloaded = ConfigMgr.getMgr();
+            if (original == reloaded || originalTask == reloaded.getTaskTask(1)) {
+                throw new IllegalStateException("Reload must create an independent configuration instance");
+            }
+            System.out.println("reload: independent instances, original task=" + originalTask);
+            System.out.println("task 1 sources=" + reloaded.explain("task.task", 1));
 
             new BytesInspector(fn).match("eq");
             CodeDataInspector inspector = new CodeDataInspector(ConfigMgr.getMgr(), ConfigCodeSchema.getCodeSchema());

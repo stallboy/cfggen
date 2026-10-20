@@ -24,7 +24,8 @@ func _to_string() -> String:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
+	_data = {}
+	var count = stream.read_count(1)
 	for i in range(count):
 		var item = _create(stream)
 		_data[item.id] = item
@@ -46,14 +47,14 @@ static func _create(stream: ConfigStream) -> DataOther_Signin:
 	return instance
 
 
-	# 解析外键引用
-	func _resolve(errors: ConfigErrors):
-		for k in vipitem2vipcountMap.keys():
-			var v = DataOther_Loot.find(vipitem2vipcountMap[k])
-			if v == null:
-				errors.ref_null("other.signin", "vipitem2vipcountMap")
-			RefVipitem2vipcountMap[k] = v
+# 解析外键引用
+func _resolve(errors: ConfigErrors):
+	for k in vipitem2vipcountMap.keys():
+		var v = DataOther_Loot.find(vipitem2vipcountMap[k])
+		if v == null:
+			errors.ref_null("other.signin", "vipitem2vipcountMap")
+		RefVipitem2vipcountMap[k] = v
 
-	static func _resolve_refs(errors: ConfigErrors):
-		for item in all():
-			item._resolve(errors)
+static func _resolve_refs(errors: ConfigErrors):
+	for item in all():
+		item._resolve(errors)

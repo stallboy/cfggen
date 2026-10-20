@@ -6,11 +6,11 @@ namespace Config.Equip
     {
         internal static DTestPackBean _create(ConfigReader reader)
         {
-            var name = reader.ReadStringInPool();
-            var iRange = DRange._create(reader);
+            var valueName = reader.ReadStringInPool();
+            var valueIRange = DRange._create(reader);
             return new DTestPackBean {
-                Name = name,
-                IRange = iRange,
+                Name = valueName,
+                IRange = valueIRange,
             };
         }
 
@@ -21,10 +21,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DTestPackBean;
-            return o != null && Name.Equals(o.Name) && IRange.Equals(o.IRange);
+            return obj is DTestPackBean o && Name.Equals(o.Name) && IRange.Equals(o.IRange);
         }
 
         public override string ToString()
@@ -32,40 +29,63 @@ namespace Config.Equip
             return "(" + Name + "," + IRange + ")";
         }
 
+
     }
 
     public partial class DAbilityInfo
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DAbilityInfo>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DAbilityInfo> list, IIssueHandler handler)
+        private static readonly int[] _symbolKeys = { 1, 2, 3, 4, 5, 6, 7 };
+        internal static int PrimaryKey(DAbilityInfo self) => self.Id;
+        internal static void InitializeAll(List<DAbilityInfo> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DAbilityInfo>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Id, self);
-                DAbilityExtensions._infos[(int)self.EEnum] = self;
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
+                string name = self.Name;
+                int symbol = (int)self.EEnum;
+                if (symbol < 0) errors.UnknownSymbol("equip.ability", name, key, config.Explain("equip.ability", key));
+                else {
+                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("equip.ability", name, _symbolKeys[symbol], key, config.Explain("equip.ability", key));
+                }
             }
-            _all = s_all;
-            _allList = list;
+            config._equip_dability_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DAbilityInfo>(s_all);
+            config._equip_dability_Symbols[(int)DAbility.Attack] = Get(config, 1);
+            if (config._equip_dability_Symbols[(int)DAbility.Attack] == null) errors.MissingSymbol("equip.ability", "attack", 1);
+            config._equip_dability_Symbols[(int)DAbility.Defence] = Get(config, 2);
+            if (config._equip_dability_Symbols[(int)DAbility.Defence] == null) errors.MissingSymbol("equip.ability", "defence", 2);
+            config._equip_dability_Symbols[(int)DAbility.Hp] = Get(config, 3);
+            if (config._equip_dability_Symbols[(int)DAbility.Hp] == null) errors.MissingSymbol("equip.ability", "hp", 3);
+            config._equip_dability_Symbols[(int)DAbility.Critical] = Get(config, 4);
+            if (config._equip_dability_Symbols[(int)DAbility.Critical] == null) errors.MissingSymbol("equip.ability", "critical", 4);
+            config._equip_dability_Symbols[(int)DAbility.Critical_resist] = Get(config, 5);
+            if (config._equip_dability_Symbols[(int)DAbility.Critical_resist] == null) errors.MissingSymbol("equip.ability", "critical_resist", 5);
+            config._equip_dability_Symbols[(int)DAbility.Block] = Get(config, 6);
+            if (config._equip_dability_Symbols[(int)DAbility.Block] == null) errors.MissingSymbol("equip.ability", "block", 6);
+            config._equip_dability_Symbols[(int)DAbility.Break_armor] = Get(config, 7);
+            if (config._equip_dability_Symbols[(int)DAbility.Break_armor] == null) errors.MissingSymbol("equip.ability", "break_armor", 7);
+            config._equip_dability_Rows = list.AsReadOnly();
         }
 
         internal static DAbilityInfo _create(ConfigReader reader)
         {
-            var id = reader.ReadInt32();
-            var name = reader.ReadStringInPool();
+            var valueId = reader.ReadInt32();
+            var valueName = reader.ReadStringInPool();
             return new DAbilityInfo {
-                Id = id,
-                Name = name,
-                EEnum = (DAbility)Enum.Parse(typeof(DAbility), StringUtil.UpperFirstChar(name))
+                Id = valueId,
+                Name = valueName,
+                EEnum = valueName switch {
+                    "attack" => DAbility.Attack,
+                    "defence" => DAbility.Defence,
+                    "hp" => DAbility.Hp,
+                    "critical" => DAbility.Critical,
+                    "critical_resist" => DAbility.Critical_resist,
+                    "block" => DAbility.Block,
+                    "break_armor" => DAbility.Break_armor,
+                    _ => (DAbility)(-1)
+                }
             };
         }
 
@@ -76,10 +96,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DAbilityInfo;
-            return o != null && Id.Equals(o.Id);
+            return obj is DAbilityInfo o && Id.Equals(o.Id);
         }
 
         public override string ToString()
@@ -87,70 +104,52 @@ namespace Config.Equip
             return "(" + Id + "," + Name + ")";
         }
 
+
     }
 
     public partial class DEquipconfig
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DEquipconfig>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DEquipconfig> list, IIssueHandler handler)
+        internal static string PrimaryKey(DEquipconfig self) => self.Entry;
+        internal static void InitializeAll(List<DEquipconfig> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<string, DEquipconfig>(count);
-            DEquipconfig? eInstance = null;
-            DEquipconfig? eInstance2 = null;
             foreach (var self in list)
             {
-                s_all.Add(self.Entry, self);
-                if (self.Entry.Length == 0)
-                    continue;
-                switch(self.Entry)
-                {
-                    case "Instance":
-                        if (eInstance != null)
-                            handler.EnumDuplicateInData("Instance");
-                        eInstance = self;
-                        break;
-                    case "Instance2":
-                        if (eInstance2 != null)
-                            handler.EnumDuplicateInData("Instance2");
-                        eInstance2 = self;
-                        break;
-                    default:
-                        handler.EnumNotInCode(self.Entry);
-                        break;
-                }
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
+                string name = self.Entry;
+                if (name.Length == 0) continue;
+                int symbol = name switch {
+                    "Instance" => 0,
+                    "Instance2" => 1,
+                    _ => -1
+                };
+                if (symbol < 0) errors.UnknownSymbol("equip.equipconfig", name, key, config.Explain("equip.equipconfig", key));
             }
-            _all = s_all;
-            _allList = list;
-            if (eInstance == null) handler.EnumNotInData("Instance");
-            else Instance = eInstance;
-            if (eInstance2 == null) handler.EnumNotInData("Instance2");
-            else Instance2 = eInstance2;
+            config._equip_dequipconfig_All = new System.Collections.ObjectModel.ReadOnlyDictionary<string, DEquipconfig>(s_all);
+            config._equip_dequipconfig_Symbol_Instance = Get(config, "Instance");
+            if (config._equip_dequipconfig_Symbol_Instance == null) errors.MissingSymbol("equip.equipconfig", "Instance", "Instance");
+            config._equip_dequipconfig_Symbol_Instance2 = Get(config, "Instance2");
+            if (config._equip_dequipconfig_Symbol_Instance2 == null) errors.MissingSymbol("equip.equipconfig", "Instance2", "Instance2");
+            config._equip_dequipconfig_Rows = list.AsReadOnly();
         }
 
         internal static DEquipconfig _create(ConfigReader reader)
         {
-            var entry = reader.ReadStringInPool();
-            var stone_count_for_set = reader.ReadInt32();
-            var draw_protect_name = reader.ReadStringInPool();
-            var broadcastid = reader.ReadInt32();
-            var broadcast_least_quality = reader.ReadInt32();
-            var week_reward_mailid = reader.ReadInt32();
+            var valueEntry = reader.ReadStringInPool();
+            var valueStone_count_for_set = reader.ReadInt32();
+            var valueDraw_protect_name = reader.ReadStringInPool();
+            var valueBroadcastid = reader.ReadInt32();
+            var valueBroadcast_least_quality = reader.ReadInt32();
+            var valueWeek_reward_mailid = reader.ReadInt32();
             return new DEquipconfig {
-                Entry = entry,
-                Stone_count_for_set = stone_count_for_set,
-                Draw_protect_name = draw_protect_name,
-                Broadcastid = broadcastid,
-                Broadcast_least_quality = broadcast_least_quality,
-                Week_reward_mailid = week_reward_mailid,
+                Entry = valueEntry,
+                Stone_count_for_set = valueStone_count_for_set,
+                Draw_protect_name = valueDraw_protect_name,
+                Broadcastid = valueBroadcastid,
+                Broadcast_least_quality = valueBroadcast_least_quality,
+                Week_reward_mailid = valueWeek_reward_mailid,
             };
         }
 
@@ -161,10 +160,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DEquipconfig;
-            return o != null && Entry.Equals(o.Entry);
+            return obj is DEquipconfig o && Entry.Equals(o.Entry);
         }
 
         public override string ToString()
@@ -172,59 +168,48 @@ namespace Config.Equip
             return "(" + Entry + "," + Stone_count_for_set + "," + Draw_protect_name + "," + Broadcastid + "," + Broadcast_least_quality + "," + Week_reward_mailid + ")";
         }
 
+
     }
 
     public partial class DJewelry
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DJewelry>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DJewelry> list, IIssueHandler handler)
+        internal static int PrimaryKey(DJewelry self) => self.ID;
+        internal static void InitializeAll(List<DJewelry> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DJewelry>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.ID, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all;
-            _allList = list;
+            config._equip_djewelry_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DJewelry>(s_all);
+            config._equip_djewelry_Rows = list.AsReadOnly();
         }
 
-        internal static void Resolve(IIssueHandler h)
-        {
-            foreach (var v in All())
-                v._resolve(h);
-        }
         internal static DJewelry _create(ConfigReader reader)
         {
-            var iD = reader.ReadInt32();
-            var name = reader.ReadStringInPool();
-            var iconFile = reader.ReadStringInPool();
-            var lvlRank = DLevelRank._create(reader);
-            var jType = reader.ReadStringInPool();
-            var suitID = reader.ReadInt32();
-            var keyAbility = reader.ReadInt32();
-            var keyAbilityValue = reader.ReadInt32();
-            var salePrice = reader.ReadInt32();
-            var description = reader.ReadStringInPool();
+            var valueID = reader.ReadInt32();
+            var valueName = reader.ReadStringInPool();
+            var valueIconFile = reader.ReadStringInPool();
+            var valueLvlRank = DLevelRank._create(reader);
+            var valueJType = reader.ReadStringInPool();
+            var valueSuitID = reader.ReadInt32();
+            var valueKeyAbility = reader.ReadInt32();
+            var valueKeyAbilityValue = reader.ReadInt32();
+            var valueSalePrice = reader.ReadInt32();
+            var valueDescription = reader.ReadStringInPool();
             return new DJewelry {
-                ID = iD,
-                Name = name,
-                IconFile = iconFile,
-                LvlRank = lvlRank,
-                JType = jType,
-                SuitID = suitID,
-                KeyAbility = keyAbility,
-                KeyAbilityValue = keyAbilityValue,
-                SalePrice = salePrice,
-                Description = description,
+                ID = valueID,
+                Name = valueName,
+                IconFile = valueIconFile,
+                LvlRank = valueLvlRank,
+                JType = valueJType,
+                SuitID = valueSuitID,
+                KeyAbility = valueKeyAbility,
+                KeyAbilityValue = valueKeyAbilityValue,
+                SalePrice = valueSalePrice,
+                Description = valueDescription,
             };
         }
 
@@ -235,10 +220,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DJewelry;
-            return o != null && ID.Equals(o.ID);
+            return obj is DJewelry o && ID.Equals(o.ID);
         }
 
         public override string ToString()
@@ -246,67 +228,64 @@ namespace Config.Equip
             return "(" + ID + "," + Name + "," + IconFile + "," + LvlRank + "," + JType + "," + SuitID + "," + KeyAbility + "," + KeyAbilityValue + "," + SalePrice + "," + Description + ")";
         }
 
-        internal void _resolve(IIssueHandler h)
+        internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            LvlRank._resolve(h);
-            var rRefLvlRank = Equip.DJewelryrandom.Get(LvlRank);
-            if (rRefLvlRank == null) h.RefNotFound("equip.jewelry", "LvlRank", LvlRank.ToString());
+            LvlRank._resolve(errors, config);
+            var rRefLvlRank = Equip.DJewelryrandom.Get(config, LvlRank);
+            if (rRefLvlRank == null) errors.MissingReference("equip.jewelry", "LvlRank", "equip.jewelryrandom", this.LvlRank);
             else RefLvlRank = rRefLvlRank;
-            var rRefJType = Equip.DJewelrytypeInfo.Get(JType);
-            if (rRefJType == null) h.RefNotFound("equip.jewelry", "JType", JType);
+            var rRefJType = Equip.DJewelrytypeInfo.Get(config, JType);
+            if (rRefJType == null) errors.MissingReference("equip.jewelry", "JType", "equip.jewelrytype", this.JType);
             else RefJType = rRefJType.EEnum;
-            NullableRefSuitID = Equip.DJewelrysuit.Get(SuitID);
-            var rRefKeyAbility = Equip.DAbilityInfo.Get(KeyAbility);
-            if (rRefKeyAbility == null) h.RefNotFound("equip.jewelry", "KeyAbility", KeyAbility.ToString());
+            NullableRefSuitID = Equip.DJewelrysuit.Get(config, SuitID);
+            var rRefKeyAbility = Equip.DAbilityInfo.Get(config, KeyAbility);
+            if (rRefKeyAbility == null) errors.MissingReference("equip.jewelry", "KeyAbility", "equip.ability", this.KeyAbility);
             else RefKeyAbility = rRefKeyAbility.EEnum;
         }
+
     }
 
     public partial class DJewelryrandom
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DJewelryrandom>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DJewelryrandom> list, IIssueHandler handler)
+        internal static DLevelRank PrimaryKey(DJewelryrandom self) => self.LvlRank;
+        internal static void InitializeAll(List<DJewelryrandom> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<DLevelRank, DJewelryrandom>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.LvlRank, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all;
-            _allList = list;
+            config._equip_djewelryrandom_All = new System.Collections.ObjectModel.ReadOnlyDictionary<DLevelRank, DJewelryrandom>(s_all);
+            config._equip_djewelryrandom_Rows = list.AsReadOnly();
         }
 
-        internal static void Resolve(IIssueHandler h)
-        {
-            foreach (var v in All())
-                v._resolve(h);
-        }
         internal static DJewelryrandom _create(ConfigReader reader)
         {
-            var lvlRank = DLevelRank._create(reader);
-            var attackRange = DRange._create(reader);
-            int Count_otherRange = reader.ReadInt32();
-            var otherRange = new List<DRange>(Count_otherRange);
-            for (int i = 0; i < Count_otherRange; i++)
-                otherRange.Add(DRange._create(reader));
-            int Count_testPack = reader.ReadInt32();
-            var testPack = new List<Equip.DTestPackBean>(Count_testPack);
-            for (int i = 0; i < Count_testPack; i++)
-                testPack.Add(Equip.DTestPackBean._create(reader));
+            var valueLvlRank = DLevelRank._create(reader);
+            var valueAttackRange = DRange._create(reader);
+            int Count_valueOtherRange = reader.ReadCount(0);
+            IReadOnlyList<DRange> valueOtherRange;
+            if (Count_valueOtherRange == 0) valueOtherRange = Array.Empty<DRange>();
+            else {
+                var values_valueOtherRange = new List<DRange>(Count_valueOtherRange);
+                for (int i = 0; i < Count_valueOtherRange; i++) values_valueOtherRange.Add(DRange._create(reader));
+                valueOtherRange = values_valueOtherRange.AsReadOnly();
+            }
+            int Count_valueTestPack = reader.ReadCount(0);
+            IReadOnlyList<Equip.DTestPackBean> valueTestPack;
+            if (Count_valueTestPack == 0) valueTestPack = Array.Empty<Equip.DTestPackBean>();
+            else {
+                var values_valueTestPack = new List<Equip.DTestPackBean>(Count_valueTestPack);
+                for (int i = 0; i < Count_valueTestPack; i++) values_valueTestPack.Add(Equip.DTestPackBean._create(reader));
+                valueTestPack = values_valueTestPack.AsReadOnly();
+            }
             return new DJewelryrandom {
-                LvlRank = lvlRank,
-                AttackRange = attackRange,
-                OtherRange = otherRange,
-                TestPack = testPack,
+                LvlRank = valueLvlRank,
+                AttackRange = valueAttackRange,
+                OtherRange = valueOtherRange,
+                TestPack = valueTestPack,
             };
         }
 
@@ -317,10 +296,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DJewelryrandom;
-            return o != null && LvlRank.Equals(o.LvlRank);
+            return obj is DJewelryrandom o && LvlRank.Equals(o.LvlRank);
         }
 
         public override string ToString()
@@ -328,77 +304,69 @@ namespace Config.Equip
             return "(" + LvlRank + "," + AttackRange + "," + StringUtil.ToString(OtherRange) + "," + StringUtil.ToString(TestPack) + ")";
         }
 
-        internal void _resolve(IIssueHandler h)
+        internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            LvlRank._resolve(h);
+            LvlRank._resolve(errors, config);
         }
+
     }
 
     public partial class DJewelrysuit
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DJewelrysuit>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DJewelrysuit> list, IIssueHandler handler)
+        private static readonly int[] _symbolKeys = { 4 };
+        internal static int PrimaryKey(DJewelrysuit self) => self.SuitID;
+        internal static void InitializeAll(List<DJewelrysuit> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DJewelrysuit>(count);
-            DJewelrysuit? eSpecialSuit = null;
             foreach (var self in list)
             {
-                s_all.Add(self.SuitID, self);
-                if (self.Ename.Length == 0)
-                    continue;
-                switch(self.Ename)
-                {
-                    case "SpecialSuit":
-                        if (eSpecialSuit != null)
-                            handler.EnumDuplicateInData("SpecialSuit");
-                        eSpecialSuit = self;
-                        break;
-                    default:
-                        handler.EnumNotInCode(self.Ename);
-                        break;
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
+                string name = self.Ename;
+                if (name.Length == 0) continue;
+                int symbol = name == "SpecialSuit" ? 0 : -1;
+                if (symbol < 0) errors.UnknownSymbol("equip.jewelrysuit", name, key, config.Explain("equip.jewelrysuit", key));
+                else {
+                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("equip.jewelrysuit", name, _symbolKeys[symbol], key, config.Explain("equip.jewelrysuit", key));
                 }
             }
-            _all = s_all;
-            _allList = list;
-            if (eSpecialSuit == null) handler.EnumNotInData("SpecialSuit");
-            else SpecialSuit = eSpecialSuit;
+            config._equip_djewelrysuit_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DJewelrysuit>(s_all);
+            config._equip_djewelrysuit_Symbol_SpecialSuit = Get(config, 4);
+            if (config._equip_djewelrysuit_Symbol_SpecialSuit == null) errors.MissingSymbol("equip.jewelrysuit", "SpecialSuit", 4);
+            config._equip_djewelrysuit_Rows = list.AsReadOnly();
         }
 
         internal static DJewelrysuit _create(ConfigReader reader)
         {
-            var suitID = reader.ReadInt32();
-            var ename = reader.ReadStringInPool();
-            var name = Config.Text._create(reader);
-            var ability1 = reader.ReadInt32();
-            var ability1Value = reader.ReadInt32();
-            var ability2 = reader.ReadInt32();
-            var ability2Value = reader.ReadInt32();
-            var ability3 = reader.ReadInt32();
-            var ability3Value = reader.ReadInt32();
-            int Count_suitList = reader.ReadInt32();
-            var suitList = new List<int>(Count_suitList);
-            for (int i = 0; i < Count_suitList; i++)
-                suitList.Add(reader.ReadInt32());
+            var valueSuitID = reader.ReadInt32();
+            var valueEname = reader.ReadStringInPool();
+            var valueName = Config.Text._create(reader);
+            var valueAbility1 = reader.ReadInt32();
+            var valueAbility1Value = reader.ReadInt32();
+            var valueAbility2 = reader.ReadInt32();
+            var valueAbility2Value = reader.ReadInt32();
+            var valueAbility3 = reader.ReadInt32();
+            var valueAbility3Value = reader.ReadInt32();
+            int Count_valueSuitList = reader.ReadCount(0);
+            IReadOnlyList<int> valueSuitList;
+            if (Count_valueSuitList == 0) valueSuitList = Array.Empty<int>();
+            else {
+                var values_valueSuitList = new List<int>(Count_valueSuitList);
+                for (int i = 0; i < Count_valueSuitList; i++) values_valueSuitList.Add(reader.ReadInt32());
+                valueSuitList = values_valueSuitList.AsReadOnly();
+            }
             return new DJewelrysuit {
-                SuitID = suitID,
-                Ename = ename,
-                Name = name,
-                Ability1 = ability1,
-                Ability1Value = ability1Value,
-                Ability2 = ability2,
-                Ability2Value = ability2Value,
-                Ability3 = ability3,
-                Ability3Value = ability3Value,
-                SuitList = suitList,
+                SuitID = valueSuitID,
+                Ename = valueEname,
+                Name = valueName,
+                Ability1 = valueAbility1,
+                Ability1Value = valueAbility1Value,
+                Ability2 = valueAbility2,
+                Ability2Value = valueAbility2Value,
+                Ability3 = valueAbility3,
+                Ability3Value = valueAbility3Value,
+                SuitList = valueSuitList,
             };
         }
 
@@ -409,10 +377,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DJewelrysuit;
-            return o != null && SuitID.Equals(o.SuitID);
+            return obj is DJewelrysuit o && SuitID.Equals(o.SuitID);
         }
 
         public override string ToString()
@@ -420,38 +385,48 @@ namespace Config.Equip
             return "(" + SuitID + "," + Ename + "," + Name + "," + Ability1 + "," + Ability1Value + "," + Ability2 + "," + Ability2Value + "," + Ability3 + "," + Ability3Value + "," + StringUtil.ToString(SuitList) + ")";
         }
 
+
     }
 
     public partial class DJewelrytypeInfo
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DJewelrytypeInfo>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DJewelrytypeInfo> list, IIssueHandler handler)
+        internal static string PrimaryKey(DJewelrytypeInfo self) => self.TypeName;
+        internal static void InitializeAll(List<DJewelrytypeInfo> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<string, DJewelrytypeInfo>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.TypeName, self);
-                DJewelrytypeExtensions._infos[(int)self.EEnum] = self;
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
+                string name = self.TypeName;
+                int symbol = (int)self.EEnum;
+                if (symbol < 0) errors.UnknownSymbol("equip.jewelrytype", name, key, config.Explain("equip.jewelrytype", key));
             }
-            _all = s_all;
-            _allList = list;
+            config._equip_djewelrytype_All = new System.Collections.ObjectModel.ReadOnlyDictionary<string, DJewelrytypeInfo>(s_all);
+            config._equip_djewelrytype_Symbols[(int)DJewelrytype.Jade] = Get(config, "Jade");
+            if (config._equip_djewelrytype_Symbols[(int)DJewelrytype.Jade] == null) errors.MissingSymbol("equip.jewelrytype", "Jade", "Jade");
+            config._equip_djewelrytype_Symbols[(int)DJewelrytype.Bracelet] = Get(config, "Bracelet");
+            if (config._equip_djewelrytype_Symbols[(int)DJewelrytype.Bracelet] == null) errors.MissingSymbol("equip.jewelrytype", "Bracelet", "Bracelet");
+            config._equip_djewelrytype_Symbols[(int)DJewelrytype.Magic] = Get(config, "Magic");
+            if (config._equip_djewelrytype_Symbols[(int)DJewelrytype.Magic] == null) errors.MissingSymbol("equip.jewelrytype", "Magic", "Magic");
+            config._equip_djewelrytype_Symbols[(int)DJewelrytype.Bottle] = Get(config, "Bottle");
+            if (config._equip_djewelrytype_Symbols[(int)DJewelrytype.Bottle] == null) errors.MissingSymbol("equip.jewelrytype", "Bottle", "Bottle");
+            config._equip_djewelrytype_Rows = list.AsReadOnly();
         }
 
         internal static DJewelrytypeInfo _create(ConfigReader reader)
         {
-            var typeName = reader.ReadStringInPool();
+            var valueTypeName = reader.ReadStringInPool();
             return new DJewelrytypeInfo {
-                TypeName = typeName,
-                EEnum = (DJewelrytype)Enum.Parse(typeof(DJewelrytype), StringUtil.UpperFirstChar(typeName))
+                TypeName = valueTypeName,
+                EEnum = valueTypeName switch {
+                    "Jade" => DJewelrytype.Jade,
+                    "Bracelet" => DJewelrytype.Bracelet,
+                    "Magic" => DJewelrytype.Magic,
+                    "Bottle" => DJewelrytype.Bottle,
+                    _ => (DJewelrytype)(-1)
+                }
             };
         }
 
@@ -462,10 +437,7 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DJewelrytypeInfo;
-            return o != null && TypeName.Equals(o.TypeName);
+            return obj is DJewelrytypeInfo o && TypeName.Equals(o.TypeName);
         }
 
         public override string ToString()
@@ -473,41 +445,68 @@ namespace Config.Equip
             return "(" + TypeName + ")";
         }
 
+
     }
 
     public partial class DRankInfo
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DRankInfo>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DRankInfo> list, IIssueHandler handler)
+        private static readonly int[] _symbolKeys = { 0, 1, 2, 3, 4, 5 };
+        internal static int PrimaryKey(DRankInfo self) => self.RankID;
+        internal static void InitializeAll(List<DRankInfo> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new DRankInfo[count];
+            var seq_RankID = new bool[count];
             foreach (var self in list)
             {
-                s_all[self.RankID] = self;
-                DRankExtensions._infos[(int)self.EEnum] = self;
+                var key = PrimaryKey(self);
+                {
+                    int seq = self.RankID;
+                    if (seq < 0 || seq >= count || seq_RankID[seq]) errors.InvalidSeq("equip.rank", "RankID", key, seq, count, config.Explain("equip.rank", key));
+                    else seq_RankID[seq] = true;
+                }
+                if (key >= 0 && key < count) s_all[key] = self;
+                string name = self.RankName;
+                int symbol = (int)self.EEnum;
+                if (symbol < 0) errors.UnknownSymbol("equip.rank", name, key, config.Explain("equip.rank", key));
+                else {
+                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("equip.rank", name, _symbolKeys[symbol], key, config.Explain("equip.rank", key));
+                }
             }
-            _all = s_all;
+            config._equip_drank_All = s_all;
+            config._equip_drank_Symbols[(int)DRank.White] = Get(config, 0);
+            if (config._equip_drank_Symbols[(int)DRank.White] == null) errors.MissingSymbol("equip.rank", "white", 0);
+            config._equip_drank_Symbols[(int)DRank.Green] = Get(config, 1);
+            if (config._equip_drank_Symbols[(int)DRank.Green] == null) errors.MissingSymbol("equip.rank", "green", 1);
+            config._equip_drank_Symbols[(int)DRank.Blue] = Get(config, 2);
+            if (config._equip_drank_Symbols[(int)DRank.Blue] == null) errors.MissingSymbol("equip.rank", "blue", 2);
+            config._equip_drank_Symbols[(int)DRank.Purple] = Get(config, 3);
+            if (config._equip_drank_Symbols[(int)DRank.Purple] == null) errors.MissingSymbol("equip.rank", "purple", 3);
+            config._equip_drank_Symbols[(int)DRank.Yellow] = Get(config, 4);
+            if (config._equip_drank_Symbols[(int)DRank.Yellow] == null) errors.MissingSymbol("equip.rank", "yellow", 4);
+            config._equip_drank_Symbols[(int)DRank.Red] = Get(config, 5);
+            if (config._equip_drank_Symbols[(int)DRank.Red] == null) errors.MissingSymbol("equip.rank", "red", 5);
+            config._equip_drank_Rows = Array.AsReadOnly(s_all);
         }
 
         internal static DRankInfo _create(ConfigReader reader)
         {
-            var rankID = reader.ReadInt32();
-            var rankName = reader.ReadStringInPool();
-            var rankShowName = reader.ReadStringInPool();
+            var valueRankID = reader.ReadInt32();
+            var valueRankName = reader.ReadStringInPool();
+            var valueRankShowName = reader.ReadStringInPool();
             return new DRankInfo {
-                RankID = rankID,
-                RankName = rankName,
-                RankShowName = rankShowName,
-                EEnum = (DRank)Enum.Parse(typeof(DRank), StringUtil.UpperFirstChar(rankName))
+                RankID = valueRankID,
+                RankName = valueRankName,
+                RankShowName = valueRankShowName,
+                EEnum = valueRankName switch {
+                    "white" => DRank.White,
+                    "green" => DRank.Green,
+                    "blue" => DRank.Blue,
+                    "purple" => DRank.Purple,
+                    "yellow" => DRank.Yellow,
+                    "red" => DRank.Red,
+                    _ => (DRank)(-1)
+                }
             };
         }
 
@@ -518,16 +517,14 @@ namespace Config.Equip
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DRankInfo;
-            return o != null && RankID.Equals(o.RankID);
+            return obj is DRankInfo o && RankID.Equals(o.RankID);
         }
 
         public override string ToString()
         {
             return "(" + RankID + "," + RankName + "," + RankShowName + ")";
         }
+
 
     }
 

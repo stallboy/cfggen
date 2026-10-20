@@ -1,19 +1,16 @@
-using System;
-using System.Collections.Generic;
+
 namespace Config
 {
 
 public partial class Text
 {
     private readonly int _index;
+    private readonly ConfigPools _pool;
 
-    public Text(int index)
-    {
-        _index = index;
-    }
+    private Text(int index, ConfigPools pool) { _index = index; _pool = pool; }
 
-    // 对外接口：从全局文本数组获取文本
-    public string T => TextPoolManager.GetText(_index);
+    public string T => _pool.GetText(_index);
+
     public override string ToString()
     {
         return T;
@@ -21,7 +18,7 @@ public partial class Text
 
     internal static Text _create(ConfigReader reader)
     {
-        return new Text(reader.ReadTextIndex());
+        return new Text(reader.ReadTextIndex(), reader.CaptureTextPool());
     }
 }
 }

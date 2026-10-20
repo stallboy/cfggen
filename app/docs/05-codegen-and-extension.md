@@ -34,7 +34,9 @@ gen 层消费 `CfgValue`，用模板渲染成各语言的代码与数据文件�
 `CsCodeGenerator`（见 `gencs/CsCodeGenerator.java`）是代表性实现，`generate(ctx)` 流程：
 
 1. `ctx.makeValue(tag)` 拿值（代码注释原话："这里只需要 schema，生成 value 只用于检验数据"——生成器顺带让值解析跑一遍校验，schema 从 `value.schema()` 取）。
-2. 拷贝运行时支撑文件（`Loader.cs`，`unity` 模式换 `Loader.unity.cs`——C#9 兼容版）。
+2. 拷贝统一的 `Loader.cs` 运行库，普通和 `unity` 模式均兼容 C# 9；包含有界输入、类型化错误收集和只读 Map，不再维护两份运行库。
+
+   生成文件按实际类型用法输出 `using`。项目启用 .NET SDK 的 `ImplicitUsings` 时，可传 `-gen cs,implicitUsings` 省略由 SDK 提供的 `System`、`System.Collections.Generic`、`System.IO`、`System.Linq`；非隐式命名空间仍显式保留。`Loader.cs` 按既有规则只在不存在时复制，已有项目切换参数时需要先更新这份运行库。
 3. 每个 struct / interface / table → 建 `Model` → `JteEngine.render("cs/GenXxx.jte", model, ps)` 写到独立文件，**单阶段并发**。
 4. 收尾：`ModuleLoader`、`Text`（lang-switch 时）、`CachedFiles.keepMetaAndDeleteOtherFiles` 清理**本次没再生成的过期文件**（保留 `Loader.cs` 等 meta）。
 

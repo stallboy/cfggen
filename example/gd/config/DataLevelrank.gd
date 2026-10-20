@@ -18,9 +18,9 @@ static func _create(stream: ConfigStream) -> DataLevelRank:
 	return instance
 
 
-	# 解析外键引用
-	func _resolve(errors: ConfigErrors):
-		RefRank = DataEquip_Rank.find(rank)
-		if RefRank == null:
-			errors.ref_null("LevelRank", "Rank")
+# 解析外键引用
+func _resolve(errors: ConfigErrors):
+	RefRank = DataEquip_Rank.find(rank)
+	if RefRank == null:
+		errors.ref_null("LevelRank", "Rank")
 

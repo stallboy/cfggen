@@ -14,15 +14,15 @@ type OtherSignin struct {
 func createOtherSignin(stream *Stream) *OtherSignin {
     v := &OtherSignin{}
     v.id = stream.ReadInt32()
-    item2countMapSize := stream.ReadInt32()
+    item2countMapSize := stream.ReadCount(0)
     v.item2countMap = make(map[int32]int32, item2countMapSize)
-    for i := 0; i < int(item2countMapSize); i++ {
+    for i := 0; i < item2countMapSize; i++ {
         var k = stream.ReadInt32()
         v.item2countMap[k] = stream.ReadInt32()
     }
-    vipitem2vipcountMapSize := stream.ReadInt32()
+    vipitem2vipcountMapSize := stream.ReadCount(0)
     v.vipitem2vipcountMap = make(map[int32]int32, vipitem2vipcountMapSize)
-    for i := 0; i < int(vipitem2vipcountMapSize); i++ {
+    for i := 0; i < vipitem2vipcountMapSize; i++ {
         var k = stream.ReadInt32()
         v.vipitem2vipcountMap[k] = stream.ReadInt32()
     }
@@ -80,7 +80,7 @@ func(t *OtherSigninMgr) Get(id int32) *OtherSignin {
 }
 
 func (t *OtherSigninMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*OtherSignin, 0, cnt)
     t.idMap = make(map[int32]*OtherSignin, cnt)
     for i := 0; i < int(cnt); i++ {

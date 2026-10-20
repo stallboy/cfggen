@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 namespace Config.Other
 {
@@ -6,26 +5,28 @@ namespace Config.Other
 public partial class DMonster
 {
     public int Id { get; init; }
-    public List<DPosition> PosList { get; init; } = null!;
+    public IReadOnlyList<DPosition> PosList { get; init; } = null!;
     public int LootId { get; init; } /* loot */
     public int LootItemId { get; init; } /* item */
-    public OrderedDictionary<string, int> EnumMap1 { get; init; } = null!;
-    public OrderedDictionary<int, string> EnumMap2 { get; init; } = null!;
+    public IReadOnlyDictionary<string, int> EnumMap1 { get; init; } = null!;
+    public IReadOnlyDictionary<int, string> EnumMap2 { get; init; } = null!;
     public Other.DLootitem RefLoot { get; private set; } = null!;
     public Other.DLoot RefAllLoot { get; private set; } = null!;
-    public OrderedDictionary<int, Other.DArgCaptureMode> RefEnumMap2 { get; private set; } = null!;
-    private static IReadOnlyList<DMonster> _allList = null!;
-    
-    private static Dictionary<int, DMonster> _all = null!;
+    public IReadOnlyDictionary<int, Other.DArgCaptureMode> RefEnumMap2 { get; private set; } = null!;
 
     public static DMonster? Get(int id)
+        => Get(ConfigMgr.GetMgr(), id);
+
+    public static DMonster? Get(ConfigMgr config, int id)
     {
-        return _all.GetValueOrDefault(id);
+        var index = config._other_dmonster_All;
+        return index.TryGetValue(id, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DMonster> All()
-    {
-        return _allList;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DMonster> All(ConfigMgr config)
+        => config._other_dmonster_Rows;
 }
 }

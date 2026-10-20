@@ -4,7 +4,6 @@ public class Position {
     private int x;
     private int y;
     private int z;
-
     private Position() {
     }
 
@@ -41,9 +40,8 @@ public class Position {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof Position))
+        if (!(other instanceof Position o))
             return false;
-        Position o = (Position) other;
         return x == o.x && y == o.y && z == o.z;
     }
 

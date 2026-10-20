@@ -21,9 +21,9 @@ type TaskTask2 struct {
 func createTaskTask2(stream *Stream) *TaskTask2 {
     v := &TaskTask2{}
     v.taskid = stream.ReadInt32()
-    nameSize := stream.ReadInt32()
+    nameSize := stream.ReadCount(0)
     v.name = make([]string, nameSize)
-    for i := 0; i < int(nameSize); i++ {
+    for i := 0; i < nameSize; i++ {
         v.name[i] = stream.ReadTextInPool()
     }
     v.nexttask = stream.ReadInt32()
@@ -32,19 +32,19 @@ func createTaskTask2(stream *Stream) *TaskTask2 {
     v.testBool = stream.ReadBool()
     v.testString = stream.ReadStringInPool()
     v.testStruct = createPosition(stream)
-    testListSize := stream.ReadInt32()
+    testListSize := stream.ReadCount(0)
     v.testList = make([]int32, testListSize)
-    for i := 0; i < int(testListSize); i++ {
+    for i := 0; i < testListSize; i++ {
         v.testList[i] = stream.ReadInt32()
     }
-    testListStructSize := stream.ReadInt32()
+    testListStructSize := stream.ReadCount(0)
     v.testListStruct = make([]*Position, testListStructSize)
-    for i := 0; i < int(testListStructSize); i++ {
+    for i := 0; i < testListStructSize; i++ {
         v.testListStruct[i] = createPosition(stream)
     }
-    testListInterfaceSize := stream.ReadInt32()
+    testListInterfaceSize := stream.ReadCount(0)
     v.testListInterface = make([]AiTriggerTick, testListInterfaceSize)
-    for i := 0; i < int(testListInterfaceSize); i++ {
+    for i := 0; i < testListInterfaceSize; i++ {
         v.testListInterface[i] = createAiTriggerTick(stream)
     }
     return v
@@ -127,7 +127,7 @@ func(t *TaskTask2Mgr) Get(taskid int32) *TaskTask2 {
 }
 
 func (t *TaskTask2Mgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*TaskTask2, 0, cnt)
     t.taskidMap = make(map[int32]*TaskTask2, cnt)
     for i := 0; i < int(cnt); i++ {

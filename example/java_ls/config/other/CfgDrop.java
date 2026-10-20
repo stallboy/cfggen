@@ -6,7 +6,6 @@ public class CfgDrop {
     private config.Text name;
     private java.util.List<config.other.CfgDropItem> items;
     private java.util.Map<Integer, Integer> testmap;
-
     private CfgDrop() {
     }
 
@@ -15,7 +14,7 @@ public class CfgDrop {
         self.dropid = input.readInt();
         self.name = config.Text._create(input);
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.items = java.util.Collections.emptyList();
             } else {
@@ -23,17 +22,21 @@ public class CfgDrop {
                 for (; c > 0; c--) {
                     self.items.add(config.other.CfgDropItem._create(input));
                 }
+                self.items = java.util.Collections.unmodifiableList(self.items);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.testmap = java.util.Collections.emptyMap();
             } else {
                 self.testmap = new java.util.LinkedHashMap<>(c);
                 for (; c > 0; c--) {
-                    self.testmap.put(input.readInt(), input.readInt());
+                    var key = input.readInt();
+                    var value = input.readInt();
+                    if (self.testmap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.drop.testmap", key);
                 }
+                self.testmap = java.util.Collections.unmodifiableMap(self.testmap);
             }
         }
         return self;
@@ -81,23 +84,6 @@ public class CfgDrop {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherDrop();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.other_drop_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgDrop self = CfgDrop._create(input);
-                mgr.other_drop_All.put(self.dropid, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

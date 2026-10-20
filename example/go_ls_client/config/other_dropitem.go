@@ -12,9 +12,9 @@ type OtherDropItem struct {
 func createOtherDropItem(stream *Stream) *OtherDropItem {
     v := &OtherDropItem{}
     v.chance = stream.ReadInt32()
-    itemidsSize := stream.ReadInt32()
+    itemidsSize := stream.ReadCount(0)
     v.itemids = make([]int32, itemidsSize)
-    for i := 0; i < int(itemidsSize); i++ {
+    for i := 0; i < itemidsSize; i++ {
         v.itemids[i] = stream.ReadInt32()
     }
     v.countmin = stream.ReadInt32()

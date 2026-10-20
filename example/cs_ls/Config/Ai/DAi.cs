@@ -7,18 +7,21 @@ public partial class DAi
     public required string CondID { get; init; } /* 触发公式 */
     public required Ai.DTriggerTick TrigTick { get; init; } /* 触发间隔(帧) */
     public required int TrigOdds { get; init; } /* 触发几率 */
-    public required List<int> ActionID { get; init; } /* 触发行为 */
+    public required IReadOnlyList<int> ActionID { get; init; } /* 触发行为 */
     public required bool DeathRemove { get; init; } /* 死亡移除 */
-    
-    private static System.Collections.Frozen.FrozenDictionary<int, DAi> _all = null!;
 
     public static DAi? Get(int iD)
+        => Get(ConfigMgr.GetMgr(), iD);
+
+    public static DAi? Get(ConfigMgr config, int iD)
     {
-        return _all.GetValueOrDefault(iD);
+        var index = config._ai_dai_All;
+        return index.TryGetValue(iD, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DAi> All()
-    {
-        return _all.Values;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DAi> All(ConfigMgr config)
+        => config._ai_dai_Rows;
 }

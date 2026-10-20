@@ -13,17 +13,20 @@ public enum Ability {
     private final String name;
     private final int value;
 
+
     Ability(String name, int value) {
         this.name = name;
         this.value = value;
     }
 
-    public static final java.util.Map<Integer, Ability> map = new java.util.HashMap<>();
+    public static final java.util.Map<Integer, Ability> map;
 
     static {
+        var symbols = new java.util.LinkedHashMap<Integer, Ability>();
         for(Ability e : Ability.values()) {
-            map.put(e.value, e);
+            symbols.put(e.value, e);
         }
+        map = java.util.Collections.unmodifiableMap(symbols);
     }
 
     public static Ability get(int value) {

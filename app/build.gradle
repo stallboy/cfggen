@@ -153,6 +153,8 @@ tasks.register('copyGenJavaSources', Copy) {
                 'SchemaDeserializer.java',
                 'ConfigErr.java',
                 'ConfigInput.java',
+                'ConfigLoader.java',
+                'ConfigPackage.java',
                 'LoadValueErrs.java',
                 'BytesInspector.java',
                 'JsonValue.java',
@@ -175,10 +177,38 @@ tasks.named('fatJar') {
 
 // 测试与覆盖率配置
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform { excludeTags 'dotnet', 'otherRuntimes', 'godot' }
     // 抑制 fastjson2 的 sun.misc.Unsafe 弃用警告（同 applicationDefaultJvmArgs）
     jvmArgs '--sun-misc-unsafe-memory-access=allow'
     finalizedBy jacocoTestReport
+}
+
+tasks.register('dotnetTest', Test) {
+    description = 'Compile and run generated C# runtime integration tests (requires .NET 10 SDK)'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'dotnet' }
+    jvmArgs '--sun-misc-unsafe-memory-access=allow'
+}
+
+tasks.register('otherRuntimeTest', Test) {
+    description = 'Compile and run generated TypeScript and Go readers (requires Node, Go and cfgeditor dependencies)'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'otherRuntimes' }
+    jvmArgs '--sun-misc-unsafe-memory-access=allow'
+}
+
+tasks.register('godotTest', Test) {
+    description = 'Run generated GDScript readers in Godot 4.6 (set -Dcfggen.godot to the executable)'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'godot' }
+    if (System.getProperty('cfggen.godot')) systemProperty 'cfggen.godot', System.getProperty('cfggen.godot')
+    jvmArgs '--sun-misc-unsafe-memory-access=allow'
 }
 
 jacocoTestReport {

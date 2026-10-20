@@ -2,38 +2,16 @@ package configgen.genbytes;
 
 import configgen.genjava.ConfigOutput;
 import configgen.i18n.LangSwitchableRuntime;
-import configgen.util.Logger;
-import configgen.value.CfgValue;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayOutputStream;
 
 import static configgen.value.CfgValue.*;
 
-public record CfgValueSerializer(@NotNull ConfigOutput output,
-                                 @NotNull StringPool stringPool,
-                                 @NotNull LangTextPool langTextPool,
-                                 LangSwitchableRuntime langSwitchRuntime) {
-
-    public void serialize(CfgValue cfgValue) {
-        //1. 写入table count
-        output.writeInt(cfgValue.vTableMap().size());
-
-        for (VTable vTable : cfgValue.sortedTables()) {
-            byte[] tableBytes = serializeTableBytes(vTable);
-
-            Logger.verbose(vTable.name() + ": " + tableBytes.length);
-            //2. 写入table name
-            output.writeString(vTable.name());
-
-            //3. 写入总大小
-            output.writeInt(tableBytes.length);
-            //4. 具体数据
-            output.writeRawBytes(tableBytes);
-        }
-    }
-
-    private byte @NotNull [] serializeTableBytes(VTable vTable) {
+public final class CfgValueSerializer {
+    private CfgValueSerializer() {}
+    public static byte @NotNull [] serializeTableBytes(VTable vTable, StringPool stringPool,
+                                                     LangTextPool langTextPool, LangSwitchableRuntime langSwitchRuntime) {
         if (langSwitchRuntime != null) {
             langSwitchRuntime.enterTable(vTable.name());
         }

@@ -1,10 +1,6 @@
 @import configgen.gencs.InterfaceModel
 @import configgen.schema.StructSchema
 @param InterfaceModel model
-@if(model.unity)
-using System;
-using System.Collections.Generic;
-@endif
 
 ${model.nsLine()}
 

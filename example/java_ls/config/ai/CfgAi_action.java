@@ -7,7 +7,6 @@ public class CfgAi_action {
     private int formulaID;
     private java.util.List<Integer> argIList;
     private java.util.List<Integer> argSList;
-
     private CfgAi_action() {
     }
 
@@ -17,7 +16,7 @@ public class CfgAi_action {
         self.desc = input.readStringInPool();
         self.formulaID = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.argIList = java.util.Collections.emptyList();
             } else {
@@ -25,10 +24,11 @@ public class CfgAi_action {
                 for (; c > 0; c--) {
                     self.argIList.add(input.readInt());
                 }
+                self.argIList = java.util.Collections.unmodifiableList(self.argIList);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.argSList = java.util.Collections.emptyList();
             } else {
@@ -36,6 +36,7 @@ public class CfgAi_action {
                 for (; c > 0; c--) {
                     self.argSList.add(input.readInt());
                 }
+                self.argSList = java.util.Collections.unmodifiableList(self.argSList);
             }
         }
         return self;
@@ -87,23 +88,6 @@ public class CfgAi_action {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allAiAi_action();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.ai_ai_action_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgAi_action self = CfgAi_action._create(input);
-                mgr.ai_ai_action_All.put(self.iD, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 namespace Config.Task
 {
@@ -13,18 +12,20 @@ public partial class DTaskextraexp
     public string Fieldb { get; init; } = null!;
     public string Fieldc { get; init; } = null!;
     public string Fieldd { get; init; } = null!;
-    private static IReadOnlyList<DTaskextraexp> _allList = null!;
-    
-    private static Dictionary<int, DTaskextraexp> _all = null!;
 
     public static DTaskextraexp? Get(int taskid)
+        => Get(ConfigMgr.GetMgr(), taskid);
+
+    public static DTaskextraexp? Get(ConfigMgr config, int taskid)
     {
-        return _all.GetValueOrDefault(taskid);
+        var index = config._task_dtaskextraexp_All;
+        return index.TryGetValue(taskid, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DTaskextraexp> All()
-    {
-        return _allList;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DTaskextraexp> All(ConfigMgr config)
+        => config._task_dtaskextraexp_Rows;
 }
 }

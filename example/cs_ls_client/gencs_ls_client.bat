@@ -1,4 +1,4 @@
-rm Config/Loader.cs
+if exist "Config\Loader.cs" del /q "Config\Loader.cs"
 
 call %~dp0..\cfggen_common.bat
 %CFGGEN% -langswitchdir ../i18n/langs -gen cs,dir:.,encoding:UTF-8,unity -gen bytes

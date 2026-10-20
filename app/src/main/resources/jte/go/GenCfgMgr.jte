@@ -27,26 +27,26 @@ func Get${ClassName}Mgr() *${ClassName}Mgr {
 
 @endfor
 func Init(reader io.Reader) *Stream {
-    stream := &Stream{reader: reader}
+    data, err := io.ReadAll(reader)
+    if err != nil { panic(err) }
+    return InitPackage(ReadPackage(data))
+}
 
-    // 1. 跳过 Schema（如果有）
-    schemaLength := stream.ReadInt32()
-    if schemaLength > 0 {
-        stream.SkipBytes(int(schemaLength))
-    }
+// InitPackage reads a complete versioned package. Mod composition remains a Java/C# API.
+func InitPackage(pack *ConfigPackage) *Stream {
+    pack.Name()
+    if pack.metadata["requires"] != "" { panic("this loader supports standalone packages; Mod composition requires Java/C#") }
+    @for(VTable vTable : cfgValue.sortedTables())
+        if _, exists := pack.blocks[".${vTable.name()}"]; !exists { panic("missing table in standalone package: ${vTable.name()}") }
+    @endfor
+    return initTables(pack.OpenData(${model.languageArguments()}))
+}
 
-    // 2. 读取 StringPool
-    stream.ReadStringPool()
-
-    // 3. 读取 LangTextPool
-    stream.ReadLangTextPool()
-
+func initTables(stream *Stream) *Stream {
+    tables := stream.ReadTables()
     // 4. 处理表数据
-    tableCount := stream.ReadSize()
-    for i := 0; i < tableCount; i++ {
-        tableName := stream.ReadString()
-        tableSize := stream.ReadSize()
-        switch tableName {
+    for _, table := range tables {
+        switch table.Name {
         @for (VTable vTable : cfgValue.sortedTables())
         !{
             GoName name = new GoName(vTable.schema());
@@ -56,10 +56,10 @@ func Init(reader io.Reader) *Stream {
         }
         case "${ClassReadName}":
             ${className}Mgr = &${ClassName}Mgr{}
-            ${className}Mgr.Init(stream)
+            ${className}Mgr.Init(table.Input)
+            table.Input.RequireEnd()
         @endfor
         default:
-            stream.SkipBytes(tableSize)
         }
     }
 

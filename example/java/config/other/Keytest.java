@@ -1,5 +1,7 @@
 package config.other;
 
+import configgen.genjava.LoadValueErrs;
+
 public class Keytest {
     private int id1;
     private long id2;
@@ -20,7 +22,7 @@ public class Keytest {
         self.id2 = input.readLong();
         self.id3 = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.ids = java.util.Collections.emptyList();
             } else {
@@ -28,11 +30,12 @@ public class Keytest {
                 for (; c > 0; c--) {
                     self.ids.add(input.readInt());
                 }
+                self.ids = java.util.Collections.unmodifiableList(self.ids);
             }
         }
         self.enumTest = input.readStringInPool();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.enumList = java.util.Collections.emptyList();
             } else {
@@ -40,6 +43,7 @@ public class Keytest {
                 for (; c > 0; c--) {
                     self.enumList.add(input.readStringInPool());
                 }
+                self.enumList = java.util.Collections.unmodifiableList(self.enumList);
             }
         }
         return self;
@@ -86,33 +90,32 @@ public class Keytest {
         return "(" + id1 + "," + id2 + "," + id3 + "," + ids + "," + enumTest + "," + enumList + ")";
     }
 
-    public void _resolveDirect(config.ConfigMgr mgr) {
-        if (ids.isEmpty()) {
-            RefIds = java.util.Collections.emptyList();
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        if (this.ids.isEmpty()) {
+            this.RefIds = java.util.Collections.emptyList();
         } else {
-            RefIds = new java.util.ArrayList<>(ids.size());
-            for (Integer e : ids) {
-                config.other.Signin r = mgr.other_signin_All.get(e);
-                configgen.genjava.LoadValueErrs.requireNonNull(r, "other.keytest.ids -> other.signin", e);
-                RefIds.add(r);
+            this.RefIds = new java.util.ArrayList<>(this.ids.size());
+            for (Integer e : this.ids) {
+                var ref = mgr.getOtherSignin(e);
+                if (ref == null) errors.missingReference("other.keytest", "ids", "other.signin", e);
+                this.RefIds.add(ref);
             }
         }
-        RefEnumTest = config.other.ArgCaptureMode.get(enumTest);
-        configgen.genjava.LoadValueErrs.requireNonNull(RefEnumTest, "other.keytest.enumTest -> other.ArgCaptureMode", enumTest);
-        if (enumList.isEmpty()) {
-            RefEnumList = java.util.Collections.emptyList();
+        this.RefIds = java.util.Collections.unmodifiableList(this.RefIds);
+        this.RefEnumTest = config.other.ArgCaptureMode.get(this.enumTest);
+        if (this.RefEnumTest == null) errors.missingReference("other.keytest", "enumTest", "other.ArgCaptureMode", this.enumTest);
+        if (this.enumList.isEmpty()) {
+            this.RefEnumList = java.util.Collections.emptyList();
         } else {
-            RefEnumList = new java.util.ArrayList<>(enumList.size());
-            for (String e : enumList) {
-                config.other.ArgCaptureMode r = config.other.ArgCaptureMode.get(e);
-                configgen.genjava.LoadValueErrs.requireNonNull(r, "other.keytest.enumList -> other.ArgCaptureMode", e);
-                RefEnumList.add(r);
+            this.RefEnumList = new java.util.ArrayList<>(this.enumList.size());
+            for (String e : this.enumList) {
+                var ref = config.other.ArgCaptureMode.get(e);
+                if (ref == null) errors.missingReference("other.keytest", "enumList", "other.ArgCaptureMode", e);
+                this.RefEnumList.add(ref);
             }
         }
-    }
+        this.RefEnumList = java.util.Collections.unmodifiableList(this.RefEnumList);
 
-    public void _resolve(config.ConfigMgr mgr) {
-        _resolveDirect(mgr);
     }
 
     public static class Id1Id2Key {
@@ -131,10 +134,14 @@ public class Keytest {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof Id1Id2Key))
+            if (!(other instanceof Id1Id2Key o))
                 return false;
-            Id1Id2Key o = (Id1Id2Key) other;
             return id1 == o.id1 && id2 == o.id2;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + id1 + "," + id2 + ")";
         }
     }
 
@@ -159,10 +166,14 @@ public class Keytest {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof Id1Id3Key))
+            if (!(other instanceof Id1Id3Key o))
                 return false;
-            Id1Id3Key o = (Id1Id3Key) other;
             return id1 == o.id1 && id3 == o.id3;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + id1 + "," + id3 + ")";
         }
     }
 
@@ -192,10 +203,14 @@ public class Keytest {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof Id2Id3Key))
+            if (!(other instanceof Id2Id3Key o))
                 return false;
-            Id2Id3Key o = (Id2Id3Key) other;
             return id2 == o.id2 && id3 == o.id3;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + id2 + "," + id3 + ")";
         }
     }
 
@@ -208,31 +223,30 @@ public class Keytest {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherKeytest();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.other_keytest_All = new java.util.LinkedHashMap<>(c);
-            mgr.other_keytest_Id1Id3Map = new java.util.LinkedHashMap<>(c);
-            mgr.other_keytest_Id2Map = new java.util.LinkedHashMap<>(c);
-            mgr.other_keytest_Id2Id3Map = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                Keytest self = Keytest._create(input);
-                mgr.other_keytest_All.put(new Id1Id2Key(self.id1, self.id2), self);
-                mgr.other_keytest_Id1Id3Map.put(new Id1Id3Key(self.id1, self.id3), self);
-                mgr.other_keytest_Id2Map.put(self.id2, self);
-                mgr.other_keytest_Id2Id3Map.put(new Id2Id3Key(self.id2, self.id3), self);
+    public static void _index(config.ConfigMgr mgr, java.util.Map<config.other.Keytest.Id1Id2Key, Keytest> rows, LoadValueErrs errors) {
+        int c = rows.size();
+        var other_keytest_Id1Id3Map = new java.util.LinkedHashMap<config.other.Keytest.Id1Id3Key, Keytest>(c);
+        var other_keytest_Id2Map = new java.util.LinkedHashMap<Long, Keytest>(c);
+        var other_keytest_Id2Id3Map = new java.util.LinkedHashMap<config.other.Keytest.Id2Id3Key, Keytest>(c);
+        for (var self : rows.values()) {
+            if (other_keytest_Id1Id3Map.putIfAbsent(new Id1Id3Key(self.id1, self.id3), self) != null) {
+                var primaryKey = new Id1Id2Key(self.id1, self.id2);
+                errors.duplicateUniqueKey("other.keytest", "id1,id3", primaryKey, new Id1Id3Key(self.id1, self.id3), mgr.explain("other.keytest", primaryKey));
+            }
+            if (other_keytest_Id2Map.putIfAbsent(self.id2, self) != null) {
+                var primaryKey = new Id1Id2Key(self.id1, self.id2);
+                errors.duplicateUniqueKey("other.keytest", "id2", primaryKey, self.id2, mgr.explain("other.keytest", primaryKey));
+            }
+            if (other_keytest_Id2Id3Map.putIfAbsent(new Id2Id3Key(self.id2, self.id3), self) != null) {
+                var primaryKey = new Id1Id2Key(self.id1, self.id2);
+                errors.duplicateUniqueKey("other.keytest", "id2,id3", primaryKey, new Id2Id3Key(self.id2, self.id3), mgr.explain("other.keytest", primaryKey));
             }
         }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            for (Keytest e : mgr.other_keytest_All.values()) {
-                e._resolve(mgr);
-            }
-        }
-
+        mgr._set_other_keytest_All(rows);
+        mgr._set_other_keytest_Id1Id3Map(other_keytest_Id1Id3Map);
+        mgr._set_other_keytest_Id2Map(other_keytest_Id2Map);
+        mgr._set_other_keytest_Id2Id3Map(other_keytest_Id2Id3Map);
     }
 
 }

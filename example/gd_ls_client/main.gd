@@ -7,12 +7,8 @@ func _ready():
 	var errors = ConfigErrors.new()
 	var processor = ConfigProcessor.new()
 
-	# 定义处理回调（加载所有配置表）
-	var process_func = func(stream: ConfigStream, errors: ConfigErrors):
-		processor.load_from_stream(stream, errors)
-
 	# 加载配置并获取 stream
-	var stream = ConfigLoader.load_from_file("res://config.bytes", process_func, errors)
+	var stream = processor.load_from_package(ConfigPackage.read_file("res://config.bytes"), errors)
 	if stream == null:
 		print("Failed to load config file")
 		return

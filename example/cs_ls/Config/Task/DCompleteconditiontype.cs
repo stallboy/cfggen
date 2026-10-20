@@ -16,26 +16,28 @@ public partial class DCompleteconditiontypeInfo
     public required int Id { get; init; } /* 任务完成条件类型（id的范围为1-100） */
     public required string Name { get; init; } /* 程序用名字 */
     public required DCompleteconditiontype EEnum { get; init; }
-    
-    private static System.Collections.Frozen.FrozenDictionary<int, DCompleteconditiontypeInfo> _all = null!;
 
     public static DCompleteconditiontypeInfo? Get(int id)
+        => Get(ConfigMgr.GetMgr(), id);
+
+    public static DCompleteconditiontypeInfo? Get(ConfigMgr config, int id)
     {
-        return _all.GetValueOrDefault(id);
+        var index = config._task_dcompleteconditiontype_All;
+        return index.TryGetValue(id, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DCompleteconditiontypeInfo> All()
-    {
-        return _all.Values;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DCompleteconditiontypeInfo> All(ConfigMgr config)
+        => config._task_dcompleteconditiontype_Rows;
 }
 
 public static class DCompleteconditiontypeExtensions
 {
-    internal static readonly DCompleteconditiontypeInfo[] _infos = new DCompleteconditiontypeInfo[7];
-
     public static DCompleteconditiontypeInfo Info(this DCompleteconditiontype e)
-    {
-        return _infos[(int)e];
-    }
+        => e.Info(ConfigMgr.GetMgr());
+
+    public static DCompleteconditiontypeInfo Info(this DCompleteconditiontype e, ConfigMgr config)
+        => config._task_dcompleteconditiontype_Symbols[(int)e]!;
 }

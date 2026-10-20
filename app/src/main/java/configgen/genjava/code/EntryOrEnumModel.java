@@ -4,6 +4,7 @@ import configgen.schema.EntryType;
 import configgen.schema.FieldType;
 import configgen.schema.ForeignKeySchema;
 import configgen.schema.TableSchema;
+import configgen.schema.Metadata;
 import configgen.value.CfgValue;
 
 import java.util.Map;
@@ -16,6 +17,7 @@ public class EntryOrEnumModel {
     public final String className;
     public final boolean isEnum;
     public final boolean hasNoIntValue;
+    public final boolean hasFixedId;
     public final Map<String, Integer> enumNameToIntegerValueMap;
     public final Iterable<String> enumNames;
     public final TableSchema table;
@@ -34,6 +36,8 @@ public class EntryOrEnumModel {
         this.className = name.className;
         this.isEnum = entryBase instanceof EntryType.EEnum;
         this.hasNoIntValue = vTable.enumNameToIntegerValueMap() == null;
+        this.hasFixedId = vTable.schema().meta().getEnumValues() instanceof Metadata.MetaEnumValues.OfAssigned
+                && !vTable.schema().primaryKey().fields().getFirst().equals("id");
         this.enumNameToIntegerValueMap = vTable.enumNameToIntegerValueMap();
         this.enumNames = vTable.enumNames();
         this.table = vTable.schema();

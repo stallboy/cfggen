@@ -146,6 +146,7 @@ public final class Main {
     private static int run(String[] args) {
         boolean allowValueErr = false;
         String dataDir = null;
+        String sharedSchema = null;
         String headRowId = System.getProperty("configgen.headrow");
         String csvDefaultEncoding = "GBK";
         String asRoot = null;
@@ -202,6 +203,7 @@ public final class Main {
                 }
 
                 case "-datadir" -> dataDir = nextArg(args, paramType, ++i);
+                case "-schema" -> sharedSchema = nextArg(args, paramType, ++i);
                 case "-headrow" -> headRowId = nextArg(args, paramType, ++i);
                 case "-encoding" -> csvDefaultEncoding = nextArg(args, paramType, ++i);
 
@@ -254,8 +256,10 @@ public final class Main {
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
 
-        Context context = new Context(new Context.ContextCfg(dataDirPath, explicitDir, headRow, csvDefaultEncoding,
-                i18nfile, langSwitchDir, langSwitchDefaultLang, allowValueErr));
+        var contextCfg = new Context.ContextCfg(dataDirPath, explicitDir, headRow, csvDefaultEncoding,
+                i18nfile, langSwitchDir, langSwitchDefaultLang, allowValueErr);
+        Context context = sharedSchema == null ? new Context(contextCfg)
+                : new Context(contextCfg, configgen.schema.CfgSchemas.readFromRoot(Path.of(sharedSchema)));
         // 登记为当前代：server类generator（无论是否开watch）的编辑写路径统一经WatchAndPostRun取当前代并互斥
         WatchAndPostRun.INSTANCE.initContext(context);
 

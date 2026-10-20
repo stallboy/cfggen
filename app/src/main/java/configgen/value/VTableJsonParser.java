@@ -34,6 +34,10 @@ public class VTableJsonParser {
     }
 
     public VTable parseTable() {
+        return new VTableCreator(subTableSchema, errs).create(parseRecords());
+    }
+
+    public List<VStruct> parseRecords() {
         List<VStruct> valueList = new ArrayList<>();
         String tableName = tableSchema.name();
         Map<String, Long> idMap = new LinkedHashMap<>();
@@ -60,7 +64,7 @@ public class VTableJsonParser {
         }
 
         valueStat.newTableLastModified(tableName, idMap);
-        return new VTableCreator(subTableSchema, errs).create(valueList);
+        return valueList;
     }
 
 }

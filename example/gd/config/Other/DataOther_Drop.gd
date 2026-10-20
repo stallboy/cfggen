@@ -21,7 +21,8 @@ func _to_string() -> String:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
+	_data = {}
+	var count = stream.read_count(1)
 	for i in range(count):
 		var item = _create(stream)
 		_data[item.dropid] = item
@@ -31,12 +32,10 @@ static func _create(stream: ConfigStream) -> DataOther_Drop:
 	var instance = DataOther_Drop.new()
 	instance.dropid = stream.read_int32()
 	instance.name = stream.read_text_in_pool()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.items.append(DataOther_DropItem._create(stream))
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_int32()
 		instance.testmap[k] = v
 	return instance
-
-

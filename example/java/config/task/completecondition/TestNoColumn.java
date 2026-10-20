@@ -6,7 +6,6 @@ public final class TestNoColumn implements config.task.completecondition.Complet
         return config.task.Completeconditiontype.TEST_NO_COLUMN;
     }
 
-
     public TestNoColumn() {
     }
 

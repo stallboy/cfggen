@@ -33,10 +33,12 @@ public class GdCodeGenerator extends GeneratorWithTag {
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
     public CfgSchema cfgSchema;
     public boolean isLangSwitch;
+    public List<String> languageNames;
 
     public static final String ENCODING = "UTF-8";
     private static final List<String> COPY_FILES = List.of(
             "ConfigStream.gd",
+            "ConfigPackage.gd",
             "ConfigLoader.gd",
             "ConfigErrors.gd",
             "TextPoolManager.gd"
@@ -84,6 +86,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
         outputFiles = ctx.outputFiles();
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
+        languageNames = isLangSwitch ? ctx.nullableLangSwitch().languages() : List.of();
 
         List<String> needCopyFiles = new ArrayList<>(4);
         needCopyFiles.addAll(COPY_FILES);

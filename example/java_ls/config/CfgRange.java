@@ -3,7 +3,6 @@ package config;
 public class CfgRange {
     private int min;
     private int max;
-
     private CfgRange() {
     }
 
@@ -40,9 +39,8 @@ public class CfgRange {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgRange))
+        if (!(other instanceof CfgRange o))
             return false;
-        CfgRange o = (CfgRange) other;
         return min == o.min && max == o.max;
     }
 

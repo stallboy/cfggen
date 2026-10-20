@@ -3,7 +3,6 @@ package config.equip;
 public class TestPackBean {
     private String name;
     private config.Range iRange;
-
     private TestPackBean() {
     }
 
@@ -34,9 +33,8 @@ public class TestPackBean {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof TestPackBean))
+        if (!(other instanceof TestPackBean o))
             return false;
-        TestPackBean o = (TestPackBean) other;
         return name.equals(o.name) && iRange.equals(o.iRange);
     }
 

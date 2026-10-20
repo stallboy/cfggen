@@ -8,7 +8,6 @@ public class CfgTestDefaultBean {
     private java.util.List<Integer> testList;
     private java.util.List<Integer> testList2;
     private java.util.Map<Integer, String> testMap;
-
     private CfgTestDefaultBean() {
     }
 
@@ -29,7 +28,7 @@ public class CfgTestDefaultBean {
         self.testString = input.readStringInPool();
         self.testSubBean = config.CfgPosition._create(input);
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.testList = java.util.Collections.emptyList();
             } else {
@@ -37,10 +36,11 @@ public class CfgTestDefaultBean {
                 for (; c > 0; c--) {
                     self.testList.add(input.readInt());
                 }
+                self.testList = java.util.Collections.unmodifiableList(self.testList);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.testList2 = java.util.Collections.emptyList();
             } else {
@@ -48,17 +48,21 @@ public class CfgTestDefaultBean {
                 for (; c > 0; c--) {
                     self.testList2.add(input.readInt());
                 }
+                self.testList2 = java.util.Collections.unmodifiableList(self.testList2);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.testMap = java.util.Collections.emptyMap();
             } else {
                 self.testMap = new java.util.LinkedHashMap<>(c);
                 for (; c > 0; c--) {
-                    self.testMap.put(input.readInt(), input.readStringInPool());
+                    var key = input.readInt();
+                    var value = input.readStringInPool();
+                    if (self.testMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("task.TestDefaultBean.testMap", key);
                 }
+                self.testMap = java.util.Collections.unmodifiableMap(self.testMap);
             }
         }
         return self;
@@ -99,9 +103,8 @@ public class CfgTestDefaultBean {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgTestDefaultBean))
+        if (!(other instanceof CfgTestDefaultBean o))
             return false;
-        CfgTestDefaultBean o = (CfgTestDefaultBean) other;
         return testInt == o.testInt && testBool == o.testBool && testString.equals(o.testString) && testSubBean.equals(o.testSubBean) && testList.equals(o.testList) && testList2.equals(o.testList2) && testMap.equals(o.testMap);
     }
 

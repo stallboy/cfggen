@@ -19,15 +19,15 @@ func createOtherKeytest(stream *Stream) *OtherKeytest {
     v.id1 = stream.ReadInt32()
     v.id2 = stream.ReadInt64()
     v.id3 = stream.ReadInt32()
-    idsSize := stream.ReadInt32()
+    idsSize := stream.ReadCount(0)
     v.ids = make([]int32, idsSize)
-    for i := 0; i < int(idsSize); i++ {
+    for i := 0; i < idsSize; i++ {
         v.ids[i] = stream.ReadInt32()
     }
     v.enumTest = stream.ReadStringInPool()
-    enumListSize := stream.ReadInt32()
+    enumListSize := stream.ReadCount(0)
     v.enumList = make([]string, enumListSize)
-    for i := 0; i < int(enumListSize); i++ {
+    for i := 0; i < enumListSize; i++ {
         v.enumList[i] = stream.ReadStringInPool()
     }
     return v
@@ -153,7 +153,7 @@ func (t *OtherKeytestMgr) GetAllById2(id2 int64) []*OtherKeytest {
     return t.id2MapList[id2]
 }
 func (t *OtherKeytestMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*OtherKeytest, 0, cnt)
     t.id1Id2Map = make(map[KeyId1Id2]*OtherKeytest, cnt)
     t.id1Id3Map = make(map[KeyId1Id3]*OtherKeytest, cnt)

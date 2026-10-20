@@ -8,7 +8,6 @@ public final class CfgCollectItem implements config.task.completecondition.CfgCo
 
     private int itemid;
     private int count;
-
     private CfgCollectItem() {
     }
 
@@ -39,9 +38,8 @@ public final class CfgCollectItem implements config.task.completecondition.CfgCo
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgCollectItem))
+        if (!(other instanceof CfgCollectItem o))
             return false;
-        CfgCollectItem o = (CfgCollectItem) other;
         return itemid == o.itemid && count == o.count;
     }
 

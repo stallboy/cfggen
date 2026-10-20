@@ -2,7 +2,6 @@ package config.ai.triggertick;
 
 public final class ConstValue implements config.ai.triggertick.TriggerTick {
     private int value;
-
     private ConstValue() {
     }
 
@@ -27,9 +26,8 @@ public final class ConstValue implements config.ai.triggertick.TriggerTick {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ConstValue))
+        if (!(other instanceof ConstValue o))
             return false;
-        ConstValue o = (ConstValue) other;
         return value == o.value;
     }
 

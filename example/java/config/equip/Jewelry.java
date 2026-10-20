@@ -1,5 +1,7 @@
 package config.equip;
 
+import configgen.genjava.LoadValueErrs;
+
 // 来自：equip/jewelry.csv
 public class Jewelry {
     private int iD;
@@ -12,6 +14,11 @@ public class Jewelry {
     private int keyAbilityValue;
     private int salePrice;
     private String description;
+    private config.equip.Jewelryrandom RefLvlRank;
+    private config.equip.Jewelrytype RefJType;
+    private config.equip.Jewelrysuit NullableRefSuitID;
+    private config.equip.Ability RefKeyAbility;
+
     private Jewelry() {
     }
 
@@ -113,9 +120,37 @@ public class Jewelry {
         return description;
     }
 
+    public config.equip.Jewelryrandom refLvlRank() {
+        return RefLvlRank;
+    }
+
+    public config.equip.Jewelrytype refJType() {
+        return RefJType;
+    }
+
+    public config.equip.Jewelrysuit nullableRefSuitID() {
+        return NullableRefSuitID;
+    }
+
+    public config.equip.Ability refKeyAbility() {
+        return RefKeyAbility;
+    }
+
     @Override
     public String toString() {
         return "(" + iD + "," + name + "," + iconFile + "," + lvlRank + "," + jType + "," + suitID + "," + keyAbility + "," + keyAbilityValue + "," + salePrice + "," + description + ")";
+    }
+
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        this.lvlRank._resolve(mgr, errors);
+        this.RefLvlRank = mgr.getEquipJewelryrandom(this.lvlRank);
+        if (this.RefLvlRank == null) errors.missingReference("equip.jewelry", "LvlRank", "equip.jewelryrandom", this.lvlRank);
+        this.RefJType = config.equip.Jewelrytype.get(this.jType);
+        if (this.RefJType == null) errors.missingReference("equip.jewelry", "JType", "equip.jewelrytype", this.jType);
+        this.NullableRefSuitID = mgr.getEquipJewelrysuit(this.suitID);
+        this.RefKeyAbility = config.equip.Ability.get(this.keyAbility);
+        if (this.RefKeyAbility == null) errors.missingReference("equip.jewelry", "KeyAbility", "equip.ability", this.keyAbility);
+
     }
 
     public static Jewelry get(int iD) {
@@ -127,23 +162,6 @@ public class Jewelry {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipJewelry();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.equip_jewelry_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                Jewelry self = Jewelry._create(input);
-                mgr.equip_jewelry_All.put(self.iD, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

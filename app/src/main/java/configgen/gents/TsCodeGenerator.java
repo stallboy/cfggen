@@ -58,4 +58,9 @@ public class TsCodeGenerator extends GeneratorWithTag {
         return String.join("_", GenNaming.classNameSegments(nameable).stream().map(StringUtil::upper1).toList());
     }
 
+    public String languageArguments() {
+        return (nullableLanguageSwitch == null ? java.util.List.<String>of() : nullableLanguageSwitch.languages())
+                .stream().map(name -> "\"" + name + "\"").collect(java.util.stream.Collectors.joining(", "));
+    }
+
 }

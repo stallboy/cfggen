@@ -12,7 +12,6 @@ public class Jewelrysuit {
     private int ability3;
     private int ability3Value;
     private java.util.List<Integer> suitList;
-
     private Jewelrysuit() {
     }
 
@@ -28,7 +27,7 @@ public class Jewelrysuit {
         self.ability3 = input.readInt();
         self.ability3Value = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.suitList = java.util.Collections.emptyList();
             } else {
@@ -36,6 +35,7 @@ public class Jewelrysuit {
                 for (; c > 0; c--) {
                     self.suitList.add(input.readInt());
                 }
+                self.suitList = java.util.Collections.unmodifiableList(self.suitList);
             }
         }
         return self;
@@ -122,23 +122,6 @@ public class Jewelrysuit {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipJewelrysuit();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.equip_jewelrysuit_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                Jewelrysuit self = Jewelrysuit._create(input);
-                mgr.equip_jewelrysuit_All.put(self.suitID, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

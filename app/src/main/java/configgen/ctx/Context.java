@@ -39,6 +39,7 @@ public class Context {
     }
 
     private final ContextCfg contextCfg;
+    private final boolean fixedSchema;
 
     private DirectoryStructure sourceStructure;
     private LangTextFinder nullableLangTextFinder;
@@ -71,7 +72,17 @@ public class Context {
     }
 
     public Context(ContextCfg cfg, DirectoryStructure sourceStructure) {
+        this(cfg, sourceStructure, null);
+    }
+
+    /** Read sparse package data without aligning or writing the shared schema. */
+    public Context(ContextCfg cfg, CfgSchema schema) {
+        this(cfg, new DirectoryStructure(cfg.dataDir, cfg.explicitDir), schema);
+    }
+
+    private Context(ContextCfg cfg, DirectoryStructure sourceStructure, CfgSchema fixed) {
         this.contextCfg = cfg;
+        this.fixedSchema = fixed != null;
         this.sourceStructure = sourceStructure;
 
         if (cfg.i18nFilename != null) {
@@ -83,6 +94,21 @@ public class Context {
         excelReader = ReadByFastExcel.INSTANCE;
         csvReader = new ReadCsv(cfg.csvOrTsvDefaultEncoding);
         CfgDataReader dataReader = new CfgDataReader(cfg.headRow, csvReader, excelReader);
+        if (fixed != null) {
+            fixed.requireResolved();
+            this.cfgSchema = fixed;
+            CfgSchemaErrs errs = CfgSchemaErrs.of();
+            this.cfgData = dataReader.readCfgData(sourceStructure.getExcelFiles(), fixed, errs);
+            errs.checkErrors("fixed schema data");
+            for (String table : cfgData.tables().keySet()) {
+                if (fixed.findTable(table) == null) throw new IllegalArgumentException("Unknown table outside shared schema: " + table);
+                if (fixed.findTable(table).meta().isJson()) throw new IllegalArgumentException("JSON table cannot also use CSV/Excel data: " + table);
+            }
+            for (String table : sourceStructure.jsonTableNames()) {
+                if (!sourceStructure.jsonFilesOf(table).isEmpty() && (fixed.findTable(table) == null || !fixed.findTable(table).meta().isJson())) throw new IllegalArgumentException("Unknown JSON table outside shared schema: " + table);
+            }
+            return;
+        }
         boolean ok = readSchemaAndData(dataReader, true);
         if (!ok) {
             readSchemaAndData(dataReader, false);
@@ -129,6 +155,8 @@ public class Context {
     public ContextCfg contextCfg() {
         return contextCfg;
     }
+
+    public boolean isFixedSchema() { return fixedSchema; }
 
     public CachedFiles outputFiles() {
         return outputFiles;

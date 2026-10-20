@@ -3,14 +3,20 @@
 @import configgen.genjava.code.StructuralClassModel.ForeignKeyInfo
 @import configgen.schema.*
 @import configgen.util.StringUtil
+@import configgen.genjava.GenJavaUtil
 @param StructuralClassModel model
 package ${model.pkg};
 
+!{ String errorsClass = GenJavaUtil.loadValueErrsClass(model.className); }
+@if(GenJavaUtil.needsLoadValueErrs(model.structural) && errorsClass.equals("LoadValueErrs"))
+import configgen.genjava.LoadValueErrs;
+
+@endif
 @if(!model.sourceComment.isEmpty())
 ${model.sourceComment}
 @endif
 @if(model.isImpl)
-    public ${model.isSealedInterface?"final ":""}class ${model.className} implements ${model.nullableInterfaceFullName} {
+    public ${model.isSealedInterface?"final ":""}class ${model.className}${model.javaBase.isEmpty() ? "" : " extends " + model.javaBase} implements ${model.nullableInterfaceFullName} {
         @if(model.enumRefTable != null)
             @Override
             public ${model.refType(model.enumRefTable)} type() {
@@ -19,14 +25,14 @@ ${model.sourceComment}
 
         @endif
 @else
-    public class ${model.className} {
+    public class ${model.className}${model.javaBase.isEmpty() ? "" : " extends " + model.javaBase} {
 @endif
 
     @for(FieldInfo field : model.fields)
         private ${field.type()} ${field.name()};
     @endfor
 
-    @if(!model.isTableAndNeedBuilder)
+    @if(!model.foreignKeys.isEmpty())
         @for(ForeignKeyInfo fk : model.foreignKeys)
             private ${fk.type()} ${fk.name()};
         @endfor
@@ -66,7 +72,7 @@ ${model.sourceComment}
                 self.${ln} = ${model.readValue(simpleType)};
             @elseif(field.type() instanceof FieldType.FList fList)
                 {
-                    int c = input.readInt();
+                    int c = input.readCount(0);
                     if (c == 0) {
                         self.${ln} = java.util.Collections.emptyList();
                     } else {
@@ -74,18 +80,22 @@ ${model.sourceComment}
                         for (; c > 0; c--) {
                             self.${ln}.add(${model.readValue((fList.item()))});
                         }
+                        self.${ln} = java.util.Collections.unmodifiableList(self.${ln});
                     }
                 }
             @elseif(field.type() instanceof FieldType.FMap fMap)
                 {
-                    int c = input.readInt();
+                    int c = input.readCount(0);
                     if (c == 0) {
                         self.${ln} = java.util.Collections.emptyMap();
                     } else {
                         self.${ln} = new java.util.LinkedHashMap<>(c);
                         for (; c > 0; c--) {
-                            self.${ln}.put(${model.readValue(fMap.key())}, ${model.readValue((fMap.value()))});
+                            var key = ${model.readValue(fMap.key())};
+                            var value = ${model.readValue(fMap.value())};
+                            if (self.${ln}.putIfAbsent(key, value) != null) input.errors().duplicateKey("${model.structural.name()}.${field.name()}", key);
                         }
+                        self.${ln} = java.util.Collections.unmodifiableMap(self.${ln});
                     }
                 }
             @endif
@@ -105,7 +115,7 @@ ${model.sourceComment}
 
     @endfor
 
-    @if(!model.isTableAndNeedBuilder)
+    @if(!model.foreignKeys.isEmpty())
         @for(ForeignKeyInfo fk : model.foreignKeys)
             public ${fk.type()} ${StringUtil.lower1(fk.name())}() {
                 return ${fk.name()};
@@ -133,9 +143,8 @@ ${model.sourceComment}
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof ${model.className}))
+            if (!(other instanceof ${model.className} o))
                 return false;
-            ${model.className} o = (${model.className}) other;
             return ${model.equals()};
         }
 
@@ -150,15 +159,15 @@ ${model.sourceComment}
         @endif
     }
 
-    @if(model.hasRef && !model.isTableAndNeedBuilder)
-        @if(!model.structural.foreignKeys().isEmpty())
-            @template.java.GenResolveDirect(cfg = model.cfg, structural = model.structural)
-        @endif
-
+    @if(model.hasRef)
         @if(model.nullableInterface!=null)
             @Override
         @endif
-        @template.java.GenResolve(cfg = model.cfg, structural = model.structural)
+        @template.java.GenResolve(cfg = model.cfg, structural = model.structural, errorsClass = errorsClass)
+    @endif
+
+    @if(GenJavaUtil.hasExtension(model.structural))
+        @template.java.GenCollectExtensions(model = model)
     @endif
 
     @if(model.isTable)

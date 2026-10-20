@@ -4,11 +4,11 @@ namespace Config
     {
         internal static DLevelRank _create(ConfigReader reader)
         {
-            var level = reader.ReadInt32();
-            var rank = reader.ReadInt32();
+            var valueLevel = reader.ReadInt32();
+            var valueRank = reader.ReadInt32();
             return new DLevelRank {
-                Level = level,
-                Rank = rank,
+                Level = valueLevel,
+                Rank = valueRank,
             };
         }
 
@@ -19,10 +19,7 @@ namespace Config
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DLevelRank;
-            return o != null && Level.Equals(o.Level) && Rank.Equals(o.Rank);
+            return obj is DLevelRank o && Level.Equals(o.Level) && Rank.Equals(o.Rank);
         }
 
         public override string ToString()
@@ -30,25 +27,26 @@ namespace Config
             return "(" + Level + "," + Rank + ")";
         }
 
-        internal void _resolve(IIssueHandler h)
+        internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            var rRefRank = Equip.DRankInfo.Get(Rank);
-            if (rRefRank == null) h.RefNotFound("LevelRank", "Rank", Rank.ToString());
+            var rRefRank = Equip.DRankInfo.Get(config, Rank);
+            if (rRefRank == null) errors.MissingReference("LevelRank", "Rank", "equip.rank", this.Rank);
             else RefRank = rRefRank.EEnum;
         }
+
     }
 
     public partial class DPosition
     {
         internal static DPosition _create(ConfigReader reader)
         {
-            var x = reader.ReadInt32();
-            var y = reader.ReadInt32();
-            var z = reader.ReadInt32();
+            var valueX = reader.ReadInt32();
+            var valueY = reader.ReadInt32();
+            var valueZ = reader.ReadInt32();
             return new DPosition {
-                X = x,
-                Y = y,
-                Z = z,
+                X = valueX,
+                Y = valueY,
+                Z = valueZ,
             };
         }
 
@@ -59,10 +57,7 @@ namespace Config
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DPosition;
-            return o != null && X.Equals(o.X) && Y.Equals(o.Y) && Z.Equals(o.Z);
+            return obj is DPosition o && X.Equals(o.X) && Y.Equals(o.Y) && Z.Equals(o.Z);
         }
 
         public override string ToString()
@@ -70,17 +65,18 @@ namespace Config
             return "(" + X + "," + Y + "," + Z + ")";
         }
 
+
     }
 
     public partial class DRange
     {
         internal static DRange _create(ConfigReader reader)
         {
-            var min = reader.ReadInt32();
-            var max = reader.ReadInt32();
+            var valueMin = reader.ReadInt32();
+            var valueMax = reader.ReadInt32();
             return new DRange {
-                Min = min,
-                Max = max,
+                Min = valueMin,
+                Max = valueMax,
             };
         }
 
@@ -91,16 +87,14 @@ namespace Config
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DRange;
-            return o != null && Min.Equals(o.Min) && Max.Equals(o.Max);
+            return obj is DRange o && Min.Equals(o.Min) && Max.Equals(o.Max);
         }
 
         public override string ToString()
         {
             return "(" + Min + "," + Max + ")";
         }
+
 
     }
 

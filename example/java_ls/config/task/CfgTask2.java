@@ -1,5 +1,7 @@
 package config.task;
 
+import configgen.genjava.LoadValueErrs;
+
 public class CfgTask2 {
     private int taskid;
     private java.util.List<config.Text> name;
@@ -22,7 +24,7 @@ public class CfgTask2 {
         CfgTask2 self = new CfgTask2();
         self.taskid = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.name = java.util.Collections.emptyList();
             } else {
@@ -30,6 +32,7 @@ public class CfgTask2 {
                 for (; c > 0; c--) {
                     self.name.add(config.Text._create(input));
                 }
+                self.name = java.util.Collections.unmodifiableList(self.name);
             }
         }
         self.nexttask = input.readInt();
@@ -39,7 +42,7 @@ public class CfgTask2 {
         self.testString = input.readStringInPool();
         self.testStruct = config.CfgPosition._create(input);
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.testList = java.util.Collections.emptyList();
             } else {
@@ -47,10 +50,11 @@ public class CfgTask2 {
                 for (; c > 0; c--) {
                     self.testList.add(input.readInt());
                 }
+                self.testList = java.util.Collections.unmodifiableList(self.testList);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.testListStruct = java.util.Collections.emptyList();
             } else {
@@ -58,10 +62,11 @@ public class CfgTask2 {
                 for (; c > 0; c--) {
                     self.testListStruct.add(config.CfgPosition._create(input));
                 }
+                self.testListStruct = java.util.Collections.unmodifiableList(self.testListStruct);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.testListInterface = java.util.Collections.emptyList();
             } else {
@@ -69,6 +74,7 @@ public class CfgTask2 {
                 for (; c > 0; c--) {
                     self.testListInterface.add(config.ai.triggertick.CfgTriggerTick._create(input));
                 }
+                self.testListInterface = java.util.Collections.unmodifiableList(self.testListInterface);
             }
         }
         return self;
@@ -134,14 +140,11 @@ public class CfgTask2 {
         return "(" + taskid + "," + name + "," + nexttask + "," + completecondition + "," + exp + "," + testBool + "," + testString + "," + testStruct + "," + testList + "," + testListStruct + "," + testListInterface + ")";
     }
 
-    public void _resolveDirect(config.ConfigMgr mgr) {
-        NullableRefTaskid = mgr.task_taskextraexp_All.get(taskid);
-        NullableRefNexttask = mgr.task_task_All.get(nexttask);
-    }
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        this.completecondition._resolve(mgr, errors);
+        this.NullableRefTaskid = mgr.getTaskTaskextraexp(this.taskid);
+        this.NullableRefNexttask = mgr.getTaskTask(this.nexttask);
 
-    public void _resolve(config.ConfigMgr mgr) {
-        completecondition._resolve(mgr);
-        _resolveDirect(mgr);
     }
 
     public static CfgTask2 get(int taskid) {
@@ -153,25 +156,6 @@ public class CfgTask2 {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allTaskTask2();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.task_task2_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgTask2 self = CfgTask2._create(input);
-                mgr.task_task2_All.put(self.taskid, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            for (CfgTask2 e : mgr.task_task2_All.values()) {
-                e._resolve(mgr);
-            }
-        }
-
-    }
 
 }

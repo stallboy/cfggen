@@ -9,7 +9,6 @@ public class CfgAi {
     private int trigOdds;
     private java.util.List<Integer> actionID;
     private boolean deathRemove;
-
     private CfgAi() {
     }
 
@@ -21,7 +20,7 @@ public class CfgAi {
         self.trigTick = config.ai.triggertick.CfgTriggerTick._create(input);
         self.trigOdds = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.actionID = java.util.Collections.emptyList();
             } else {
@@ -29,6 +28,7 @@ public class CfgAi {
                 for (; c > 0; c--) {
                     self.actionID.add(input.readInt());
                 }
+                self.actionID = java.util.Collections.unmodifiableList(self.actionID);
             }
         }
         self.deathRemove = input.readBool();
@@ -95,23 +95,6 @@ public class CfgAi {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allAiAi();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.ai_ai_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgAi self = CfgAi._create(input);
-                mgr.ai_ai_All.put(self.iD, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

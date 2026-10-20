@@ -1,22 +1,29 @@
 package config.other;
 
+import configgen.genjava.LoadValueErrs;
+
 public enum CfgArgCaptureMode {
-    SNAPSHOT("Snapshot"),
-    DYNAMIC("Dynamic");
+    SNAPSHOT("Snapshot", 1),
+    DYNAMIC("Dynamic", 2);
 
     private final String value;
-    private volatile config.other.CfgArgCaptureMode_Detail ref;
 
-    CfgArgCaptureMode(String value) {
+
+    CfgArgCaptureMode(String value, int fixedId) {
         this.value = value;
+        this.fixedId = fixedId;
     }
 
-    public static final java.util.Map<String, CfgArgCaptureMode> map = new java.util.HashMap<>();
+    private final int fixedId;
+
+    public static final java.util.Map<String, CfgArgCaptureMode> map;
 
     static {
+        var symbols = new java.util.LinkedHashMap<String, CfgArgCaptureMode>();
         for(CfgArgCaptureMode e : CfgArgCaptureMode.values()) {
-            map.put(e.value, e);
+            symbols.put(e.value, e);
         }
+        map = java.util.Collections.unmodifiableMap(symbols);
     }
 
     public static CfgArgCaptureMode get(String value) {
@@ -28,25 +35,39 @@ public enum CfgArgCaptureMode {
     }
 
     public int getId() {
-        return ref.getId();
+        return ref().getId();
     }
 
     public String getComment() {
-        return ref.getComment();
+        return ref().getComment();
     }
 
     public config.other.CfgArgCaptureMode_Detail ref() {
-        return ref;
+        return ref(config.ConfigMgr.getMgr());
     }
 
-    void setRef(config.ConfigMgr mgr) {
-        ref = mgr.other_ArgCaptureMode_All.get(value);
-        configgen.genjava.LoadValueErrs.requireNonNull(ref, "other.ArgCaptureMode.setRef", value);
+    public config.other.CfgArgCaptureMode_Detail ref(config.ConfigMgr mgr) {
+        return mgr._get_other_ArgCaptureMode_Refs(ordinal());
     }
 
-    public static void setAllRefs(config.ConfigMgr mgr) {
-        for(CfgArgCaptureMode e : CfgArgCaptureMode.values()) {
-            e.setRef(mgr);
+    public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
+        mgr._set_other_ArgCaptureMode_Refs(new config.other.CfgArgCaptureMode_Detail[] {
+            mgr.getOtherArgCaptureMode(SNAPSHOT.value),
+            mgr.getOtherArgCaptureMode(DYNAMIC.value),
+        });
+        for (var row : mgr._get_other_ArgCaptureMode_All().values()) {
+            var key = row.getName();
+            String symbol = row.getName();
+            CfgArgCaptureMode expected = get(symbol);
+            if (expected == null) {
+                errors.unknownSymbol("other.ArgCaptureMode", symbol, key, mgr.explain("other.ArgCaptureMode", key));
+                continue;
+            }
+            if (row.getId() != expected.fixedId) errors.changedSymbolId("other.ArgCaptureMode", symbol, expected.fixedId, row.getId(), mgr.explain("other.ArgCaptureMode", key));
+        }
+        for (CfgArgCaptureMode e : map.values()) {
+            if (e.ref(mgr) == null) errors.missingSymbol("other.ArgCaptureMode", e.value, e.value);
         }
     }
+
 }

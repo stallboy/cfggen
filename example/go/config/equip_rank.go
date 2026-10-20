@@ -84,7 +84,7 @@ func(t *EquipRankMgr) Get(rankID int32) *EquipRank {
 }
 
 func (t *EquipRankMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipRank, 0, cnt)
     t.rankIDArr = make([]*EquipRank, cnt)
     for i := 0; i < int(cnt); i++ {

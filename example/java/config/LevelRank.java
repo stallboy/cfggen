@@ -1,5 +1,7 @@
 package config;
 
+import configgen.genjava.LoadValueErrs;
+
 public class LevelRank {
     private int level;
     private int rank;
@@ -45,9 +47,8 @@ public class LevelRank {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof LevelRank))
+        if (!(other instanceof LevelRank o))
             return false;
-        LevelRank o = (LevelRank) other;
         return level == o.level && rank == o.rank;
     }
 
@@ -56,13 +57,10 @@ public class LevelRank {
         return "(" + level + "," + rank + ")";
     }
 
-    public void _resolveDirect(config.ConfigMgr mgr) {
-        RefRank = config.equip.Rank.get(rank);
-        configgen.genjava.LoadValueErrs.requireNonNull(RefRank, "LevelRank.Rank -> equip.rank", rank);
-    }
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        this.RefRank = config.equip.Rank.get(this.rank);
+        if (this.RefRank == null) errors.missingReference("LevelRank", "Rank", "equip.rank", this.rank);
 
-    public void _resolve(config.ConfigMgr mgr) {
-        _resolveDirect(mgr);
     }
 
 }

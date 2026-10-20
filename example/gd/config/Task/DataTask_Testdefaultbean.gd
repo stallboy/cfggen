@@ -20,11 +20,11 @@ static func _create(stream: ConfigStream) -> DataTask_TestDefaultBean:
 	instance.testBool = stream.read_bool()
 	instance.testString = stream.read_string_in_pool()
 	instance.testSubBean = DataPosition._create(stream)
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.testList.append(stream.read_int32())
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.testList2.append(stream.read_int32())
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_string_in_pool()
 		instance.testMap[k] = v

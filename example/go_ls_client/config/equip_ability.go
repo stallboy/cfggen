@@ -80,7 +80,7 @@ func(t *EquipAbilityMgr) Get(id int32) *EquipAbility {
 }
 
 func (t *EquipAbilityMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipAbility, 0, cnt)
     t.idMap = make(map[int32]*EquipAbility, cnt)
     for i := 0; i < int(cnt); i++ {

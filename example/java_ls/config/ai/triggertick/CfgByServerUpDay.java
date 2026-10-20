@@ -4,7 +4,6 @@ public final class CfgByServerUpDay implements config.ai.triggertick.CfgTriggerT
     private int init;
     private float coefficient1;
     private float coefficient2;
-
     private CfgByServerUpDay() {
     }
 
@@ -41,9 +40,8 @@ public final class CfgByServerUpDay implements config.ai.triggertick.CfgTriggerT
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgByServerUpDay))
+        if (!(other instanceof CfgByServerUpDay o))
             return false;
-        CfgByServerUpDay o = (CfgByServerUpDay) other;
         return init == o.init && coefficient1 == o.coefficient1 && coefficient2 == o.coefficient2;
     }
 

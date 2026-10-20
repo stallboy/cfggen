@@ -14,17 +14,20 @@ public enum CfgCompleteconditiontype {
     private final String name;
     private final int value;
 
+
     CfgCompleteconditiontype(String name, int value) {
         this.name = name;
         this.value = value;
     }
 
-    public static final java.util.Map<Integer, CfgCompleteconditiontype> map = new java.util.HashMap<>();
+    public static final java.util.Map<Integer, CfgCompleteconditiontype> map;
 
     static {
+        var symbols = new java.util.LinkedHashMap<Integer, CfgCompleteconditiontype>();
         for(CfgCompleteconditiontype e : CfgCompleteconditiontype.values()) {
-            map.put(e.value, e);
+            symbols.put(e.value, e);
         }
+        map = java.util.Collections.unmodifiableMap(symbols);
     }
 
     public static CfgCompleteconditiontype get(int value) {

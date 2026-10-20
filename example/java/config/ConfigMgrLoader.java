@@ -1,115 +1,90 @@
 package config;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import configgen.genjava.ConfigLoader;
+import configgen.genjava.ConfigPackage;
+import configgen.genjava.LoadValueErrs;
+import java.util.*;
 
 public class ConfigMgrLoader {
-
-    public static configgen.genjava.SchemaInterface loadSchema(configgen.genjava.ConfigInput input) {
-        // 1. 读取 Schema（如果有）
-        int schemaLength = input.readInt();
-        if (schemaLength <= 0) {
-            return null;
-        } else {
-            return (configgen.genjava.SchemaInterface) configgen.genjava.SchemaDeserializer.deserialize(input);
-        }
+    public static ConfigMgr loadPackagesAndSetMgr(ConfigPackage... packages) {
+        ConfigMgr config = loadPackages(packages);
+        ConfigMgr.setMgr(config);
+        return config;
     }
 
-    public static ConfigMgr load(configgen.genjava.ConfigInput input) {
+    public static ConfigMgr loadPackages(ConfigPackage... packages) {
+        ConfigPackage.validateOrder(List.of(packages));
+        var errors = new LoadValueErrs();
         ConfigMgr mgr = new ConfigMgr();
-        return load(mgr, input);
-    }
-
-    public static ConfigMgr load(ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-        // 2. 初始化 StringPool 和 LangTextPool
-        input.readStringPool();
-        input.readLangTextPool();
-
-        // 3. 读取表数据
-        int c = input.readInt();
-        if (c < 18) {
-            throw new IllegalArgumentException();
-        }
-
-        Map<String, ConfigLoader> allConfigLoaders = getAllConfigLoaders();
-        for (int i = 0; i < c; i++) {
-            String tableName = input.readString();
-            int tableSize = input.readInt();
-            ConfigLoader configLoader = allConfigLoaders.get(tableName);
-            if (configLoader != null) {
-                configLoader.createAll(mgr, input);
-            } else {
-                input.skipBytes(tableSize);
+        var loaders = newLoaders(mgr, errors);
+        var expected = ConfigCodeSchema.getPackageSchema();
+        for (var pack : packages) {
+            String packName = pack.name();
+            if (!pack.validateSchema(expected, errors)) continue;
+            for (String block : pack.blockNames()) {
+                if (!block.startsWith(".")) continue;
+                String table = block.substring(1);
+                var loader = loaders.get(table);
+                if (loader != null) loader.read(pack.block(block), packName);
             }
         }
+        return finish(mgr, loaders, errors);
+    }
 
-        for (var configLoader : allConfigLoaders.values()) {
-            configLoader.resolveAll(mgr);
+    private static ConfigMgr finish(ConfigMgr mgr, Map<String, ConfigLoader<?, ?>> loaders, LoadValueErrs errors) {
+        for (var entry : loaders.entrySet()) {
+            mgr.setOrigins(entry.getKey(), entry.getValue().origins());
+            entry.getValue().index();
         }
-
+        errors.checkErrors();
+        config.equip.Equipconfig_Entry.setAllRefs(mgr, errors);
+        config.equip.Jewelrysuit_Entry.setAllRefs(mgr, errors);
+        config.equip.Rank.setAllRefs(mgr, errors);
+        config.other.ArgCaptureMode.setAllRefs(mgr, errors);
+        for (var loader : loaders.values()) loader.resolveAll();
+        errors.checkErrors();
+        mgr.markReady();
         return mgr;
     }
 
-    public static void loadPartialAndSetMgr(configgen.genjava.ConfigInput input, ConfigMgr oldMgr, Set<String> tableNames) {
-        ConfigMgr newMgr = new ConfigMgr();
-        newMgr.copyFrom(oldMgr);
-
-        input.readStringPool();
-        input.readLangTextPool();
-
-        int c = input.readInt();
-
-        Map<String, ConfigLoader> allConfigLoaders = getAllConfigLoaders();
-        for (int i = 0; i < c; i++) {
-            String tableName = input.readString();
-            int tableSize = input.readInt();
-            if (tableNames.contains(tableName)) {
-                ConfigLoader configLoader = allConfigLoaders.get(tableName);
-                if (configLoader != null) {
-                    configLoader.createAll(newMgr, input);
-                } else {
-                    input.skipBytes(tableSize);
-                }
-            } else {
-                input.skipBytes(tableSize);
-            }
-        }
-
-        for (var configLoader : allConfigLoaders.values()) {
-            configLoader.resolveAll(newMgr);
-        }
-
-        ConfigMgr.setMgr(newMgr);
-    }
-
-    public static void applySetAllRefs(ConfigMgr mgr) {
-        config.equip.Equipconfig_Entry.setAllRefs(mgr);
-        config.equip.Jewelrysuit_Entry.setAllRefs(mgr);
-        config.equip.Rank.setAllRefs(mgr);
-        config.other.ArgCaptureMode.setAllRefs(mgr);
-    }
-
-    public static Map<String, ConfigLoader> getAllConfigLoaders() {
-        Map<String, ConfigLoader> allConfigLoaders = new LinkedHashMap<>();
-        allConfigLoaders.put("ai.ai", new config.ai.Ai._ConfigLoader());
-        allConfigLoaders.put("ai.ai_action", new config.ai.AiAction._ConfigLoader());
-        allConfigLoaders.put("ai.ai_condition", new config.ai.AiCondition._ConfigLoader());
-        allConfigLoaders.put("equip.equipconfig", new config.equip.Equipconfig._ConfigLoader());
-        allConfigLoaders.put("equip.jewelry", new config.equip.Jewelry._ConfigLoader());
-        allConfigLoaders.put("equip.jewelryrandom", new config.equip.Jewelryrandom._ConfigLoader());
-        allConfigLoaders.put("equip.jewelrysuit", new config.equip.Jewelrysuit._ConfigLoader());
-        allConfigLoaders.put("equip.rank", new config.equip.Rank_Detail._ConfigLoader());
-        allConfigLoaders.put("other.ArgCaptureMode", new config.other.ArgCaptureMode_Detail._ConfigLoader());
-        allConfigLoaders.put("other.drop", new config.other.Drop._ConfigLoader());
-        allConfigLoaders.put("other.keytest", new config.other.Keytest._ConfigLoader());
-        allConfigLoaders.put("other.loot", new config.other.Loot._ConfigLoader());
-        allConfigLoaders.put("other.lootitem", new config.other.Lootitem._ConfigLoader());
-        allConfigLoaders.put("other.monster", new config.other.Monster._ConfigLoader());
-        allConfigLoaders.put("other.signin", new config.other.Signin._ConfigLoader());
-        allConfigLoaders.put("task.task", new config.task.Task._ConfigLoader());
-        allConfigLoaders.put("task.task2", new config.task.Task2._ConfigLoader());
-        allConfigLoaders.put("task.taskextraexp", new config.task.Taskextraexp._ConfigLoader());
-        return allConfigLoaders;
+    private static Map<String, ConfigLoader<?, ?>> newLoaders(ConfigMgr mgr, LoadValueErrs errors) {
+        var loaders = new LinkedHashMap<String, ConfigLoader<?, ?>>();
+        loaders.put("ai.ai", new ConfigLoader<>("ai.ai", errors, config.ai.Ai::_create,
+                config.ai.Ai::getID, mgr::_set_ai_ai_All, null));
+        loaders.put("ai.ai_action", new ConfigLoader<>("ai.ai_action", errors, config.ai.AiAction::_create,
+                config.ai.AiAction::getID, mgr::_set_ai_ai_action_All, null));
+        loaders.put("ai.ai_condition", new ConfigLoader<>("ai.ai_condition", errors, config.ai.AiCondition::_create,
+                config.ai.AiCondition::getID, mgr::_set_ai_ai_condition_All, null));
+        loaders.put("equip.equipconfig", new ConfigLoader<>("equip.equipconfig", errors, config.equip.Equipconfig::_create,
+                config.equip.Equipconfig::getEntry, mgr::_set_equip_equipconfig_All, null));
+        loaders.put("equip.jewelry", new ConfigLoader<>("equip.jewelry", errors, config.equip.Jewelry::_create,
+                config.equip.Jewelry::getID, mgr::_set_equip_jewelry_All, row -> row._resolve(mgr, errors)));
+        loaders.put("equip.jewelryrandom", new ConfigLoader<>("equip.jewelryrandom", errors, config.equip.Jewelryrandom::_create,
+                config.equip.Jewelryrandom::getLvlRank, mgr::_set_equip_jewelryrandom_All, row -> row._resolve(mgr, errors)));
+        loaders.put("equip.jewelrysuit", new ConfigLoader<>("equip.jewelrysuit", errors, config.equip.Jewelrysuit::_create,
+                config.equip.Jewelrysuit::getSuitID, mgr::_set_equip_jewelrysuit_All, null));
+        loaders.put("equip.rank", new ConfigLoader<>("equip.rank", errors, config.equip.Rank_Detail::_create,
+                config.equip.Rank_Detail::getRankID, rows -> config.equip.Rank_Detail._index(mgr, rows, errors), null));
+        loaders.put("other.ArgCaptureMode", new ConfigLoader<>("other.ArgCaptureMode", errors, config.other.ArgCaptureMode_Detail::_create,
+                config.other.ArgCaptureMode_Detail::getName, rows -> config.other.ArgCaptureMode_Detail._index(mgr, rows, errors), null));
+        loaders.put("other.drop", new ConfigLoader<>("other.drop", errors, config.other.Drop::_create,
+                config.other.Drop::getDropid, mgr::_set_other_drop_All, null));
+        loaders.put("other.keytest", new ConfigLoader<>("other.keytest", errors, config.other.Keytest::_create,
+                row -> new config.other.Keytest.Id1Id2Key(row.getId1(), row.getId2()), rows -> config.other.Keytest._index(mgr, rows, errors), row -> row._resolve(mgr, errors)));
+        loaders.put("other.loot", new ConfigLoader<>("other.loot", errors, config.other.Loot::_create,
+                config.other.Loot::getLootid, mgr::_set_other_loot_All, row -> row._resolve(mgr, errors)));
+        loaders.put("other.lootitem", new ConfigLoader<>("other.lootitem", errors, config.other.Lootitem::_create,
+                row -> new config.other.Lootitem.LootidItemidKey(row.getLootid(), row.getItemid()), mgr::_set_other_lootitem_All, null));
+        loaders.put("other.monster", new ConfigLoader<>("other.monster", errors, config.other.Monster::_create,
+                config.other.Monster::getId, mgr::_set_other_monster_All, row -> row._resolve(mgr, errors)));
+        loaders.put("other.signin", new ConfigLoader<>("other.signin", errors, config.other.Signin::_create,
+                config.other.Signin::getId, mgr::_set_other_signin_All, row -> row._resolve(mgr, errors)));
+        loaders.put("task.task", new ConfigLoader<>("task.task", errors, config.task.Task::_create,
+                config.task.Task::getTaskid, mgr::_set_task_task_All, row -> row._resolve(mgr, errors)));
+        loaders.put("task.task2", new ConfigLoader<>("task.task2", errors, config.task.Task2::_create,
+                config.task.Task2::getTaskid, mgr::_set_task_task2_All, row -> row._resolve(mgr, errors)));
+        loaders.put("task.taskextraexp", new ConfigLoader<>("task.taskextraexp", errors, config.task.Taskextraexp::_create,
+                config.task.Taskextraexp::getTaskid, mgr::_set_task_taskextraexp_All, null));
+        return loaders;
     }
 }

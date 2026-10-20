@@ -84,7 +84,7 @@ func (t *OtherLootitemMgr) GetAllByItemid(itemid int32) []*OtherLootitem {
     return t.itemidMapList[itemid]
 }
 func (t *OtherLootitemMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*OtherLootitem, 0, cnt)
     t.lootidItemidMap = make(map[KeyLootidItemid]*OtherLootitem, cnt)
     for i := 0; i < int(cnt); i++ {

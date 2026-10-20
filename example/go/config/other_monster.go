@@ -17,22 +17,22 @@ type OtherMonster struct {
 func createOtherMonster(stream *Stream) *OtherMonster {
     v := &OtherMonster{}
     v.id = stream.ReadInt32()
-    posListSize := stream.ReadInt32()
+    posListSize := stream.ReadCount(0)
     v.posList = make([]*Position, posListSize)
-    for i := 0; i < int(posListSize); i++ {
+    for i := 0; i < posListSize; i++ {
         v.posList[i] = createPosition(stream)
     }
     v.lootId = stream.ReadInt32()
     v.lootItemId = stream.ReadInt32()
-    enumMap1Size := stream.ReadInt32()
+    enumMap1Size := stream.ReadCount(0)
     v.enumMap1 = make(map[string]int32, enumMap1Size)
-    for i := 0; i < int(enumMap1Size); i++ {
+    for i := 0; i < enumMap1Size; i++ {
         var k = stream.ReadStringInPool()
         v.enumMap1[k] = stream.ReadInt32()
     }
-    enumMap2Size := stream.ReadInt32()
+    enumMap2Size := stream.ReadCount(0)
     v.enumMap2 = make(map[int32]string, enumMap2Size)
-    for i := 0; i < int(enumMap2Size); i++ {
+    for i := 0; i < enumMap2Size; i++ {
         var k = stream.ReadInt32()
         v.enumMap2[k] = stream.ReadStringInPool()
     }
@@ -106,7 +106,7 @@ func(t *OtherMonsterMgr) Get(id int32) *OtherMonster {
 }
 
 func (t *OtherMonsterMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*OtherMonster, 0, cnt)
     t.idMap = make(map[int32]*OtherMonster, cnt)
     for i := 0; i < int(cnt); i++ {

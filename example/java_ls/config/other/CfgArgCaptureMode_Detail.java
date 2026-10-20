@@ -1,10 +1,11 @@
 package config.other;
 
+import configgen.genjava.LoadValueErrs;
+
 public class CfgArgCaptureMode_Detail {
     private String name;
     private int id;
     private String comment;
-
     private CfgArgCaptureMode_Detail() {
     }
 
@@ -47,25 +48,18 @@ public class CfgArgCaptureMode_Detail {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherArgCaptureMode();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.other_ArgCaptureMode_All = new java.util.LinkedHashMap<>(c);
-            mgr.other_ArgCaptureMode_IdMap = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgArgCaptureMode_Detail self = CfgArgCaptureMode_Detail._create(input);
-                mgr.other_ArgCaptureMode_All.put(self.name, self);
-                mgr.other_ArgCaptureMode_IdMap.put(self.id, self);
+    public static void _index(config.ConfigMgr mgr, java.util.Map<String, CfgArgCaptureMode_Detail> rows, LoadValueErrs errors) {
+        int c = rows.size();
+        var other_ArgCaptureMode_IdMap = new java.util.LinkedHashMap<Integer, CfgArgCaptureMode_Detail>(c);
+        for (var self : rows.values()) {
+            if (other_ArgCaptureMode_IdMap.putIfAbsent(self.id, self) != null) {
+                var primaryKey = self.name;
+                errors.duplicateUniqueKey("other.ArgCaptureMode", "id", primaryKey, self.id, mgr.explain("other.ArgCaptureMode", primaryKey));
             }
         }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
+        mgr._set_other_ArgCaptureMode_All(rows);
+        mgr._set_other_ArgCaptureMode_IdMap(other_ArgCaptureMode_IdMap);
     }
 
 }

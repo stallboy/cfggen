@@ -31,7 +31,8 @@ func _to_string() -> String:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
+	_data = {}
+	var count = stream.read_count(1)
 	for i in range(count):
 		var item = _create(stream)
 		_data[item.taskid] = item
@@ -40,7 +41,7 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 static func _create(stream: ConfigStream) -> DataTask_Task2:
 	var instance = DataTask_Task2.new()
 	instance.taskid = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.name.append(stream.read_text_in_pool())
 	instance.nexttask = stream.read_int32()
 	instance.completecondition = DataTask_Completecondition._create(stream)
@@ -48,22 +49,22 @@ static func _create(stream: ConfigStream) -> DataTask_Task2:
 	instance.testBool = stream.read_bool()
 	instance.testString = stream.read_string_in_pool()
 	instance.testStruct = DataPosition._create(stream)
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.testList.append(stream.read_int32())
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.testListStruct.append(DataPosition._create(stream))
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.testListInterface.append(DataAi_TriggerTick._create(stream))
 	return instance
 
 
-	# 解析外键引用
-	func _resolve(errors: ConfigErrors):
-		if completecondition != null:
-			completecondition._resolve(errors)
-		NullableRefTaskid = DataTask_Taskextraexp.find(taskid)
-		NullableRefNexttask = DataTask_Task.find(nexttask)
+# 解析外键引用
+func _resolve(errors: ConfigErrors):
+	if completecondition != null:
+		completecondition._resolve(errors)
+	NullableRefTaskid = DataTask_Taskextraexp.find(taskid)
+	NullableRefNexttask = DataTask_Task.find(nexttask)
 
-	static func _resolve_refs(errors: ConfigErrors):
-		for item in all():
-			item._resolve(errors)
+static func _resolve_refs(errors: ConfigErrors):
+	for item in all():
+		item._resolve(errors)

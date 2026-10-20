@@ -29,9 +29,11 @@ public class GoCodeGenerator extends GeneratorWithTag {
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
 
     public boolean isLangSwitch;
+    private List<String> languageNames;
 
     private static final List<String> COPY_FILES = List.of(
             "stream.go",
+            "package.go",
             "LoadErrors.go"
     );
 
@@ -50,12 +52,13 @@ public class GoCodeGenerator extends GeneratorWithTag {
         CfgSchema cfgSchema = cfgValue.schema();
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
+        languageNames = isLangSwitch ? ctx.nullableLangSwitch().languages() : List.of();
 
         for (String fn : COPY_FILES) {
             FileUtil.copyFileIfNotExist("/support/go/" + fn,
                     "src/main/resources/support/go/" + fn,
                     dstDir.resolve(fn),
-                    ENCODING, outputFiles);
+                    ENCODING, outputFiles, line -> line.equals("package config") ? "package " + pkg : line);
         }
 
         genCfgMgrFile(cfgValue);
@@ -123,7 +126,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
 
     private void genCfgMgrFile(CfgValue cfgValue) {
         String mgrFileName = StringUtil.lower1(pkg) + "mgr";
-        var model = new CfgMgrModel(pkg, cfgValue);
+        var model = new CfgMgrModel(pkg, cfgValue, languageNames);
         try (var ps = createCode(mgrFileName + ".go")) {
             JteEngine.render("go/GenCfgMgr.jte", model, ps);
         }

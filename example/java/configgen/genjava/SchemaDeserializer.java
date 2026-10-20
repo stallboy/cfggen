@@ -3,7 +3,10 @@ package configgen.genjava;
 public final class SchemaDeserializer {
 
     public static Schema deserialize(ConfigInput input) {
-        return new SchemaDeserializer(input).deserialize();
+        var errors = input.errors();
+        Schema schema = new SchemaDeserializer(input).deserialize();
+        errors.checkErrors();
+        return schema;
     }
 
     private final ConfigInput input;
@@ -27,7 +30,7 @@ public final class SchemaDeserializer {
             case Schema.BEAN -> deserializeBean();
             case Schema.INTERFACE -> deserializeInterface();
             case Schema.ENUM -> deserializeEnum();
-            default -> throw new ConfigErr("schema tag " + tag + " not supported");
+            default -> throw input.errors().unsupportedSchemaTag(tag);
         };
     }
 
@@ -50,9 +53,11 @@ public final class SchemaDeserializer {
     private SchemaBean deserializeBean() {
         boolean isTable = input.readBool();
         SchemaBean bean = new SchemaBean(isTable);
-        int size = input.readInt();
+        int size = input.readCount(8);
+        var names = new java.util.HashSet<String>();
         for (int i = 0; i < size; i++) {
             String name = input.readString();
+            if (!names.add(name)) input.errors().duplicateKey("schema field", name);
             Schema schema = deserialize();
             bean.addColumn(name, schema);
         }
@@ -63,9 +68,10 @@ public final class SchemaDeserializer {
         boolean isEnumPart = input.readBool();
         boolean hasIntValue = input.readBool();
         SchemaEnum enumSchema = new SchemaEnum(isEnumPart, hasIntValue);
-        int size = input.readInt();
+        int size = input.readCount(hasIntValue ? 8 : 4);
         for (int i = 0; i < size; i++) {
             String name = input.readString();
+            if (enumSchema.values.containsKey(name)) input.errors().duplicateKey("schema symbol", name);
             if (hasIntValue) {
                 int value = input.readInt();
                 enumSchema.addValue(name, value);
@@ -78,11 +84,11 @@ public final class SchemaDeserializer {
 
     private SchemaInterface deserializeInterface() {
         SchemaInterface interfaceSchema = new SchemaInterface();
-        int size = input.readInt();
+        int size = input.readCount(8);
         for (int i = 0; i < size; i++) {
             String name = input.readString();
             Schema schema = deserialize();
-            interfaceSchema.addImp(name, schema);
+            if (interfaceSchema.implementations.putIfAbsent(name, schema) != null) input.errors().duplicateKey("schema implementation", name);
         }
         return interfaceSchema;
     }

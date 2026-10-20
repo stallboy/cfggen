@@ -9,7 +9,7 @@ public final class SchemaRef implements Schema {
 
     @Override
     public boolean compatible(Schema other) {
-        return other instanceof SchemaRef && type.equals(((SchemaRef) other).type);
+        return other instanceof SchemaRef ref && type.equals(ref.type);
     }
 
     @Override

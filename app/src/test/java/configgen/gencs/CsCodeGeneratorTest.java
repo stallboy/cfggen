@@ -17,8 +17,10 @@ import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * C# 生成器冒烟：生成成功 + 关键产物存在 + 内容含预期类型。
@@ -26,6 +28,63 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CsCodeGeneratorTest {
 
     private @TempDir Path tempDir;
+
+    @Test
+    void extensionsDoNotAddResolveMethodsOrRegistrationState() throws Exception {
+        var ctx = TestCtx.newContext(tempDir, """
+                struct key { id:int ->unit; }
+                struct plain { value:int; }
+                struct bundle { values:list<plain>; }
+                table unit[id] { id:int (seq); name:str; [name]; }
+                table holder[id] { id:int; keys:list<key> (pack); }
+                """, Map.of("unit", "id,name\nid,name\n0,zero\n", "holder", "id,keys\nid,keys\n1,(0)\n"));
+        Path output = tempDir.resolve("out");
+        new CsCodeGenerator(new ParameterParser("cs,dir:" + output)).generate(ctx);
+        try (var files = Files.walk(output)) {
+            for (Path path : files.filter(p -> p.toString().endsWith(".cs")).toList()) {
+                String code = Files.readString(path);
+                for (String old : java.util.List.of("SimpleIssueHandler", "IIssueHandler", "SetRowContext", "_collectExtensions", "TakeExtensions", "reader.Capture(", "registered", "AddExtension", "List<IConfigExtension>", "catch (", "try {")) {
+                    assertFalse(code.contains(old), path + ": " + old);
+                }
+            }
+        }
+        String loader = Files.readString(output.resolve("Config/Loader.cs"));
+        assertTrue(loader.contains("sealed class LoadErrors"));
+        assertTrue(loader.contains("record MissingReference("));
+        assertTrue(loader.contains("private void Add(LoadError error)"));
+        String module = Files.readString(output.resolve("Config/_loaders/_rootLoader.cs"));
+        assertEquals(2, module.lines().filter(line -> line.contains("void _resolve(")).count());
+        String processor = Files.readString(output.resolve("Config/Processor.cs"));
+        assertFalse(processor.contains("Ready(DPlain "));
+        assertTrue(processor.contains("Ready(DBundle "));
+    }
+
+    @Test
+    void usingDirectivesFollowUsageAndImplicitUsingsOption() throws Exception {
+        var ctx = TestCtx.newContext(tempDir, """
+                struct point { x:int; }
+                interface shape { struct none { } }
+                table unit[id] { id:int; }
+                """, Map.of("unit", "id\nid\n1\n"));
+        for (boolean implicit : java.util.List.of(false, true)) {
+            Path output = tempDir.resolve(implicit ? "implicit" : "explicit");
+            new CsCodeGenerator(new ParameterParser("cs,dir:" + output + (implicit ? ",implicitUsings" : ""))).generate(ctx);
+            Path config = output.resolve("Config");
+            assertFalse(Files.readString(config.resolve("DPoint.cs")).contains("using "));
+            assertFalse(Files.readString(config.resolve("DShape.cs")).contains("using "));
+            String unit = Files.readString(config.resolve("DUnit.cs"));
+            assertFalse(unit.contains("using System;"));
+            org.junit.jupiter.api.Assertions.assertEquals(!implicit, unit.contains("using System.Collections.Generic;"));
+            for (String file : java.util.List.of("Loader.cs", "Processor.cs", "ConfigMgr.cs", "ConfigPackage.cs")) {
+                String code = Files.readString(config.resolve(file));
+                org.junit.jupiter.api.Assertions.assertEquals(!implicit, code.contains("using System;"), file);
+                org.junit.jupiter.api.Assertions.assertEquals(!implicit, code.contains("using System.Collections.Generic;"), file);
+            }
+            String pack = Files.readString(config.resolve("ConfigPackage.cs"));
+            org.junit.jupiter.api.Assertions.assertEquals(!implicit, pack.contains("using System.IO;"));
+            assertTrue(pack.contains("using System.Text;"));
+        }
+    }
 
     @BeforeAll
     static void setupLogger() {
@@ -63,6 +122,26 @@ class CsCodeGeneratorTest {
         assertTrue(content.contains("Name"), "应包含字段Name");
 
         assertTrue(Files.exists(configDir.resolve("Loader.cs")), "应生成Config/Loader.cs");
+        String processor = Files.readString(configDir.resolve("Processor.cs"));
+        assertFalse(processor.contains("\"default\""));
+        assertFalse(processor.contains("params string[] languages"));
+        assertTrue(processor.contains("pack.Block(block)"));
+        assertFalse(Files.readString(configDir.resolve("ConfigMgr.cs")).contains("switch"));
+    }
+
+    @Test
+    void zeroAndOneBranchMappingsDoNotGenerateSwitches() throws Exception {
+        var ctx = TestCtx.newContext(tempDir, """
+                struct point { value:int; }
+                interface one { struct node { point:point; } }
+                table rank[id] (enum='name') { id:int; name:str; }
+                table empty[id] (enum='name') { id:int; name:str; }
+                table entry[id] (entry='name') { id:int; name:str; }
+                """, Map.of("rank", "id,name\nid,name\n1,Green\n", "empty", "id,name\nid,name\n", "entry", "id,name\nid,name\n1,Home\n"));
+        Path output = tempDir.resolve("out");
+        new CsCodeGenerator(new ParameterParser("cs,dir:" + output)).generate(ctx);
+        assertFalse(Files.readString(output.resolve("Config/_loaders/_rootLoader.cs")).contains("switch"));
+        assertFalse(Files.readString(output.resolve("Config/Processor.cs")).contains("switch"));
     }
 
     @Test

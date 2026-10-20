@@ -7,7 +7,6 @@ public class AiCondition {
     private int formulaID;
     private java.util.List<Integer> argIList;
     private java.util.List<Integer> argSList;
-
     private AiCondition() {
     }
 
@@ -17,7 +16,7 @@ public class AiCondition {
         self.desc = input.readStringInPool();
         self.formulaID = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.argIList = java.util.Collections.emptyList();
             } else {
@@ -25,10 +24,11 @@ public class AiCondition {
                 for (; c > 0; c--) {
                     self.argIList.add(input.readInt());
                 }
+                self.argIList = java.util.Collections.unmodifiableList(self.argIList);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.argSList = java.util.Collections.emptyList();
             } else {
@@ -36,6 +36,7 @@ public class AiCondition {
                 for (; c > 0; c--) {
                     self.argSList.add(input.readInt());
                 }
+                self.argSList = java.util.Collections.unmodifiableList(self.argSList);
             }
         }
         return self;
@@ -87,23 +88,6 @@ public class AiCondition {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allAiAiCondition();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.ai_ai_condition_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                AiCondition self = AiCondition._create(input);
-                mgr.ai_ai_condition_All.put(self.iD, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

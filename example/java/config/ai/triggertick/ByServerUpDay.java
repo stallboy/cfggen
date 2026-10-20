@@ -4,7 +4,6 @@ public final class ByServerUpDay implements config.ai.triggertick.TriggerTick {
     private int init;
     private float coefficient1;
     private float coefficient2;
-
     private ByServerUpDay() {
     }
 
@@ -41,9 +40,8 @@ public final class ByServerUpDay implements config.ai.triggertick.TriggerTick {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ByServerUpDay))
+        if (!(other instanceof ByServerUpDay o))
             return false;
-        ByServerUpDay o = (ByServerUpDay) other;
         return init == o.init && coefficient1 == o.coefficient1 && coefficient2 == o.coefficient2;
     }
 

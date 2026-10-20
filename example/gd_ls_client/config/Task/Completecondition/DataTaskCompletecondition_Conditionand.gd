@@ -16,10 +16,10 @@ static func _create(stream: ConfigStream) -> DataTaskCompletecondition_Condition
 	return instance
 
 
-	# 解析外键引用
-	func _resolve(errors: ConfigErrors):
-		if cond1 != null:
-			cond1._resolve(errors)
-		if cond2 != null:
-			cond2._resolve(errors)
+# 解析外键引用
+func _resolve(errors: ConfigErrors):
+	if cond1 != null:
+		cond1._resolve(errors)
+	if cond2 != null:
+		cond2._resolve(errors)
 

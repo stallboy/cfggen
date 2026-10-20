@@ -70,6 +70,12 @@ public class FileUtil {
 
     public static void copyFileIfNotExist(String sourceFileInResources, String fallbackSourceFile,
                                              Path dstFile, String dstEncoding, CachedFiles cachedFiles) throws IOException {
+        copyFileIfNotExist(sourceFileInResources, fallbackSourceFile, dstFile, dstEncoding, cachedFiles, line -> line);
+    }
+
+    public static void copyFileIfNotExist(String sourceFileInResources, String fallbackSourceFile,
+                                         Path dstFile, String dstEncoding, CachedFiles cachedFiles,
+                                         java.util.function.UnaryOperator<String> transformLine) throws IOException {
 
         if (Files.exists(dstFile)) {
             cachedFiles.keepFile(dstFile);
@@ -98,7 +104,7 @@ public class FileUtil {
 
             String line;
             while ((line = br.readLine()) != null) {
-                ps.println(line);
+                ps.println(transformLine.apply(line));
             }
         }
     }

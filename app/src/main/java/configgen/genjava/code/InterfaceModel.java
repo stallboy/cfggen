@@ -2,6 +2,7 @@ package configgen.genjava.code;
 
 import configgen.schema.HasRef;
 import configgen.schema.InterfaceSchema;
+import configgen.genjava.GenJavaUtil;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ public class InterfaceModel {
     public final boolean isSealedInterface;
     public final String nullableEnumRefTable;
     public final boolean hasRef;
+    public final boolean hasExtension;
     public final List<Impl> impls;
 
     public record Impl(String name,
@@ -27,6 +29,7 @@ public class InterfaceModel {
         this.nullableEnumRefTable = sInterface.nullableEnumRefTable() != null ?
                 Name.refType(cfg, sInterface.nullableEnumRefTable()) : null;
         this.hasRef = HasRef.hasRef(sInterface);
+        this.hasExtension = GenJavaUtil.hasExtension(sInterface);
 
         this.impls = sInterface.impls().stream().map(impl -> {
             // permits 用与实际生成 impl 类同一个 NameableName，保证 prefix/beautifulName 下名字一致

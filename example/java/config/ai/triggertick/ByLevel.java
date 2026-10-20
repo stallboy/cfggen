@@ -3,7 +3,6 @@ package config.ai.triggertick;
 public final class ByLevel implements config.ai.triggertick.TriggerTick {
     private int init;
     private float coefficient;
-
     private ByLevel() {
     }
 
@@ -34,9 +33,8 @@ public final class ByLevel implements config.ai.triggertick.TriggerTick {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ByLevel))
+        if (!(other instanceof ByLevel o))
             return false;
-        ByLevel o = (ByLevel) other;
         return init == o.init && coefficient == o.coefficient;
     }
 

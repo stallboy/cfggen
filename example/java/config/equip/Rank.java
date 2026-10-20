@@ -1,5 +1,7 @@
 package config.equip;
 
+import configgen.genjava.LoadValueErrs;
+
 // 来自：equip/rank.csv
 public enum Rank {
     WHITE("white", 0),
@@ -11,19 +13,21 @@ public enum Rank {
 
     private final String name;
     private final int value;
-    private volatile config.equip.Rank_Detail ref;
+
 
     Rank(String name, int value) {
         this.name = name;
         this.value = value;
     }
 
-    public static final java.util.Map<Integer, Rank> map = new java.util.HashMap<>();
+    public static final java.util.Map<Integer, Rank> map;
 
     static {
+        var symbols = new java.util.LinkedHashMap<Integer, Rank>();
         for(Rank e : Rank.values()) {
-            map.put(e.value, e);
+            symbols.put(e.value, e);
         }
+        map = java.util.Collections.unmodifiableMap(symbols);
     }
 
     public static Rank get(int value) {
@@ -48,21 +52,47 @@ public enum Rank {
      * 显示名称
      */
     public String getRankShowName() {
-        return ref.getRankShowName();
+        return ref().getRankShowName();
     }
 
     public config.equip.Rank_Detail ref() {
-        return ref;
+        return ref(config.ConfigMgr.getMgr());
     }
 
-    void setRef(config.ConfigMgr mgr) {
-        ref = mgr.equip_rank_All[value];
-        configgen.genjava.LoadValueErrs.requireNonNull(ref, "equip.rank.setRef", value);
+    public config.equip.Rank_Detail ref(config.ConfigMgr mgr) {
+        return mgr._get_equip_rank_Refs(ordinal());
     }
 
-    public static void setAllRefs(config.ConfigMgr mgr) {
-        for(Rank e : Rank.values()) {
-            e.setRef(mgr);
+    public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
+        mgr._set_equip_rank_Refs(new config.equip.Rank_Detail[] {
+            mgr.getEquipRank(WHITE.value),
+            mgr.getEquipRank(GREEN.value),
+            mgr.getEquipRank(BLUE.value),
+            mgr.getEquipRank(PURPLE.value),
+            mgr.getEquipRank(YELLOW.value),
+            mgr.getEquipRank(RED.value),
+        });
+        for (var row : mgr._get_equip_rank_All()) {
+            var key = row.getRankID();
+            String symbol = row.getRankName();
+            Rank expected = switch (symbol) {
+                case "white" -> WHITE;
+                case "green" -> GREEN;
+                case "blue" -> BLUE;
+                case "purple" -> PURPLE;
+                case "yellow" -> YELLOW;
+                case "red" -> RED;
+                default -> null;
+            };
+            if (expected == null) {
+                errors.unknownSymbol("equip.rank", symbol, key, mgr.explain("equip.rank", key));
+                continue;
+            }
+            if (key != expected.value) errors.changedSymbolId("equip.rank", symbol, expected.value, key, mgr.explain("equip.rank", key));
+        }
+        for (Rank e : map.values()) {
+            if (e.ref(mgr) == null) errors.missingSymbol("equip.rank", e.name, e.value);
         }
     }
+
 }

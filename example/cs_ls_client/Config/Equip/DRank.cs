@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 namespace Config.Equip
 {
@@ -19,28 +18,30 @@ public partial class DRankInfo
     public string RankName { get; init; } = null!; /* 程序用名字 */
     public string RankShowName { get; init; } = null!; /* 显示名称 */
     public DRank EEnum { get; init; }
-    
-    private static DRankInfo[] _all = null!;
 
     public static DRankInfo? Get(int rankID)
+        => Get(ConfigMgr.GetMgr(), rankID);
+
+    public static DRankInfo? Get(ConfigMgr config, int rankID)
     {
+        var index = config._equip_drank_All;
         var key = rankID;
-        return key >= 0 && key < _all.Length ? _all[key] : null;
+        return key >= 0 && key < index.Length ? index[key] : null;
     }
 
     public static IReadOnlyList<DRankInfo> All()
-    {
-        return _all;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DRankInfo> All(ConfigMgr config)
+        => config._equip_drank_Rows;
 }
 
 public static class DRankExtensions
 {
-    internal static readonly DRankInfo[] _infos = new DRankInfo[6];
-
     public static DRankInfo Info(this DRank e)
-    {
-        return _infos[(int)e];
-    }
+        => e.Info(ConfigMgr.GetMgr());
+
+    public static DRankInfo Info(this DRank e, ConfigMgr config)
+        => config._equip_drank_Symbols[(int)e]!;
 }
 }

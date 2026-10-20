@@ -9,6 +9,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GeneratorsTest {
 
+    @Test
+    void bytesRejectsRemovedFormatAndSchemaOptions() {
+        for (String option : new String[]{"format:legacy", "format:blocks", "schema"}) {
+            var parameter = new ParameterParser("bytes," + option);
+            new configgen.genbytes.BytesGenerator(parameter);
+            assertThrows(CliException.class, parameter::assureNoExtra);
+        }
+    }
+
     @BeforeAll
     static void setupLogger() {
         Logger.setPrinter(Logger.Printer.nullPrinter);

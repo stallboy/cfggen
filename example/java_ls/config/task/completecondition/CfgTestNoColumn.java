@@ -6,7 +6,6 @@ public final class CfgTestNoColumn implements config.task.completecondition.CfgC
         return config.task.CfgCompleteconditiontype.TESTNOCOLUMN;
     }
 
-
     public CfgTestNoColumn() {
     }
 

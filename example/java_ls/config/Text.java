@@ -16,10 +16,10 @@ public class Text {
 
     public static Text _create(configgen.genjava.ConfigInput input) {
         Text self = new Text();
-        String[] texts = input.readTextsInPool();
-        self.zh_cn = texts[0];
-        self.en = texts[1];
-        self.tw = texts[2];
+        int index = input.readTextIndex();
+        self.zh_cn = input.textInPool(0, index);
+        self.en = input.textInPool(1, index);
+        self.tw = input.textInPool(2, index);
         return self;
     }
 

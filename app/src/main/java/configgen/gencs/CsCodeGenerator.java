@@ -27,6 +27,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
     public final String prefix;
     public final boolean serverText;
     public final boolean unity;
+    public final boolean implicitUsings;
 
     private Path dstDir;
     private CachedFiles outputFiles;
@@ -52,6 +53,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         }
         serverText = parameter.has("serverText");
         unity = parameter.has("unity");
+        implicitUsings = parameter.has("implicitUsings");
     }
 
     @Override
@@ -63,14 +65,27 @@ public class CsCodeGenerator extends GeneratorWithTag {
         outputFiles = ctx.outputFiles();
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
-        // unity 模式用 C#9 兼容的 Loader（含自定义 OrderedDictionary 等）；否则用最新特性版
-        String loaderSrc = unity ? "Loader.unity.cs" : "Loader.cs";
-        FileUtil.copyFileIfNotExist("/support/cs/" + loaderSrc,
-                "src/main/resources/support/cs/" + loaderSrc,
+        // 普通和 Unity 模式共用 C#9 兼容的运行库。
+        FileUtil.copyFileIfNotExist("/support/cs/Loader.cs",
+                "src/main/resources/support/cs/Loader.cs",
                 dstDir.resolve("Loader.cs"),
-                encoding, outputFiles);
+                encoding, outputFiles, line -> {
+                    if (implicitUsings && switch (line) {
+                        case "using System;", "using System.Collections.Generic;", "using System.Linq;" -> true;
+                        default -> false;
+                    }) return "";
+                    return line.replace("namespace Config", "namespace " + pkg);
+                });
 
-        generateProcessor(cfgSchema);
+        var schemaBuffer = new ByteArrayOutputStream();
+        try (var schemaOut = new configgen.genjava.ConfigOutput(schemaBuffer)) {
+            new configgen.genjava.SchemaSerializer(schemaOut).serializeInterface(configgen.genjava.SchemaParser.parsePackage(cfgValue, ctx.nullableLangSwitch()));
+        }
+        generateProcessor(cfgValue, java.util.Base64.getEncoder().encodeToString(schemaBuffer.toByteArray()),
+                ctx.nullableLangSwitch() == null ? List.of() : ctx.nullableLangSwitch().languages());
+        try (var ps = createCode("ConfigPackage.cs")) {
+            JteEngine.render("cs/ConfigPackage.jte", Map.of("pkg", pkg, "implicitUsings", implicitUsings), ps);
+        }
 
         // struct/interface/table 类各自生成独立文件，互不依赖；单阶段并发渲染。
         // 唯一共享可变状态是打印机缓冲区，已用 ThreadLocal（mainCc）按线程隔离。
@@ -138,10 +153,13 @@ public class CsCodeGenerator extends GeneratorWithTag {
         }
     }
 
-    private void generateProcessor(CfgSchema cfgSchema) {
-        ProcessorModel model = new ProcessorModel(this, cfgSchema.sortedTables());
+    private void generateProcessor(CfgValue cfgValue, String schemaBase64, List<String> languages) {
+        ProcessorModel model = new ProcessorModel(this, cfgValue, schemaBase64, languages);
         try (var ps = createCode("Processor.cs")) {
             JteEngine.render("cs/Processor.jte", model, ps);
+        }
+        try (var ps = createCode("ConfigMgr.cs")) {
+            JteEngine.render("cs/ConfigMgr.jte", model, ps);
         }
     }
 

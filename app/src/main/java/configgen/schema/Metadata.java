@@ -184,12 +184,13 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String ROOT = "root";
     private static final String SEQ = "seq";
     private static final String COMMENT_TEXT = "commentText"; // enum声明的comment字段用text类型（默认str）
+    private static final String JAVA_BASE = "javaBase";
 
     private static final Set<String> stateTags = Set.of(SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT);
 
     private static final Set<String> reservedTags = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK,
-            LOWER_CASE, MUST_FILL, ROOT, SEQ, COMMENT_TEXT, ENUM_VALUES, FROM_ENUM_TYPE, FROM_CFG_FILEPATH);
+            LOWER_CASE, MUST_FILL, ROOT, SEQ, COMMENT_TEXT, JAVA_BASE, ENUM_VALUES, FROM_ENUM_TYPE, FROM_CFG_FILEPATH);
 
     /**
      * 保留tag（metadata）允许出现的位置，用于解析时校验：
@@ -216,6 +217,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
     private static final Map<String, Set<MetaPos>> reservedTagPositions = Map.ofEntries(
+            Map.entry(JAVA_BASE, Set.of(MetaPos.TABLE, MetaPos.STRUCT)),
             Map.entry(COMMENT_TEXT, Set.of(MetaPos.ENUM_DECL)),
             Map.entry(JSON, Set.of(MetaPos.TABLE)),
             Map.entry(ENTRY, Set.of(MetaPos.TABLE)),
@@ -243,7 +245,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     /**
      * 必须带值的保留名。裸写 (sep) 时 removeFmt 匹配不到值的类型，fmt静默退回auto，必须报错。
      */
-    private static final Set<String> valueRequiredNames = Set.of(ENTRY, ENUM, ENUM_REF, DEFAULT_IMPL, SEP, FIX, BLOCK);
+    private static final Set<String> valueRequiredNames = Set.of(ENTRY, ENUM, ENUM_REF, DEFAULT_IMPL, SEP, FIX, BLOCK, JAVA_BASE);
 
     public static boolean isReservedTagNotAllowedAt(String name, MetaPos pos) {
         Set<MetaPos> allowed = reservedTagPositions.get(name);
@@ -305,6 +307,13 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
 
     public boolean hasEnumValues() {
         return data.get(ENUM_VALUES) instanceof MetaEnumValues;
+    }
+
+    public Integer assignedEnumId(String name) {
+        if (getEnumValues() instanceof MetaEnumValues.OfAssigned assigned) {
+            for (EnumValueAssigned value : assigned.values()) if (value.name().equals(name)) return value.number();
+        }
+        return null;
     }
 
     // 来自 enum 类型（用于 CfgWriter 还原）

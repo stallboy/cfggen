@@ -18,6 +18,7 @@ public class StructModel {
     public final CfgValue.VTable _vTable;
     private final CsCodeGenerator gen;
     public final boolean unity;
+    public final boolean implicitUsings;
 
     public StructModel(CsCodeGenerator gen, Structural structural, CfgValue.VTable _vTable) {
         this.gen = gen;
@@ -26,6 +27,27 @@ public class StructModel {
         this.structural = structural;
         this._vTable = _vTable;
         this.unity = gen.unity;
+        this.implicitUsings = gen.implicitUsings;
+    }
+
+    public boolean usesCollections() {
+        return _vTable != null || structural.fields().stream().anyMatch(f -> f.type() instanceof ContainerType)
+                || structural.foreignKeys().stream().anyMatch(fk -> fk.refKey() instanceof RefKey.RefList);
+    }
+
+    public boolean usesArray() {
+        return structural.fields().stream().anyMatch(f -> f.type() instanceof FList)
+                || structural.foreignKeys().stream().anyMatch(fk -> fk.refKey() instanceof RefKey.RefList)
+                || _vTable != null && isSeqKey(_vTable.schema().primaryKey());
+    }
+
+    public static boolean hasNested(Structural structural) {
+        return structural.fields().stream().anyMatch(field -> switch (field.type()) {
+            case StructRef _ -> true;
+            case FList list -> list.item() instanceof StructRef;
+            case FMap map -> map.key() instanceof StructRef || map.value() instanceof StructRef;
+            default -> false;
+        });
     }
 
     public boolean isEnum() {
@@ -41,16 +63,25 @@ public class StructModel {
                 && !_vTable.enumNames().isEmpty();
     }
 
+    public String symbolKey(String symbol) {
+        return _vTable.enumNameToIntegerValueMap() == null ? "\"" + symbol + "\"" : _vTable.enumNameToIntegerValueMap().get(symbol).toString();
+    }
+
     public String fullName(Nameable nameable) {
         return new Name(gen.pkg, gen.prefix, nameable).fullName;
     }
 
-    public String upper1(String value) {
-        return StringUtil.upper1(value);
+    public String tableDataName(TableSchema table) {
+        return fullName(table) + (isEnum(table) ? "Info" : "");
     }
 
-    public String lower1(String value) {
-        return StringUtil.lower1(value);
+    public String referenceKey(KeySchema key) {
+        String fields = key.fields().stream().map(f -> "this." + upper1(f)).collect(Collectors.joining(", "));
+        return key.fields().size() == 1 ? fields : "(" + fields + ")";
+    }
+
+    public String upper1(String value) {
+        return StringUtil.upper1(value);
     }
 
     private static final Set<String> reserved = Set.of(
@@ -74,15 +105,8 @@ public class StructModel {
             case STRING -> "string";
             case TEXT -> gen.isLangSwitch ? topPkg + ".Text" : "string";
             case StructRef structRef -> fullName(structRef.obj());
-            case FList fList -> "List<" + type(fList.item()) + ">";
-            case FMap fMap -> "OrderedDictionary<" + type(fMap.key()) + ", " + type(fMap.value()) + ">";
-        };
-    }
-
-    public String toStringOrNot(FieldType t) {
-        return switch (t) {
-            case STRING, TEXT -> "";
-            default -> ".ToString()";
+            case FList fList -> "IReadOnlyList<" + type(fList.item()) + ">";
+            case FMap fMap -> "IReadOnlyDictionary<" + type(fMap.key()) + ", " + type(fMap.value()) + ">";
         };
     }
 
@@ -103,7 +127,7 @@ public class StructModel {
     public String refType(ForeignKeySchema fk) {
         switch (fk.refKey()) {
             case RefKey.RefList _ -> {
-                return "List<" + fullName(fk.refTableSchema()) + ">";
+                return "IReadOnlyList<" + fullName(fk.refTableSchema()) + ">";
             }
             case RefKey.RefSimple rs -> {
                 FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
@@ -112,10 +136,10 @@ public class StructModel {
                         return fullName(fk.refTableSchema()) + (rs.nullable() ? "?" : "");
                     }
                     case FList ignored2 -> {
-                        return "List<" + fullName(fk.refTableSchema()) + ">";
+                        return "IReadOnlyList<" + fullName(fk.refTableSchema()) + ">";
                     }
                     case FMap fMap -> {
-                        return "OrderedDictionary<" + type(fMap.key()) + ", " + fullName(fk.refTableSchema()) + ">";
+                        return "IReadOnlyDictionary<" + type(fMap.key()) + ", " + fullName(fk.refTableSchema()) + ">";
                     }
                 }
             }
@@ -132,7 +156,7 @@ public class StructModel {
     }
 
     public String uniqueKeyMapName(KeySchema keySchema) {
-        return "_" + lower1(GenNaming.uniqueKeyMapName(keySchema));
+        return "_" + StringUtil.lower1(GenNaming.uniqueKeyMapName(keySchema));
     }
 
     public String keyClassName(KeySchema keySchema) {
@@ -140,6 +164,19 @@ public class StructModel {
             return GenNaming.compositeKeyClassName(keySchema);
         else
             return type(keySchema.fieldSchemas().getFirst().type());
+    }
+
+    public String qualifiedKeyType(KeySchema key) {
+        return key.fields().size() == 1 ? keyClassName(key)
+                : name.fullName + (((TableSchema) structural).entry() instanceof EntryType.EEnum ? "Info" : "") + "." + keyClassName(key);
+    }
+
+    public String tableField(String suffix) {
+        return "_" + structural.name().replace("_", "_u").replace(".", "_d") + "_" + suffix;
+    }
+
+    public String indexField(KeySchema key) {
+        return tableField(key.equals(((TableSchema) structural).primaryKey()) ? "All" : GenNaming.uniqueKeyMapName(key));
     }
 
     public String formalParams(List<FieldSchema> fs) {
@@ -183,21 +220,16 @@ public class StructModel {
         boolean isEnum = refTable.entry() instanceof EntryType.EEnum;
         String post = isEnum ? "Info" : "";
         return switch (refSimple) {
-            case RefKey.RefPrimary _ -> fullName(refTable) + post + ".Get(" + actualParam + ")";
+            case RefKey.RefPrimary _ -> fullName(refTable) + post + ".Get(config, " + actualParam + ")";
 
             case RefKey.RefUniq refUniq ->
                     fullName(refTable) + post + "." + GenNaming.uniqueKeyGetByName(refUniq.keyNames())
-                            + "(" + actualParam + ")";
+                            + "(config, " + actualParam + ")";
         };
     }
 
     public String dictValueType() {
         return name.className + (isEnum() ? "Info" : "");
-    }
-
-    public String dictType(KeySchema keySchema) {
-        String dict = unity ? "Dictionary" : "System.Collections.Frozen.FrozenDictionary";
-        return dict + "<" + keyClassName(keySchema) + ", " + dictValueType() + ">";
     }
 
     public String dictTypeWhenInit(KeySchema keySchema) {
@@ -249,7 +281,17 @@ public class StructModel {
 
     // unity(C#9) 无集合表达式 []，用 new；非 unity 用 []
     public String refAssignExpr(ForeignKeySchema fk) {
-        return unity ? "new " + refType(fk) + "()" : "[]";
+        return "new " + refType(fk).replace("IReadOnlyList<", "List<").replace("IReadOnlyDictionary<", "ConfigMap<") + "()";
+    }
+
+    public String mutableType(FieldType type) {
+        return type(type).replace("IReadOnlyList<", "List<").replace("IReadOnlyDictionary<", "ConfigMap<");
+    }
+
+    public String freezeRef(ForeignKeySchema fk, String value) {
+        if (fk.refKey() instanceof RefKey.RefList || fk.key().fieldSchemas().getFirst().type() instanceof FList)
+            return value + ".Count == 0 ? Array.Empty<" + fullName(fk.refTableSchema()) + ">() : " + value + ".AsReadOnly()";
+        return value;
     }
 
 }

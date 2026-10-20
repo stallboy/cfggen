@@ -1,59 +1,130 @@
 @import configgen.gencs.ProcessorModel
-@import configgen.schema.HasRef
-@import configgen.schema.TableSchema
+@import configgen.schema.*
+@import configgen.schema.FieldType.*
+@import configgen.gencs.StructModel
+@import configgen.util.StringUtil
 @param ProcessorModel model
-@if(model.unity)
-using System;
-using System.Collections.Generic;
+@if(!model.implicitUsings)
+    using System;
+    using System.Collections.Generic;
 @endif
 
 ${model.nsLine()}
 
 public static class Processor
 {
-    // 从 bytes 文件加载（新格式）
-    public static void Process(ConfigReader reader)
+    private static readonly string Schema = ConfigPackage.SchemaKey(new ConfigReader(Convert.FromBase64String("${model.schemaBase64}")));
+    @if(!model.languageLiterals.isEmpty())
+        private static readonly string[] Languages = { ${model.languageLiterals} };
+    @endif
+
+    public static ConfigMgr LoadPackagesAndSetMgr(params ConfigPackage[] packages)
     {
-        var configNulls = new List<string>
-        {
-            @for(TableSchema table : model.tableSchemas)
-                "${table.name()}",
-            @endfor
-        };
+        var config = LoadPackages(packages);
+        ConfigMgr.SetMgr(config);
+        return config;
+    }
 
-        // 读取表数量
-        int tableCount = reader.ReadInt32();
-
-        for (int i = 0; i < tableCount; i++)
-        {
-            // 读取表名
-            string tableName = reader.ReadTableName();
-            // 读取表大小
-            int tableSize = reader.ReadInt32();
-
-            // 根据表名分发到对应的 Initialize 方法
-            switch(tableName)
+    public static ConfigMgr LoadPackages(params ConfigPackage[] packages)
+    {
+        ConfigPackage.ValidateOrder(packages);
+        var errors = new LoadErrors();
+        foreach (var pack in packages) pack.ValidateSchema(Schema, errors);
+        errors.CheckErrors();
+        var config = new ConfigMgr();
+        @for(TableSchema table : model.tableSchemas)
+            !{var sm = model.tableModel(table);}
             {
-                @for(TableSchema table : model.tableSchemas)
-                    case "${table.name()}":
-                        configNulls.Remove(tableName);
-                        ${model.fullName(table)}.Initialize(reader);
-                        break;
-                @endfor
-                default:
-                    // 未知表，跳过
-                    reader.SkipBytes(tableSize);
-                    break;
+                var rows = ReadTable(packages, "${table.name()}", ${model.fullName(table)}._create,
+                    ${model.fullName(table)}.PrimaryKey, config.${sm.tableField("Origins")}, errors);
+                ${model.fullName(table)}.InitializeAll(rows, errors, config);
             }
-        }
-        foreach (var t in configNulls)
-            reader.TableNotInData(t);
-        // 解析外键引用
+        @endfor
+        errors.CheckErrors();
         @for(TableSchema table : model.tableSchemas)
             @if(HasRef.hasRef(table))
-                ${model.fullName(table)}.Resolve(reader);
+                foreach (var row in ${model.fullName(table)}.All(config)) row._resolve(errors, config);
             @endif
         @endfor
+        errors.CheckErrors();
+        @for(TableSchema table : model.tableSchemas)
+            foreach (var row in ${model.fullName(table)}.All(config)) Ready(row, config);
+        @endfor
+        config.MarkReady();
+        return config;
+    }
+
+    private static void Ready<T>(T value, ConfigMgr config)
+    {
+        if (value is IConfigExtension extension) extension.OnConfigReady(config);
+    }
+
+    @for(Structural structural : model.readyStructs)
+        private static void Ready(${model.fullName(structural)} value, ConfigMgr config)
+        {
+            @for(FieldSchema field : structural.fields())
+                !{String fieldName = "value." + StringUtil.upper1(field.name());}
+                @if(field.type() instanceof StructRef)
+                    Ready(${fieldName}, config);
+                @elseif(field.type() instanceof FList list && list.item() instanceof StructRef)
+                    foreach (var item in ${fieldName}) Ready(item, config);
+                @elseif(field.type() instanceof FMap map && (map.key() instanceof StructRef || map.value() instanceof StructRef))
+                    foreach (var pair in ${fieldName}) {
+                        @if(map.key() instanceof StructRef)
+                            Ready(pair.Key, config);
+                        @endif
+                        @if(map.value() instanceof StructRef)
+                            Ready(pair.Value, config);
+                        @endif
+                    }
+                @endif
+            @endfor
+            Ready<${model.fullName(structural)}>(value, config);
+        }
+
+    @endfor
+    @for(InterfaceSchema union : model.readyInterfaces)
+        private static void Ready(${model.fullName(union)} value, ConfigMgr config)
+        {
+            !{var nested = union.impls().stream().filter(StructModel::hasNested).toList();}
+            @if(nested.size() == 1)
+                if (value is ${model.fullName(nested.getFirst())} item) Ready(item, config);
+                else Ready<${model.fullName(union)}>(value, config);
+            @else
+                switch (value) {
+                    @for(StructSchema impl : nested)
+                        case ${model.fullName(impl)} item: Ready(item, config); return;
+                    @endfor
+                }
+                Ready<${model.fullName(union)}>(value, config);
+            @endif
+        }
+
+    @endfor
+    private static List<T> ReadTable<K, T>(ConfigPackage[] packages, string table,
+        Func<ConfigReader, T> readRow, Func<T, K> primaryKey, Dictionary<K, List<string>> origins,
+        LoadErrors errors) where K : notnull
+    {
+        var rows = new List<T>();
+        var slots = new Dictionary<K, int>();
+        string block = "." + table;
+        foreach (var pack in packages) {
+            if (!pack.HasBlock(block)) continue;
+            string packName = pack.Name;
+            var input = pack.Block(block${model.languageLiterals.isEmpty() ? "" : ", Languages"}); input.SetErrors(errors);
+            int count = input.ReadCount();
+            for (int j = 0; j < count; j++) {
+                var row = readRow(input);
+                K key = primaryKey(row);
+                if (!origins.TryGetValue(key, out var chain)) { chain = new List<string>(); origins.Add(key, chain); }
+                if (chain.Count != 0 && chain[chain.Count - 1] == packName) { errors.DuplicateRecord(table, packName, key); continue; }
+                if (slots.TryGetValue(key, out var slot)) rows[slot] = row;
+                else { slots.Add(key, rows.Count); rows.Add(row); }
+                chain.Add(packName);
+            }
+            input.RequireEnd();
+        }
+        return rows;
     }
 }
 @if(model.unity)

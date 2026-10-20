@@ -3,7 +3,6 @@ package config;
 public class Range {
     private int min;
     private int max;
-
     private Range() {
     }
 
@@ -40,9 +39,8 @@ public class Range {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof Range))
+        if (!(other instanceof Range o))
             return false;
-        Range o = (Range) other;
         return min == o.min && max == o.max;
     }
 

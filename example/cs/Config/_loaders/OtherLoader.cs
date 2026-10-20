@@ -1,23 +1,25 @@
-using System.Collections.Frozen;
-
 namespace Config.Other
 {
     public partial class DDropItem
     {
         internal static DDropItem _create(ConfigReader reader)
         {
-            var chance = reader.ReadInt32();
-            int Count_itemids = reader.ReadInt32();
-            var itemids = new List<int>(Count_itemids);
-            for (int i = 0; i < Count_itemids; i++)
-                itemids.Add(reader.ReadInt32());
-            var countmin = reader.ReadInt32();
-            var countmax = reader.ReadInt32();
+            var valueChance = reader.ReadInt32();
+            int Count_valueItemids = reader.ReadCount(0);
+            IReadOnlyList<int> valueItemids;
+            if (Count_valueItemids == 0) valueItemids = Array.Empty<int>();
+            else {
+                var values_valueItemids = new List<int>(Count_valueItemids);
+                for (int i = 0; i < Count_valueItemids; i++) values_valueItemids.Add(reader.ReadInt32());
+                valueItemids = values_valueItemids.AsReadOnly();
+            }
+            var valueCountmin = reader.ReadInt32();
+            var valueCountmax = reader.ReadInt32();
             return new DDropItem {
-                Chance = chance,
-                Itemids = itemids,
-                Countmin = countmin,
-                Countmax = countmax,
+                Chance = valueChance,
+                Itemids = valueItemids,
+                Countmin = valueCountmin,
+                Countmax = valueCountmax,
             };
         }
 
@@ -28,10 +30,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DDropItem;
-            return o != null && Chance.Equals(o.Chance) && Itemids.Equals(o.Itemids) && Countmin.Equals(o.Countmin) && Countmax.Equals(o.Countmax);
+            return obj is DDropItem o && Chance.Equals(o.Chance) && Itemids.Equals(o.Itemids) && Countmin.Equals(o.Countmin) && Countmax.Equals(o.Countmax);
         }
 
         public override string ToString()
@@ -39,44 +38,56 @@ namespace Config.Other
             return "(" + Chance + "," + StringUtil.ToString(Itemids) + "," + Countmin + "," + Countmax + ")";
         }
 
+
     }
 
     public partial class DArgCaptureModeInfo
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DArgCaptureModeInfo>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DArgCaptureModeInfo> list, IIssueHandler handler)
+        private static readonly int[] _symbolIds = { 1, 2 };
+        internal static string PrimaryKey(DArgCaptureModeInfo self) => self.Name;
+        internal static void InitializeAll(List<DArgCaptureModeInfo> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<string, DArgCaptureModeInfo>(count);
             var s_idMap = new Dictionary<int, DArgCaptureModeInfo>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Name, self);
-                s_idMap.Add(self.Id, self);
-                DArgCaptureModeExtensions._infos[(int)self.EEnum] = self;
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
+                {
+                    var uniqueKey = self.Id;
+                    if (!s_idMap.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.ArgCaptureMode", "id", key, uniqueKey, config.Explain("other.ArgCaptureMode", key));
+                }
+                string name = self.Name;
+                int symbol = (int)self.EEnum;
+                if (symbol < 0) errors.UnknownSymbol("other.ArgCaptureMode", name, key, config.Explain("other.ArgCaptureMode", key));
+                else {
+                    if (self.Id != _symbolIds[symbol]) errors.ChangedSymbolId("other.ArgCaptureMode", name, _symbolIds[symbol], self.Id, config.Explain("other.ArgCaptureMode", key));
+                }
             }
-            _all = s_all.ToFrozenDictionary();
-            _idMap = s_idMap.ToFrozenDictionary();
+            config._other_dArgCaptureMode_All = new System.Collections.ObjectModel.ReadOnlyDictionary<string, DArgCaptureModeInfo>(s_all);
+            config._other_dArgCaptureMode_IdMap = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DArgCaptureModeInfo>(s_idMap);
+            config._other_dArgCaptureMode_Symbols[(int)DArgCaptureMode.Snapshot] = Get(config, "Snapshot");
+            if (config._other_dArgCaptureMode_Symbols[(int)DArgCaptureMode.Snapshot] == null) errors.MissingSymbol("other.ArgCaptureMode", "Snapshot", "Snapshot");
+            config._other_dArgCaptureMode_Symbols[(int)DArgCaptureMode.Dynamic] = Get(config, "Dynamic");
+            if (config._other_dArgCaptureMode_Symbols[(int)DArgCaptureMode.Dynamic] == null) errors.MissingSymbol("other.ArgCaptureMode", "Dynamic", "Dynamic");
+            config._other_dArgCaptureMode_Rows = list.AsReadOnly();
         }
 
         internal static DArgCaptureModeInfo _create(ConfigReader reader)
         {
-            var name = reader.ReadStringInPool();
-            var id = reader.ReadInt32();
-            var comment = reader.ReadStringInPool();
+            var valueName = reader.ReadStringInPool();
+            var valueId = reader.ReadInt32();
+            var valueComment = reader.ReadStringInPool();
             return new DArgCaptureModeInfo {
-                Name = name,
-                Id = id,
-                Comment = comment,
-                EEnum = Enum.Parse<DArgCaptureMode>(StringUtil.UpperFirstChar(name))
+                Name = valueName,
+                Id = valueId,
+                Comment = valueComment,
+                EEnum = valueName switch {
+                    "Snapshot" => DArgCaptureMode.Snapshot,
+                    "Dynamic" => DArgCaptureMode.Dynamic,
+                    _ => (DArgCaptureMode)(-1)
+                }
             };
         }
 
@@ -87,10 +98,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DArgCaptureModeInfo;
-            return o != null && Name.Equals(o.Name);
+            return obj is DArgCaptureModeInfo o && Name.Equals(o.Name);
         }
 
         public override string ToString()
@@ -98,47 +106,49 @@ namespace Config.Other
             return "(" + Name + "," + Id + "," + Comment + ")";
         }
 
+
     }
 
     public partial class DDrop
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DDrop>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DDrop> list, IIssueHandler handler)
+        internal static int PrimaryKey(DDrop self) => self.Dropid;
+        internal static void InitializeAll(List<DDrop> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DDrop>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Dropid, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            config._other_ddrop_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DDrop>(s_all);
+            config._other_ddrop_Rows = list.AsReadOnly();
         }
 
         internal static DDrop _create(ConfigReader reader)
         {
-            var dropid = reader.ReadInt32();
-            var name = reader.ReadTextInPool();
-            int Count_items = reader.ReadInt32();
-            var items = new List<Other.DDropItem>(Count_items);
-            for (int i = 0; i < Count_items; i++)
-                items.Add(Other.DDropItem._create(reader));
-            int Count_testmap = reader.ReadInt32();
-            var testmap = new OrderedDictionary<int, int>(Count_testmap);
-            for (int i = 0; i < Count_testmap; i++)
-                testmap.Add(reader.ReadInt32(), reader.ReadInt32());
+            var valueDropid = reader.ReadInt32();
+            var valueName = reader.ReadTextInPool();
+            int Count_valueItems = reader.ReadCount(0);
+            IReadOnlyList<Other.DDropItem> valueItems;
+            if (Count_valueItems == 0) valueItems = Array.Empty<Other.DDropItem>();
+            else {
+                var values_valueItems = new List<Other.DDropItem>(Count_valueItems);
+                for (int i = 0; i < Count_valueItems; i++) values_valueItems.Add(Other.DDropItem._create(reader));
+                valueItems = values_valueItems.AsReadOnly();
+            }
+            int Count_valueTestmap = reader.ReadCount(0);
+            var valueTestmap = Count_valueTestmap == 0 ? ConfigMap<int, int>.Empty : new ConfigMap<int, int>(Count_valueTestmap);
+            for (int i = 0; i < Count_valueTestmap; i++) {
+                var key = reader.ReadInt32();
+                var value = reader.ReadInt32();
+                if (!valueTestmap.TryAdd(key, value)) reader.Errors.DuplicateKey("other.drop.testmap", key);
+            }
             return new DDrop {
-                Dropid = dropid,
-                Name = name,
-                Items = items,
-                Testmap = testmap,
+                Dropid = valueDropid,
+                Name = valueName,
+                Items = valueItems,
+                Testmap = valueTestmap,
             };
         }
 
@@ -149,10 +159,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DDrop;
-            return o != null && Dropid.Equals(o.Dropid);
+            return obj is DDrop o && Dropid.Equals(o.Dropid);
         }
 
         public override string ToString()
@@ -160,20 +167,13 @@ namespace Config.Other
             return "(" + Dropid + "," + Name + "," + StringUtil.ToString(Items) + "," + Testmap + ")";
         }
 
+
     }
 
     public partial class DKeytest
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DKeytest>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DKeytest> list, IIssueHandler handler)
+        internal static Id1Id2Key PrimaryKey(DKeytest self) => new Id1Id2Key(self.Id1, self.Id2);
+        internal static void InitializeAll(List<DKeytest> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<Id1Id2Key, DKeytest>(count);
@@ -182,43 +182,57 @@ namespace Config.Other
             var s_id2Id3Map = new Dictionary<Id2Id3Key, DKeytest>(count);
             foreach (var self in list)
             {
-                s_all.Add(new Id1Id2Key(self.Id1, self.Id2), self);
-                s_id1Id3Map.Add(new Id1Id3Key(self.Id1, self.Id3), self);
-                s_id2Map.Add(self.Id2, self);
-                s_id2Id3Map.Add(new Id2Id3Key(self.Id2, self.Id3), self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
+                {
+                    var uniqueKey = new Id1Id3Key(self.Id1, self.Id3);
+                    if (!s_id1Id3Map.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.keytest", "id1,id3", key, uniqueKey, config.Explain("other.keytest", key));
+                }
+                {
+                    var uniqueKey = self.Id2;
+                    if (!s_id2Map.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.keytest", "id2", key, uniqueKey, config.Explain("other.keytest", key));
+                }
+                {
+                    var uniqueKey = new Id2Id3Key(self.Id2, self.Id3);
+                    if (!s_id2Id3Map.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("other.keytest", "id2,id3", key, uniqueKey, config.Explain("other.keytest", key));
+                }
             }
-            _all = s_all.ToFrozenDictionary();
-            _id1Id3Map = s_id1Id3Map.ToFrozenDictionary();
-            _id2Map = s_id2Map.ToFrozenDictionary();
-            _id2Id3Map = s_id2Id3Map.ToFrozenDictionary();
+            config._other_dkeytest_All = new System.Collections.ObjectModel.ReadOnlyDictionary<Id1Id2Key, DKeytest>(s_all);
+            config._other_dkeytest_Id1Id3Map = new System.Collections.ObjectModel.ReadOnlyDictionary<Id1Id3Key, DKeytest>(s_id1Id3Map);
+            config._other_dkeytest_Id2Map = new System.Collections.ObjectModel.ReadOnlyDictionary<long, DKeytest>(s_id2Map);
+            config._other_dkeytest_Id2Id3Map = new System.Collections.ObjectModel.ReadOnlyDictionary<Id2Id3Key, DKeytest>(s_id2Id3Map);
+            config._other_dkeytest_Rows = list.AsReadOnly();
         }
 
-        internal static void Resolve(IIssueHandler h)
-        {
-            foreach (var v in All())
-                v._resolve(h);
-        }
         internal static DKeytest _create(ConfigReader reader)
         {
-            var id1 = reader.ReadInt32();
-            var id2 = reader.ReadInt64();
-            var id3 = reader.ReadInt32();
-            int Count_ids = reader.ReadInt32();
-            var ids = new List<int>(Count_ids);
-            for (int i = 0; i < Count_ids; i++)
-                ids.Add(reader.ReadInt32());
-            var enumTest = reader.ReadStringInPool();
-            int Count_enumList = reader.ReadInt32();
-            var enumList = new List<string>(Count_enumList);
-            for (int i = 0; i < Count_enumList; i++)
-                enumList.Add(reader.ReadStringInPool());
+            var valueId1 = reader.ReadInt32();
+            var valueId2 = reader.ReadInt64();
+            var valueId3 = reader.ReadInt32();
+            int Count_valueIds = reader.ReadCount(0);
+            IReadOnlyList<int> valueIds;
+            if (Count_valueIds == 0) valueIds = Array.Empty<int>();
+            else {
+                var values_valueIds = new List<int>(Count_valueIds);
+                for (int i = 0; i < Count_valueIds; i++) values_valueIds.Add(reader.ReadInt32());
+                valueIds = values_valueIds.AsReadOnly();
+            }
+            var valueEnumTest = reader.ReadStringInPool();
+            int Count_valueEnumList = reader.ReadCount(0);
+            IReadOnlyList<string> valueEnumList;
+            if (Count_valueEnumList == 0) valueEnumList = Array.Empty<string>();
+            else {
+                var values_valueEnumList = new List<string>(Count_valueEnumList);
+                for (int i = 0; i < Count_valueEnumList; i++) values_valueEnumList.Add(reader.ReadStringInPool());
+                valueEnumList = values_valueEnumList.AsReadOnly();
+            }
             return new DKeytest {
-                Id1 = id1,
-                Id2 = id2,
-                Id3 = id3,
-                Ids = ids,
-                EnumTest = enumTest,
-                EnumList = enumList,
+                Id1 = valueId1,
+                Id2 = valueId2,
+                Id3 = valueId3,
+                Ids = valueIds,
+                EnumTest = valueEnumTest,
+                EnumList = valueEnumList,
             };
         }
 
@@ -229,10 +243,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DKeytest;
-            return o != null && Id1.Equals(o.Id1) && Id2.Equals(o.Id2);
+            return obj is DKeytest o && Id1.Equals(o.Id1) && Id2.Equals(o.Id2);
         }
 
         public override string ToString()
@@ -240,69 +251,65 @@ namespace Config.Other
             return "(" + Id1 + "," + Id2 + "," + Id3 + "," + StringUtil.ToString(Ids) + "," + EnumTest + "," + StringUtil.ToString(EnumList) + ")";
         }
 
-        internal void _resolve(IIssueHandler h)
+        internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            RefIds = [];
+            var resolvedRefIds = new List<Other.DSignin>();
             foreach(var e in Ids)
             {
-                var r = Other.DSignin.Get(e);
-                if (r == null) h.RefNotFound("other.keytest", "ids", e.ToString());
-                else RefIds.Add(r);
+                var r = Other.DSignin.Get(config, e);
+                if (r == null) errors.MissingReference("other.keytest", "ids", "other.signin", e);
+                else resolvedRefIds.Add(r);
             }
-            var rRefEnumTest = Other.DArgCaptureModeInfo.Get(EnumTest);
-            if (rRefEnumTest == null) h.RefNotFound("other.keytest", "enumTest", EnumTest);
+            RefIds = resolvedRefIds.Count == 0 ? Array.Empty<Other.DSignin>() : resolvedRefIds.AsReadOnly();
+            var rRefEnumTest = Other.DArgCaptureModeInfo.Get(config, EnumTest);
+            if (rRefEnumTest == null) errors.MissingReference("other.keytest", "enumTest", "other.ArgCaptureMode", this.EnumTest);
             else RefEnumTest = rRefEnumTest.EEnum;
-            RefEnumList = [];
+            var resolvedRefEnumList = new List<Other.DArgCaptureMode>();
             foreach(var e in EnumList)
             {
-                var r = Other.DArgCaptureModeInfo.Get(e);
-                if (r == null) h.RefNotFound("other.keytest", "enumList", e);
-                else RefEnumList.Add(r.EEnum);
+                var r = Other.DArgCaptureModeInfo.Get(config, e);
+                if (r == null) errors.MissingReference("other.keytest", "enumList", "other.ArgCaptureMode", e);
+                else resolvedRefEnumList.Add(r.EEnum);
             }
+            RefEnumList = resolvedRefEnumList.Count == 0 ? Array.Empty<Other.DArgCaptureMode>() : resolvedRefEnumList.AsReadOnly();
         }
+
     }
 
     public partial class DLoot
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DLoot>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DLoot> list, IIssueHandler handler)
+        internal static int PrimaryKey(DLoot self) => self.Lootid;
+        internal static void InitializeAll(List<DLoot> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DLoot>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Lootid, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            config._other_dloot_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DLoot>(s_all);
+            config._other_dloot_Rows = list.AsReadOnly();
         }
 
-        internal static void Resolve(IIssueHandler h)
-        {
-            foreach (var v in All())
-                v._resolve(h);
-        }
         internal static DLoot _create(ConfigReader reader)
         {
-            var lootid = reader.ReadInt32();
-            var ename = reader.ReadStringInPool();
-            var name = reader.ReadTextInPool();
-            int Count_chanceList = reader.ReadInt32();
-            var chanceList = new List<int>(Count_chanceList);
-            for (int i = 0; i < Count_chanceList; i++)
-                chanceList.Add(reader.ReadInt32());
+            var valueLootid = reader.ReadInt32();
+            var valueEname = reader.ReadStringInPool();
+            var valueName = reader.ReadTextInPool();
+            int Count_valueChanceList = reader.ReadCount(0);
+            IReadOnlyList<int> valueChanceList;
+            if (Count_valueChanceList == 0) valueChanceList = Array.Empty<int>();
+            else {
+                var values_valueChanceList = new List<int>(Count_valueChanceList);
+                for (int i = 0; i < Count_valueChanceList; i++) values_valueChanceList.Add(reader.ReadInt32());
+                valueChanceList = values_valueChanceList.AsReadOnly();
+            }
             return new DLoot {
-                Lootid = lootid,
-                Ename = ename,
-                Name = name,
-                ChanceList = chanceList,
+                Lootid = valueLootid,
+                Ename = valueEname,
+                Name = valueName,
+                ChanceList = valueChanceList,
             };
         }
 
@@ -313,10 +320,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DLoot;
-            return o != null && Lootid.Equals(o.Lootid);
+            return obj is DLoot o && Lootid.Equals(o.Lootid);
         }
 
         public override string ToString()
@@ -324,58 +328,55 @@ namespace Config.Other
             return "(" + Lootid + "," + Ename + "," + Name + "," + StringUtil.ToString(ChanceList) + ")";
         }
 
-        internal void _resolve(IIssueHandler h)
+        internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            ListRefLootid = [];
-            foreach (var v in Other.DLootitem.All())
+            var resolvedListRefLootid = new List<Other.DLootitem>();
+            foreach (var v in Other.DLootitem.All(config))
             {
                 if (v.Lootid.Equals(Lootid))
-                    ListRefLootid.Add(v);
+                    resolvedListRefLootid.Add(v);
             }
-            ListRefAnotherWay = [];
-            foreach (var v in Other.DLootitem.All())
+            ListRefLootid = resolvedListRefLootid.Count == 0 ? Array.Empty<Other.DLootitem>() : resolvedListRefLootid.AsReadOnly();
+            var resolvedListRefAnotherWay = new List<Other.DLootitem>();
+            foreach (var v in Other.DLootitem.All(config))
             {
                 if (v.Lootid.Equals(Lootid))
-                    ListRefAnotherWay.Add(v);
+                    resolvedListRefAnotherWay.Add(v);
             }
+            ListRefAnotherWay = resolvedListRefAnotherWay.Count == 0 ? Array.Empty<Other.DLootitem>() : resolvedListRefAnotherWay.AsReadOnly();
         }
+
     }
 
     public partial class DLootitem
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DLootitem>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DLootitem> list, IIssueHandler handler)
+        internal static LootidItemidKey PrimaryKey(DLootitem self) => new LootidItemidKey(self.Lootid, self.Itemid);
+        internal static void InitializeAll(List<DLootitem> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<LootidItemidKey, DLootitem>(count);
             foreach (var self in list)
             {
-                s_all.Add(new LootidItemidKey(self.Lootid, self.Itemid), self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            config._other_dlootitem_All = new System.Collections.ObjectModel.ReadOnlyDictionary<LootidItemidKey, DLootitem>(s_all);
+            config._other_dlootitem_Rows = list.AsReadOnly();
         }
 
         internal static DLootitem _create(ConfigReader reader)
         {
-            var lootid = reader.ReadInt32();
-            var itemid = reader.ReadInt32();
-            var chance = reader.ReadInt32();
-            var countmin = reader.ReadInt32();
-            var countmax = reader.ReadInt32();
+            var valueLootid = reader.ReadInt32();
+            var valueItemid = reader.ReadInt32();
+            var valueChance = reader.ReadInt32();
+            var valueCountmin = reader.ReadInt32();
+            var valueCountmax = reader.ReadInt32();
             return new DLootitem {
-                Lootid = lootid,
-                Itemid = itemid,
-                Chance = chance,
-                Countmin = countmin,
-                Countmax = countmax,
+                Lootid = valueLootid,
+                Itemid = valueItemid,
+                Chance = valueChance,
+                Countmin = valueCountmin,
+                Countmax = valueCountmax,
             };
         }
 
@@ -386,10 +387,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DLootitem;
-            return o != null && Lootid.Equals(o.Lootid) && Itemid.Equals(o.Itemid);
+            return obj is DLootitem o && Lootid.Equals(o.Lootid) && Itemid.Equals(o.Itemid);
         }
 
         public override string ToString()
@@ -397,59 +395,59 @@ namespace Config.Other
             return "(" + Lootid + "," + Itemid + "," + Chance + "," + Countmin + "," + Countmax + ")";
         }
 
+
     }
 
     public partial class DMonster
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DMonster>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DMonster> list, IIssueHandler handler)
+        internal static int PrimaryKey(DMonster self) => self.Id;
+        internal static void InitializeAll(List<DMonster> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DMonster>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Id, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            config._other_dmonster_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DMonster>(s_all);
+            config._other_dmonster_Rows = list.AsReadOnly();
         }
 
-        internal static void Resolve(IIssueHandler h)
-        {
-            foreach (var v in All())
-                v._resolve(h);
-        }
         internal static DMonster _create(ConfigReader reader)
         {
-            var id = reader.ReadInt32();
-            int Count_posList = reader.ReadInt32();
-            var posList = new List<DPosition>(Count_posList);
-            for (int i = 0; i < Count_posList; i++)
-                posList.Add(DPosition._create(reader));
-            var lootId = reader.ReadInt32();
-            var lootItemId = reader.ReadInt32();
-            int Count_enumMap1 = reader.ReadInt32();
-            var enumMap1 = new OrderedDictionary<string, int>(Count_enumMap1);
-            for (int i = 0; i < Count_enumMap1; i++)
-                enumMap1.Add(reader.ReadStringInPool(), reader.ReadInt32());
-            int Count_enumMap2 = reader.ReadInt32();
-            var enumMap2 = new OrderedDictionary<int, string>(Count_enumMap2);
-            for (int i = 0; i < Count_enumMap2; i++)
-                enumMap2.Add(reader.ReadInt32(), reader.ReadStringInPool());
+            var valueId = reader.ReadInt32();
+            int Count_valuePosList = reader.ReadCount(0);
+            IReadOnlyList<DPosition> valuePosList;
+            if (Count_valuePosList == 0) valuePosList = Array.Empty<DPosition>();
+            else {
+                var values_valuePosList = new List<DPosition>(Count_valuePosList);
+                for (int i = 0; i < Count_valuePosList; i++) values_valuePosList.Add(DPosition._create(reader));
+                valuePosList = values_valuePosList.AsReadOnly();
+            }
+            var valueLootId = reader.ReadInt32();
+            var valueLootItemId = reader.ReadInt32();
+            int Count_valueEnumMap1 = reader.ReadCount(0);
+            var valueEnumMap1 = Count_valueEnumMap1 == 0 ? ConfigMap<string, int>.Empty : new ConfigMap<string, int>(Count_valueEnumMap1);
+            for (int i = 0; i < Count_valueEnumMap1; i++) {
+                var key = reader.ReadStringInPool();
+                var value = reader.ReadInt32();
+                if (!valueEnumMap1.TryAdd(key, value)) reader.Errors.DuplicateKey("other.monster.enumMap1", key);
+            }
+            int Count_valueEnumMap2 = reader.ReadCount(0);
+            var valueEnumMap2 = Count_valueEnumMap2 == 0 ? ConfigMap<int, string>.Empty : new ConfigMap<int, string>(Count_valueEnumMap2);
+            for (int i = 0; i < Count_valueEnumMap2; i++) {
+                var key = reader.ReadInt32();
+                var value = reader.ReadStringInPool();
+                if (!valueEnumMap2.TryAdd(key, value)) reader.Errors.DuplicateKey("other.monster.enumMap2", key);
+            }
             return new DMonster {
-                Id = id,
-                PosList = posList,
-                LootId = lootId,
-                LootItemId = lootItemId,
-                EnumMap1 = enumMap1,
-                EnumMap2 = enumMap2,
+                Id = valueId,
+                PosList = valuePosList,
+                LootId = valueLootId,
+                LootItemId = valueLootItemId,
+                EnumMap1 = valueEnumMap1,
+                EnumMap2 = valueEnumMap2,
             };
         }
 
@@ -460,10 +458,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DMonster;
-            return o != null && Id.Equals(o.Id);
+            return obj is DMonster o && Id.Equals(o.Id);
         }
 
         public override string ToString()
@@ -471,71 +466,68 @@ namespace Config.Other
             return "(" + Id + "," + StringUtil.ToString(PosList) + "," + LootId + "," + LootItemId + "," + EnumMap1 + "," + EnumMap2 + ")";
         }
 
-        internal void _resolve(IIssueHandler h)
+        internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            var rRefLoot = Other.DLootitem.Get(LootId, LootItemId);
-            if (rRefLoot == null) h.RefNotFound("other.monster", "Loot", LootId.ToString());
+            var rRefLoot = Other.DLootitem.Get(config, LootId, LootItemId);
+            if (rRefLoot == null) errors.MissingReference("other.monster", "Loot", "other.lootitem", (this.LootId, this.LootItemId));
             else RefLoot = rRefLoot;
-            var rRefAllLoot = Other.DLoot.Get(LootId);
-            if (rRefAllLoot == null) h.RefNotFound("other.monster", "AllLoot", LootId.ToString());
+            var rRefAllLoot = Other.DLoot.Get(config, LootId);
+            if (rRefAllLoot == null) errors.MissingReference("other.monster", "AllLoot", "other.loot", this.LootId);
             else RefAllLoot = rRefAllLoot;
-            RefEnumMap2 = [];
+            var resolvedRefEnumMap2 = new ConfigMap<int, Other.DArgCaptureMode>();
             foreach(var kv in EnumMap2)
             {
                 var k = kv.Key;
-                var v = Other.DArgCaptureModeInfo.Get(kv.Value);
-                if (v == null) h.RefNotFound("other.monster", "enumMap2", kv.Value);
-                else RefEnumMap2.Add(k, v.EEnum);
+                var v = Other.DArgCaptureModeInfo.Get(config, kv.Value);
+                if (v == null) errors.MissingReference("other.monster", "enumMap2", "other.ArgCaptureMode", kv.Value);
+                else resolvedRefEnumMap2.TryAdd(k, v.EEnum);
             }
+            RefEnumMap2 = resolvedRefEnumMap2;
         }
+
     }
 
     public partial class DSignin
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DSignin>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DSignin> list, IIssueHandler handler)
+        internal static int PrimaryKey(DSignin self) => self.Id;
+        internal static void InitializeAll(List<DSignin> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DSignin>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Id, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            config._other_dsignin_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DSignin>(s_all);
+            config._other_dsignin_Rows = list.AsReadOnly();
         }
 
-        internal static void Resolve(IIssueHandler h)
-        {
-            foreach (var v in All())
-                v._resolve(h);
-        }
         internal static DSignin _create(ConfigReader reader)
         {
-            var id = reader.ReadInt32();
-            int Count_item2countMap = reader.ReadInt32();
-            var item2countMap = new OrderedDictionary<int, int>(Count_item2countMap);
-            for (int i = 0; i < Count_item2countMap; i++)
-                item2countMap.Add(reader.ReadInt32(), reader.ReadInt32());
-            int Count_vipitem2vipcountMap = reader.ReadInt32();
-            var vipitem2vipcountMap = new OrderedDictionary<int, int>(Count_vipitem2vipcountMap);
-            for (int i = 0; i < Count_vipitem2vipcountMap; i++)
-                vipitem2vipcountMap.Add(reader.ReadInt32(), reader.ReadInt32());
-            var viplevel = reader.ReadInt32();
-            var iconFile = reader.ReadStringInPool();
+            var valueId = reader.ReadInt32();
+            int Count_valueItem2countMap = reader.ReadCount(0);
+            var valueItem2countMap = Count_valueItem2countMap == 0 ? ConfigMap<int, int>.Empty : new ConfigMap<int, int>(Count_valueItem2countMap);
+            for (int i = 0; i < Count_valueItem2countMap; i++) {
+                var key = reader.ReadInt32();
+                var value = reader.ReadInt32();
+                if (!valueItem2countMap.TryAdd(key, value)) reader.Errors.DuplicateKey("other.signin.item2countMap", key);
+            }
+            int Count_valueVipitem2vipcountMap = reader.ReadCount(0);
+            var valueVipitem2vipcountMap = Count_valueVipitem2vipcountMap == 0 ? ConfigMap<int, int>.Empty : new ConfigMap<int, int>(Count_valueVipitem2vipcountMap);
+            for (int i = 0; i < Count_valueVipitem2vipcountMap; i++) {
+                var key = reader.ReadInt32();
+                var value = reader.ReadInt32();
+                if (!valueVipitem2vipcountMap.TryAdd(key, value)) reader.Errors.DuplicateKey("other.signin.vipitem2vipcountMap", key);
+            }
+            var valueViplevel = reader.ReadInt32();
+            var valueIconFile = reader.ReadStringInPool();
             return new DSignin {
-                Id = id,
-                Item2countMap = item2countMap,
-                Vipitem2vipcountMap = vipitem2vipcountMap,
-                Viplevel = viplevel,
-                IconFile = iconFile,
+                Id = valueId,
+                Item2countMap = valueItem2countMap,
+                Vipitem2vipcountMap = valueVipitem2vipcountMap,
+                Viplevel = valueViplevel,
+                IconFile = valueIconFile,
             };
         }
 
@@ -546,10 +538,7 @@ namespace Config.Other
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DSignin;
-            return o != null && Id.Equals(o.Id);
+            return obj is DSignin o && Id.Equals(o.Id);
         }
 
         public override string ToString()
@@ -557,17 +546,19 @@ namespace Config.Other
             return "(" + Id + "," + Item2countMap + "," + Vipitem2vipcountMap + "," + Viplevel + "," + IconFile + ")";
         }
 
-        internal void _resolve(IIssueHandler h)
+        internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            RefVipitem2vipcountMap = [];
+            var resolvedRefVipitem2vipcountMap = new ConfigMap<int, Other.DLoot>();
             foreach(var kv in Vipitem2vipcountMap)
             {
                 var k = kv.Key;
-                var v = Other.DLoot.Get(kv.Value);
-                if (v == null) h.RefNotFound("other.signin", "vipitem2vipcountMap", kv.Value.ToString());
-                else RefVipitem2vipcountMap.Add(k, v);
+                var v = Other.DLoot.Get(config, kv.Value);
+                if (v == null) errors.MissingReference("other.signin", "vipitem2vipcountMap", "other.loot", kv.Value);
+                else resolvedRefVipitem2vipcountMap.TryAdd(k, v);
             }
+            RefVipitem2vipcountMap = resolvedRefVipitem2vipcountMap;
         }
+
     }
 
 }

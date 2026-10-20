@@ -7,7 +7,6 @@ public final class TalkNpc implements config.task.completecondition.Completecond
     }
 
     private int npcid;
-
     private TalkNpc() {
     }
 
@@ -32,9 +31,8 @@ public final class TalkNpc implements config.task.completecondition.Completecond
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof TalkNpc))
+        if (!(other instanceof TalkNpc o))
             return false;
-        TalkNpc o = (TalkNpc) other;
         return npcid == o.npcid;
     }
 

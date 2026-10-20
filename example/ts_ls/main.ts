@@ -1,6 +1,6 @@
 // main.ts
 import {Config} from "./Config";
-import {Loader, LoadErrors} from "./ConfigUtil";
+import {ConfigPackage, LoadErrors} from "./ConfigUtil";
 import { readFileSync } from 'fs';
 
 
@@ -17,7 +17,7 @@ function main(): void {
 
     const data = readFileToArrayBufferSync('./config.bytes');
     const errors = new LoadErrors();
-    const stream = Loader.LoadBytes(data, Config.Processor.Process, errors);
+    const stream = Config.Processor.ProcessPackage(ConfigPackage.Read(data), errors);
 
 
     for(const e of errors.Errors){

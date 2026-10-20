@@ -16,16 +16,19 @@ public partial class DJewelry
     public Equip.DJewelrytype RefJType { get; private set; }
     public Equip.DJewelrysuit? NullableRefSuitID { get; private set; }
     public Equip.DAbility RefKeyAbility { get; private set; }
-    
-    private static System.Collections.Frozen.FrozenDictionary<int, DJewelry> _all = null!;
 
     public static DJewelry? Get(int iD)
+        => Get(ConfigMgr.GetMgr(), iD);
+
+    public static DJewelry? Get(ConfigMgr config, int iD)
     {
-        return _all.GetValueOrDefault(iD);
+        var index = config._equip_djewelry_All;
+        return index.TryGetValue(iD, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DJewelry> All()
-    {
-        return _all.Values;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DJewelry> All(ConfigMgr config)
+        => config._equip_djewelry_Rows;
 }

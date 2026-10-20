@@ -1,6 +1,5 @@
 package configgen.genbytes;
 
-import configgen.genjava.ConfigOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -42,15 +41,5 @@ public class LangTextPool {
         return thisIndex;
     }
 
-    public void serialize(ConfigOutput out) {
-        out.writeInt(textPools.length);
-        for (TextPool textPool : textPools) {
-            textPool.serialize(out);
-        }
-    }
 
-    public void serializeFirst(ConfigOutput out) {
-        out.writeInt(1);
-        textPools[0].serialize(out);
-    }
 }

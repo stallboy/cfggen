@@ -26,9 +26,9 @@ func createEquipJewelrysuit(stream *Stream) *EquipJewelrysuit {
     v.ability2Value = stream.ReadInt32()
     v.ability3 = stream.ReadInt32()
     v.ability3Value = stream.ReadInt32()
-    suitListSize := stream.ReadInt32()
+    suitListSize := stream.ReadCount(0)
     v.suitList = make([]int32, suitListSize)
-    for i := 0; i < int(suitListSize); i++ {
+    for i := 0; i < suitListSize; i++ {
         v.suitList[i] = stream.ReadInt32()
     }
     return v
@@ -102,7 +102,7 @@ func(t *EquipJewelrysuitMgr) Get(suitID int32) *EquipJewelrysuit {
 }
 
 func (t *EquipJewelrysuitMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipJewelrysuit, 0, cnt)
     t.suitIDMap = make(map[int32]*EquipJewelrysuit, cnt)
     for i := 0; i < int(cnt); i++ {

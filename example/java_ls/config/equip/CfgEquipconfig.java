@@ -8,7 +8,6 @@ public class CfgEquipconfig {
     private int broadcastid;
     private int broadcast_least_quality;
     private int week_reward_mailid;
-
     private CfgEquipconfig() {
     }
 
@@ -79,23 +78,6 @@ public class CfgEquipconfig {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipEquipconfig();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.equip_equipconfig_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgEquipconfig self = CfgEquipconfig._create(input);
-                mgr.equip_equipconfig_All.put(self.entry, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

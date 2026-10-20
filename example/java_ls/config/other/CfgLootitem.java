@@ -7,7 +7,6 @@ public class CfgLootitem {
     private int chance;
     private int countmin;
     private int countmax;
-
     private CfgLootitem() {
     }
 
@@ -77,10 +76,14 @@ public class CfgLootitem {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof LootidItemidKey))
+            if (!(other instanceof LootidItemidKey o))
                 return false;
-            LootidItemidKey o = (LootidItemidKey) other;
             return lootid == o.lootid && itemid == o.itemid;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + lootid + "," + itemid + ")";
         }
     }
 
@@ -93,23 +96,6 @@ public class CfgLootitem {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherLootitem();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.other_lootitem_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgLootitem self = CfgLootitem._create(input);
-                mgr.other_lootitem_All.put(new LootidItemidKey(self.lootid, self.itemid), self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

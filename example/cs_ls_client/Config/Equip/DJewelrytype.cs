@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 namespace Config.Equip
 {
@@ -15,28 +14,29 @@ public partial class DJewelrytypeInfo
 {
     public string TypeName { get; init; } = null!; /* 程序用名字 */
     public DJewelrytype EEnum { get; init; }
-    private static IReadOnlyList<DJewelrytypeInfo> _allList = null!;
-    
-    private static Dictionary<string, DJewelrytypeInfo> _all = null!;
 
     public static DJewelrytypeInfo? Get(string typeName)
+        => Get(ConfigMgr.GetMgr(), typeName);
+
+    public static DJewelrytypeInfo? Get(ConfigMgr config, string typeName)
     {
-        return _all.GetValueOrDefault(typeName);
+        var index = config._equip_djewelrytype_All;
+        return index.TryGetValue(typeName, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DJewelrytypeInfo> All()
-    {
-        return _allList;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DJewelrytypeInfo> All(ConfigMgr config)
+        => config._equip_djewelrytype_Rows;
 }
 
 public static class DJewelrytypeExtensions
 {
-    internal static readonly DJewelrytypeInfo[] _infos = new DJewelrytypeInfo[4];
-
     public static DJewelrytypeInfo Info(this DJewelrytype e)
-    {
-        return _infos[(int)e];
-    }
+        => e.Info(ConfigMgr.GetMgr());
+
+    public static DJewelrytypeInfo Info(this DJewelrytype e, ConfigMgr config)
+        => config._equip_djewelrytype_Symbols[(int)e]!;
 }
 }

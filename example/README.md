@@ -51,7 +51,8 @@ example/
 
 ### 前置条件
 
-- 确保 `../cfggen.jar` 存在。若不存在，在 `..` 目录下执行 `genjar.bat`
+- 使用 JDK 25。在仓库根执行 `app\gradlew.bat -p app fatJar`，生成脚本使用 `app/build/libs/cfggen.jar`。
+- 二进制示例统一使用版本化命名块容器；旧数据需重新导出，并同步更新支持源码和加载入口。
 
 ### 查看使用说明
 

@@ -9,7 +9,6 @@ public class Taskextraexp {
     private String fielda;
     private String fieldb;
     private String fieldc;
-
     private Taskextraexp() {
     }
 
@@ -73,23 +72,6 @@ public class Taskextraexp {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allTaskTaskextraexp();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.task_taskextraexp_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                Taskextraexp self = Taskextraexp._create(input);
-                mgr.task_taskextraexp_All.put(self.taskid, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
-        }
-
-    }
 
 }

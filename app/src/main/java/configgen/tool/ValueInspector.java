@@ -238,7 +238,7 @@ public class ValueInspector implements AutoCloseable {
         return List.of(
                 "int <num> [num]...      : Search for integers (supports hex 0x)",
                 "str <substring>         : Search for strings containing substring",
-                "ref <table[key]> [skip] : Search references to a table/key",
+                "ref <table[key]> [skip] : Search references to a .key",
                 "sl  [name]              : List matching schema names",
                 "sll [name]              : List matching schemas with data (limit 100)",
                 "slljson [name]          : List matching schemas in JSON format",

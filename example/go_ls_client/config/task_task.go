@@ -16,9 +16,9 @@ type TaskTask struct {
 func createTaskTask(stream *Stream) *TaskTask {
     v := &TaskTask{}
     v.taskid = stream.ReadInt32()
-    nameSize := stream.ReadInt32()
+    nameSize := stream.ReadCount(0)
     v.name = make([]*Text, nameSize)
-    for i := 0; i < int(nameSize); i++ {
+    for i := 0; i < nameSize; i++ {
         v.name[i] = createText(stream)
     }
     v.nexttask = stream.ReadInt32()
@@ -85,7 +85,7 @@ func(t *TaskTaskMgr) Get(taskid int32) *TaskTask {
 }
 
 func (t *TaskTaskMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*TaskTask, 0, cnt)
     t.taskidMap = make(map[int32]*TaskTask, cnt)
     for i := 0; i < int(cnt); i++ {

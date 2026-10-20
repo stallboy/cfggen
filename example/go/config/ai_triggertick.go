@@ -11,7 +11,6 @@ func createAiTriggerTick(stream *Stream) AiTriggerTick {
         return createAiTriggerTickByLevel(stream)
     case "ByServerUpDay":
         return createAiTriggerTickByServerUpDay(stream)
-    default:
-        panic("unexpected AiTriggerTick type: " + typeName)
     }
+    panic("unexpected AiTriggerTick type: " + typeName)
 }

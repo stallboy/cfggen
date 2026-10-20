@@ -29,7 +29,9 @@ func _to_string() -> String:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
+	_data = {}
+	SpecialSuit = null
+	var count = stream.read_count(1)
 	for i in range(count):
 		var item = _create(stream)
 		_data[item.suitID] = item
@@ -56,7 +58,7 @@ static func _create(stream: ConfigStream) -> DataEquip_Jewelrysuit:
 	instance.ability2Value = stream.read_int32()
 	instance.ability3 = stream.read_int32()
 	instance.ability3Value = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.suitList.append(stream.read_int32())
 	return instance
 

@@ -2,10 +2,6 @@
 @param String pkg
 @param List<String> languages
 @param boolean unity
-@if(unity)
-using System;
-using System.Collections.Generic;
-@endif
 
 ${unity ? "namespace " + pkg + "\n{" : "namespace " + pkg + ";"}
 
@@ -27,11 +23,12 @@ public partial class Text
 
     internal static Text _create(ConfigReader reader)
     {
-        string[] texts = reader.ReadTextsInPool();
+        int index = reader.ReadTextIndex();
+        var pool = reader.CaptureTextPool();
         return new Text
         {
         @for(int i = 0; i < languages.size(); i++)
-            ${languages.get(i)} = texts[${i}],
+            ${languages.get(i)} = pool.Texts[${i}][index],
         @endfor
         };
     }

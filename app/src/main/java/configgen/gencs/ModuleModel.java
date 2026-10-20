@@ -1,8 +1,5 @@
 package configgen.gencs;
 
-import configgen.schema.*;
-import configgen.util.StringUtil;
-
 import java.util.*;
 
 /**
@@ -11,20 +8,15 @@ import java.util.*;
  * 根模块 = 没有子目录的类（moduleKey = ""）。
  */
 public class ModuleModel {
-    public final String topPkg;
-    public final String moduleKey;     // "" for root, "Ai", "Task", etc.
+    private final String moduleKey;
 
     // Grouped by namespace, preserves insertion order
     private final LinkedHashMap<String, NamespaceGroup> groups = new LinkedHashMap<>();
-    private boolean hasTable;
-    private final CsCodeGenerator gen;
-    public final boolean unity;
+    public final boolean implicitUsings;
 
     public ModuleModel(CsCodeGenerator gen, String moduleKey) {
-        this.gen = gen;
-        this.topPkg = gen.pkg;
         this.moduleKey = moduleKey;
-        this.unity = gen.unity;
+        this.implicitUsings = gen.implicitUsings;
     }
 
     public String outputFilePath() {
@@ -34,9 +26,6 @@ public class ModuleModel {
     void addStruct(StructModel model) {
         String ns = model.name.pkg;
         groups.computeIfAbsent(ns, NamespaceGroup::new).structs.add(model);
-        if (model._vTable != null) {
-            hasTable = true;
-        }
     }
 
     void addInterface(InterfaceModel model) {
@@ -49,16 +38,12 @@ public class ModuleModel {
     }
 
 
-    public String fullName(Nameable nameable) {
-        return new Name(gen.pkg, gen.prefix, nameable).fullName;
+    public boolean usesArray() {
+        return groups.values().stream().flatMap(g -> g.structs.stream()).anyMatch(StructModel::usesArray);
     }
 
-    public String upper1(String value) {
-        return StringUtil.upper1(value);
-    }
-
-    public boolean hasTable() {
-        return hasTable;
+    public boolean usesCollections() {
+        return groups.values().stream().flatMap(g -> g.structs.stream()).anyMatch(StructModel::usesCollections);
     }
 
     public static class NamespaceGroup {

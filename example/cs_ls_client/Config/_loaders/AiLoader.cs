@@ -4,47 +4,44 @@ namespace Config.Ai
 {
     public partial class DAi
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DAi>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DAi> list, IIssueHandler handler)
+        internal static int PrimaryKey(DAi self) => self.ID;
+        internal static void InitializeAll(List<DAi> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DAi>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.ID, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all;
-            _allList = list;
+            config._ai_dai_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DAi>(s_all);
+            config._ai_dai_Rows = list.AsReadOnly();
         }
 
         internal static DAi _create(ConfigReader reader)
         {
-            var iD = reader.ReadInt32();
-            var desc = reader.ReadStringInPool();
-            var condID = reader.ReadStringInPool();
-            var trigTick = Ai.DTriggerTick._create(reader);
-            var trigOdds = reader.ReadInt32();
-            int Count_actionID = reader.ReadInt32();
-            var actionID = new List<int>(Count_actionID);
-            for (int i = 0; i < Count_actionID; i++)
-                actionID.Add(reader.ReadInt32());
-            var deathRemove = reader.ReadBool();
+            var valueID = reader.ReadInt32();
+            var valueDesc = reader.ReadStringInPool();
+            var valueCondID = reader.ReadStringInPool();
+            var valueTrigTick = Ai.DTriggerTick._create(reader);
+            var valueTrigOdds = reader.ReadInt32();
+            int Count_valueActionID = reader.ReadCount(0);
+            IReadOnlyList<int> valueActionID;
+            if (Count_valueActionID == 0) valueActionID = Array.Empty<int>();
+            else {
+                var values_valueActionID = new List<int>(Count_valueActionID);
+                for (int i = 0; i < Count_valueActionID; i++) values_valueActionID.Add(reader.ReadInt32());
+                valueActionID = values_valueActionID.AsReadOnly();
+            }
+            var valueDeathRemove = reader.ReadBool();
             return new DAi {
-                ID = iD,
-                Desc = desc,
-                CondID = condID,
-                TrigTick = trigTick,
-                TrigOdds = trigOdds,
-                ActionID = actionID,
-                DeathRemove = deathRemove,
+                ID = valueID,
+                Desc = valueDesc,
+                CondID = valueCondID,
+                TrigTick = valueTrigTick,
+                TrigOdds = valueTrigOdds,
+                ActionID = valueActionID,
+                DeathRemove = valueDeathRemove,
             };
         }
 
@@ -55,10 +52,7 @@ namespace Config.Ai
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DAi;
-            return o != null && ID.Equals(o.ID);
+            return obj is DAi o && ID.Equals(o.ID);
         }
 
         public override string ToString()
@@ -66,50 +60,52 @@ namespace Config.Ai
             return "(" + ID + "," + Desc + "," + CondID + "," + TrigTick + "," + TrigOdds + "," + StringUtil.ToString(ActionID) + "," + DeathRemove + ")";
         }
 
+
     }
 
     public partial class DAiAction
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DAiAction>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DAiAction> list, IIssueHandler handler)
+        internal static int PrimaryKey(DAiAction self) => self.ID;
+        internal static void InitializeAll(List<DAiAction> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DAiAction>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.ID, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all;
-            _allList = list;
+            config._ai_dai_uaction_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DAiAction>(s_all);
+            config._ai_dai_uaction_Rows = list.AsReadOnly();
         }
 
         internal static DAiAction _create(ConfigReader reader)
         {
-            var iD = reader.ReadInt32();
-            var desc = reader.ReadStringInPool();
-            var formulaID = reader.ReadInt32();
-            int Count_argIList = reader.ReadInt32();
-            var argIList = new List<int>(Count_argIList);
-            for (int i = 0; i < Count_argIList; i++)
-                argIList.Add(reader.ReadInt32());
-            int Count_argSList = reader.ReadInt32();
-            var argSList = new List<int>(Count_argSList);
-            for (int i = 0; i < Count_argSList; i++)
-                argSList.Add(reader.ReadInt32());
+            var valueID = reader.ReadInt32();
+            var valueDesc = reader.ReadStringInPool();
+            var valueFormulaID = reader.ReadInt32();
+            int Count_valueArgIList = reader.ReadCount(0);
+            IReadOnlyList<int> valueArgIList;
+            if (Count_valueArgIList == 0) valueArgIList = Array.Empty<int>();
+            else {
+                var values_valueArgIList = new List<int>(Count_valueArgIList);
+                for (int i = 0; i < Count_valueArgIList; i++) values_valueArgIList.Add(reader.ReadInt32());
+                valueArgIList = values_valueArgIList.AsReadOnly();
+            }
+            int Count_valueArgSList = reader.ReadCount(0);
+            IReadOnlyList<int> valueArgSList;
+            if (Count_valueArgSList == 0) valueArgSList = Array.Empty<int>();
+            else {
+                var values_valueArgSList = new List<int>(Count_valueArgSList);
+                for (int i = 0; i < Count_valueArgSList; i++) values_valueArgSList.Add(reader.ReadInt32());
+                valueArgSList = values_valueArgSList.AsReadOnly();
+            }
             return new DAiAction {
-                ID = iD,
-                Desc = desc,
-                FormulaID = formulaID,
-                ArgIList = argIList,
-                ArgSList = argSList,
+                ID = valueID,
+                Desc = valueDesc,
+                FormulaID = valueFormulaID,
+                ArgIList = valueArgIList,
+                ArgSList = valueArgSList,
             };
         }
 
@@ -120,61 +116,60 @@ namespace Config.Ai
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DAiAction;
-            return o != null && ID.Equals(o.ID);
+            return obj is DAiAction o && ID.Equals(o.ID);
         }
 
         public override string ToString()
         {
             return "(" + ID + "," + Desc + "," + FormulaID + "," + StringUtil.ToString(ArgIList) + "," + StringUtil.ToString(ArgSList) + ")";
         }
+
 
     }
 
     public partial class DAiCondition
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DAiCondition>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DAiCondition> list, IIssueHandler handler)
+        internal static int PrimaryKey(DAiCondition self) => self.ID;
+        internal static void InitializeAll(List<DAiCondition> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DAiCondition>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.ID, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all;
-            _allList = list;
+            config._ai_dai_ucondition_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DAiCondition>(s_all);
+            config._ai_dai_ucondition_Rows = list.AsReadOnly();
         }
 
         internal static DAiCondition _create(ConfigReader reader)
         {
-            var iD = reader.ReadInt32();
-            var desc = reader.ReadStringInPool();
-            var formulaID = reader.ReadInt32();
-            int Count_argIList = reader.ReadInt32();
-            var argIList = new List<int>(Count_argIList);
-            for (int i = 0; i < Count_argIList; i++)
-                argIList.Add(reader.ReadInt32());
-            int Count_argSList = reader.ReadInt32();
-            var argSList = new List<int>(Count_argSList);
-            for (int i = 0; i < Count_argSList; i++)
-                argSList.Add(reader.ReadInt32());
+            var valueID = reader.ReadInt32();
+            var valueDesc = reader.ReadStringInPool();
+            var valueFormulaID = reader.ReadInt32();
+            int Count_valueArgIList = reader.ReadCount(0);
+            IReadOnlyList<int> valueArgIList;
+            if (Count_valueArgIList == 0) valueArgIList = Array.Empty<int>();
+            else {
+                var values_valueArgIList = new List<int>(Count_valueArgIList);
+                for (int i = 0; i < Count_valueArgIList; i++) values_valueArgIList.Add(reader.ReadInt32());
+                valueArgIList = values_valueArgIList.AsReadOnly();
+            }
+            int Count_valueArgSList = reader.ReadCount(0);
+            IReadOnlyList<int> valueArgSList;
+            if (Count_valueArgSList == 0) valueArgSList = Array.Empty<int>();
+            else {
+                var values_valueArgSList = new List<int>(Count_valueArgSList);
+                for (int i = 0; i < Count_valueArgSList; i++) values_valueArgSList.Add(reader.ReadInt32());
+                valueArgSList = values_valueArgSList.AsReadOnly();
+            }
             return new DAiCondition {
-                ID = iD,
-                Desc = desc,
-                FormulaID = formulaID,
-                ArgIList = argIList,
-                ArgSList = argSList,
+                ID = valueID,
+                Desc = valueDesc,
+                FormulaID = valueFormulaID,
+                ArgIList = valueArgIList,
+                ArgSList = valueArgSList,
             };
         }
 
@@ -185,16 +180,14 @@ namespace Config.Ai
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DAiCondition;
-            return o != null && ID.Equals(o.ID);
+            return obj is DAiCondition o && ID.Equals(o.ID);
         }
 
         public override string ToString()
         {
             return "(" + ID + "," + Desc + "," + FormulaID + "," + StringUtil.ToString(ArgIList) + "," + StringUtil.ToString(ArgSList) + ")";
         }
+
 
     }
 
@@ -202,17 +195,12 @@ namespace Config.Ai
     {
         internal static DTriggerTick _create(ConfigReader reader)
         {
-            var impl = reader.ReadStringInPool();
-            switch(impl)
-            {
-                case "ConstValue":
-                    return Ai.TriggerTick.DConstValue._create(reader);
-                case "ByLevel":
-                    return Ai.TriggerTick.DByLevel._create(reader);
-                case "ByServerUpDay":
-                    return Ai.TriggerTick.DByServerUpDay._create(reader);
-            }
-            throw reader.NotFoundImpl(impl, "ai.TriggerTick");
+            return reader.ReadStringInPool() switch {
+                "ConstValue" => Ai.TriggerTick.DConstValue._create(reader),
+                "ByLevel" => Ai.TriggerTick.DByLevel._create(reader),
+                "ByServerUpDay" => Ai.TriggerTick.DByServerUpDay._create(reader),
+                var impl => throw reader.Errors.UnknownVariant("ai.TriggerTick", impl)
+            };
         }
     }
 
@@ -224,9 +212,9 @@ namespace Config.Ai.TriggerTick
     {
         internal static DConstValue _create(ConfigReader reader)
         {
-            var value = reader.ReadInt32();
+            var valueValue = reader.ReadInt32();
             return new DConstValue {
-                Value = value,
+                Value = valueValue,
             };
         }
 
@@ -237,10 +225,7 @@ namespace Config.Ai.TriggerTick
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DConstValue;
-            return o != null && Value.Equals(o.Value);
+            return obj is DConstValue o && Value.Equals(o.Value);
         }
 
         public override string ToString()
@@ -248,17 +233,18 @@ namespace Config.Ai.TriggerTick
             return "(" + Value + ")";
         }
 
+
     }
 
     public partial class DByLevel
     {
         internal static DByLevel _create(ConfigReader reader)
         {
-            var init = reader.ReadInt32();
-            var coefficient = reader.ReadSingle();
+            var valueInit = reader.ReadInt32();
+            var valueCoefficient = reader.ReadSingle();
             return new DByLevel {
-                Init = init,
-                Coefficient = coefficient,
+                Init = valueInit,
+                Coefficient = valueCoefficient,
             };
         }
 
@@ -269,10 +255,7 @@ namespace Config.Ai.TriggerTick
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DByLevel;
-            return o != null && Init.Equals(o.Init) && Coefficient.Equals(o.Coefficient);
+            return obj is DByLevel o && Init.Equals(o.Init) && Coefficient.Equals(o.Coefficient);
         }
 
         public override string ToString()
@@ -280,19 +263,20 @@ namespace Config.Ai.TriggerTick
             return "(" + Init + "," + Coefficient + ")";
         }
 
+
     }
 
     public partial class DByServerUpDay
     {
         internal static DByServerUpDay _create(ConfigReader reader)
         {
-            var init = reader.ReadInt32();
-            var coefficient1 = reader.ReadSingle();
-            var coefficient2 = reader.ReadSingle();
+            var valueInit = reader.ReadInt32();
+            var valueCoefficient1 = reader.ReadSingle();
+            var valueCoefficient2 = reader.ReadSingle();
             return new DByServerUpDay {
-                Init = init,
-                Coefficient1 = coefficient1,
-                Coefficient2 = coefficient2,
+                Init = valueInit,
+                Coefficient1 = valueCoefficient1,
+                Coefficient2 = valueCoefficient2,
             };
         }
 
@@ -303,16 +287,14 @@ namespace Config.Ai.TriggerTick
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DByServerUpDay;
-            return o != null && Init.Equals(o.Init) && Coefficient1.Equals(o.Coefficient1) && Coefficient2.Equals(o.Coefficient2);
+            return obj is DByServerUpDay o && Init.Equals(o.Init) && Coefficient1.Equals(o.Coefficient1) && Coefficient2.Equals(o.Coefficient2);
         }
 
         public override string ToString()
         {
             return "(" + Init + "," + Coefficient1 + "," + Coefficient2 + ")";
         }
+
 
     }
 

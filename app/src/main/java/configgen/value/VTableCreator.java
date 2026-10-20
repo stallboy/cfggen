@@ -18,10 +18,18 @@ public class VTableCreator {
     }
 
     public VTable create(List<VStruct> valueList) {
+        return create(valueList, true);
+    }
+
+    public VTable createRecords(List<VStruct> valueList) {
+        return create(valueList, false);
+    }
+
+    private VTable create(List<VStruct> valueList, boolean synthesizeEnums) {
         // 检查是否是 schema 定义的 enum
         MetaEnumValues enumValues = tableSchema.meta().getEnumValues();
 
-        if (enumValues != null) {
+        if (enumValues != null && synthesizeEnums) {
             // 生成虚拟数据
             valueList = new ArrayList<>();
             Source autoSource = Source.of();  // 自动生成的数据使用空 Source

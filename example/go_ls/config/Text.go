@@ -8,25 +8,14 @@ type Text struct {
 
 func createText(stream *Stream) *Text {
     self := &Text{}
-    texts := stream.ReadTextsInPool()
-    if 0 < len(texts) {
-        self.Zh_cn = texts[0]
-    }
-    if 1 < len(texts) {
-        self.En = texts[1]
-    }
-    if 2 < len(texts) {
-        self.Tw = texts[2]
-    }
+    index := stream.ReadTextIndex()
+    pools := stream.GetLangTextPools()
+    self.Zh_cn = pools[0][index]
+    self.En = pools[1][index]
+    self.Tw = pools[2][index]
     return self
 }
 
 func (t *Text) String() string {
-    result := ""
-    result += t.Zh_cn
-    result += ","
-    result += t.En
-    result += ","
-    result += t.Tw
-    return result
+        return t.Zh_cn + "," + t.En + "," + t.Tw
 }

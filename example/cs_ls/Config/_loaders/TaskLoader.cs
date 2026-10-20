@@ -1,35 +1,44 @@
-using System.Collections.Frozen;
-
 namespace Config.Task
 {
     public partial class DTestDefaultBean
     {
         internal static DTestDefaultBean _create(ConfigReader reader)
         {
-            var testInt = reader.ReadInt32();
-            var testBool = reader.ReadBool();
-            var testString = reader.ReadStringInPool();
-            var testSubBean = DPosition._create(reader);
-            int Count_testList = reader.ReadInt32();
-            var testList = new List<int>(Count_testList);
-            for (int i = 0; i < Count_testList; i++)
-                testList.Add(reader.ReadInt32());
-            int Count_testList2 = reader.ReadInt32();
-            var testList2 = new List<int>(Count_testList2);
-            for (int i = 0; i < Count_testList2; i++)
-                testList2.Add(reader.ReadInt32());
-            int Count_testMap = reader.ReadInt32();
-            var testMap = new OrderedDictionary<int, string>(Count_testMap);
-            for (int i = 0; i < Count_testMap; i++)
-                testMap.Add(reader.ReadInt32(), reader.ReadStringInPool());
+            var valueTestInt = reader.ReadInt32();
+            var valueTestBool = reader.ReadBool();
+            var valueTestString = reader.ReadStringInPool();
+            var valueTestSubBean = DPosition._create(reader);
+            int Count_valueTestList = reader.ReadCount(0);
+            IReadOnlyList<int> valueTestList;
+            if (Count_valueTestList == 0) valueTestList = Array.Empty<int>();
+            else {
+                var values_valueTestList = new List<int>(Count_valueTestList);
+                for (int i = 0; i < Count_valueTestList; i++) values_valueTestList.Add(reader.ReadInt32());
+                valueTestList = values_valueTestList.AsReadOnly();
+            }
+            int Count_valueTestList2 = reader.ReadCount(0);
+            IReadOnlyList<int> valueTestList2;
+            if (Count_valueTestList2 == 0) valueTestList2 = Array.Empty<int>();
+            else {
+                var values_valueTestList2 = new List<int>(Count_valueTestList2);
+                for (int i = 0; i < Count_valueTestList2; i++) values_valueTestList2.Add(reader.ReadInt32());
+                valueTestList2 = values_valueTestList2.AsReadOnly();
+            }
+            int Count_valueTestMap = reader.ReadCount(0);
+            var valueTestMap = Count_valueTestMap == 0 ? ConfigMap<int, string>.Empty : new ConfigMap<int, string>(Count_valueTestMap);
+            for (int i = 0; i < Count_valueTestMap; i++) {
+                var key = reader.ReadInt32();
+                var value = reader.ReadStringInPool();
+                if (!valueTestMap.TryAdd(key, value)) reader.Errors.DuplicateKey("task.TestDefaultBean.testMap", key);
+            }
             return new DTestDefaultBean {
-                TestInt = testInt,
-                TestBool = testBool,
-                TestString = testString,
-                TestSubBean = testSubBean,
-                TestList = testList,
-                TestList2 = testList2,
-                TestMap = testMap,
+                TestInt = valueTestInt,
+                TestBool = valueTestBool,
+                TestString = valueTestString,
+                TestSubBean = valueTestSubBean,
+                TestList = valueTestList,
+                TestList2 = valueTestList2,
+                TestMap = valueTestMap,
             };
         }
 
@@ -40,10 +49,7 @@ namespace Config.Task
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DTestDefaultBean;
-            return o != null && TestInt.Equals(o.TestInt) && TestBool.Equals(o.TestBool) && TestString.Equals(o.TestString) && TestSubBean.Equals(o.TestSubBean) && TestList.Equals(o.TestList) && TestList2.Equals(o.TestList2) && TestMap.Equals(o.TestMap);
+            return obj is DTestDefaultBean o && TestInt.Equals(o.TestInt) && TestBool.Equals(o.TestBool) && TestString.Equals(o.TestString) && TestSubBean.Equals(o.TestSubBean) && TestList.Equals(o.TestList) && TestList2.Equals(o.TestList2) && TestMap.Equals(o.TestMap);
         }
 
         public override string ToString()
@@ -51,39 +57,63 @@ namespace Config.Task
             return "(" + TestInt + "," + TestBool + "," + TestString + "," + TestSubBean + "," + StringUtil.ToString(TestList) + "," + StringUtil.ToString(TestList2) + "," + TestMap + ")";
         }
 
+
     }
 
     public partial class DCompleteconditiontypeInfo
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DCompleteconditiontypeInfo>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DCompleteconditiontypeInfo> list, IIssueHandler handler)
+        private static readonly int[] _symbolKeys = { 1, 2, 3, 4, 5, 6, 7 };
+        internal static int PrimaryKey(DCompleteconditiontypeInfo self) => self.Id;
+        internal static void InitializeAll(List<DCompleteconditiontypeInfo> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DCompleteconditiontypeInfo>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Id, self);
-                DCompleteconditiontypeExtensions._infos[(int)self.EEnum] = self;
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
+                string name = self.Name;
+                int symbol = (int)self.EEnum;
+                if (symbol < 0) errors.UnknownSymbol("task.completeconditiontype", name, key, config.Explain("task.completeconditiontype", key));
+                else {
+                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("task.completeconditiontype", name, _symbolKeys[symbol], key, config.Explain("task.completeconditiontype", key));
+                }
             }
-            _all = s_all.ToFrozenDictionary();
+            config._task_dcompleteconditiontype_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DCompleteconditiontypeInfo>(s_all);
+            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.KillMonster] = Get(config, 1);
+            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.KillMonster] == null) errors.MissingSymbol("task.completeconditiontype", "KillMonster", 1);
+            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.TalkNpc] = Get(config, 2);
+            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.TalkNpc] == null) errors.MissingSymbol("task.completeconditiontype", "TalkNpc", 2);
+            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.CollectItem] = Get(config, 3);
+            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.CollectItem] == null) errors.MissingSymbol("task.completeconditiontype", "CollectItem", 3);
+            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.ConditionAnd] = Get(config, 4);
+            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.ConditionAnd] == null) errors.MissingSymbol("task.completeconditiontype", "ConditionAnd", 4);
+            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.Chat] = Get(config, 5);
+            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.Chat] == null) errors.MissingSymbol("task.completeconditiontype", "Chat", 5);
+            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.TestNoColumn] = Get(config, 6);
+            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.TestNoColumn] == null) errors.MissingSymbol("task.completeconditiontype", "TestNoColumn", 6);
+            config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.Aa] = Get(config, 7);
+            if (config._task_dcompleteconditiontype_Symbols[(int)DCompleteconditiontype.Aa] == null) errors.MissingSymbol("task.completeconditiontype", "aa", 7);
+            config._task_dcompleteconditiontype_Rows = list.AsReadOnly();
         }
 
         internal static DCompleteconditiontypeInfo _create(ConfigReader reader)
         {
-            var id = reader.ReadInt32();
-            var name = reader.ReadStringInPool();
+            var valueId = reader.ReadInt32();
+            var valueName = reader.ReadStringInPool();
             return new DCompleteconditiontypeInfo {
-                Id = id,
-                Name = name,
-                EEnum = Enum.Parse<DCompleteconditiontype>(StringUtil.UpperFirstChar(name))
+                Id = valueId,
+                Name = valueName,
+                EEnum = valueName switch {
+                    "KillMonster" => DCompleteconditiontype.KillMonster,
+                    "TalkNpc" => DCompleteconditiontype.TalkNpc,
+                    "CollectItem" => DCompleteconditiontype.CollectItem,
+                    "ConditionAnd" => DCompleteconditiontype.ConditionAnd,
+                    "Chat" => DCompleteconditiontype.Chat,
+                    "TestNoColumn" => DCompleteconditiontype.TestNoColumn,
+                    "aa" => DCompleteconditiontype.Aa,
+                    _ => (DCompleteconditiontype)(-1)
+                }
             };
         }
 
@@ -94,10 +124,7 @@ namespace Config.Task
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DCompleteconditiontypeInfo;
-            return o != null && Id.Equals(o.Id);
+            return obj is DCompleteconditiontypeInfo o && Id.Equals(o.Id);
         }
 
         public override string ToString()
@@ -105,53 +132,47 @@ namespace Config.Task
             return "(" + Id + "," + Name + ")";
         }
 
+
     }
 
     public partial class DTask
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DTask>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DTask> list, IIssueHandler handler)
+        internal static int PrimaryKey(DTask self) => self.Taskid;
+        internal static void InitializeAll(List<DTask> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DTask>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Taskid, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            config._task_dtask_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DTask>(s_all);
+            config._task_dtask_Rows = list.AsReadOnly();
         }
 
-        internal static void Resolve(IIssueHandler h)
-        {
-            foreach (var v in All())
-                v._resolve(h);
-        }
         internal static DTask _create(ConfigReader reader)
         {
-            var taskid = reader.ReadInt32();
-            int Count_name = reader.ReadInt32();
-            var name = new List<Config.Text>(Count_name);
-            for (int i = 0; i < Count_name; i++)
-                name.Add(Config.Text._create(reader));
-            var nexttask = reader.ReadInt32();
-            var completecondition = Task.DCompletecondition._create(reader);
-            var exp = reader.ReadInt32();
-            var testDefaultBean = Task.DTestDefaultBean._create(reader);
+            var valueTaskid = reader.ReadInt32();
+            int Count_valueName = reader.ReadCount(0);
+            IReadOnlyList<Config.Text> valueName;
+            if (Count_valueName == 0) valueName = Array.Empty<Config.Text>();
+            else {
+                var values_valueName = new List<Config.Text>(Count_valueName);
+                for (int i = 0; i < Count_valueName; i++) values_valueName.Add(Config.Text._create(reader));
+                valueName = values_valueName.AsReadOnly();
+            }
+            var valueNexttask = reader.ReadInt32();
+            var valueCompletecondition = Task.DCompletecondition._create(reader);
+            var valueExp = reader.ReadInt32();
+            var valueTestDefaultBean = Task.DTestDefaultBean._create(reader);
             return new DTask {
-                Taskid = taskid,
-                Name = name,
-                Nexttask = nexttask,
-                Completecondition = completecondition,
-                Exp = exp,
-                TestDefaultBean = testDefaultBean,
+                Taskid = valueTaskid,
+                Name = valueName,
+                Nexttask = valueNexttask,
+                Completecondition = valueCompletecondition,
+                Exp = valueExp,
+                TestDefaultBean = valueTestDefaultBean,
             };
         }
 
@@ -162,10 +183,7 @@ namespace Config.Task
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DTask;
-            return o != null && Taskid.Equals(o.Taskid);
+            return obj is DTask o && Taskid.Equals(o.Taskid);
         }
 
         public override string ToString()
@@ -173,78 +191,84 @@ namespace Config.Task
             return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestDefaultBean + ")";
         }
 
-        internal void _resolve(IIssueHandler h)
+        internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            Completecondition._resolve(h);
-            NullableRefTaskid = Task.DTaskextraexp.Get(Taskid);
-            NullableRefNexttask = Task.DTask.Get(Nexttask);
+            Completecondition._resolve(errors, config);
+            NullableRefTaskid = Task.DTaskextraexp.Get(config, Taskid);
+            NullableRefNexttask = Task.DTask.Get(config, Nexttask);
         }
+
     }
 
     public partial class DTask2
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DTask2>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DTask2> list, IIssueHandler handler)
+        internal static int PrimaryKey(DTask2 self) => self.Taskid;
+        internal static void InitializeAll(List<DTask2> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DTask2>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Taskid, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            config._task_dtask2_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DTask2>(s_all);
+            config._task_dtask2_Rows = list.AsReadOnly();
         }
 
-        internal static void Resolve(IIssueHandler h)
-        {
-            foreach (var v in All())
-                v._resolve(h);
-        }
         internal static DTask2 _create(ConfigReader reader)
         {
-            var taskid = reader.ReadInt32();
-            int Count_name = reader.ReadInt32();
-            var name = new List<Config.Text>(Count_name);
-            for (int i = 0; i < Count_name; i++)
-                name.Add(Config.Text._create(reader));
-            var nexttask = reader.ReadInt32();
-            var completecondition = Task.DCompletecondition._create(reader);
-            var exp = reader.ReadInt32();
-            var testBool = reader.ReadBool();
-            var testString = reader.ReadStringInPool();
-            var testStruct = DPosition._create(reader);
-            int Count_testList = reader.ReadInt32();
-            var testList = new List<int>(Count_testList);
-            for (int i = 0; i < Count_testList; i++)
-                testList.Add(reader.ReadInt32());
-            int Count_testListStruct = reader.ReadInt32();
-            var testListStruct = new List<DPosition>(Count_testListStruct);
-            for (int i = 0; i < Count_testListStruct; i++)
-                testListStruct.Add(DPosition._create(reader));
-            int Count_testListInterface = reader.ReadInt32();
-            var testListInterface = new List<Ai.DTriggerTick>(Count_testListInterface);
-            for (int i = 0; i < Count_testListInterface; i++)
-                testListInterface.Add(Ai.DTriggerTick._create(reader));
+            var valueTaskid = reader.ReadInt32();
+            int Count_valueName = reader.ReadCount(0);
+            IReadOnlyList<Config.Text> valueName;
+            if (Count_valueName == 0) valueName = Array.Empty<Config.Text>();
+            else {
+                var values_valueName = new List<Config.Text>(Count_valueName);
+                for (int i = 0; i < Count_valueName; i++) values_valueName.Add(Config.Text._create(reader));
+                valueName = values_valueName.AsReadOnly();
+            }
+            var valueNexttask = reader.ReadInt32();
+            var valueCompletecondition = Task.DCompletecondition._create(reader);
+            var valueExp = reader.ReadInt32();
+            var valueTestBool = reader.ReadBool();
+            var valueTestString = reader.ReadStringInPool();
+            var valueTestStruct = DPosition._create(reader);
+            int Count_valueTestList = reader.ReadCount(0);
+            IReadOnlyList<int> valueTestList;
+            if (Count_valueTestList == 0) valueTestList = Array.Empty<int>();
+            else {
+                var values_valueTestList = new List<int>(Count_valueTestList);
+                for (int i = 0; i < Count_valueTestList; i++) values_valueTestList.Add(reader.ReadInt32());
+                valueTestList = values_valueTestList.AsReadOnly();
+            }
+            int Count_valueTestListStruct = reader.ReadCount(0);
+            IReadOnlyList<DPosition> valueTestListStruct;
+            if (Count_valueTestListStruct == 0) valueTestListStruct = Array.Empty<DPosition>();
+            else {
+                var values_valueTestListStruct = new List<DPosition>(Count_valueTestListStruct);
+                for (int i = 0; i < Count_valueTestListStruct; i++) values_valueTestListStruct.Add(DPosition._create(reader));
+                valueTestListStruct = values_valueTestListStruct.AsReadOnly();
+            }
+            int Count_valueTestListInterface = reader.ReadCount(0);
+            IReadOnlyList<Ai.DTriggerTick> valueTestListInterface;
+            if (Count_valueTestListInterface == 0) valueTestListInterface = Array.Empty<Ai.DTriggerTick>();
+            else {
+                var values_valueTestListInterface = new List<Ai.DTriggerTick>(Count_valueTestListInterface);
+                for (int i = 0; i < Count_valueTestListInterface; i++) values_valueTestListInterface.Add(Ai.DTriggerTick._create(reader));
+                valueTestListInterface = values_valueTestListInterface.AsReadOnly();
+            }
             return new DTask2 {
-                Taskid = taskid,
-                Name = name,
-                Nexttask = nexttask,
-                Completecondition = completecondition,
-                Exp = exp,
-                TestBool = testBool,
-                TestString = testString,
-                TestStruct = testStruct,
-                TestList = testList,
-                TestListStruct = testListStruct,
-                TestListInterface = testListInterface,
+                Taskid = valueTaskid,
+                Name = valueName,
+                Nexttask = valueNexttask,
+                Completecondition = valueCompletecondition,
+                Exp = valueExp,
+                TestBool = valueTestBool,
+                TestString = valueTestString,
+                TestStruct = valueTestStruct,
+                TestList = valueTestList,
+                TestListStruct = valueTestListStruct,
+                TestListInterface = valueTestListInterface,
             };
         }
 
@@ -255,10 +279,7 @@ namespace Config.Task
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DTask2;
-            return o != null && Taskid.Equals(o.Taskid);
+            return obj is DTask2 o && Taskid.Equals(o.Taskid);
         }
 
         public override string ToString()
@@ -266,55 +287,50 @@ namespace Config.Task
             return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + StringUtil.ToString(TestList) + "," + StringUtil.ToString(TestListStruct) + "," + StringUtil.ToString(TestListInterface) + ")";
         }
 
-        internal void _resolve(IIssueHandler h)
+        internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            Completecondition._resolve(h);
-            NullableRefTaskid = Task.DTaskextraexp.Get(Taskid);
-            NullableRefNexttask = Task.DTask.Get(Nexttask);
+            Completecondition._resolve(errors, config);
+            NullableRefTaskid = Task.DTaskextraexp.Get(config, Taskid);
+            NullableRefNexttask = Task.DTask.Get(config, Nexttask);
         }
+
     }
 
     public partial class DTaskextraexp
     {
-        internal static void Initialize(ConfigReader reader)
-        {
-            int count = reader.ReadInt32();
-            var list = new List<DTaskextraexp>(count);
-            for (int i = 0; i < count; i++)
-                list.Add(_create(reader));
-            InitializeAll(list, reader);
-        }
-
-        internal static void InitializeAll(List<DTaskextraexp> list, IIssueHandler handler)
+        internal static int PrimaryKey(DTaskextraexp self) => self.Taskid;
+        internal static void InitializeAll(List<DTaskextraexp> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DTaskextraexp>(count);
             foreach (var self in list)
             {
-                s_all.Add(self.Taskid, self);
+                var key = PrimaryKey(self);
+                s_all.Add(key, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            config._task_dtaskextraexp_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DTaskextraexp>(s_all);
+            config._task_dtaskextraexp_Rows = list.AsReadOnly();
         }
 
         internal static DTaskextraexp _create(ConfigReader reader)
         {
-            var taskid = reader.ReadInt32();
-            var extraexp = reader.ReadInt32();
-            var test1 = reader.ReadStringInPool();
-            var test2 = reader.ReadStringInPool();
-            var fielda = reader.ReadStringInPool();
-            var fieldb = reader.ReadStringInPool();
-            var fieldc = reader.ReadStringInPool();
-            var fieldd = reader.ReadStringInPool();
+            var valueTaskid = reader.ReadInt32();
+            var valueExtraexp = reader.ReadInt32();
+            var valueTest1 = reader.ReadStringInPool();
+            var valueTest2 = reader.ReadStringInPool();
+            var valueFielda = reader.ReadStringInPool();
+            var valueFieldb = reader.ReadStringInPool();
+            var valueFieldc = reader.ReadStringInPool();
+            var valueFieldd = reader.ReadStringInPool();
             return new DTaskextraexp {
-                Taskid = taskid,
-                Extraexp = extraexp,
-                Test1 = test1,
-                Test2 = test2,
-                Fielda = fielda,
-                Fieldb = fieldb,
-                Fieldc = fieldc,
-                Fieldd = fieldd,
+                Taskid = valueTaskid,
+                Extraexp = valueExtraexp,
+                Test1 = valueTest1,
+                Test2 = valueTest2,
+                Fielda = valueFielda,
+                Fieldb = valueFieldb,
+                Fieldc = valueFieldc,
+                Fieldd = valueFieldd,
             };
         }
 
@@ -325,10 +341,7 @@ namespace Config.Task
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DTaskextraexp;
-            return o != null && Taskid.Equals(o.Taskid);
+            return obj is DTaskextraexp o && Taskid.Equals(o.Taskid);
         }
 
         public override string ToString()
@@ -336,34 +349,24 @@ namespace Config.Task
             return "(" + Taskid + "," + Extraexp + "," + Test1 + "," + Test2 + "," + Fielda + "," + Fieldb + "," + Fieldc + "," + Fieldd + ")";
         }
 
+
     }
 
     public partial interface DCompletecondition
     {
-        void _resolve(IIssueHandler h)
-        {
-        }
+        void _resolve(LoadErrors errors, ConfigMgr config) { }
         internal static DCompletecondition _create(ConfigReader reader)
         {
-            var impl = reader.ReadStringInPool();
-            switch(impl)
-            {
-                case "KillMonster":
-                    return Task.Completecondition.DKillMonster._create(reader);
-                case "TalkNpc":
-                    return Task.Completecondition.DTalkNpc._create(reader);
-                case "TestNoColumn":
-                    return Task.Completecondition.DTestNoColumn._create(reader);
-                case "Chat":
-                    return Task.Completecondition.DChat._create(reader);
-                case "ConditionAnd":
-                    return Task.Completecondition.DConditionAnd._create(reader);
-                case "CollectItem":
-                    return Task.Completecondition.DCollectItem._create(reader);
-                case "aa":
-                    return Task.Completecondition.DAa._create(reader);
-            }
-            throw reader.NotFoundImpl(impl, "task.completecondition");
+            return reader.ReadStringInPool() switch {
+                "KillMonster" => Task.Completecondition.DKillMonster._create(reader),
+                "TalkNpc" => Task.Completecondition.DTalkNpc._create(reader),
+                "TestNoColumn" => Task.Completecondition.DTestNoColumn._create(reader),
+                "Chat" => Task.Completecondition.DChat._create(reader),
+                "ConditionAnd" => Task.Completecondition.DConditionAnd._create(reader),
+                "CollectItem" => Task.Completecondition.DCollectItem._create(reader),
+                "aa" => Task.Completecondition.DAa._create(reader),
+                var impl => throw reader.Errors.UnknownVariant("task.completecondition", impl)
+            };
         }
     }
 
@@ -375,11 +378,11 @@ namespace Config.Task.Completecondition
     {
         internal static DKillMonster _create(ConfigReader reader)
         {
-            var monsterid = reader.ReadInt32();
-            var count = reader.ReadInt32();
+            var valueMonsterid = reader.ReadInt32();
+            var valueCount = reader.ReadInt32();
             return new DKillMonster {
-                Monsterid = monsterid,
-                Count = count,
+                Monsterid = valueMonsterid,
+                Count = valueCount,
             };
         }
 
@@ -390,10 +393,7 @@ namespace Config.Task.Completecondition
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DKillMonster;
-            return o != null && Monsterid.Equals(o.Monsterid) && Count.Equals(o.Count);
+            return obj is DKillMonster o && Monsterid.Equals(o.Monsterid) && Count.Equals(o.Count);
         }
 
         public override string ToString()
@@ -401,21 +401,22 @@ namespace Config.Task.Completecondition
             return "(" + Monsterid + "," + Count + ")";
         }
 
-        public void _resolve(IIssueHandler h)
+        public void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            var rRefMonsterid = Other.DMonster.Get(Monsterid);
-            if (rRefMonsterid == null) h.RefNotFound("KillMonster", "monsterid", Monsterid.ToString());
+            var rRefMonsterid = Other.DMonster.Get(config, Monsterid);
+            if (rRefMonsterid == null) errors.MissingReference("KillMonster", "monsterid", "other.monster", this.Monsterid);
             else RefMonsterid = rRefMonsterid;
         }
+
     }
 
     public partial class DTalkNpc
     {
         internal static DTalkNpc _create(ConfigReader reader)
         {
-            var npcid = reader.ReadInt32();
+            var valueNpcid = reader.ReadInt32();
             return new DTalkNpc {
-                Npcid = npcid,
+                Npcid = valueNpcid,
             };
         }
 
@@ -426,16 +427,14 @@ namespace Config.Task.Completecondition
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DTalkNpc;
-            return o != null && Npcid.Equals(o.Npcid);
+            return obj is DTalkNpc o && Npcid.Equals(o.Npcid);
         }
 
         public override string ToString()
         {
             return "(" + Npcid + ")";
         }
+
 
     }
 
@@ -453,11 +452,9 @@ namespace Config.Task.Completecondition
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DTestNoColumn;
-            return o != null;
+            return obj is DTestNoColumn;
         }
+
 
     }
 
@@ -465,9 +462,9 @@ namespace Config.Task.Completecondition
     {
         internal static DChat _create(ConfigReader reader)
         {
-            var msg = reader.ReadStringInPool();
+            var valueMsg = reader.ReadStringInPool();
             return new DChat {
-                Msg = msg,
+                Msg = valueMsg,
             };
         }
 
@@ -478,10 +475,7 @@ namespace Config.Task.Completecondition
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DChat;
-            return o != null && Msg.Equals(o.Msg);
+            return obj is DChat o && Msg.Equals(o.Msg);
         }
 
         public override string ToString()
@@ -489,17 +483,18 @@ namespace Config.Task.Completecondition
             return "(" + Msg + ")";
         }
 
+
     }
 
     public partial class DConditionAnd
     {
         internal static DConditionAnd _create(ConfigReader reader)
         {
-            var cond1 = Task.DCompletecondition._create(reader);
-            var cond2 = Task.DCompletecondition._create(reader);
+            var valueCond1 = Task.DCompletecondition._create(reader);
+            var valueCond2 = Task.DCompletecondition._create(reader);
             return new DConditionAnd {
-                Cond1 = cond1,
-                Cond2 = cond2,
+                Cond1 = valueCond1,
+                Cond2 = valueCond2,
             };
         }
 
@@ -510,10 +505,7 @@ namespace Config.Task.Completecondition
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DConditionAnd;
-            return o != null && Cond1.Equals(o.Cond1) && Cond2.Equals(o.Cond2);
+            return obj is DConditionAnd o && Cond1.Equals(o.Cond1) && Cond2.Equals(o.Cond2);
         }
 
         public override string ToString()
@@ -521,22 +513,23 @@ namespace Config.Task.Completecondition
             return "(" + Cond1 + "," + Cond2 + ")";
         }
 
-        public void _resolve(IIssueHandler h)
+        public void _resolve(LoadErrors errors, ConfigMgr config)
         {
-            Cond1._resolve(h);
-            Cond2._resolve(h);
+            Cond1._resolve(errors, config);
+            Cond2._resolve(errors, config);
         }
+
     }
 
     public partial class DCollectItem
     {
         internal static DCollectItem _create(ConfigReader reader)
         {
-            var itemid = reader.ReadInt32();
-            var count = reader.ReadInt32();
+            var valueItemid = reader.ReadInt32();
+            var valueCount = reader.ReadInt32();
             return new DCollectItem {
-                Itemid = itemid,
-                Count = count,
+                Itemid = valueItemid,
+                Count = valueCount,
             };
         }
 
@@ -547,16 +540,14 @@ namespace Config.Task.Completecondition
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DCollectItem;
-            return o != null && Itemid.Equals(o.Itemid) && Count.Equals(o.Count);
+            return obj is DCollectItem o && Itemid.Equals(o.Itemid) && Count.Equals(o.Count);
         }
 
         public override string ToString()
         {
             return "(" + Itemid + "," + Count + ")";
         }
+
 
     }
 
@@ -574,11 +565,9 @@ namespace Config.Task.Completecondition
 
         public override bool Equals(object? obj)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DAa;
-            return o != null;
+            return obj is DAa;
         }
+
 
     }
 

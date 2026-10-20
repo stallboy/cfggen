@@ -6,7 +6,6 @@ public final class CfgAa implements config.task.completecondition.CfgCompletecon
         return config.task.CfgCompleteconditiontype.AA;
     }
 
-
     public CfgAa() {
     }
 

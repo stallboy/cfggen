@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 namespace Config.Ai
 {
@@ -10,20 +9,22 @@ public partial class DAi
     public string CondID { get; init; } = null!; /* 触发公式 */
     public Ai.DTriggerTick TrigTick { get; init; } = null!; /* 触发间隔(帧) */
     public int TrigOdds { get; init; } /* 触发几率 */
-    public List<int> ActionID { get; init; } = null!; /* 触发行为 */
+    public IReadOnlyList<int> ActionID { get; init; } = null!; /* 触发行为 */
     public bool DeathRemove { get; init; } /* 死亡移除 */
-    private static IReadOnlyList<DAi> _allList = null!;
-    
-    private static Dictionary<int, DAi> _all = null!;
 
     public static DAi? Get(int iD)
+        => Get(ConfigMgr.GetMgr(), iD);
+
+    public static DAi? Get(ConfigMgr config, int iD)
     {
-        return _all.GetValueOrDefault(iD);
+        var index = config._ai_dai_All;
+        return index.TryGetValue(iD, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DAi> All()
-    {
-        return _allList;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DAi> All(ConfigMgr config)
+        => config._ai_dai_Rows;
 }
 }

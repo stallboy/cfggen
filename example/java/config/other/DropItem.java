@@ -5,7 +5,6 @@ public class DropItem {
     private java.util.List<Integer> itemids;
     private int countmin;
     private int countmax;
-
     private DropItem() {
     }
 
@@ -20,7 +19,7 @@ public class DropItem {
         DropItem self = new DropItem();
         self.chance = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.itemids = java.util.Collections.emptyList();
             } else {
@@ -28,6 +27,7 @@ public class DropItem {
                 for (; c > 0; c--) {
                     self.itemids.add(input.readInt());
                 }
+                self.itemids = java.util.Collections.unmodifiableList(self.itemids);
             }
         }
         self.countmin = input.readInt();
@@ -70,9 +70,8 @@ public class DropItem {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof DropItem))
+        if (!(other instanceof DropItem o))
             return false;
-        DropItem o = (DropItem) other;
         return chance == o.chance && itemids.equals(o.itemids) && countmin == o.countmin && countmax == o.countmax;
     }
 

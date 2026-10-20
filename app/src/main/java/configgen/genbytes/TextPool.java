@@ -32,9 +32,7 @@ public class TextPool {
         indices.add(idx);
     }
 
-    public void serialize(ConfigOutput out) {
-        // 写入语言名称
-        out.writeString(langName);
+    public void serializeBody(ConfigOutput out) {
 
         // 写入索引数组
         out.writeInt(indices.size());

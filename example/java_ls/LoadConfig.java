@@ -1,11 +1,9 @@
 
-import config.ConfigCodeSchema;
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
 import config.task.CfgTask;
 import configgen.genjava.ConfigInput;
-import configgen.genjava.Schema;
-import configgen.genjava.SchemaCompatibleException;
+import configgen.genjava.ConfigPackage;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -19,16 +17,8 @@ public class LoadConfig {
     private static final Logger logger = Logger.getLogger("LoadConfig");
 
     public static void load(String fn) throws IOException {
-        Schema codeSchema = ConfigCodeSchema.getCodeSchema();
         try (ConfigInput input = new ConfigInput(Path.of(fn))) {
-            Schema dataSchema = ConfigMgrLoader.loadSchema(input);
-            boolean compatible = codeSchema.compatible(dataSchema);
-            if (compatible) {
-                ConfigMgr mgr = ConfigMgrLoader.load(input);
-                ConfigMgr.setMgr(mgr);
-            } else {
-                throw new SchemaCompatibleException("schema not compatible, ignore load configdata");
-            }
+            ConfigMgrLoader.loadPackagesAndSetMgr(ConfigPackage.read(input));
         }
     }
 

@@ -59,7 +59,7 @@ func(t *EquipJewelrytypeMgr) Get(typeName string) *EquipJewelrytype {
 }
 
 func (t *EquipJewelrytypeMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipJewelrytype, 0, cnt)
     t.typeNameMap = make(map[string]*EquipJewelrytype, cnt)
     for i := 0; i < int(cnt); i++ {

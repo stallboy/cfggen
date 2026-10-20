@@ -1,3 +1,4 @@
+
 namespace Config.Task;
 
 public partial interface DCompletecondition

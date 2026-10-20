@@ -11,7 +11,9 @@ import java.util.Map;
 
 final class GenConfigCodeSchema {
     static void generateAll(JavaCodeGenerator gen, GenCfg cfg, int schemaNumPerFile, CfgValue cfgValue, LangSwitchable ls) {
-        SchemaInterface schemaInterface = SchemaParser.parse(cfgValue, ls);
+        SchemaInterface schemaInterface = SchemaParser.parsePackage(cfgValue, ls);
+        var packageOnly = new java.util.HashSet<>(schemaInterface.implementations.keySet());
+        packageOnly.removeAll(SchemaParser.parse(cfgValue, ls).implementations.keySet());
         List<Map.Entry<String, Schema>> all = new ArrayList<>(schemaInterface.implementations.entrySet());
         List<Map.Entry<String, Schema>> main;
         List<List<Map.Entry<String, Schema>>> nullableOthers = null;
@@ -33,12 +35,12 @@ final class GenConfigCodeSchema {
             }
         }
 
-        generateFile(gen, cfg, 0, main, nullableOthers);
+        generateFile(gen, cfg, 0, main, nullableOthers, packageOnly);
         if (nullableOthers != null) {
             int idx = 0;
             for (List<Map.Entry<String, Schema>> nullableOther : nullableOthers) {
                 idx++;
-                generateFile(gen, cfg, idx, nullableOther, null);
+                generateFile(gen, cfg, idx, nullableOther, null, packageOnly);
             }
         }
     }
@@ -54,7 +56,7 @@ final class GenConfigCodeSchema {
 
     static void generateFile(JavaCodeGenerator gen, GenCfg cfg, int idx,
                              List<Map.Entry<String, Schema>> schemas,
-                             List<List<Map.Entry<String, Schema>>> nullableOthers) {
+                             List<List<Map.Entry<String, Schema>>> nullableOthers, java.util.Set<String> packageOnly) {
 
         String className = getClassName(idx);
         try (CachedIndentPrinter ps = gen.createCode(className + ".java")) {
@@ -67,7 +69,7 @@ final class GenConfigCodeSchema {
             ps.println();
 
             if (idx == 0) {
-                printMain(schemas, nullableOthers, ps);
+                printMain(schemas, nullableOthers, ps, packageOnly);
                 print(schemas, ps);
             } else {
                 print(schemas, ps);
@@ -78,9 +80,11 @@ final class GenConfigCodeSchema {
 
     private static void printMain(List<Map.Entry<String, Schema>> main,
                                   List<List<Map.Entry<String, Schema>>> nullableOthers,
-                                  CachedIndentPrinter ip) {
+                                  CachedIndentPrinter ip, java.util.Set<String> packageOnly) {
 
-        ip.println1("public static SchemaInterface getCodeSchema() {");
+        ip.println1("public static SchemaInterface getCodeSchema() { return createSchema(false); }");
+        ip.println1("public static SchemaInterface getPackageSchema() { return createSchema(true); }");
+        ip.println1("private static SchemaInterface createSchema(boolean packageLayout) {");
         ip.inc();
         ip.inc();
 
@@ -90,7 +94,7 @@ final class GenConfigCodeSchema {
         for (Map.Entry<String, Schema> stringSchemaEntry : main) {
             String key = stringSchemaEntry.getKey();
             String func = key.replace('.', '_');
-            ip.println("%s.addImp(\"%s\", %s());", name, key, func);
+            ip.println("%s%s.addImp(\"%s\", %s());", packageOnly.contains(key) ? "if (packageLayout) " : "", name, key, func);
         }
 
         if (nullableOthers != null) {
@@ -100,7 +104,7 @@ final class GenConfigCodeSchema {
                 for (Map.Entry<String, Schema> stringSchemaEntry : other) {
                     String key = stringSchemaEntry.getKey();
                     String func = key.replace('.', '_');
-                    ip.println("%s.addImp(\"%s\", %s.%s());", name, key, getClassName(idx), func);
+                    ip.println("%s%s.addImp(\"%s\", %s.%s());", packageOnly.contains(key) ? "if (packageLayout) " : "", name, key, getClassName(idx), func);
                 }
             }
         }

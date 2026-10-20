@@ -1,5 +1,7 @@
 package config.other;
 
+import configgen.genjava.LoadValueErrs;
+
 // 来自：other/monster.csv
 public class CfgMonster {
     private int id;
@@ -19,7 +21,7 @@ public class CfgMonster {
         CfgMonster self = new CfgMonster();
         self.id = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.posList = java.util.Collections.emptyList();
             } else {
@@ -27,30 +29,37 @@ public class CfgMonster {
                 for (; c > 0; c--) {
                     self.posList.add(config.CfgPosition._create(input));
                 }
+                self.posList = java.util.Collections.unmodifiableList(self.posList);
             }
         }
         self.lootId = input.readInt();
         self.lootItemId = input.readInt();
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.enumMap1 = java.util.Collections.emptyMap();
             } else {
                 self.enumMap1 = new java.util.LinkedHashMap<>(c);
                 for (; c > 0; c--) {
-                    self.enumMap1.put(input.readStringInPool(), input.readInt());
+                    var key = input.readStringInPool();
+                    var value = input.readInt();
+                    if (self.enumMap1.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.monster.enumMap1", key);
                 }
+                self.enumMap1 = java.util.Collections.unmodifiableMap(self.enumMap1);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.enumMap2 = java.util.Collections.emptyMap();
             } else {
                 self.enumMap2 = new java.util.LinkedHashMap<>(c);
                 for (; c > 0; c--) {
-                    self.enumMap2.put(input.readInt(), input.readStringInPool());
+                    var key = input.readInt();
+                    var value = input.readStringInPool();
+                    if (self.enumMap2.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.monster.enumMap2", key);
                 }
+                self.enumMap2 = java.util.Collections.unmodifiableMap(self.enumMap2);
             }
         }
         return self;
@@ -103,25 +112,23 @@ public class CfgMonster {
         return "(" + id + "," + posList + "," + lootId + "," + lootItemId + "," + enumMap1 + "," + enumMap2 + ")";
     }
 
-    public void _resolveDirect(config.ConfigMgr mgr) {
-        RefLoot = mgr.other_lootitem_All.get(new config.other.CfgLootitem.LootidItemidKey(lootId, lootItemId) );
-        configgen.genjava.LoadValueErrs.requireNonNull(RefLoot, "other.monster.Loot -> other.lootitem", "" + lootId + "," + lootItemId);
-        RefAllLoot = mgr.other_loot_All.get(lootId);
-        configgen.genjava.LoadValueErrs.requireNonNull(RefAllLoot, "other.monster.AllLoot -> other.loot", lootId);
-        if (enumMap2.isEmpty()) {
-            RefEnumMap2 = java.util.Collections.emptyMap();
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        this.RefLoot = mgr.getOtherLootitem(this.lootId, this.lootItemId);
+        if (this.RefLoot == null) errors.missingReference("other.monster", "Loot", "other.lootitem", java.util.List.of(this.lootId, this.lootItemId));
+        this.RefAllLoot = mgr.getOtherLoot(this.lootId);
+        if (this.RefAllLoot == null) errors.missingReference("other.monster", "AllLoot", "other.loot", this.lootId);
+        if (this.enumMap2.isEmpty()) {
+            this.RefEnumMap2 = java.util.Collections.emptyMap();
         } else {
-            RefEnumMap2 = new java.util.LinkedHashMap<>(enumMap2.size());
-            for (java.util.Map.Entry<Integer, String> e : enumMap2.entrySet()) {
-                config.other.CfgArgCaptureMode rv = config.other.CfgArgCaptureMode.get(e.getValue());
-                configgen.genjava.LoadValueErrs.requireNonNull(rv, "other.monster.enumMap2 -> other.ArgCaptureMode", e.getValue());
-                RefEnumMap2.put(e.getKey(), rv);
+            this.RefEnumMap2 = new java.util.LinkedHashMap<>(this.enumMap2.size());
+            for (java.util.Map.Entry<Integer, String> e : this.enumMap2.entrySet()) {
+                var ref = config.other.CfgArgCaptureMode.get(e.getValue());
+                if (ref == null) errors.missingReference("other.monster", "enumMap2", "other.ArgCaptureMode", e.getValue());
+                this.RefEnumMap2.put(e.getKey(), ref);
             }
         }
-    }
+        this.RefEnumMap2 = java.util.Collections.unmodifiableMap(this.RefEnumMap2);
 
-    public void _resolve(config.ConfigMgr mgr) {
-        _resolveDirect(mgr);
     }
 
     public static CfgMonster get(int id) {
@@ -133,25 +140,6 @@ public class CfgMonster {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherMonster();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.other_monster_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgMonster self = CfgMonster._create(input);
-                mgr.other_monster_All.put(self.id, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            for (CfgMonster e : mgr.other_monster_All.values()) {
-                e._resolve(mgr);
-            }
-        }
-
-    }
 
 }

@@ -3,6 +3,7 @@ package configgen.genbytes;
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
+import configgen.gen.CliException;
 import configgen.genjava.*;
 import configgen.i18n.LangSwitchable;
 import configgen.i18n.LangSwitchableRuntime;
@@ -15,26 +16,38 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.function.Consumer;
 
 public class BytesGenerator extends GeneratorWithTag {
     private final String dir;
     private final String cipher;
-    private final boolean hasSchema;
     private final boolean isLangSeparated;
+    private final String pack;
+    private final String requires;
+    private final List<Path> dependencies;
     private CachedFiles outputFiles;
 
     public BytesGenerator(Parameter parameter) {
         super(parameter);
         dir = parameter.get("dir", ".");
         cipher = parameter.get("cipher", "");
-        hasSchema = parameter.has("schema");
+        pack = parameter.get("pack", "base");
+        requires = parameter.get("requires", "").replace(';', ',');
+        String deps = parameter.get("deps", "");
+        dependencies = deps.isEmpty() ? List.of() : java.util.Arrays.stream(deps.split(";", -1)).map(Path::of).toList();
+        if (pack.isBlank() || !pack.equals(pack.strip()) || pack.contains(",") || pack.contains(";")) throw new CliException("pack requires a nonempty name without commas or semicolons");
+        if (!deps.isEmpty() && java.util.Arrays.stream(deps.split(";", -1)).anyMatch(String::isBlank)) throw new CliException("Empty dependency file in deps");
         isLangSeparated = parameter.has("langSeparated");
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
         outputFiles = ctx.outputFiles();
-        CfgValue cfgValue = ctx.makeValue(tag);
+        PackageBuilder.Result build = ctx.isFixedSchema() || !requires.isEmpty() || !dependencies.isEmpty()
+                ? PackageBuilder.build(ctx, tag, dependencies, pack, requires) : null;
+        CfgValue cfgValue = build == null ? ctx.makeValue(tag) : build.own();
         LangSwitchable langSwitch = ctx.nullableLangSwitch();
 
         // 初始化运行时
@@ -48,78 +61,42 @@ public class BytesGenerator extends GeneratorWithTag {
             langTextPool = new LangTextPool(List.of("default"));
         }
 
-        // schema
-        ByteArrayOutputStream schemaContent = null;
-        if (hasSchema) {
-            // 序列化 schema（使用小端序 ConfigOutput）
-            schemaContent = new ByteArrayOutputStream(1024 * 64);
-            try (ConfigOutput schemaOutput = new ConfigOutput(schemaContent)) {
-                SchemaInterface schema = SchemaParser.parse(cfgValue, langSwitch);
-                new SchemaSerializer(schemaOutput).serializeInterface(schema);
+        writePackage(cfgValue, build == null ? cfgValue : build.effective(), langSwitch, langSwitchRuntime, langTextPool);
+    }
+    private void writePackage(CfgValue value, CfgValue schemaValue, LangSwitchable langSwitch,
+                              LangSwitchableRuntime runtime, LangTextPool texts) {
+        Map<String, String> metadata = new LinkedHashMap<>();
+        metadata.put("pack", pack);
+        if (!requires.isEmpty()) metadata.put("requires", requires);
+        metadata.put("defaultLanguage", texts.getTextPools()[0].getLangName());
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("schema", encode(out -> new SchemaSerializer(out).serializeInterface(SchemaParser.parsePackage(schemaValue, langSwitch))));
+        StringPool strings = new StringPool();
+        Map<String, byte[]> tables = new LinkedHashMap<>();
+        for (CfgValue.VTable table : value.sortedTables()) {
+            tables.put("." + table.name(), CfgValueSerializer.serializeTableBytes(table, strings, texts, runtime));
+        }
+        entries.put("strings", encode(strings::serialize));
+        for (int i = 0; i < texts.getTextPools().length; i++) {
+            TextPool text = texts.getTextPools()[i];
+            if (!isLangSeparated || i == 0) entries.put("text/" + text.getLangName(), encode(text::serializeBody));
+            else {
+                try (ConfigOutput out = createConfigOutput(text.getLangName() + ".bytes")) {
+                    PackageSerializer.write(out, Map.of("pack", pack),
+                            Map.of("text/" + text.getLangName(), encode(text::serializeBody)));
+                }
             }
         }
-
-        // 收集表数据和文本
-        StringPool stringPool = new StringPool(); // 必然启用
-        ByteArrayOutputStream content = new ByteArrayOutputStream(1024 * 1024);
-        try (ConfigOutput valueStream = new ConfigOutput(content)) {
-            CfgValueSerializer serializer = new CfgValueSerializer(valueStream,
-                    stringPool, langTextPool, langSwitchRuntime);
-            serializer.serialize(cfgValue);
-        }
-
-        // 写入文件
-        if (isLangSeparated && langTextPool.getTextPools().length > 1) {
-            // 分离模式：主文件 + 语言文件
-            writeConfigBytes(schemaContent, stringPool, langTextPool, true, content);
-            writeRestLangFiles(langTextPool);
-        } else {
-            // 合并模式：单个文件
-            writeConfigBytes(schemaContent, stringPool, langTextPool, false, content);
-        }
+        entries.putAll(tables);
+        try (ConfigOutput out = createConfigOutput("config.bytes")) { PackageSerializer.write(out, metadata, entries); }
     }
 
-    private void writeConfigBytes(ByteArrayOutputStream schemaContent,
-                                  StringPool stringPool,
-                                  LangTextPool langTextPool,
-                                  boolean isOnlyFirstLang,
-                                  ByteArrayOutputStream content) {
-
-        try (ConfigOutput configOutput = createConfigOutput("config.bytes")) {
-            // 1. Schema（可选）
-            if (schemaContent != null) {
-                // 序列化 schema
-                byte[] schemaBytes = schemaContent.toByteArray();
-                configOutput.writeInt(schemaBytes.length);
-                configOutput.writeRawBytes(schemaBytes);
-            } else {
-                // 表明 无schema
-                configOutput.writeInt(0);
-            }
-
-            // 2. StringPool
-            stringPool.serialize(configOutput);
-
-            // 3. LangTextPool
-            if (isOnlyFirstLang) {
-                langTextPool.serializeFirst(configOutput);
-            } else {
-                langTextPool.serialize(configOutput);
-            }
-            // 4. 表数据
-            configOutput.writeRawBytes(content.toByteArray());
-        }
+    private static byte[] encode(Consumer<ConfigOutput> writer) {
+        var stream = new ByteArrayOutputStream();
+        try (ConfigOutput out = new ConfigOutput(stream)) { writer.accept(out); }
+        return stream.toByteArray();
     }
 
-
-    private void writeRestLangFiles(LangTextPool langTextPool) {
-        for (int i = 1; i < langTextPool.getTextPools().length; i++) {
-            TextPool textPool = langTextPool.getTextPools()[i];
-            try (ConfigOutput out = createConfigOutput(textPool.getLangName() + ".bytes")) {
-                textPool.serialize(out);
-            }
-        }
-    }
 
     private ConfigOutput createConfigOutput(String fileName) {
         CachedFileOutputStream stream = new CachedFileOutputStream(Path.of(dir, fileName), outputFiles);

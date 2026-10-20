@@ -9,16 +9,19 @@ public enum CfgJewelrytype {
 
     private final String value;
 
+
     CfgJewelrytype(String value) {
         this.value = value;
     }
 
-    public static final java.util.Map<String, CfgJewelrytype> map = new java.util.HashMap<>();
+    public static final java.util.Map<String, CfgJewelrytype> map;
 
     static {
+        var symbols = new java.util.LinkedHashMap<String, CfgJewelrytype>();
         for(CfgJewelrytype e : CfgJewelrytype.values()) {
-            map.put(e.value, e);
+            symbols.put(e.value, e);
         }
+        map = java.util.Collections.unmodifiableMap(symbols);
     }
 
     public static CfgJewelrytype get(String value) {

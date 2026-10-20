@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 namespace Config.Equip
 {
@@ -19,28 +18,29 @@ public partial class DAbilityInfo
     public int Id { get; init; } /* 属性类型 */
     public string Name { get; init; } = null!; /* 程序用名字 */
     public DAbility EEnum { get; init; }
-    private static IReadOnlyList<DAbilityInfo> _allList = null!;
-    
-    private static Dictionary<int, DAbilityInfo> _all = null!;
 
     public static DAbilityInfo? Get(int id)
+        => Get(ConfigMgr.GetMgr(), id);
+
+    public static DAbilityInfo? Get(ConfigMgr config, int id)
     {
-        return _all.GetValueOrDefault(id);
+        var index = config._equip_dability_All;
+        return index.TryGetValue(id, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DAbilityInfo> All()
-    {
-        return _allList;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DAbilityInfo> All(ConfigMgr config)
+        => config._equip_dability_Rows;
 }
 
 public static class DAbilityExtensions
 {
-    internal static readonly DAbilityInfo[] _infos = new DAbilityInfo[7];
-
     public static DAbilityInfo Info(this DAbility e)
-    {
-        return _infos[(int)e];
-    }
+        => e.Info(ConfigMgr.GetMgr());
+
+    public static DAbilityInfo Info(this DAbility e, ConfigMgr config)
+        => config._equip_dability_Symbols[(int)e]!;
 }
 }

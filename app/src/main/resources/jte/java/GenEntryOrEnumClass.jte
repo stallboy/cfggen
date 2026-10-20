@@ -1,4 +1,5 @@
 @import configgen.genjava.code.EntryOrEnumModel
+@import configgen.genjava.GenJavaUtil
 @import configgen.genjava.code.Name
 @import configgen.schema.FieldSchema
 @import configgen.schema.ForeignKeySchema
@@ -6,6 +7,14 @@
 @param EntryOrEnumModel model
 package ${model.pkg};
 
+!{
+    String errorsClass = GenJavaUtil.loadValueErrsClass(model.className);
+    String lookup = Name.GetByKeyFunctionNameInConfigMgr(model.name.cfg, model.table.primaryKey(), true, model.table);
+}
+@if(model.isNeedReadData && errorsClass.equals("LoadValueErrs"))
+import configgen.genjava.LoadValueErrs;
+
+@endif
 @if(!model.sourceComment.isEmpty())
 ${model.sourceComment}
 @endif
@@ -24,9 +33,9 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 String fix = c == len ? ";" : ",";
             }
             @if(model.isEnum)
-                ${model.enumFieldName(enumName)}("${enumName}")${fix}
+                ${model.enumFieldName(enumName)}("${enumName}"${model.hasFixedId ? ", " + model.table.meta().assignedEnumId(enumName) : ""})${fix}
             @else
-                public static final ${model.className} ${model.enumFieldName(enumName)} = new ${model.className}("${enumName}");
+                public static final ${model.className} ${model.enumFieldName(enumName)} = new ${model.className}(${c - 1}, "${enumName}"${model.hasFixedId ? ", " + model.table.meta().assignedEnumId(enumName) : ""});
             @endif
         @endfor
         @if(model.isEnum && 0 == c)
@@ -35,13 +44,16 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
 
         private final String value;
-        @if(model.isNeedReadData)
-            private volatile ${model.dataNameFullName} ref;
-        @endif
 
 
-        ${model.className}(String value) {
+        ${model.className}(${model.isEnum ? "" : "int index, "}String value${model.hasFixedId ? ", int fixedId" : ""}) {
+            @if(!model.isEnum)
+                this.index = index;
+            @endif
             this.value = value;
+            @if(model.hasFixedId)
+                this.fixedId = fixedId;
+            @endif
         }
 
     @else
@@ -57,9 +69,9 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 String fix = c == len ? ";" : ",";
             }
             @if(model.isEnum)
-                ${model.enumFieldName(enumName)}("${enumName}", ${value})${fix}
+                ${model.enumFieldName(enumName)}("${enumName}", ${value}${model.hasFixedId ? ", " + model.table.meta().assignedEnumId(enumName) : ""})${fix}
             @else
-                public static final ${model.className} ${model.enumFieldName(enumName)} = new ${model.className}("${enumName}", ${value});
+                public static final ${model.className} ${model.enumFieldName(enumName)} = new ${model.className}(${c - 1}, "${enumName}", ${value}${model.hasFixedId ? ", " + model.table.meta().assignedEnumId(enumName) : ""});
             @endif
         @endfor
         @if(model.isEnum && 0 == c)
@@ -69,25 +81,38 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
         private final String name;
         private final int value;
-        @if(model.isNeedReadData)
-            private volatile ${model.dataNameFullName} ref;
-        @endif
 
 
-        ${model.className}(String name, int value) {
+        ${model.className}(${model.isEnum ? "" : "int index, "}String name, int value${model.hasFixedId ? ", int fixedId" : ""}) {
+            @if(!model.isEnum)
+                this.index = index;
+            @endif
             this.name = name;
             this.value = value;
+            @if(model.hasFixedId)
+                this.fixedId = fixedId;
+            @endif
         }
 
     @endif
 
+    @if(!model.isEnum)
+        private final int index;
+
+    @endif
+    @if(model.hasFixedId)
+        private final int fixedId;
+
+    @endif
     @if(model.isEnum)
-        public static final java.util.Map<${model.hasNoIntValue ? "String" : "Integer"}, ${model.className}> map = new java.util.HashMap<>();
+        public static final java.util.Map<${model.hasNoIntValue ? "String" : "Integer"}, ${model.className}> map;
 
         static {
+            var symbols = new java.util.LinkedHashMap<${model.hasNoIntValue ? "String" : "Integer"}, ${model.className}>();
             for(${model.className} e : ${model.className}.values()) {
-                map.put(e.value, e);
+                symbols.put(e.value, e);
             }
+            map = java.util.Collections.unmodifiableMap(symbols);
         }
 
         public static ${model.className} get(${model.hasNoIntValue ? "String" : "int"} value) {
@@ -106,7 +131,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 @elseif(field == model.entryBase.fieldSchema())
                     return name;
                 @else
-                    return ref.get${StringUtil.upper1(field.name())}();
+                    return ref().get${StringUtil.upper1(field.name())}();
                 @endif
             }
 
@@ -114,7 +139,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
         @for(ForeignKeySchema fk : model.table.foreignKeys())
             public ${model.refType(fk)} ${StringUtil.lower1(Name.refName(fk))}() {
-                return ref.${StringUtil.lower1(Name.refName(fk))}();
+                return ref().${StringUtil.lower1(Name.refName(fk))}();
             }
 
         @endfor
@@ -122,31 +147,56 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
     @if(model.isNeedReadData)
         public ${model.dataNameFullName} ref() {
-            return ref;
+            return ref(${model.codeTopPkg}.ConfigMgr.getMgr());
         }
 
-        void setRef(${model.codeTopPkg}.ConfigMgr mgr) {
-            @if(model.table.primaryKey().fieldSchemas().size() == 1 && model.table.primaryKey().fieldSchemas().getFirst().isSeq())
-                ref = mgr.${model.name.containerPrefix}All[value];
-            @else
-                ref = mgr.${model.name.containerPrefix}All.get(value);
-            @endif
-            configgen.genjava.LoadValueErrs.requireNonNull(ref, "${model.table.name()}.setRef", value);
+        public ${model.dataNameFullName} ref(${model.codeTopPkg}.ConfigMgr mgr) {
+            return mgr._get_${model.name.containerPrefix}Refs(${model.isEnum ? "ordinal()" : "index"});
         }
 
-        @if(model.isEnum)
-            public static void setAllRefs(${model.codeTopPkg}.ConfigMgr mgr) {
-                for(${model.className} e : ${model.className}.values()) {
-                    e.setRef(mgr);
-                }
-            }
-        @else
-            public static void setAllRefs(${model.codeTopPkg}.ConfigMgr mgr) {
+        public static void setAllRefs(${model.codeTopPkg}.ConfigMgr mgr, ${errorsClass} errors) {
+            mgr._set_${model.name.containerPrefix}Refs(new ${model.dataNameFullName}[] {
                 @for(String enumName : model.enumNames)
-                    ${model.enumFieldName(enumName)}.setRef(mgr);
+                    mgr.${lookup}(${model.enumFieldName(enumName)}.value),
                 @endfor
+            });
+            for (var row : mgr._get_${model.name.containerPrefix}All()${model.table.primaryKey().fieldSchemas().getFirst().isSeq() ? "" : ".values()"}) {
+                var key = row.get${StringUtil.upper1(model.table.primaryKey().fieldSchemas().getFirst().name())}();
+                String symbol = row.get${StringUtil.upper1(model.entryBase.fieldSchema().name())}();
+                @if(!model.isEnum)
+                    if (symbol.isEmpty()) continue;
+                @endif
+                @if(model.isEnum && model.hasNoIntValue)
+                    ${model.className} expected = get(symbol);
+                @else
+                    ${model.className} expected = switch (symbol) {
+                        @for(String enumName : model.enumNames)
+                            case "${enumName}" -> ${model.enumFieldName(enumName)};
+                        @endfor
+                        default -> null;
+                    };
+                @endif
+                if (expected == null) {
+                    errors.unknownSymbol("${model.table.name()}", symbol, key, mgr.explain("${model.table.name()}", key));
+                    continue;
+                }
+                @if(!model.hasNoIntValue)
+                    if (key != expected.value) errors.changedSymbolId("${model.table.name()}", symbol, expected.value, key, mgr.explain("${model.table.name()}", key));
+                @endif
+                @if(model.hasFixedId)
+                    if (row.getId() != expected.fixedId) errors.changedSymbolId("${model.table.name()}", symbol, expected.fixedId, row.getId(), mgr.explain("${model.table.name()}", key));
+                @endif
             }
-        @endif
+            @if(model.isEnum)
+                for (${model.className} e : map.values()) {
+                    if (e.ref(mgr) == null) errors.missingSymbol("${model.table.name()}", ${model.hasNoIntValue ? "e.value" : "e.name"}, e.value);
+                }
+            @else
+                @for(String enumName : model.enumNames)
+                    if (${model.enumFieldName(enumName)}.ref(mgr) == null) errors.missingSymbol("${model.table.name()}", "${enumName}", ${model.enumFieldName(enumName)}.value);
+                @endfor
+            @endif
+        }
 
     @endif
 }

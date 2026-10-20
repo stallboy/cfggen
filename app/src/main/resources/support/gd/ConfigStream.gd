@@ -7,86 +7,89 @@ var _pos: int = 0
 var _string_pool: Array[String] = []  # 字符串池，用于去重
 var _lang_names: Array[String] = []  # 语言名称列表
 var _lang_text_pools: Array[Array] = []  # 多语言文本池
+var _failed: bool = false
+var _table_blocks: Dictionary = {}
+
 
 func _init(data: PackedByteArray):
 	_data = data
+
+func valid() -> bool:
+	return not _failed
+
+func remaining() -> int:
+	return _data.size() - _pos
+
+func fail(message: String):
+	_failed = true
+	push_error(message)
+
+func require_bytes(length: int) -> bool:
+	if _failed:
+		return false
+	if length < 0 or length > remaining():
+		fail("Read outside input block: %d" % length)
+		return false
+	return true
+
+func require_end() -> bool:
+	if remaining() != 0:
+		fail("Unconsumed block bytes")
+	return valid()
+
+func read_count(minimum_bytes: int = 4) -> int:
+	var count = read_int32()
+	if count < 0 or minimum_bytes > 0 and count > remaining() / minimum_bytes:
+		fail("Invalid count: %d" % count)
+		return 0
+	return count
+
+func read_bytes(length: int) -> PackedByteArray:
+	if not require_bytes(length):
+		return PackedByteArray()
+	var result = _data.slice(_pos, _pos + length)
+	_pos += length
+	return result
+
+func read_tables() -> Dictionary:
+	return _table_blocks
+
+func read_text_block() -> Array:
+	var indices: Array[int] = []
+	for i in range(read_count()):
+		indices.append(read_int32())
+	var pool: Array[String] = []
+	for i in range(read_count()):
+		pool.append(read_string())
+	var texts: Array[String] = []
+	for index in indices:
+		if index < 0 or index >= pool.size():
+			fail("Invalid text pool index")
+			return []
+		texts.append(pool[index])
+	return texts
 
 
 # 读取字符串池（可选，如果二进制数据使用了 stringpool）
 func read_string_pool():
 	"""读取字符串池，必须在读取字符串数据之前调用"""
-	var count = read_int32()
+	var count = read_count()
 	_string_pool = []
 	for i in range(count):
-		var length = read_int32()
-		if length <= 0:
-			_string_pool.append("")
-		else:
-			var bytes = _data.slice(_pos, _pos + length)
-			_pos += length
-			_string_pool.append(bytes.get_string_from_utf8())
-
-# 读取 LangTextPool（在读取表数据之前调用）
-func read_lang_text_pool():
-	"""读取多语言文本池"""
-	var lang_count = read_int32()
-	_lang_names = []
-	_lang_text_pools = []
-
-	for lang_idx in range(lang_count):
-		var length = read_int32()
-		if length <= 0:
-			_lang_names.append("")
-		else:
-			var bytes = _data.slice(_pos, _pos + length)
-			_pos += length
-			_lang_names.append(bytes.get_string_from_utf8())
-
-		# 读取索引数组
-		var index_count = read_int32()
-		var indices = []
-		for i in range(index_count):
-			indices.append(read_int32())
-
-		# 读取该语言的字符串池
-		var pool_count = read_int32()
-		var pool = []
-		for i in range(pool_count):
-			var str_length = read_int32()
-			if str_length <= 0:
-				pool.append("")
-			else:
-				var bytes = _data.slice(_pos, _pos + str_length)
-				_pos += str_length
-				pool.append(bytes.get_string_from_utf8())
-
-		# 构建文本数组：texts[textIndex] = pool[indices[textIndex]]
-		var texts = []
-		texts.resize(index_count)
-		for i in range(index_count):
-			texts[i] = pool[indices[i]]
-
-		_lang_text_pools.append(texts)
+		_string_pool.append(read_string())
 
 # 读取字符串
 func read_string() -> String:
 	"""直接读取字符串数据"""
 	var length = read_int32()
-	if length <= 0:
-		return ""
-	var bytes = _data.slice(_pos, _pos + length)
-	_pos += length
-	return bytes.get_string_from_utf8()
+	return read_bytes(length).get_string_from_utf8()
 
 # 从字符串池读取字符串
 func read_string_in_pool() -> String:
 	"""从字符串池中读取字符串（通过索引）"""
-	if _string_pool.is_empty():
-		push_error("字符串池未初始化，请先调用 read_string_pool()")
-		return ""
 	var index = read_int32()
 	if index < 0 or index >= _string_pool.size():
-		push_error("字符串索引越界: %d" % index)
+		fail("String pool index out of bounds: %d" % index)
 		return ""
 	return _string_pool[index]
 
@@ -94,36 +97,44 @@ func read_string_in_pool() -> String:
 func read_text_in_pool() -> String:
 	"""从多语言文本池中读取文本（通过索引）"""
 	if _lang_text_pools.is_empty():
-		push_error("文本池未初始化，请先调用 read_lang_text_pool()")
+		fail("Text pools not initialized")
 		return ""
 	var index = read_int32()
 	# 服务器模式：直接使用第一个语言的文本
 	var current_lang_pool = _lang_text_pools[0]
 	if index < 0 or index >= current_lang_pool.size():
-		push_error("文本索引越界: %d" % index)
+		fail("Text index out of bounds: %d" % index)
 		return ""
 	return current_lang_pool[index]
 
 # 读取32位整数
 func read_int32() -> int:
+	if not require_bytes(4):
+		return 0
 	var value = _data.decode_s32(_pos)
 	_pos += 4
 	return value
 
 # 读取64位整数
 func read_int64() -> int:
+	if not require_bytes(8):
+		return 0
 	var value = _data.decode_s64(_pos)
 	_pos += 8
 	return value
 
 # 读取布尔值
 func read_bool() -> bool:
+	if not require_bytes(1):
+		return false
 	var value = _data.decode_s8(_pos) != 0
 	_pos += 1
 	return value
 
 # 读取浮点数
 func read_float() -> float:
+	if not require_bytes(4):
+		return 0.0
 	var value = _data.decode_float(_pos)
 	_pos += 4
 	return value
@@ -131,12 +142,16 @@ func read_float() -> float:
 # 跳过指定字节数
 func skip_bytes(count: int):
 	"""跳过指定数量的字节（用于跳过 Schema）"""
-	_pos += count
+	if require_bytes(count):
+		_pos += count
 
 # 读取文本索引（客户端模式 TEXT 类型字段）
 func read_text_index() -> int:
 	"""读取文本索引（用于 ConfigText）"""
-	return read_int32()
+	var index = read_int32()
+	if _lang_text_pools.is_empty() or index < 0 or index >= _lang_text_pools[0].size():
+		fail("Invalid text index: %d" % index)
+	return index
 
 # 获取语言名称列表
 func get_lang_names() -> Array[String]:

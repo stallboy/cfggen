@@ -56,6 +56,10 @@ public class VTableParser {
     }
 
     public VTable parseTable() {
+        return new VTableCreator(subTableSchema, errs).create(parseRecords());
+    }
+
+    public List<VStruct> parseRecords() {
         boolean hasBlock = HasBlock.hasBlock(tableSchema);
 
         int rowCnt = dTable.rows().size();
@@ -82,7 +86,7 @@ public class VTableParser {
             }
         }
 
-        return new VTableCreator(subTableSchema, errs).create(valueList);
+        return valueList;
     }
 
     // 主键所在格子是否全为空

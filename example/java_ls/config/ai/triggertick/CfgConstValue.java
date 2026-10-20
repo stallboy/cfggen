@@ -2,7 +2,6 @@ package config.ai.triggertick;
 
 public final class CfgConstValue implements config.ai.triggertick.CfgTriggerTick {
     private int value;
-
     private CfgConstValue() {
     }
 
@@ -27,9 +26,8 @@ public final class CfgConstValue implements config.ai.triggertick.CfgTriggerTick
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgConstValue))
+        if (!(other instanceof CfgConstValue o))
             return false;
-        CfgConstValue o = (CfgConstValue) other;
         return value == o.value;
     }
 

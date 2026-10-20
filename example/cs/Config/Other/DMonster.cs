@@ -3,24 +3,27 @@ namespace Config.Other;
 public partial class DMonster
 {
     public required int Id { get; init; }
-    public required List<DPosition> PosList { get; init; }
+    public required IReadOnlyList<DPosition> PosList { get; init; }
     public required int LootId { get; init; } /* loot */
     public required int LootItemId { get; init; } /* item */
-    public required OrderedDictionary<string, int> EnumMap1 { get; init; }
-    public required OrderedDictionary<int, string> EnumMap2 { get; init; }
+    public required IReadOnlyDictionary<string, int> EnumMap1 { get; init; }
+    public required IReadOnlyDictionary<int, string> EnumMap2 { get; init; }
     public Other.DLootitem RefLoot { get; private set; } = null!;
     public Other.DLoot RefAllLoot { get; private set; } = null!;
-    public OrderedDictionary<int, Other.DArgCaptureMode> RefEnumMap2 { get; private set; } = null!;
-    
-    private static System.Collections.Frozen.FrozenDictionary<int, DMonster> _all = null!;
+    public IReadOnlyDictionary<int, Other.DArgCaptureMode> RefEnumMap2 { get; private set; } = null!;
 
     public static DMonster? Get(int id)
+        => Get(ConfigMgr.GetMgr(), id);
+
+    public static DMonster? Get(ConfigMgr config, int id)
     {
-        return _all.GetValueOrDefault(id);
+        var index = config._other_dmonster_All;
+        return index.TryGetValue(id, out var result) ? result : null;
     }
 
     public static IReadOnlyList<DMonster> All()
-    {
-        return _all.Values;
-    }
+        => All(ConfigMgr.GetMgr());
+
+    public static IReadOnlyList<DMonster> All(ConfigMgr config)
+        => config._other_dmonster_Rows;
 }

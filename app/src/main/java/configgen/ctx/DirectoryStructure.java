@@ -202,6 +202,8 @@ public class DirectoryStructure implements JsonTableFiles {
         return getJsonFilesByTable(tableName);
     }
 
+    public Set<String> jsonTableNames() { return Set.copyOf(jsonFiles.keySet()); }
+
     public Collection<JsonFileInfo> getJsonFilesByTable(String tableName) {
         JsonFileList list = jsonFiles.get(tableName);
         if (list == null) {

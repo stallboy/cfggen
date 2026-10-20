@@ -45,15 +45,15 @@ func create${className}(${streamIf} *Stream) *${className} {
         @if (t instanceof StructRef structRef)
             v.${n} = create${model.ClassName(structRef.obj())}(stream)
         @elseif(t instanceof FList (SimpleType item))
-            ${n}Size := stream.ReadInt32()
+            ${n}Size := stream.ReadCount(0)
             v.${n} = make([]${model.type(item)}, ${n}Size)
-            for i := 0; i < int(${n}Size); i++ {
+            for i := 0; i < ${n}Size; i++ {
                 v.${n}[i] = ${model.genReadField(item)}
             }
         @elseif (t instanceof FieldType.FMap (FieldType.SimpleType key, SimpleType value))
-            ${n}Size := stream.ReadInt32()
+            ${n}Size := stream.ReadCount(0)
             v.${n} = make(map[${model.type(key)}]${model.type(value)}, ${n}Size)
-            for i := 0; i < int(${n}Size); i++ {
+            for i := 0; i < ${n}Size; i++ {
                 var k = ${model.genReadField(key)}
                 v.${n}[k] = ${model.genReadField(value)}
             }
@@ -246,7 +246,7 @@ var (
     @endif
     <%--gen Init--%>
     func (t *${className}Mgr) Init(stream *Stream) {
-        cnt := stream.ReadInt32()
+        cnt := int32(stream.ReadCount(1))
         t.all = make([]*${className}, 0, cnt)
         @for (KeySchema keySchema : keySchemas)
         !{

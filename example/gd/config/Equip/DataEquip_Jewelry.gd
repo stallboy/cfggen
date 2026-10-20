@@ -31,7 +31,8 @@ func _to_string() -> String:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
+	_data = {}
+	var count = stream.read_count(1)
 	for i in range(count):
 		var item = _create(stream)
 		_data[item.iD] = item
@@ -52,18 +53,18 @@ static func _create(stream: ConfigStream) -> DataEquip_Jewelry:
 	return instance
 
 
-	# 解析外键引用
-	func _resolve(errors: ConfigErrors):
-		if lvlRank != null:
-			lvlRank._resolve(errors)
-		RefJType = DataEquip_Jewelrytype.find(jType)
-		if RefJType == null:
-			errors.ref_null("equip.jewelry", "JType")
-		NullableRefSuitID = DataEquip_Jewelrysuit.find(suitID)
-		RefKeyAbility = DataEquip_Ability.find(keyAbility)
-		if RefKeyAbility == null:
-			errors.ref_null("equip.jewelry", "KeyAbility")
+# 解析外键引用
+func _resolve(errors: ConfigErrors):
+	if lvlRank != null:
+		lvlRank._resolve(errors)
+	RefJType = DataEquip_Jewelrytype.find(jType)
+	if RefJType == null:
+		errors.ref_null("equip.jewelry", "JType")
+	NullableRefSuitID = DataEquip_Jewelrysuit.find(suitID)
+	RefKeyAbility = DataEquip_Ability.find(keyAbility)
+	if RefKeyAbility == null:
+		errors.ref_null("equip.jewelry", "KeyAbility")
 
-	static func _resolve_refs(errors: ConfigErrors):
-		for item in all():
-			item._resolve(errors)
+static func _resolve_refs(errors: ConfigErrors):
+	for item in all():
+		item._resolve(errors)

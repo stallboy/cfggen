@@ -28,16 +28,13 @@ public class MethodStr {
         return keySchema.fields().stream().map(e -> pre + lower1(e)).collect(Collectors.joining(", "));
     }
 
-    /**
-     * 生成"作为 LoadValueErrs.requireNonNull 的 key 显示参数"的源码表达式：
-     * 单字段直接用变量名（零开销），多字段拼成 {@code "f1,f2"} 字符串（仅多字段外键，少见）。
-     */
+    public static String referenceKey(KeySchema keySchema) {
+        String fields = actualParamsKeyRaw(keySchema, "this.");
+        return keySchema.fields().size() == 1 ? fields : "java.util.List.of(" + fields + ")";
+    }
+
     public static String keyDisplayExpr(KeySchema keySchema) {
-        List<String> fields = keySchema.fields();
-        if (fields.size() == 1) {
-            return lower1(fields.getFirst());
-        }
-        return "\"\" + " + fields.stream().map(StringUtil::lower1).collect(Collectors.joining(" + \",\" + "));
+        return keySchema.fields().stream().map(StringUtil::lower1).collect(Collectors.joining(" + \",\" + "));
     }
 
     public static String hashCodes(List<FieldSchema> fs) {
@@ -54,41 +51,11 @@ public class MethodStr {
     }
 
     public static String tableGet(GenCfg cfg, TableSchema refTable, RefSimple refSimple, String actualParam) {
-        NameableName name = new NameableName(cfg, refTable);
-
         if (refTable.entry() instanceof EntryType.EEnum) {
-            return name.fullName + ".get(" + actualParam + ")";
-        } else {
-            String pre = "mgr." + name.containerPrefix;
-            switch (refSimple) {
-                case RefPrimary ignored -> {
-                    boolean isSeq = refTable.primaryKey().fieldSchemas().size() == 1
-                            && refTable.primaryKey().fieldSchemas().getFirst().isSeq();
-                    if (isSeq) {
-                        return pre + "All[" + actualParam + "]";
-                    } else if (refTable.primaryKey().fieldSchemas().size() == 1) {
-                        return pre + "All.get(" + actualParam + ")";
-                    } else {
-                        return pre + "All.get(new " + Name.keyClassName(cfg, refTable.primaryKey(), name) +
-                                "(" + actualParam + ") )";
-                    }
-                }
-
-                case RefUniq refUniq -> {
-                    boolean isSeq = refUniq.key().fieldSchemas().size() == 1
-                            && refUniq.key().fieldSchemas().getFirst().isSeq();
-                    String mapName = Name.uniqueKeyMapName(refUniq.key());
-                    if (isSeq) {
-                        return pre + mapName + "[" + actualParam + "]";
-                    } else if (refUniq.key().fields().size() == 1) {
-                        return pre + mapName + ".get(" + actualParam + ")";
-                    } else {
-                        return pre + mapName + ".get( new " +
-                                Name.keyClassName(cfg, refUniq.key(), name) + "(" + actualParam + ") )";
-                    }
-                }
-            }
+            return new NameableName(cfg, refTable).fullName + ".get(" + actualParam + ")";
         }
+        KeySchema key = refSimple instanceof RefUniq unique ? unique.key() : refTable.primaryKey();
+        return "mgr." + Name.GetByKeyFunctionNameInConfigMgr(cfg, key, !(refSimple instanceof RefUniq), refTable)
+                + "(" + actualParam + ")";
     }
-
 }

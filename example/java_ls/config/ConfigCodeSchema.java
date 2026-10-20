@@ -4,7 +4,9 @@ import configgen.genjava.*;
 
 public class ConfigCodeSchema {
 
-    public static SchemaInterface getCodeSchema() {
+    public static SchemaInterface getCodeSchema() { return createSchema(false); }
+    public static SchemaInterface getPackageSchema() { return createSchema(true); }
+    private static SchemaInterface createSchema(boolean packageLayout) {
         SchemaInterface schema = new SchemaInterface();
         schema.addImp("Text", Text());
         schema.addImp("LevelRank", LevelRank());
@@ -19,6 +21,7 @@ public class ConfigCodeSchema {
         schema.addImp("ai.ai_action", ai_ai_action());
         schema.addImp("ai.ai_condition", ai_ai_condition());
         schema.addImp("equip.ability", equip_ability());
+        if (packageLayout) schema.addImp("equip.ability_Detail", equip_ability_Detail());
         schema.addImp("equip.equipconfig", equip_equipconfig());
         schema.addImp("equip.equipconfig_Entry", equip_equipconfig_Entry());
         schema.addImp("equip.jewelry", equip_jewelry());
@@ -26,6 +29,7 @@ public class ConfigCodeSchema {
         schema.addImp("equip.jewelrysuit", equip_jewelrysuit());
         schema.addImp("equip.jewelrysuit_Entry", equip_jewelrysuit_Entry());
         schema.addImp("equip.jewelrytype", equip_jewelrytype());
+        if (packageLayout) schema.addImp("equip.jewelrytype_Detail", equip_jewelrytype_Detail());
         schema.addImp("equip.rank", equip_rank());
         schema.addImp("equip.rank_Detail", equip_rank_Detail());
         schema.addImp("other.ArgCaptureMode", other_ArgCaptureMode());
@@ -37,6 +41,7 @@ public class ConfigCodeSchema {
         schema.addImp("other.monster", other_monster());
         schema.addImp("other.signin", other_signin());
         schema.addImp("task.completeconditiontype", task_completeconditiontype());
+        if (packageLayout) schema.addImp("task.completeconditiontype_Detail", task_completeconditiontype_Detail());
         schema.addImp("task.task", task_task());
         schema.addImp("task.task2", task_task2());
         schema.addImp("task.taskextraexp", task_taskextraexp());
@@ -209,6 +214,13 @@ public class ConfigCodeSchema {
         return s2;
     }
 
+    static Schema equip_ability_Detail() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("id", SchemaPrimitive.SInt);
+        s2.addColumn("name", SchemaPrimitive.SStr);
+        return s2;
+    }
+
     static Schema equip_equipconfig() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("entry", SchemaPrimitive.SStr);
@@ -278,6 +290,12 @@ public class ConfigCodeSchema {
         s2.addValue("Bracelet");
         s2.addValue("Magic");
         s2.addValue("Bottle");
+        return s2;
+    }
+
+    static Schema equip_jewelrytype_Detail() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("TypeName", SchemaPrimitive.SStr);
         return s2;
     }
 
@@ -384,6 +402,13 @@ public class ConfigCodeSchema {
         s2.addValue("Chat", 5);
         s2.addValue("TestNoColumn", 6);
         s2.addValue("aa", 7);
+        return s2;
+    }
+
+    static Schema task_completeconditiontype_Detail() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("id", SchemaPrimitive.SInt);
+        s2.addColumn("name", SchemaPrimitive.SStr);
         return s2;
     }
 

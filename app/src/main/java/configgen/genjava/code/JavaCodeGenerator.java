@@ -56,6 +56,8 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
             "ConfigErr.java",
             "ConfigInput.java",
+            "ConfigLoader.java",
+            "ConfigPackage.java",
             "LoadValueErrs.java",
 
             "BytesInspector.java",
@@ -163,14 +165,14 @@ public class JavaCodeGenerator extends GeneratorWithTag {
                     Map.of("pkg", cfg.codeTopPkg(), "tableDataNames", tableDataNames), ps);
         }
 
-        try (var ps = createCode("ConfigLoader.java")) {
-            JteEngine.render("java/ConfigLoader.jte",
-                    Map.of("pkg", cfg.codeTopPkg()), ps);
+        try (var ps = createCode("ConfigExtension.java")) {
+            JteEngine.render("java/ConfigExtension.jte", Map.of("pkg", cfg.codeTopPkg()), ps);
         }
 
         try (var ps = createCode("ConfigMgrLoader.java")) {
             JteEngine.render("java/ConfigMgrLoader.jte",
-                    new ConfigMgrLoaderModel(cfg, cfgValue, setAllRefsInMgrLoader), ps);
+                    new ConfigMgrLoaderModel(cfg, cfgValue, setAllRefsInMgrLoader,
+                            ctx.nullableLangSwitch() == null ? List.of() : ctx.nullableLangSwitch().languages()), ps);
         }
 
         GenConfigCodeSchema.generateAll(this, cfg, schemaNumPerFile, cfgValue, ctx.nullableLangSwitch());
@@ -251,7 +253,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             String entryPostfix = "";
             boolean isEnum = entryBase instanceof EntryType.EEnum;
             if (isEnum) {
-                if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(schema)) {
+                if (!GenJavaUtil.needsTableData(schema)) {
                     isNeedReadData = false;
                 } else {
                     dataPostfix = "_Detail";

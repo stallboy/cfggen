@@ -1,5 +1,7 @@
 package config.equip;
 
+import configgen.genjava.LoadValueErrs;
+
 // struct 作为key，有些生成代码是不支持的
 // 来自：equip/jewelryrandom.csv
 public class Jewelryrandom {
@@ -7,7 +9,6 @@ public class Jewelryrandom {
     private config.Range attackRange;
     private java.util.List<config.Range> otherRange;
     private java.util.List<config.equip.TestPackBean> testPack;
-
     private Jewelryrandom() {
     }
 
@@ -16,7 +17,7 @@ public class Jewelryrandom {
         self.lvlRank = config.LevelRank._create(input);
         self.attackRange = config.Range._create(input);
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.otherRange = java.util.Collections.emptyList();
             } else {
@@ -24,10 +25,11 @@ public class Jewelryrandom {
                 for (; c > 0; c--) {
                     self.otherRange.add(config.Range._create(input));
                 }
+                self.otherRange = java.util.Collections.unmodifiableList(self.otherRange);
             }
         }
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.testPack = java.util.Collections.emptyList();
             } else {
@@ -35,6 +37,7 @@ public class Jewelryrandom {
                 for (; c > 0; c--) {
                     self.testPack.add(config.equip.TestPackBean._create(input));
                 }
+                self.testPack = java.util.Collections.unmodifiableList(self.testPack);
             }
         }
         return self;
@@ -73,8 +76,8 @@ public class Jewelryrandom {
         return "(" + lvlRank + "," + attackRange + "," + otherRange + "," + testPack + ")";
     }
 
-    public void _resolve(config.ConfigMgr mgr) {
-        lvlRank._resolve(mgr);
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        this.lvlRank._resolve(mgr, errors);
     }
 
     public static Jewelryrandom get(config.LevelRank lvlRank) {
@@ -86,25 +89,6 @@ public class Jewelryrandom {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipJewelryrandom();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.equip_jewelryrandom_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                Jewelryrandom self = Jewelryrandom._create(input);
-                mgr.equip_jewelryrandom_All.put(self.lvlRank, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            for (Jewelryrandom e : mgr.equip_jewelryrandom_All.values()) {
-                e._resolve(mgr);
-            }
-        }
-
-    }
 
 }

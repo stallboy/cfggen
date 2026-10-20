@@ -15,14 +15,14 @@ func createAiAi_condition(stream *Stream) *AiAi_condition {
     v.iD = stream.ReadInt32()
     v.desc = stream.ReadStringInPool()
     v.formulaID = stream.ReadInt32()
-    argIListSize := stream.ReadInt32()
+    argIListSize := stream.ReadCount(0)
     v.argIList = make([]int32, argIListSize)
-    for i := 0; i < int(argIListSize); i++ {
+    for i := 0; i < argIListSize; i++ {
         v.argIList[i] = stream.ReadInt32()
     }
-    argSListSize := stream.ReadInt32()
+    argSListSize := stream.ReadCount(0)
     v.argSList = make([]int32, argSListSize)
-    for i := 0; i < int(argSListSize); i++ {
+    for i := 0; i < argSListSize; i++ {
         v.argSList[i] = stream.ReadInt32()
     }
     return v
@@ -67,7 +67,7 @@ func(t *AiAi_conditionMgr) Get(iD int32) *AiAi_condition {
 }
 
 func (t *AiAi_conditionMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*AiAi_condition, 0, cnt)
     t.iDMap = make(map[int32]*AiAi_condition, cnt)
     for i := 0; i < int(cnt); i++ {

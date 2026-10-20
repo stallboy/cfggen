@@ -75,11 +75,17 @@ func _to_string() -> String:
 
 	# 从流初始化
 	static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
+		_data = {}
+		@if(table.entry() instanceof EntryType.EntryBase)
+			@for(String enumName : model._vTable.enumNames())
+				${model.upper1(enumName)} = null
+			@endfor
+		@endif
 		@for(KeySchema uk : table.uniqueKeys())
 			${model.uniqueKeyMapName(uk)} = {}
 		@endfor
 
-		var count = stream.read_int32()
+		var count = stream.read_count(1)
 		for i in range(count):
 			var item = _create(stream)
 			_data[item.${model.primaryKeyFieldName()}] = item
@@ -118,10 +124,10 @@ static func _create(stream: ConfigStream) -> ${model.name.className}:
 		!{String n = field.name();}
 		!{FieldType t = field.type();}
 		@if(t instanceof FList(SimpleType item))
-			for c in range(stream.read_int32()):
+			for c in range(stream.read_count(0)):
 				instance.${model.fieldName(field)}.append(${model.create(item)})
 		@elseif(t instanceof FMap(SimpleType key, SimpleType value))
-			for c in range(stream.read_int32()):
+			for c in range(stream.read_count(0)):
 				var k = ${model.create(key)}
 				var v = ${model.create(value)}
 				instance.${model.fieldName(field)}[k] = v
@@ -133,7 +139,6 @@ static func _create(stream: ConfigStream) -> ${model.name.className}:
 
 
 @if(configgen.schema.HasRef.hasRef(model.structural))
-
 	# 解析外键引用
 	func _resolve(errors: ConfigErrors):
 		@for(FieldSchema field : model.structural.fields())
@@ -146,10 +151,17 @@ static func _create(stream: ConfigStream) -> ${model.name.className}:
 					for item in ${model.fieldName(field)}:
 						if item != null:
 							item._resolve(errors)
-				@elseif(type instanceof FMap)
-					for item in ${model.fieldName(field)}.values():
-						if item != null:
-							item._resolve(errors)
+				@elseif(type instanceof FMap map)
+					@if(configgen.schema.HasRef.hasRef(map.key()))
+						for key in ${model.fieldName(field)}.keys():
+							if key != null:
+								key._resolve(errors)
+					@endif
+					@if(configgen.schema.HasRef.hasRef(map.value()))
+						for value in ${model.fieldName(field)}.values():
+							if value != null:
+								value._resolve(errors)
+					@endif
 				@endif
 			@endif
 		@endfor

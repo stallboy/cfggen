@@ -79,7 +79,7 @@ func(t *EquipEquipconfigMgr) Get(entry string) *EquipEquipconfig {
 }
 
 func (t *EquipEquipconfigMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipEquipconfig, 0, cnt)
     t.entryMap = make(map[string]*EquipEquipconfig, cnt)
     for i := 0; i < int(cnt); i++ {

@@ -26,6 +26,7 @@ public class StructuralClassModel {
     public final boolean hasRef;
     public final String codeTopPkg;
     public final String sourceComment; // 类文件顶部来源注释（trailing + 数据文件路径）；无则空串
+    public final String javaBase;
 
     public record FieldInfo(String name,
                             String type,
@@ -42,6 +43,12 @@ public class StructuralClassModel {
         this.structural = structural;
         this.name = name;
         this.sourceComment = sourceComment;
+        var base = structural.meta().get("javaBase");
+        if (base != null && (!(base instanceof Metadata.MetaStr s) || s.value().isBlank()
+                || !s.value().matches("[\\p{javaJavaIdentifierStart}][\\p{javaJavaIdentifierPart}]*(\\.[\\p{javaJavaIdentifierStart}][\\p{javaJavaIdentifierPart}]*)*"))) {
+            throw new configgen.gen.CliException("Invalid javaBase for " + structural.name());
+        }
+        this.javaBase = structural.meta().getStr("javaBase", "");
         this.pkg = name.pkg;
         this.className = name.className;
         this.isSealedInterface = cfg.isSealedInterface();

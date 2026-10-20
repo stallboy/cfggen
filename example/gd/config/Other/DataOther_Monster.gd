@@ -26,7 +26,8 @@ func _to_string() -> String:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
+	_data = {}
+	var count = stream.read_count(1)
 	for i in range(count):
 		var item = _create(stream)
 		_data[item.id] = item
@@ -35,32 +36,32 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 static func _create(stream: ConfigStream) -> DataOther_Monster:
 	var instance = DataOther_Monster.new()
 	instance.id = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		instance.posList.append(DataPosition._create(stream))
 	instance.lootId = stream.read_int32()
 	instance.lootItemId = stream.read_int32()
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		var k = stream.read_string_in_pool()
 		var v = stream.read_int32()
 		instance.enumMap1[k] = v
-	for c in range(stream.read_int32()):
+	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_string_in_pool()
 		instance.enumMap2[k] = v
 	return instance
 
 
-	# 解析外键引用
-	func _resolve(errors: ConfigErrors):
-		RefAllLoot = DataOther_Loot.find(lootId)
-		if RefAllLoot == null:
-			errors.ref_null("other.monster", "AllLoot")
-		for k in enumMap2.keys():
-			var v = DataOther_ArgCaptureMode.find(enumMap2[k])
-			if v == null:
-				errors.ref_null("other.monster", "enumMap2")
-			RefEnumMap2[k] = v
+# 解析外键引用
+func _resolve(errors: ConfigErrors):
+	RefAllLoot = DataOther_Loot.find(lootId)
+	if RefAllLoot == null:
+		errors.ref_null("other.monster", "AllLoot")
+	for k in enumMap2.keys():
+		var v = DataOther_ArgCaptureMode.find(enumMap2[k])
+		if v == null:
+			errors.ref_null("other.monster", "enumMap2")
+		RefEnumMap2[k] = v
 
-	static func _resolve_refs(errors: ConfigErrors):
-		for item in all():
-			item._resolve(errors)
+static func _resolve_refs(errors: ConfigErrors):
+	for item in all():
+		item._resolve(errors)

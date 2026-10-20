@@ -66,7 +66,7 @@ func(t *OtherArgCaptureModeMgr) GetByid(id int32) *OtherArgCaptureMode {
 }
 
 func (t *OtherArgCaptureModeMgr) Init(stream *Stream) {
-    cnt := stream.ReadInt32()
+    cnt := int32(stream.ReadCount(1))
     t.all = make([]*OtherArgCaptureMode, 0, cnt)
     t.nameMap = make(map[string]*OtherArgCaptureMode, cnt)
     t.idMap = make(map[int32]*OtherArgCaptureMode, cnt)

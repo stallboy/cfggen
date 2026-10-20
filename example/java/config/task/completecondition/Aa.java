@@ -6,7 +6,6 @@ public final class Aa implements config.task.completecondition.Completecondition
         return config.task.Completeconditiontype.AA;
     }
 
-
     public Aa() {
     }
 

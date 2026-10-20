@@ -7,7 +7,6 @@ public final class CfgChat implements config.task.completecondition.CfgCompletec
     }
 
     private String msg;
-
     private CfgChat() {
     }
 
@@ -32,9 +31,8 @@ public final class CfgChat implements config.task.completecondition.CfgCompletec
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgChat))
+        if (!(other instanceof CfgChat o))
             return false;
-        CfgChat o = (CfgChat) other;
         return msg.equals(o.msg);
     }
 

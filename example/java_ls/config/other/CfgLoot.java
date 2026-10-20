@@ -1,5 +1,7 @@
 package config.other;
 
+import configgen.genjava.LoadValueErrs;
+
 // 来自：other/loot.csv
 public class CfgLoot {
     private int lootid;
@@ -18,7 +20,7 @@ public class CfgLoot {
         self.ename = input.readStringInPool();
         self.name = config.Text._create(input);
         {
-            int c = input.readInt();
+            int c = input.readCount(0);
             if (c == 0) {
                 self.chanceList = java.util.Collections.emptyList();
             } else {
@@ -26,6 +28,7 @@ public class CfgLoot {
                 for (; c > 0; c--) {
                     self.chanceList.add(input.readInt());
                 }
+                self.chanceList = java.util.Collections.unmodifiableList(self.chanceList);
             }
         }
         return self;
@@ -69,23 +72,20 @@ public class CfgLoot {
         return "(" + lootid + "," + ename + "," + name + "," + chanceList + ")";
     }
 
-    public void _resolveDirect(config.ConfigMgr mgr) {
-        ListRefLootid = new java.util.ArrayList<>();
-        for (config.other.CfgLootitem v : mgr.other_lootitem_All.values()) {
-            if (v.getLootid() == lootid)
-                ListRefLootid.add(v);
+    public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
+        this.ListRefLootid = new java.util.ArrayList<>();
+        for (config.other.CfgLootitem v : mgr._get_other_lootitem_All().values()) {
+            if (v.getLootid() == this.lootid)
+                this.ListRefLootid.add(v);
         }
-        ListRefLootid = ListRefLootid.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(ListRefLootid);
-        ListRefAnotherWay = new java.util.ArrayList<>();
-        for (config.other.CfgLootitem v : mgr.other_lootitem_All.values()) {
-            if (v.getLootid() == lootid)
-                ListRefAnotherWay.add(v);
+        this.ListRefLootid = java.util.Collections.unmodifiableList(this.ListRefLootid);
+        this.ListRefAnotherWay = new java.util.ArrayList<>();
+        for (config.other.CfgLootitem v : mgr._get_other_lootitem_All().values()) {
+            if (v.getLootid() == this.lootid)
+                this.ListRefAnotherWay.add(v);
         }
-        ListRefAnotherWay = ListRefAnotherWay.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(ListRefAnotherWay);
-    }
+        this.ListRefAnotherWay = java.util.Collections.unmodifiableList(this.ListRefAnotherWay);
 
-    public void _resolve(config.ConfigMgr mgr) {
-        _resolveDirect(mgr);
     }
 
     public static CfgLoot get(int lootid) {
@@ -97,25 +97,6 @@ public class CfgLoot {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherLoot();
     }
-    public static class _ConfigLoader implements config.ConfigLoader {
 
-        @Override
-        public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            int c = input.readInt();
-            mgr.other_loot_All = new java.util.LinkedHashMap<>(c);
-            for (; c > 0; c--) {
-                CfgLoot self = CfgLoot._create(input);
-                mgr.other_loot_All.put(self.lootid, self);
-            }
-        }
-
-        @Override
-        public void resolveAll(config.ConfigMgr mgr) {
-            for (CfgLoot e : mgr.other_loot_All.values()) {
-                e._resolve(mgr);
-            }
-        }
-
-    }
 
 }

@@ -20,9 +20,9 @@ public class Text {
 
     public static Text _create(configgen.genjava.ConfigInput input) {
         Text self = new Text();
-        String[] texts = input.readTextsInPool();
+        int index = input.readTextIndex();
         @for(int i = 0; i < model.languages.size(); i++)
-        self.${model.languages.get(i)} = texts[${i}];
+        self.${model.languages.get(i)} = input.textInPool(${i}, index);
         @endfor
         return self;
     }

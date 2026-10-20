@@ -24,9 +24,13 @@ public static class ${Name.keyClassName(cfg, keySchema)} {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof ${Name.keyClassName(cfg, keySchema)}))
+            if (!(other instanceof ${Name.keyClassName(cfg, keySchema)} o))
                 return false;
-            ${Name.keyClassName(cfg, keySchema)} o = (${Name.keyClassName(cfg, keySchema)}) other;
             return ${MethodStr.equals(keySchema.fieldSchemas())};
+        }
+
+        @Override
+        public String toString() {
+            return "(" + ${MethodStr.keyDisplayExpr(keySchema)} + ")";
         }
     }

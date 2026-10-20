@@ -11,11 +11,10 @@ type Text struct {
 
 func createText(stream *Stream) *Text {
     self := &Text{}
-    texts := stream.ReadTextsInPool()
+    index := stream.ReadTextIndex()
+    pools := stream.GetLangTextPools()
     @for(int i = 0; i < languages.size(); i++)
-    if ${i} < len(texts) {
-        self.${languages.get(i)} = texts[${i}]
-    }
+        self.${languages.get(i)} = pools[${i}][index]
     @endfor
     return self
 }
@@ -24,13 +23,6 @@ func (t *Text) String() string {
     @if(languages.size() == 1)
     return t.${languages.getFirst()}
     @else
-    result := ""
-    @for(int i = 0; i < languages.size(); i++)
-    @if(i > 0)
-    result += ","
-    @endif
-    result += t.${languages.get(i)}
-    @endfor
-    return result
+        return ${String.join(" + \",\" + ", languages.stream().map(lang -> "t." + lang).toList())}
     @endif
 }

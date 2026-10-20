@@ -18,14 +18,7 @@ static class Program
         Console.WriteLine("cipher: " + cipher);
         XorBytesWithCipher(bytes, cipher);
     
-        var loadResult = Loader.LoadBytes(bytes, Processor.Process);
-
-        // 打印警告信息
-        Console.WriteLine("=== Issues ===");
-        foreach (var issue in loadResult.LoadIssues)
-        {
-            Console.WriteLine(issue);
-        }
+        Processor.LoadPackagesAndSetMgr(ConfigPackage.Read(bytes));
         
         Console.WriteLine("\n=== Test Data ===");
         Console.WriteLine(Config.Task.DTask.Get(1));

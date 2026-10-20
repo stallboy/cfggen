@@ -2,31 +2,17 @@
 @param String pkg
 @param List<String> languages
 @param boolean unity
-@if(unity)
-using System;
-using System.Collections.Generic;
-@endif
 
 ${unity ? "namespace " + pkg + "\n{" : "namespace " + pkg + ";"}
 
-@if(unity)
 public partial class Text
 {
     private readonly int _index;
+    private readonly ConfigPools _pool;
 
-    public Text(int index)
-    {
-        _index = index;
-    }
+    private Text(int index, ConfigPools pool) { _index = index; _pool = pool; }
 
-    // 对外接口：从全局文本数组获取文本
-    public string T => TextPoolManager.GetText(_index);
-@else
-public partial class Text(int index)
-{
-    // 对外接口：从全局文本数组获取文本
-    public string T => TextPoolManager.GetText(index);
-@endif
+    public string T => _pool.GetText(_index);
 
     public override string ToString()
     {
@@ -35,7 +21,7 @@ public partial class Text(int index)
 
     internal static Text _create(ConfigReader reader)
     {
-        return new Text(reader.ReadTextIndex());
+        return new Text(reader.ReadTextIndex(), reader.CaptureTextPool());
     }
 }
 @if(unity)
