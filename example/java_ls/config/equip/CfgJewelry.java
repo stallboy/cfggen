@@ -131,12 +131,18 @@ public class CfgJewelry {
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.lvlRank._resolve(mgr, errors);
         this.RefLvlRank = mgr.getEquipJewelry_random(this.lvlRank);
-        if (this.RefLvlRank == null) errors.missingReference("equip.jewelry", "LvlRank", "equip.jewelry_random", this.lvlRank);
+        if (this.RefLvlRank == null) {
+            errors.missingReference("equip.jewelry", "LvlRank", "equip.jewelry_random", this.lvlRank);
+        }
         this.RefJType = config.equip.CfgJewelry_type.get(this.jType);
-        if (this.RefJType == null) errors.missingReference("equip.jewelry", "JType", "equip.jewelry_type", this.jType);
+        if (this.RefJType == null) {
+            errors.missingReference("equip.jewelry", "JType", "equip.jewelry_type", this.jType);
+        }
         this.NullableRefSuitID = mgr.getEquipJewelry_suit(this.suitID);
         this.RefKeyAbility = config.equip.CfgAbility.get(this.keyAbility);
-        if (this.RefKeyAbility == null) errors.missingReference("equip.jewelry", "KeyAbility", "equip.ability", this.keyAbility);
+        if (this.RefKeyAbility == null) {
+            errors.missingReference("equip.jewelry", "KeyAbility", "equip.ability", this.keyAbility);
+        }
 
     }
 

@@ -34,7 +34,7 @@ class DefaultLanguageRuntimeTest {
                 "interface Choice { struct Known { } struct Other { } } interface Solo { struct Only { } } table key_test[id] { id:int; choice:Solo (pack); } table variant[id] { id:int; choice:Choice (pack); } table containers[id] { id:int; values:list<int> (pack); pairs:map<int,int> (pack); } table item[id] { id:int; name:str; desc:text; }",
                 Map.of("item", "id,name,desc\nid,name,desc\n1,Alice,你好\n", "key_test", "id,choice\nid,choice\n1,Only()\n", "variant", "id,choice\nid,choice\n1,Known()\n", "containers", "id,values,pairs\nid,values,pairs\n1,,\n"));
         new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context);
-        var pack = ConfigPackage.read(new ConfigInput(root.resolve("config.bytes")));
+        var pack = ConfigPackage.read(root.resolve("base.bytes"));
         var metadata = new LinkedHashMap<>(pack.metadata());
         metadata.put("defaultLanguage", "zh_cn");
         var blocks = new LinkedHashMap<String, byte[]>();
@@ -72,8 +72,8 @@ class DefaultLanguageRuntimeTest {
                 import configgen.genjava.*;
                 public class Check {
                     public static void main(String[] args) throws Exception {
-                        var base = ConfigPackage.read(new ConfigInput(java.nio.file.Path.of(args[0])));
-                        var mod = ConfigPackage.read(new ConfigInput(java.nio.file.Path.of(args[1])));
+                        var base = ConfigPackage.read(java.nio.file.Path.of(args[0]));
+                        var mod = ConfigPackage.read(java.nio.file.Path.of(args[1]));
                         var original = ConfigMgrLoader.loadPackages(base);
                         var combined = ConfigMgrLoader.loadPackages(base, mod);
                         if (!original.getItem(1).getDesc().equals("你好") || !combined.getItem(1).getDesc().equals("你好")
@@ -87,7 +87,7 @@ class DefaultLanguageRuntimeTest {
         assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null, arguments.toArray(String[]::new)));
         try (var loader = new URLClassLoader(new java.net.URL[]{classes.toUri().toURL()}, getClass().getClassLoader())) {
             loader.loadClass("Check").getMethod("main", String[].class).invoke(null,
-                    (Object) new String[]{root.resolve("localized.bytes").toString(), root.resolve("mod/config.bytes").toString()});
+                    (Object) new String[]{root.resolve("localized.bytes").toString(), root.resolve("mod/mod.bytes").toString()});
         }
     }
 

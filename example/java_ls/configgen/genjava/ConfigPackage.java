@@ -1,5 +1,7 @@
 package configgen.genjava;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 /** Versioned metadata and named blocks. Block views share input bytes but have independent cursors. */
@@ -21,6 +23,10 @@ public final class ConfigPackage {
         this.defaultLanguages = List.of(metadata.getOrDefault("defaultLanguage", "default"));
     }
 
+    public static ConfigPackage read(Path path) throws IOException {
+        return read(new ConfigInput(path));
+    }
+
     public static ConfigPackage read(ConfigInput input) {
         var errors = input.errors();
         int version = input.readInt();
@@ -40,7 +46,9 @@ public final class ConfigPackage {
         for (int i = 0; i < count; i++) {
             String name = input.readString();
             ConfigInput block = input.slice(input.readInt());
-            if (blocks.putIfAbsent(name, block) != null) errors.duplicateKey("block", name);
+            if (blocks.putIfAbsent(name, block) != null) {
+                errors.duplicateKey("block", name);
+            }
         }
         input.requireEnd();
         String name = metadata.get("pack");
@@ -61,7 +69,9 @@ public final class ConfigPackage {
         input.requireEnd();
         String reason = "Incompatible schema or fixed symbols";
         try {
-            if (expected.compatible(actual) && actual.compatible(expected)) return true;
+            if (expected.compatible(actual) && actual.compatible(expected)) {
+                return true;
+            }
         } catch (SchemaCompatibleException failure) {
             reason = failure.getMessage();
         }
@@ -71,21 +81,33 @@ public final class ConfigPackage {
 
     public ConfigInput block(String name, String... languages) {
         ConfigInput block = blocks.get(name);
-        if (block == null) throw new ConfigErr(new LoadValueErrs.MissingBlock(name));
+        if (block == null) {
+            throw new ConfigErr(new LoadValueErrs.MissingBlock(name));
+        }
         var input = block.fork();
         return name.startsWith(".") ? input.withPools(pools(languages)) : input;
     }
 
     public ConfigPackage attach(ConfigPackage... resources) {
-        if (resources.length == 0) return this;
+        if (resources.length == 0) {
+            return this;
+        }
         var errors = new LoadValueErrs();
         var combined = new LinkedHashMap<>(blocks);
         for (var resource : resources) {
-            if (!name().equals(resource.name())) errors.foreignLanguageResource(name(), resource.name());
-            if (resource.blocks.isEmpty()) errors.emptyLanguageResource(resource.name());
+            if (!name().equals(resource.name())) {
+                errors.foreignLanguageResource(name(), resource.name());
+            }
+            if (resource.blocks.isEmpty()) {
+                errors.emptyLanguageResource(resource.name());
+            }
             resource.blocks.forEach((name, block) -> {
-                if (!name.startsWith("text/")) errors.unexpectedLanguageBlock(name);
-                if (combined.putIfAbsent(name, block) != null) errors.duplicateKey("language", name);
+                if (!name.startsWith("text/")) {
+                    errors.unexpectedLanguageBlock(name);
+                }
+                if (combined.putIfAbsent(name, block) != null) {
+                    errors.duplicateKey("language", name);
+                }
             });
         }
         errors.checkErrors();
@@ -95,27 +117,35 @@ public final class ConfigPackage {
     private synchronized ConfigInput pools(String... languages) {
         var selected = languages.length == 0 ? defaultLanguages : List.of(languages);
         var cached = pools.get(selected);
-        if (cached != null) return cached;
+        if (cached != null) {
+            return cached;
+        }
         ConfigInput decoded = block("strings");
         decoded.readStringPool();
         decoded.requireEnd();
         String[] names = selected.toArray(String[]::new);
         ConfigInput[] inputs = new ConfigInput[names.length];
-        for (int i = 0; i < names.length; i++) inputs[i] = block("text/" + names[i]);
+        for (int i = 0; i < names.length; i++) {
+            inputs[i] = block("text/" + names[i]);
+        }
         decoded.readLanguageBlocks(names, inputs);
         pools.put(selected, decoded);
         return decoded;
     }
 
     public String name() {
-        if (name == null) throw new ConfigErr(new LoadValueErrs.MissingPackageName());
+        if (name == null) {
+            throw new ConfigErr(new LoadValueErrs.MissingPackageName());
+        }
         return name;
     }
 
     public List<String> dependencies() { return dependencies; }
 
     private static List<String> parseDependencies(String value, String name, LoadValueErrs errors) {
-        if (value.isEmpty()) return List.of();
+        if (value.isEmpty()) {
+            return List.of();
+        }
         Set<String> result = new LinkedHashSet<>();
         for (String item : value.split(",", -1)) {
             String dependency = item.strip();
@@ -128,13 +158,19 @@ public final class ConfigPackage {
 
     public static void validateOrder(List<ConfigPackage> packages) {
         var errors = new LoadValueErrs();
-        if (packages.isEmpty()) errors.missingBasePackage();
+        if (packages.isEmpty()) {
+            errors.missingBasePackage();
+        }
         Set<String> seen = new HashSet<>();
         for (ConfigPackage pack : packages) {
             String name = pack.name();
-            if (!seen.add(name)) errors.duplicatePackage(name);
+            if (!seen.add(name)) {
+                errors.duplicatePackage(name);
+            }
             for (String dependency : pack.dependencies()) {
-                if (!seen.contains(dependency)) errors.missingDependency(name, dependency);
+                if (!seen.contains(dependency)) {
+                    errors.missingDependency(name, dependency);
+                }
             }
         }
         errors.checkErrors();

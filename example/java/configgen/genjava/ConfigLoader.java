@@ -11,7 +11,7 @@ public final class ConfigLoader<K, T> {
     private final Consumer<Map<K, T>> index;
     private final Consumer<T> resolve;
     private Map<K, T> rows = new LinkedHashMap<>();
-    private Map<K, List<String>> origins = new LinkedHashMap<>();
+    private Map<K, List<String>> origins = new HashMap<>();
 
     public ConfigLoader(String table, LoadValueErrs errors, Function<ConfigInput, T> decode, Function<T, K> key,
                         Consumer<Map<K, T>> index, Consumer<T> resolve) {
@@ -23,18 +23,23 @@ public final class ConfigLoader<K, T> {
         this.resolve = resolve;
     }
 
-    public void read(ConfigInput input, String pack) {
+    public void read(ConfigInput input, String pack, boolean base) {
         input.setErrors(errors);
         int count = input.readCount(1);
         for (int i = 0; i < count; i++) {
             T row = decode.apply(input);
             K id = key.apply(row);
-            var chain = origins.computeIfAbsent(id, ignored -> new ArrayList<>(2));
-            if (rows.put(id, row) != null && pack.equals(chain.getLast())) {
-                errors.duplicateRecord(table, pack, id);
-                continue;
+            boolean duplicate = rows.put(id, row) != null;
+            if (!base) {
+                var chain = origins.computeIfAbsent(id, ignored -> new ArrayList<>(2));
+                duplicate = !chain.isEmpty() && pack.equals(chain.getLast());
+                if (!duplicate) {
+                    chain.add(pack);
+                }
             }
-            chain.add(pack);
+            if (duplicate) {
+                errors.duplicateRecord(table, pack, id);
+            }
         }
         input.requireEnd();
     }
@@ -51,7 +56,8 @@ public final class ConfigLoader<K, T> {
     }
 
     public void resolveAll() {
-        if (resolve == null) return;
-        rows.values().forEach(resolve);
+        if (resolve != null) {
+            rows.values().forEach(resolve);
+        }
     }
 }

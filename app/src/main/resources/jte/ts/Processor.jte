@@ -18,7 +18,11 @@ export class Processor {
     static Process(os: Stream, errors: LoadErrors): void {
         // 读取表数量
         const tables = os.ReadTables();
-        for (const name of Processor.TableNames) if (!tables.has(name)) throw new Error("Missing table in standalone package: " + name);
+        for (const name of Processor.TableNames) {
+            if (!tables.has(name)) {
+                throw new Error("Missing table in standalone package: " + name);
+            }
+        }
         for (const [tableName, tableInput] of tables) {
 
             // 根据表名分发到对应的 Initialize 方法

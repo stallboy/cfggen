@@ -40,8 +40,9 @@ public final class ByServerUpDay implements config.ai.triggertick.TriggerTick {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ByServerUpDay o))
+        if (!(other instanceof ByServerUpDay o)) {
             return false;
+        }
         return init == o.init && coefficient1 == o.coefficient1 && coefficient2 == o.coefficient2;
     }
 

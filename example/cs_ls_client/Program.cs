@@ -5,7 +5,7 @@ static class Program
 {
     public static void Main()
     {
-        var pack = ConfigPackage.ReadFile("config.bytes");
+        var pack = ConfigPackage.ReadFile("base.bytes");
         Processor.LoadPackagesAndSetMgr(pack);
         
         Console.WriteLine("\n=== Test Data ===");

@@ -147,9 +147,9 @@ class RuntimeExtensionTest {
             writeHolder(root.resolve("moddata"));
             Context mod = TestCtx.newContext(root.resolve("moddata"), ctx.cfgSchema().stringify(),
                     Map.of("monster", "id,attack,tags,rank\nid,attack,tags,rank\n1,30,new,10\n2,50,extra,10\n", "rank", "id,name,multiplier\nid,name,multiplier\n10,Green,3\n"));
-            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("mod") + ",pack:map,requires:base,deps:" + root.resolve("base/config.bytes"))).generate(mod);
-            ConfigPackage basePack = ConfigPackage.read(new ConfigInput(root.resolve("base/config.bytes")));
-            ConfigPackage modPack = ConfigPackage.read(new ConfigInput(root.resolve("mod/config.bytes")));
+            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("mod") + ",pack:map,requires:base,deps:" + root.resolve("base/base.bytes"))).generate(mod);
+            ConfigPackage basePack = ConfigPackage.read(root.resolve("base/base.bytes"));
+            ConfigPackage modPack = ConfigPackage.read(root.resolve("mod/map.bytes"));
             var duplicate = duplicatePairRow(modPack);
             var duplicateFailure = assertThrows(java.lang.reflect.InvocationTargetException.class,
                     () -> loading.getMethod("loadPackagesAndSetMgr", ConfigPackage[].class)
@@ -256,24 +256,23 @@ class RuntimeExtensionTest {
             assertSame(baseRank, rank.getClass().getMethod("ref", mgr).invoke(rank, a));
             assertEquals(20, monster.getMethod("power").invoke(rowA));
             assertSame(rowB, monster.getMethod("get", int.class).invoke(null, 1), "Loading does not activate the new instance");
-            assertEquals(List.of("base", "map"), mgr.getMethod("explain", String.class, Object.class)
+            assertEquals(List.of(), mgr.getMethod("explain", String.class, Object.class).invoke(a, "monster", 1));
+            assertEquals(List.of("map"), mgr.getMethod("explain", String.class, Object.class)
                     .invoke(combined, "monster", 1));
             assertEquals("changed", property(mgr.getMethod("getPair", int.class, String.class).invoke(combined, 1, "a"), "getName"));
             assertNull(mgr.getMethod("getPairByName", String.class).invoke(combined, "old"));
             assertEquals("three", property(mgr.getMethod("getStep", int.class).invoke(combined, 3), "getName"));
             var pairKey = loader.loadClass("config.Pair$IdCodeKey").getConstructor(int.class, String.class).newInstance(1, "a");
-            assertEquals(List.of("base", "map"), mgr.getMethod("explain", String.class, Object.class).invoke(combined, "pair", pairKey));
+            assertEquals(List.of("map"), mgr.getMethod("explain", String.class, Object.class).invoke(combined, "pair", pairKey));
             var sources = (List<?>) mgr.getMethod("explain", String.class, Object.class).invoke(combined, "pair", pairKey);
             assertThrows(UnsupportedOperationException.class, sources::clear);
 
             Files.writeString(root.resolve("moddata/step.csv"), "id,name\nid,name\n0,zero\n1,one\n2,two\n3,three\n");
             Context complete = new Context(mod.contextCfg(), ctx.cfgSchema());
             new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("replacement"))).generate(complete);
-            try (var replacement = new ConfigInput(root.resolve("replacement/config.bytes"))) {
-                var replacementPack = ConfigPackage.read(replacement);
-                Object rebuilt = loading.getMethod("loadPackages", ConfigPackage[].class).invoke(null, (Object) new ConfigPackage[]{replacementPack});
-                mgr.getMethod("setMgr", mgr).invoke(null, rebuilt);
-            }
+            var replacementPack = ConfigPackage.read(root.resolve("replacement/base.bytes"));
+            Object rebuilt = loading.getMethod("loadPackages", ConfigPackage[].class).invoke(null, (Object) new ConfigPackage[]{replacementPack});
+            mgr.getMethod("setMgr", mgr).invoke(null, rebuilt);
             assertEquals(20, monster.getMethod("power").invoke(rowA));
             Object reloaded = monster.getMethod("get", int.class).invoke(null, 1);
             assertNotSame(rowA, reloaded);
@@ -281,8 +280,8 @@ class RuntimeExtensionTest {
 
             Files.writeString(root.resolve("moddata/monster.csv"), "id,attack,tags,rank\nid,attack,tags,rank\n1,-1,bad,10\n");
             Context invalidCache = new Context(mod.contextCfg(), ctx.cfgSchema());
-            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("fail") + ",pack:broken,requires:base,deps:" + root.resolve("base/config.bytes"))).generate(invalidCache);
-            var broken = ConfigPackage.read(new ConfigInput(root.resolve("fail/config.bytes")));
+            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("fail") + ",pack:broken,requires:base,deps:" + root.resolve("base/base.bytes"))).generate(invalidCache);
+            var broken = ConfigPackage.read(root.resolve("fail/broken.bytes"));
             Object published = mgr.getMethod("getMgr").invoke(null);
             var failure = assertThrows(java.lang.reflect.InvocationTargetException.class, () -> loading.getMethod("loadPackagesAndSetMgr", ConfigPackage[].class)
                     .invoke(null, (Object) new ConfigPackage[]{basePack, broken}));
@@ -418,9 +417,7 @@ class RuntimeExtensionTest {
     }
 
     private Object load(Class<?> loader) throws Exception {
-        try (var input = new ConfigInput(root.resolve("bytes/config.bytes"))) {
-            var pack = ConfigPackage.read(input);
-            return loader.getMethod("loadPackages", ConfigPackage[].class).invoke(null, (Object) new ConfigPackage[]{pack});
-        }
+        var pack = ConfigPackage.read(root.resolve("bytes/base.bytes"));
+        return loader.getMethod("loadPackages", ConfigPackage[].class).invoke(null, (Object) new ConfigPackage[]{pack});
     }
 }

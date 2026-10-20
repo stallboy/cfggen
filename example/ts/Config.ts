@@ -193,8 +193,9 @@ export class Other_DropItem {
         const self = new Other_DropItem();
         self._chance = os.ReadInt32();
         self._itemids = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._itemids.push(os.ReadInt32());
+        }
         self._countmin = os.ReadInt32();
         self._countmax = os.ReadInt32();
         return self;
@@ -229,11 +230,13 @@ export class Task_TestDefaultBean {
         self._testString = os.ReadStringInPool();
         self._testSubBean = Position._create(os);
         self._testList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._testList.push(os.ReadInt32());
+        }
         self._testList2 = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._testList2.push(os.ReadInt32());
+        }
         self._testMap  = new Map<number, string>();
         for (let c = os.ReadCount(0); c > 0; c--) {
             self._testMap.set(os.ReadInt32(), os.ReadStringInPool());
@@ -469,8 +472,7 @@ export class Ai_Ai {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Ai_Ai>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._ID, self);
         }
@@ -485,8 +487,9 @@ export class Ai_Ai {
         self._TrigTick = Ai_TriggerTick._create(os);
         self._TrigOdds = os.ReadInt32();
         self._ActionID = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._ActionID.push(os.ReadInt32());
+        }
         self._DeathRemove = os.ReadBool();
         return self;
     }
@@ -526,8 +529,7 @@ export class Ai_Ai_action {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Ai_Ai_action>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._ID, self);
         }
@@ -540,11 +542,13 @@ export class Ai_Ai_action {
         self._Desc = os.ReadStringInPool();
         self._FormulaID = os.ReadInt32();
         self._ArgIList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._ArgIList.push(os.ReadInt32());
+        }
         self._ArgSList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._ArgSList.push(os.ReadInt32());
+        }
         return self;
     }
 
@@ -583,8 +587,7 @@ export class Ai_Ai_condition {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Ai_Ai_condition>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._ID, self);
         }
@@ -597,11 +600,13 @@ export class Ai_Ai_condition {
         self._Desc = os.ReadStringInPool();
         self._FormulaID = os.ReadInt32();
         self._ArgIList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._ArgIList.push(os.ReadInt32());
+        }
         self._ArgSList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._ArgSList.push(os.ReadInt32());
+        }
         return self;
     }
 
@@ -660,8 +665,7 @@ export class Equip_Ability {
         this._block = undefined!;
         this._break_armor = undefined!;
         this.all = new Map<number, Equip_Ability>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._id, self);
             if (self._name.trim().length === 0) {
@@ -669,38 +673,45 @@ export class Equip_Ability {
             }
             switch(self._name.trim()) {
                 case "attack":
-                    if (this._attack != null)
+                    if (this._attack != null) {
                         errors.EnumDup("equip.ability", "attack");
+                    }
                     this._attack = self;
                     break;
                 case "defence":
-                    if (this._defence != null)
+                    if (this._defence != null) {
                         errors.EnumDup("equip.ability", "defence");
+                    }
                     this._defence = self;
                     break;
                 case "hp":
-                    if (this._hp != null)
+                    if (this._hp != null) {
                         errors.EnumDup("equip.ability", "hp");
+                    }
                     this._hp = self;
                     break;
                 case "critical":
-                    if (this._critical != null)
+                    if (this._critical != null) {
                         errors.EnumDup("equip.ability", "critical");
+                    }
                     this._critical = self;
                     break;
                 case "critical_resist":
-                    if (this._critical_resist != null)
+                    if (this._critical_resist != null) {
                         errors.EnumDup("equip.ability", "critical_resist");
+                    }
                     this._critical_resist = self;
                     break;
                 case "block":
-                    if (this._block != null)
+                    if (this._block != null) {
                         errors.EnumDup("equip.ability", "block");
+                    }
                     this._block = self;
                     break;
                 case "break_armor":
-                    if (this._break_armor != null)
+                    if (this._break_armor != null) {
                         errors.EnumDup("equip.ability", "break_armor");
+                    }
                     this._break_armor = self;
                     break;
                 default:
@@ -786,8 +797,7 @@ export class Equip_Equip_config {
         this._Instance = undefined!;
         this._Instance2 = undefined!;
         this.all = new Map<string, Equip_Equip_config>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._entry, self);
             if (self._entry.trim().length === 0) {
@@ -795,13 +805,15 @@ export class Equip_Equip_config {
             }
             switch(self._entry.trim()) {
                 case "Instance":
-                    if (this._Instance != null)
+                    if (this._Instance != null) {
                         errors.EnumDup("equip.equip_config", "Instance");
+                    }
                     this._Instance = self;
                     break;
                 case "Instance2":
-                    if (this._Instance2 != null)
+                    if (this._Instance2 != null) {
                         errors.EnumDup("equip.equip_config", "Instance2");
+                    }
                     this._Instance2 = self;
                     break;
                 default:
@@ -888,8 +900,7 @@ export class Equip_Jewelry {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Equip_Jewelry>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._ID, self);
         }
@@ -968,8 +979,7 @@ export class Equip_Jewelry_random {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Equip_Jewelry_random>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._LvlRank.Level + self._LvlRank.Rank * 100000000, self);
         }
@@ -986,11 +996,13 @@ export class Equip_Jewelry_random {
         self._LvlRank = LevelRank._create(os);
         self._AttackRange = Range._create(os);
         self._OtherRange = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._OtherRange.push(Range._create(os));
+        }
         self._TestPack = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._TestPack.push(Equip_TestPackBean._create(os));
+        }
         return self;
     }
 
@@ -1051,8 +1063,7 @@ export class Equip_Jewelry_suit {
     static Initialize(os: Stream, errors: LoadErrors) {
         this._SpecialSuit = undefined!;
         this.all = new Map<number, Equip_Jewelry_suit>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._SuitID, self);
             if (self._Ename.trim().length === 0) {
@@ -1060,8 +1071,9 @@ export class Equip_Jewelry_suit {
             }
             switch(self._Ename.trim()) {
                 case "SpecialSuit":
-                    if (this._SpecialSuit != null)
+                    if (this._SpecialSuit != null) {
                         errors.EnumDup("equip.jewelry_suit", "SpecialSuit");
+                    }
                     this._SpecialSuit = self;
                     break;
                 default:
@@ -1087,8 +1099,9 @@ export class Equip_Jewelry_suit {
         self._Ability3 = os.ReadInt32();
         self._Ability3Value = os.ReadInt32();
         self._SuitList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._SuitList.push(os.ReadInt32());
+        }
         return self;
     }
 
@@ -1132,8 +1145,7 @@ export class Equip_Jewelry_type {
         this._Magic = undefined!;
         this._Bottle = undefined!;
         this.all = new Map<string, Equip_Jewelry_type>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._TypeName, self);
             if (self._TypeName.trim().length === 0) {
@@ -1141,23 +1153,27 @@ export class Equip_Jewelry_type {
             }
             switch(self._TypeName.trim()) {
                 case "Jade":
-                    if (this._Jade != null)
+                    if (this._Jade != null) {
                         errors.EnumDup("equip.jewelry_type", "Jade");
+                    }
                     this._Jade = self;
                     break;
                 case "Bracelet":
-                    if (this._Bracelet != null)
+                    if (this._Bracelet != null) {
                         errors.EnumDup("equip.jewelry_type", "Bracelet");
+                    }
                     this._Bracelet = self;
                     break;
                 case "Magic":
-                    if (this._Magic != null)
+                    if (this._Magic != null) {
                         errors.EnumDup("equip.jewelry_type", "Magic");
+                    }
                     this._Magic = self;
                     break;
                 case "Bottle":
-                    if (this._Bottle != null)
+                    if (this._Bottle != null) {
                         errors.EnumDup("equip.jewelry_type", "Bottle");
+                    }
                     this._Bottle = self;
                     break;
                 default:
@@ -1240,8 +1256,7 @@ export class Equip_Rank {
         this._yellow = undefined!;
         this._red = undefined!;
         this.all = new Map<number, Equip_Rank>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._RankID, self);
             if (self._RankName.trim().length === 0) {
@@ -1249,33 +1264,39 @@ export class Equip_Rank {
             }
             switch(self._RankName.trim()) {
                 case "white":
-                    if (this._white != null)
+                    if (this._white != null) {
                         errors.EnumDup("equip.rank", "white");
+                    }
                     this._white = self;
                     break;
                 case "green":
-                    if (this._green != null)
+                    if (this._green != null) {
                         errors.EnumDup("equip.rank", "green");
+                    }
                     this._green = self;
                     break;
                 case "blue":
-                    if (this._blue != null)
+                    if (this._blue != null) {
                         errors.EnumDup("equip.rank", "blue");
+                    }
                     this._blue = self;
                     break;
                 case "purple":
-                    if (this._purple != null)
+                    if (this._purple != null) {
                         errors.EnumDup("equip.rank", "purple");
+                    }
                     this._purple = self;
                     break;
                 case "yellow":
-                    if (this._yellow != null)
+                    if (this._yellow != null) {
                         errors.EnumDup("equip.rank", "yellow");
+                    }
                     this._yellow = self;
                     break;
                 case "red":
-                    if (this._red != null)
+                    if (this._red != null) {
                         errors.EnumDup("equip.rank", "red");
+                    }
                     this._red = self;
                     break;
                 default:
@@ -1355,8 +1376,7 @@ export class Other_ArgCaptureMode {
         this._Dynamic = undefined!;
         this.all = new Map<string, Other_ArgCaptureMode>();
         this.idMap = new Map<number, Other_ArgCaptureMode>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._name, self);
             this.idMap.set(self._id, self);
@@ -1365,13 +1385,15 @@ export class Other_ArgCaptureMode {
             }
             switch(self._name.trim()) {
                 case "Snapshot":
-                    if (this._Snapshot != null)
+                    if (this._Snapshot != null) {
                         errors.EnumDup("other.ArgCaptureMode", "Snapshot");
+                    }
                     this._Snapshot = self;
                     break;
                 case "Dynamic":
-                    if (this._Dynamic != null)
+                    if (this._Dynamic != null) {
                         errors.EnumDup("other.ArgCaptureMode", "Dynamic");
+                    }
                     this._Dynamic = self;
                     break;
                 default:
@@ -1429,8 +1451,7 @@ export class Other_Drop {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Drop>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._dropid, self);
         }
@@ -1442,8 +1463,9 @@ export class Other_Drop {
         self._dropid = os.ReadInt32();
         self._name = os.ReadTextInPool();
         self._items = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._items.push(Other_DropItem._create(os));
+        }
         self._testmap  = new Map<number, number>();
         for (let c = os.ReadCount(0); c > 0; c--) {
             self._testmap.set(os.ReadInt32(), os.ReadInt32());
@@ -1514,8 +1536,7 @@ export class Other_Key_test {
         this.id1Id3Map = new Map<number, Other_Key_test>();
         this.id2Map = new Map<number, Other_Key_test>();
         this.id2Id3Map = new Map<number, Other_Key_test>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._id1 + self._id2 * 100000000, self);
             this.id1Id3Map.set(self._id1 + self._id3 * 100000000, self);
@@ -1536,12 +1557,14 @@ export class Other_Key_test {
         self._id2 = os.ReadInt64();
         self._id3 = os.ReadInt32();
         self._ids = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._ids.push(os.ReadInt32());
+        }
         self._enumTest = os.ReadStringInPool();
         self._enumList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._enumList.push(os.ReadStringInPool());
+        }
         return self;
     }
 
@@ -1606,8 +1629,7 @@ export class Other_Loot {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Loot>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._lootid, self);
         }
@@ -1625,23 +1647,24 @@ export class Other_Loot {
         self._ename = os.ReadStringInPool();
         self._name = os.ReadTextInPool();
         self._chanceList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._chanceList.push(os.ReadInt32());
+        }
         return self;
     }
 
     _resolve(errors: LoadErrors) {
         this._ListRefLootid = [];
-        for (const v of Other_Loot_item.All().values())
-        {
-            if (v.Lootid === this._lootid)
+        for (const v of Other_Loot_item.All().values()) {
+            if (v.Lootid === this._lootid) {
                 this._ListRefLootid.push(v);
+            }
         }
         this._ListRefAnotherWay = [];
-        for (const v of Other_Loot_item.All().values())
-        {
-            if (v.Lootid === this._lootid)
+        for (const v of Other_Loot_item.All().values()) {
+            if (v.Lootid === this._lootid) {
                 this._ListRefAnotherWay.push(v);
+            }
         }
     }
 }
@@ -1680,8 +1703,7 @@ export class Other_Loot_item {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Loot_item>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._lootid + self._itemid * 100000000, self);
         }
@@ -1739,8 +1761,7 @@ export class Other_Monster {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Monster>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._id, self);
         }
@@ -1756,8 +1777,9 @@ export class Other_Monster {
         const self = new Other_Monster();
         self._id = os.ReadInt32();
         self._posList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._posList.push(Position._create(os));
+        }
         self._lootId = os.ReadInt32();
         self._lootItemId = os.ReadInt32();
         self._enumMap1  = new Map<string, number>();
@@ -1830,8 +1852,7 @@ export class Other_Sign_in {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Sign_in>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._id, self);
         }
@@ -1925,8 +1946,7 @@ export class Task_Complete_condition_type {
         this._TestNoColumn = undefined!;
         this._aa = undefined!;
         this.all = new Map<number, Task_Complete_condition_type>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._id, self);
             if (self._name.trim().length === 0) {
@@ -1934,38 +1954,45 @@ export class Task_Complete_condition_type {
             }
             switch(self._name.trim()) {
                 case "KillMonster":
-                    if (this._KillMonster != null)
+                    if (this._KillMonster != null) {
                         errors.EnumDup("task.complete_condition_type", "KillMonster");
+                    }
                     this._KillMonster = self;
                     break;
                 case "TalkNpc":
-                    if (this._TalkNpc != null)
+                    if (this._TalkNpc != null) {
                         errors.EnumDup("task.complete_condition_type", "TalkNpc");
+                    }
                     this._TalkNpc = self;
                     break;
                 case "CollectItem":
-                    if (this._CollectItem != null)
+                    if (this._CollectItem != null) {
                         errors.EnumDup("task.complete_condition_type", "CollectItem");
+                    }
                     this._CollectItem = self;
                     break;
                 case "ConditionAnd":
-                    if (this._ConditionAnd != null)
+                    if (this._ConditionAnd != null) {
                         errors.EnumDup("task.complete_condition_type", "ConditionAnd");
+                    }
                     this._ConditionAnd = self;
                     break;
                 case "Chat":
-                    if (this._Chat != null)
+                    if (this._Chat != null) {
                         errors.EnumDup("task.complete_condition_type", "Chat");
+                    }
                     this._Chat = self;
                     break;
                 case "TestNoColumn":
-                    if (this._TestNoColumn != null)
+                    if (this._TestNoColumn != null) {
                         errors.EnumDup("task.complete_condition_type", "TestNoColumn");
+                    }
                     this._TestNoColumn = self;
                     break;
                 case "aa":
-                    if (this._aa != null)
+                    if (this._aa != null) {
                         errors.EnumDup("task.complete_condition_type", "aa");
+                    }
                     this._aa = self;
                     break;
                 default:
@@ -2044,8 +2071,7 @@ export class Task_Task {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Task_Task>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._taskid, self);
         }
@@ -2061,8 +2087,9 @@ export class Task_Task {
         const self = new Task_Task();
         self._taskid = os.ReadInt32();
         self._name = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._name.push(os.ReadTextInPool());
+        }
         self._nexttask = os.ReadInt32();
         self._completecondition = Task_Completecondition._create(os);
         self._exp = os.ReadInt32();
@@ -2123,8 +2150,7 @@ export class Task_Task2 {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Task_Task2>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._taskid, self);
         }
@@ -2140,8 +2166,9 @@ export class Task_Task2 {
         const self = new Task_Task2();
         self._taskid = os.ReadInt32();
         self._name = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._name.push(os.ReadTextInPool());
+        }
         self._nexttask = os.ReadInt32();
         self._completecondition = Task_Completecondition._create(os);
         self._exp = os.ReadInt32();
@@ -2149,14 +2176,17 @@ export class Task_Task2 {
         self._testString = os.ReadStringInPool();
         self._testStruct = Position._create(os);
         self._testList = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._testList.push(os.ReadInt32());
+        }
         self._testListStruct = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._testListStruct.push(Position._create(os));
+        }
         self._testListInterface = [];
-        for (let c = os.ReadCount(0); c > 0; c--)
+        for (let c = os.ReadCount(0); c > 0; c--) {
             self._testListInterface.push(Ai_TriggerTick._create(os));
+        }
         return self;
     }
 
@@ -2204,8 +2234,7 @@ export class Task_Task_extra_exp {
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Task_Task_extra_exp>();
-        for (let c = os.ReadCount(1); c > 0; c--)
-        {
+        for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
             this.all.set(self._taskid, self);
         }
@@ -2261,7 +2290,11 @@ export class Processor {
     static Process(os: Stream, errors: LoadErrors): void {
         // 读取表数量
         const tables = os.ReadTables();
-        for (const name of Processor.TableNames) if (!tables.has(name)) throw new Error("Missing table in standalone package: " + name);
+        for (const name of Processor.TableNames) {
+            if (!tables.has(name)) {
+                throw new Error("Missing table in standalone package: " + name);
+            }
+        }
         for (const [tableName, tableInput] of tables) {
 
             // 根据表名分发到对应的 Initialize 方法

@@ -10,18 +10,26 @@ namespace Config.Task
             var valueTestSubBean = DPosition._create(reader);
             int Count_valueTestList = reader.ReadCount(0);
             IReadOnlyList<int> valueTestList;
-            if (Count_valueTestList == 0) valueTestList = Array.Empty<int>();
+            if (Count_valueTestList == 0) {
+                valueTestList = Array.Empty<int>();
+            }
             else {
                 var values_valueTestList = new List<int>(Count_valueTestList);
-                for (int i = 0; i < Count_valueTestList; i++) values_valueTestList.Add(reader.ReadInt32());
+                for (int i = 0; i < Count_valueTestList; i++) {
+                    values_valueTestList.Add(reader.ReadInt32());
+                }
                 valueTestList = values_valueTestList.AsReadOnly();
             }
             int Count_valueTestList2 = reader.ReadCount(0);
             IReadOnlyList<int> valueTestList2;
-            if (Count_valueTestList2 == 0) valueTestList2 = Array.Empty<int>();
+            if (Count_valueTestList2 == 0) {
+                valueTestList2 = Array.Empty<int>();
+            }
             else {
                 var values_valueTestList2 = new List<int>(Count_valueTestList2);
-                for (int i = 0; i < Count_valueTestList2; i++) values_valueTestList2.Add(reader.ReadInt32());
+                for (int i = 0; i < Count_valueTestList2; i++) {
+                    values_valueTestList2.Add(reader.ReadInt32());
+                }
                 valueTestList2 = values_valueTestList2.AsReadOnly();
             }
             int Count_valueTestMap = reader.ReadCount(0);
@@ -29,7 +37,9 @@ namespace Config.Task
             for (int i = 0; i < Count_valueTestMap; i++) {
                 var key = reader.ReadInt32();
                 var value = reader.ReadStringInPool();
-                if (!valueTestMap.TryAdd(key, value)) reader.Errors.DuplicateKey("task.TestDefaultBean.testMap", key);
+                if (!valueTestMap.TryAdd(key, value)) {
+                    reader.Errors.DuplicateKey("task.TestDefaultBean.testMap", key);
+                }
             }
             return new DTestDefaultBean {
                 TestInt = valueTestInt,
@@ -68,32 +78,49 @@ namespace Config.Task
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DCompleteConditionTypeInfo>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
                 string name = self.Name;
                 int symbol = (int)self.EEnum;
-                if (symbol < 0) errors.UnknownSymbol("task.complete_condition_type", name, key, config.Explain("task.complete_condition_type", key));
+                if (symbol < 0) {
+                    errors.UnknownSymbol("task.complete_condition_type", name, key, config.Explain("task.complete_condition_type", key));
+                }
                 else {
-                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("task.complete_condition_type", name, _symbolKeys[symbol], key, config.Explain("task.complete_condition_type", key));
+                    if (!key.Equals(_symbolKeys[symbol])) {
+                        errors.ChangedSymbolId("task.complete_condition_type", name, _symbolKeys[symbol], key, config.Explain("task.complete_condition_type", key));
+                    }
                 }
             }
             config._task_dcomplete_ucondition_utype_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DCompleteConditionTypeInfo>(s_all);
             config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.KillMonster] = Get(config, 1);
-            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.KillMonster] == null) errors.MissingSymbol("task.complete_condition_type", "KillMonster", 1);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.KillMonster] == null) {
+                errors.MissingSymbol("task.complete_condition_type", "KillMonster", 1);
+            }
             config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TalkNpc] = Get(config, 2);
-            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TalkNpc] == null) errors.MissingSymbol("task.complete_condition_type", "TalkNpc", 2);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TalkNpc] == null) {
+                errors.MissingSymbol("task.complete_condition_type", "TalkNpc", 2);
+            }
             config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.CollectItem] = Get(config, 3);
-            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.CollectItem] == null) errors.MissingSymbol("task.complete_condition_type", "CollectItem", 3);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.CollectItem] == null) {
+                errors.MissingSymbol("task.complete_condition_type", "CollectItem", 3);
+            }
             config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.ConditionAnd] = Get(config, 4);
-            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.ConditionAnd] == null) errors.MissingSymbol("task.complete_condition_type", "ConditionAnd", 4);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.ConditionAnd] == null) {
+                errors.MissingSymbol("task.complete_condition_type", "ConditionAnd", 4);
+            }
             config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Chat] = Get(config, 5);
-            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Chat] == null) errors.MissingSymbol("task.complete_condition_type", "Chat", 5);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Chat] == null) {
+                errors.MissingSymbol("task.complete_condition_type", "Chat", 5);
+            }
             config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TestNoColumn] = Get(config, 6);
-            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TestNoColumn] == null) errors.MissingSymbol("task.complete_condition_type", "TestNoColumn", 6);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.TestNoColumn] == null) {
+                errors.MissingSymbol("task.complete_condition_type", "TestNoColumn", 6);
+            }
             config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Aa] = Get(config, 7);
-            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Aa] == null) errors.MissingSymbol("task.complete_condition_type", "aa", 7);
+            if (config._task_dcomplete_ucondition_utype_Symbols[(int)DCompleteConditionType.Aa] == null) {
+                errors.MissingSymbol("task.complete_condition_type", "aa", 7);
+            }
             config._task_dcomplete_ucondition_utype_Rows = list.AsReadOnly();
         }
 
@@ -142,8 +169,7 @@ namespace Config.Task
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DTask>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
@@ -156,10 +182,14 @@ namespace Config.Task
             var valueTaskid = reader.ReadInt32();
             int Count_valueName = reader.ReadCount(0);
             IReadOnlyList<string> valueName;
-            if (Count_valueName == 0) valueName = Array.Empty<string>();
+            if (Count_valueName == 0) {
+                valueName = Array.Empty<string>();
+            }
             else {
                 var values_valueName = new List<string>(Count_valueName);
-                for (int i = 0; i < Count_valueName; i++) values_valueName.Add(reader.ReadTextInPool());
+                for (int i = 0; i < Count_valueName; i++) {
+                    values_valueName.Add(reader.ReadTextInPool());
+                }
                 valueName = values_valueName.AsReadOnly();
             }
             var valueNexttask = reader.ReadInt32();
@@ -207,8 +237,7 @@ namespace Config.Task
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DTask2>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
@@ -221,10 +250,14 @@ namespace Config.Task
             var valueTaskid = reader.ReadInt32();
             int Count_valueName = reader.ReadCount(0);
             IReadOnlyList<string> valueName;
-            if (Count_valueName == 0) valueName = Array.Empty<string>();
+            if (Count_valueName == 0) {
+                valueName = Array.Empty<string>();
+            }
             else {
                 var values_valueName = new List<string>(Count_valueName);
-                for (int i = 0; i < Count_valueName; i++) values_valueName.Add(reader.ReadTextInPool());
+                for (int i = 0; i < Count_valueName; i++) {
+                    values_valueName.Add(reader.ReadTextInPool());
+                }
                 valueName = values_valueName.AsReadOnly();
             }
             var valueNexttask = reader.ReadInt32();
@@ -235,26 +268,38 @@ namespace Config.Task
             var valueTestStruct = DPosition._create(reader);
             int Count_valueTestList = reader.ReadCount(0);
             IReadOnlyList<int> valueTestList;
-            if (Count_valueTestList == 0) valueTestList = Array.Empty<int>();
+            if (Count_valueTestList == 0) {
+                valueTestList = Array.Empty<int>();
+            }
             else {
                 var values_valueTestList = new List<int>(Count_valueTestList);
-                for (int i = 0; i < Count_valueTestList; i++) values_valueTestList.Add(reader.ReadInt32());
+                for (int i = 0; i < Count_valueTestList; i++) {
+                    values_valueTestList.Add(reader.ReadInt32());
+                }
                 valueTestList = values_valueTestList.AsReadOnly();
             }
             int Count_valueTestListStruct = reader.ReadCount(0);
             IReadOnlyList<DPosition> valueTestListStruct;
-            if (Count_valueTestListStruct == 0) valueTestListStruct = Array.Empty<DPosition>();
+            if (Count_valueTestListStruct == 0) {
+                valueTestListStruct = Array.Empty<DPosition>();
+            }
             else {
                 var values_valueTestListStruct = new List<DPosition>(Count_valueTestListStruct);
-                for (int i = 0; i < Count_valueTestListStruct; i++) values_valueTestListStruct.Add(DPosition._create(reader));
+                for (int i = 0; i < Count_valueTestListStruct; i++) {
+                    values_valueTestListStruct.Add(DPosition._create(reader));
+                }
                 valueTestListStruct = values_valueTestListStruct.AsReadOnly();
             }
             int Count_valueTestListInterface = reader.ReadCount(0);
             IReadOnlyList<Ai.DTriggerTick> valueTestListInterface;
-            if (Count_valueTestListInterface == 0) valueTestListInterface = Array.Empty<Ai.DTriggerTick>();
+            if (Count_valueTestListInterface == 0) {
+                valueTestListInterface = Array.Empty<Ai.DTriggerTick>();
+            }
             else {
                 var values_valueTestListInterface = new List<Ai.DTriggerTick>(Count_valueTestListInterface);
-                for (int i = 0; i < Count_valueTestListInterface; i++) values_valueTestListInterface.Add(Ai.DTriggerTick._create(reader));
+                for (int i = 0; i < Count_valueTestListInterface; i++) {
+                    values_valueTestListInterface.Add(Ai.DTriggerTick._create(reader));
+                }
                 valueTestListInterface = values_valueTestListInterface.AsReadOnly();
             }
             return new DTask2 {
@@ -303,8 +348,7 @@ namespace Config.Task
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DTaskExtraExp>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
@@ -404,8 +448,12 @@ namespace Config.Task.Completecondition
         public void _resolve(LoadErrors errors, ConfigMgr config)
         {
             var rRefMonsterid = Other.DMonster.Get(config, Monsterid);
-            if (rRefMonsterid == null) errors.MissingReference("KillMonster", "monsterid", "other.monster", this.Monsterid);
-            else RefMonsterid = rRefMonsterid;
+            if (rRefMonsterid == null) {
+                errors.MissingReference("KillMonster", "monsterid", "other.monster", this.Monsterid);
+            }
+            else {
+                RefMonsterid = rRefMonsterid;
+            }
         }
 
     }

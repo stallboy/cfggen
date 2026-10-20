@@ -40,8 +40,9 @@ public final class CfgByServerUpDay implements config.ai.triggertick.CfgTriggerT
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgByServerUpDay o))
+        if (!(other instanceof CfgByServerUpDay o)) {
             return false;
+        }
         return init == o.init && coefficient1 == o.coefficient1 && coefficient2 == o.coefficient2;
     }
 

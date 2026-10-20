@@ -23,7 +23,7 @@ sidebar:
 | 静态查询 | 查询当前默认实例；其他实例通过实例 API 查询 |
 | enum 和 entry | 符号名、ID 及映射固定；允许覆盖已有符号的详情数据；普通数据 ID 可新增 |
 | 包构建 | 提供共享 schema、基础包及声明的依赖；验证有效组合，但只导出当前包自己的记录 |
-| 包描述 | `config.bytes` 先写 int32 协议版本，再写 `map<string, string>` metadata 和命名数据块；包名和依赖为约定键，不增加清单文件或内容哈希 |
+| 包描述 | `base.bytes` 先写 int32 协议版本，再写 `map<string, string>` metadata 和命名数据块；包名和依赖为约定键，不增加清单文件或内容哈希 |
 | 来源 | 内存保留包、表、主键和覆盖链，不做字段级追踪及运行时 Excel 行定位 |
 | builder | 保留未绑定语义；不自动执行扩展初始化，首版不提供 `buildIn(cfg)` |
 | 只读 | 加载后的索引和数据集合对外只读；Java 和 C# 同时落实 |
@@ -34,7 +34,7 @@ sidebar:
 
 ### 2.1 metadata 与命名数据块
 
-继续使用 `config.bytes`，采用以下逻辑结构，仅协议版本作为固定前缀，包名和依赖继续是 metadata 约定键。详细编码、边界和迁移规则见 [config.bytes 格式优化设计](./config-bytes-format-design.md)。
+主包命名为 `<pack>.bytes`，默认包为 `base.bytes`。分离语言资源命名为 `<pack>_<language>.bytes`，例如 `base_en.bytes` 和 `desert-map_en.bytes`，可在同一目录中存放多个包。容器采用以下逻辑结构，仅协议版本作为固定前缀，包名和依赖继续是 metadata 约定键。详细编码、边界和迁移规则见 [配置包二进制格式设计](./config-bytes-format-design.md)。
 
 ```text
 formatVersion: int32
@@ -52,7 +52,7 @@ metadata 使用直接编码的带长度 UTF-8 字符串，不依赖后面的池�
 
 包名是稳定标识，区别于文件路径。名字按原值精确匹配，重复包名直接报错。一个实例的第一个包作为基础包，后续包作为增量层；不额外引入清单中的包种类字段。
 
-默认仍可使用单个 `config.bytes`。若启用分离语言文件，语言文件使用相同容器，只带所属包 metadata 和语言块；它是资源，不作为额外数据包参与覆盖。不增加另一套清单。块名、块内编码与传输契约在 Java/C# 中一致，块的物理顺序不决定读取语义。
+默认仍可使用单个 `base.bytes`。若启用分离语言文件，语言文件使用相同容器，只带所属包 metadata 和语言块；它是资源，不作为额外数据包参与覆盖。不增加另一套清单。块名、块内编码与传输契约在 Java/C# 中一致，块的物理顺序不决定读取语义。
 
 ### 2.2 依赖与覆盖顺序
 
@@ -360,10 +360,10 @@ Java `builder.build()`、struct 构造器、C# 对象初始化器构造的都是
 
 ```shell
 java -jar app/build/libs/cfggen.jar -datadir config -gen java,dir:generated/java -gen cs,dir:generated/cs -gen bytes,pack:base,dir:out/base
-java -jar app/build/libs/cfggen.jar -datadir mods/desert -schema config/config.cfg -gen bytes,pack:desert,requires:base,deps:out/base/config.bytes,dir:out/desert
+java -jar app/build/libs/cfggen.jar -datadir mods/desert -schema config/config.cfg -gen bytes,pack:desert,requires:base,deps:out/base/base.bytes,dir:out/desert
 ```
 
-现有参数用冒号赋值、逗号分隔。多个依赖分别写为 `requires:base;balance,deps:out/base/config.bytes;out/balance/config.bytes`，整个 `bytes,...` 参数加 shell 引号。`deps` 按显式顺序包含全部直接/传递依赖，`requires` 仅声明直接依赖；包名禁止逗号、分号和首尾空白。`-schema` 接受共享根文件或目录，一起读取模块定义，不 align、不写回；未知数据表报错。
+现有参数用冒号赋值、逗号分隔。多个依赖分别写为 `requires:base;balance,deps:out/base/base.bytes;out/balance/balance.bytes`，整个 `bytes,...` 参数加 shell 引号。`deps` 按显式顺序包含全部直接/传递依赖，`requires` 仅声明直接依赖；包名同时作为文件名，禁止路径分隔符、保留字符、逗号、分号和首尾空白。`-schema` 接受共享根文件或目录，一起读取模块定义，不 align、不写回；未知数据表报错。
 
 包名默认为 `base`，始终包含 schema，直接 `-gen bytes` 即可输出版本化容器。只支持当前格式，旧数据须重新导出；不提供 `format` 或 `schema` 导出选项。多个独立包应显式指定各自的 `pack`。Mod 只重新导出数据，不重新生成/编译业务代码。Java 父类和 C# partial 源码都应放在生成目录之外。
 
@@ -372,20 +372,20 @@ java -jar app/build/libs/cfggen.jar -datadir mods/desert -schema config/config.c
 ### Java 和 C#
 
 ```java
-// ConfigPackage、ConfigInput 位于 configgen.genjava；其余类型位于生成目标包。
-ConfigPackage base = ConfigPackage.read(new ConfigInput(Path.of("out/base/config.bytes")));
-ConfigPackage mod = ConfigPackage.read(new ConfigInput(Path.of("out/desert/config.bytes")));
+// ConfigPackage 位于 configgen.genjava；其余类型位于生成目标包。
+ConfigPackage base = ConfigPackage.read(Path.of("out/base/base.bytes"));
+ConfigPackage mod = ConfigPackage.read(Path.of("out/desert/desert.bytes"));
 ConfigMgr original = ConfigMgrLoader.loadPackages(base);
 ConfigMgr game = ConfigMgrLoader.loadPackages(base, mod);
 ConfigMgr.setMgr(game);
 Monster added = Monster.get(1002);
 Monster old = original.getMonster(1);
-var chain = game.explain("monster", 1); // [base, desert]
+var chain = game.explain("monster", 1); // [desert]
 ```
 
 ```csharp
-var original = Processor.LoadPackages(ConfigPackage.ReadFile("out/base/config.bytes"));
-var game = Processor.LoadPackages(ConfigPackage.ReadFile("out/base/config.bytes"), ConfigPackage.ReadFile("out/desert/config.bytes"));
+var original = Processor.LoadPackages(ConfigPackage.ReadFile("out/base/base.bytes"));
+var game = Processor.LoadPackages(ConfigPackage.ReadFile("out/base/base.bytes"), ConfigPackage.ReadFile("out/desert/desert.bytes"));
 ConfigMgr.SetMgr(game);
 var added = DMonster.Get(1002);
 var old = DMonster.Get(original, 1);
@@ -401,7 +401,7 @@ Java 的 `configgen.genjava.ConfigLoader<K, T>` 是普通 Java 支持类，随�
 
 加载器合并主键 Map，在索引交接前封闭可变 Map 并冻结来源列表，随后把只读容器交给 `ConfigMgr`。内部 `_set_` 接管生成器独占的容器并包装只读视图，不再复制整张 Map/List；调用方交接后不得继续修改底层容器。无外键的表不遍历解析；错误上下文延迟到实际发现错误时才格式化，成功记录不拼接诊断文字。稀疏包只扫描自身实际存在的表块，不遍历 schema 全部表。
 
-包内重复主键通过来源链的最后一个包名识别，无需 `localKeys`。总加载器用 `ConfigLoader<?, ?>` 分发表数据，无 `Object` 记录容器或行强转；返回配置后不再持有临时加载器。完成阶段依次：建索引、建立符号引用缓存并校验符号、解析引用、绑定全部扩展、执行回调、标记就绪。缓存由生成的 `setAllRefs` 一次建立，解析阶段即可使用；只为有详情数据的 enum 和 entry 分配缓存。
+第一包视为基础包，不为其记录建立来源项；`origins` 只保存后续 Mod 写入的主键与包名链，未改动的基础数据查询来源时返回空列表。基础包重复主键用合并索引识别，Mod 包内重复主键通过来源链的最后一个包名识别，无需 `localKeys`。总加载器用 `ConfigLoader<?, ?>` 分发表数据，无 `Object` 记录容器或行强转；返回配置后不再持有临时加载器。完成阶段依次：建索引、建立符号引用缓存并校验符号、解析引用、绑定全部扩展、执行回调、标记就绪。缓存由生成的 `setAllRefs` 一次建立，解析阶段即可使用；只为有详情数据的 enum 和 entry 分配缓存。
 
 Java 生成代码及支持源码以 JDK 25 为目标。`LoadValueErrs.Error` 为 sealed interface，permits 具体的 record：`MissingReference` 携带来源类型、字段、目标表、引用键，`InvalidSeq` 携带值和有效大小，`ChangedSymbolId` 携带预期和实际 ID，包依赖及二进制格式错误也各有参数明确的 record。错误所需参数直接放在各自 record 中，无 `Row` 包装或 `at` 可变上下文。包内重复主键用 `DuplicateRecord(table, pack, key)`，最终唯一键冲突用 `DuplicateUniqueKey(table, field, rowKey, key, packs)`；索引和符号错误保留自己的来源链。引用错误只记录结构、字段、目标和引用键，复合键保留为值列表。公共收集方法按类别提供，只记录调用方已判断的错误；不接收待校验对象、不读取包、不比较 schema，通用的 `add/fail` 均为 private。
 
@@ -435,7 +435,7 @@ C# 错误使用 `LoadError` record 层级，具体 record 只保存各自需要�
 | Go | `InitPackage(ReadPackage(data))` | 完整单包；`Init(io.Reader)` 同样读取新格式 |
 | Godot | `ConfigProcessor.new().load_from_package(ConfigPackage.read_file(path), errors)` | 完整单包 |
 
-TS 的 `ConfigPackage` 从 `ConfigUtil.ts` 导出。后三者保持既有静态/全局对象模型，拒绝带 `requires` 或缺少所需表的独立包，避免误用旧数据完成增量覆盖；它们不提供 Java/C# 的 Mod 组合 API。Lua 本身输出 Lua 数据，不消费 `config.bytes`。
+TS 的 `ConfigPackage` 从 `ConfigUtil.ts` 导出。后三者保持既有静态/全局对象模型，拒绝带 `requires` 或缺少所需表的独立包，避免误用旧数据完成增量覆盖；它们不提供 Java/C# 的 Mod 组合 API。Lua 本身输出 Lua 数据，不消费 `base.bytes`。
 
 C# client 使用所属包的文本池，以 `TextPoolManager.Language` 选择语言。TS/Go/Godot client 保持原有 TextPoolManager 用法，从返回 stream 的语言池选择当前语言。serverText 生成各语言字段。
 

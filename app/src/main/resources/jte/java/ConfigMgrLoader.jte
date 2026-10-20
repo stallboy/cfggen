@@ -26,12 +26,18 @@ public class ConfigMgrLoader {
         var expected = ConfigCodeSchema.getPackageSchema();
         for (var pack : packages) {
             String packName = pack.name();
-            if (!pack.validateSchema(expected, errors)) continue;
+            if (!pack.validateSchema(expected, errors)) {
+                continue;
+            }
             for (String block : pack.blockNames()) {
-                if (!block.startsWith(".")) continue;
+                if (!block.startsWith(".")) {
+                    continue;
+                }
                 String table = block.substring(1);
                 var loader = loaders.get(table);
-                if (loader != null) loader.read(pack.block(block${model.languageLiterals.isEmpty() ? "" : ", LANGUAGES"}), packName);
+                if (loader != null) {
+                    loader.read(pack.block(block${model.languageLiterals.isEmpty() ? "" : ", LANGUAGES"}), packName, pack == packages[0]);
+                }
             }
         }
         return finish(mgr, loaders, errors);
@@ -46,7 +52,9 @@ public class ConfigMgrLoader {
         @for(String fc : model.setAllRefs_FullClassNames)
         ${fc}.setAllRefs(mgr, errors);
         @endfor
-        for (var loader : loaders.values()) loader.resolveAll();
+        for (var loader : loaders.values()) {
+            loader.resolveAll();
+        }
         errors.checkErrors();
         @if(!model.extensionRows.isEmpty())
         var seen = Collections.newSetFromMap(new IdentityHashMap<ConfigExtension, Boolean>());
@@ -58,9 +66,13 @@ public class ConfigMgrLoader {
             }
         };
         @for(String rows : model.extensionRows)
-        for (var row : ${rows}) row._collectExtensions(collect);
+        for (var row : ${rows}) {
+            row._collectExtensions(collect);
+        }
         @endfor
-        for (var extension : extensions) extension.onConfigReady();
+        for (var extension : extensions) {
+            extension.onConfigReady();
+        }
         @endif
         mgr.markReady();
         return mgr;

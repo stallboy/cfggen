@@ -39,7 +39,7 @@ Parameters can be in any order, but -datadir is required when using generators.
         csvencoding=GBK
         headrow=2
     -tool bytesview
-        bytes=config.bytes
+        bytes=base.bytes
         match=null
     -tool term       查看术语，或检查术语使用情况
         todo=null
@@ -117,10 +117,10 @@ Parameters can be in any order, but -datadir is required when using generators.
         own=null
         dir=.
         cipher=              xor加密
-        pack=base            新格式默认包名，Mod 应指定独立包名
+        pack=base            主文件为 <pack>.bytes，Mod 应指定独立包名
         requires=            多个直接依赖用分号分隔
         deps=                按加载顺序给出依赖包路径，多个用分号分隔
-        langSeparated        ,默认为false
+        langSeparated        额外语言输出 <pack>_<language>.bytes，默认为false
     -gen lua         生成lua代码（数据也是代码）
         own=null
         dir=.                生成代码所在目录

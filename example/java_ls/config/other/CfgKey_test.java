@@ -97,20 +97,26 @@ public class CfgKey_test {
             this.RefIds = new java.util.ArrayList<>(this.ids.size());
             for (Integer e : this.ids) {
                 var ref = mgr.getOtherSign_in(e);
-                if (ref == null) errors.missingReference("other.key_test", "ids", "other.sign_in", e);
+                if (ref == null) {
+                    errors.missingReference("other.key_test", "ids", "other.sign_in", e);
+                }
                 this.RefIds.add(ref);
             }
         }
         this.RefIds = java.util.Collections.unmodifiableList(this.RefIds);
         this.RefEnumTest = config.other.CfgArgCaptureMode.get(this.enumTest);
-        if (this.RefEnumTest == null) errors.missingReference("other.key_test", "enumTest", "other.ArgCaptureMode", this.enumTest);
+        if (this.RefEnumTest == null) {
+            errors.missingReference("other.key_test", "enumTest", "other.ArgCaptureMode", this.enumTest);
+        }
         if (this.enumList.isEmpty()) {
             this.RefEnumList = java.util.Collections.emptyList();
         } else {
             this.RefEnumList = new java.util.ArrayList<>(this.enumList.size());
             for (String e : this.enumList) {
                 var ref = config.other.CfgArgCaptureMode.get(e);
-                if (ref == null) errors.missingReference("other.key_test", "enumList", "other.ArgCaptureMode", e);
+                if (ref == null) {
+                    errors.missingReference("other.key_test", "enumList", "other.ArgCaptureMode", e);
+                }
                 this.RefEnumList.add(ref);
             }
         }
@@ -134,8 +140,9 @@ public class CfgKey_test {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof Id1Id2Key o))
+            if (!(other instanceof Id1Id2Key o)) {
                 return false;
+            }
             return id1 == o.id1 && id2 == o.id2;
         }
 
@@ -166,8 +173,9 @@ public class CfgKey_test {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof Id1Id3Key o))
+            if (!(other instanceof Id1Id3Key o)) {
                 return false;
+            }
             return id1 == o.id1 && id3 == o.id3;
         }
 
@@ -203,8 +211,9 @@ public class CfgKey_test {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof Id2Id3Key o))
+            if (!(other instanceof Id2Id3Key o)) {
                 return false;
+            }
             return id2 == o.id2 && id3 == o.id3;
         }
 

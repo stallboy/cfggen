@@ -15,7 +15,7 @@ function readFileToArrayBufferSync(filePath: string): ArrayBuffer {
 
 function main(): void {
 
-    const data = readFileToArrayBufferSync('./config.bytes');
+    const data = readFileToArrayBufferSync('./base.bytes');
     const errors = new LoadErrors();
     const stream = Config.Processor.ProcessPackage(ConfigPackage.Read(data), errors);
 

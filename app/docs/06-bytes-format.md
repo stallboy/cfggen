@@ -1,6 +1,6 @@
 # Bytes 二进制格式
 
-`-gen bytes` 把配置序列化为 `config.bytes`。写入侧在 `genbytes` 包，完整 Java 示例见 `example/java/`。
+`-gen bytes` 把配置序列化为 `<pack>.bytes`，默认包名为 `base`，因此默认文件为 `base.bytes`。启用分离语言时，额外资源命名为 `<pack>_<language>.bytes`，例如 `demo-mod_en.bytes`。写入侧在 `genbytes` 包，完整 Java 示例见 `example/java/`。
 
 ## 文件结构
 
@@ -40,7 +40,7 @@ strings[poolCount]: string
 
 表中 `text` 字段保存 textIndex，各语言通过 indices 找到本语言的去重字符串。语言名已在块名中，不在内容里重复写。各语言的 textCount 必须相同。
 
-`langSeparated` 将第一种语言保留在主包，其余语言输出为 `<language>.bytes`。这些文件采用同一容器，只含所属 `pack` 的 metadata 和相应的 text 块。读取前使用 `attach(...)` 挂接资源；C#/TS/Go 名为 `Attach`。资源与主包须成套分发。
+`langSeparated` 将第一种语言保留在主包，其余语言输出为 `<pack>_<language>.bytes`。这些文件采用同一容器，只含所属 `pack` 的 metadata 和相应的 text 块。读取前使用 `attach(...)` 挂接资源；C#/TS/Go 名为 `Attach`。资源与主包须成套分发。
 
 ## 表记录
 
@@ -68,7 +68,7 @@ Java/C# 支持多个数据包合并、独立实例和扩展初始化；TS/Go/God
 | --- | --- |
 | `pack:base` | 包名，默认 `base` |
 | `requires:base;balance` | 声明直接依赖 |
-| `deps:base/config.bytes;balance/config.bytes` | 按顺序提供构建所需的全部依赖包 |
+| `deps:base/base.bytes;balance/balance.bytes` | 按顺序提供构建所需的全部依赖包 |
 | `langSeparated` | 拆分额外语言资源 |
 | `cipher:KEY` | 对整个容器做 XOR 混淆，读取和构建依赖输入前需解码 |
 

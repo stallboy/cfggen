@@ -60,7 +60,9 @@ public class CfgTestDefaultBean {
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readStringInPool();
-                    if (self.testMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("task.TestDefaultBean.testMap", key);
+                    if (self.testMap.putIfAbsent(key, value) != null) {
+                        input.errors().duplicateKey("task.TestDefaultBean.testMap", key);
+                    }
                 }
                 self.testMap = java.util.Collections.unmodifiableMap(self.testMap);
             }
@@ -103,8 +105,9 @@ public class CfgTestDefaultBean {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgTestDefaultBean o))
+        if (!(other instanceof CfgTestDefaultBean o)) {
             return false;
+        }
         return testInt == o.testInt && testBool == o.testBool && testString.equals(o.testString) && testSubBean.equals(o.testSubBean) && testList.equals(o.testList) && testList2.equals(o.testList2) && testMap.equals(o.testMap);
     }
 

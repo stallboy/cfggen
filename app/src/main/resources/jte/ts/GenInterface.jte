@@ -20,7 +20,9 @@ export abstract class ${className} {
         const typeName = os.ReadStringInPool();
         @if(sInterface.impls().size() == 1)
             !{var impl = sInterface.impls().getFirst();}
-            if (typeName === "${impl.name()}") return ${gen.className(impl)}._create(os);
+            if (typeName === "${impl.name()}") {
+                return ${gen.className(impl)}._create(os);
+            }
         @elseif(sInterface.impls().size() > 1)
             switch(typeName) {
                 @for(StructSchema impl : sInterface.impls())

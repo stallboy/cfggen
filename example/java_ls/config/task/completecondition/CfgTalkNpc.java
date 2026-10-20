@@ -31,8 +31,9 @@ public final class CfgTalkNpc implements config.task.completecondition.CfgComple
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgTalkNpc o))
+        if (!(other instanceof CfgTalkNpc o)) {
             return false;
+        }
         return npcid == o.npcid;
     }
 

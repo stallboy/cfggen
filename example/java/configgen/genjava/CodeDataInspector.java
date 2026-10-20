@@ -51,7 +51,9 @@ public class CodeDataInspector {
         List<Member> members = new ArrayList<>();
         HashSet<String> done = new HashSet<>();
         for (String name : rootSchema.implementations.keySet()) {
-            if (!nameMatches(name, tableMatch)) continue;
+            if (!nameMatches(name, tableMatch)) {
+                continue;
+            }
             dedupAddType(members, name, done);
         }
         return new Obj(null, members);
@@ -86,13 +88,21 @@ public class CodeDataInspector {
         List<JsonValue> records = new ArrayList<>();
         int totalShown = 0;
         for (TableData td : discoverTables()) {
-            if (totalShown >= totalCap) break;
-            if (!nameMatches(td.displayName, tableMatch)) continue;
+            if (totalShown >= totalCap) {
+                break;
+            }
+            if (!nameMatches(td.displayName, tableMatch)) {
+                continue;
+            }
             int shownThisTable = 0;
             for (Object record : iterRecords(td)) {
-                if (shownThisTable >= perTableCap || totalShown >= totalCap) break;
+                if (shownThisTable >= perTableCap || totalShown >= totalCap) {
+                    break;
+                }
                 JsonValue jv = recordToJson(record, td.recordSchema, td.displayName);
-                if (!needle.isEmpty() && !flatContains(jv, needle)) continue;
+                if (!needle.isEmpty() && !flatContains(jv, needle)) {
+                    continue;
+                }
                 records.add(jv);
                 shownThisTable++;
                 totalShown++;
@@ -126,7 +136,9 @@ public class CodeDataInspector {
         if (mgr != null) {
             Class<?> cls = mgr.getClass();
             for (Map.Entry<String, Schema> e : rootSchema.implementations.entrySet()) {
-                if (!(e.getValue() instanceof SchemaBean bean) || !bean.isTable) continue;
+                if (!(e.getValue() instanceof SchemaBean bean) || !bean.isTable) {
+                    continue;
+                }
                 String key = e.getKey();
                 String base = key.endsWith("_Detail")
                         ? key.substring(0, key.length() - "_Detail".length())
@@ -139,7 +151,9 @@ public class CodeDataInspector {
                     } catch (NoSuchMethodException ignored) {
                         data = cls.getField(fieldName).get(mgr);
                     }
-                    if (data == null) continue;
+                    if (data == null) {
+                        continue;
+                    }
                     list.add(new TableData(base, bean, data, data.getClass().isArray()));
                 } catch (NoSuchFieldException ignored) {
                     // 纯枚举表等无 _All 字段，跳过
@@ -153,11 +167,15 @@ public class CodeDataInspector {
     }
 
     private TableData findTable(String table) {
-        if (table == null || table.isEmpty()) return null;
+        if (table == null || table.isEmpty()) {
+            return null;
+        }
         TableData contains = null;
         int containsHits = 0;
         for (TableData td : discoverTables()) {
-            if (td.displayName.equals(table)) return td;
+            if (td.displayName.equals(table)) {
+                return td;
+            }
             if (td.displayName.contains(table)) {
                 contains = td;
                 containsHits++;
@@ -168,7 +186,9 @@ public class CodeDataInspector {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean nameMatches(String name, String match) {
-        if (match == null || match.isEmpty()) return true;
+        if (match == null || match.isEmpty()) {
+            return true;
+        }
         return name.toLowerCase().contains(match.toLowerCase());
     }
 
@@ -183,11 +203,17 @@ public class CodeDataInspector {
                 return null;
             }
             int len = td.isArray ? Array.getLength(td.data) : ((List<?>) td.data).size();
-            if (idx < 0 || idx >= len) return null;
+            if (idx < 0 || idx >= len) {
+                return null;
+            }
             return td.isArray ? Array.get(td.data, idx) : ((List<?>) td.data).get(idx);
         }
-        if (!(td.data instanceof Map<?, ?> map)) return null;
-        if (map.isEmpty()) return null;
+        if (!(td.data instanceof Map<?, ?> map)) {
+            return null;
+        }
+        if (map.isEmpty()) {
+            return null;
+        }
         Object sampleKey = map.keySet().iterator().next();
         Object key;
         try {
@@ -195,7 +221,9 @@ public class CodeDataInspector {
         } catch (Exception ex) {
             return null;
         }
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         @SuppressWarnings("unchecked")
         Map<Object, ?> raw = (Map<Object, ?>) map;
         return raw.get(key);
@@ -209,15 +237,21 @@ public class CodeDataInspector {
     private Object buildKey(Class<?> keyClass, String keyStr) throws Exception {
         if (keyStr.indexOf(',') < 0) {
             Object single = singlePrimitive(keyClass, keyStr.trim());
-            if (single != null) return single;
+            if (single != null) {
+                return single;
+            }
         }
         String[] parts = keyStr.split(",");
-        for (int i = 0; i < parts.length; i++) parts[i] = parts[i].trim();
+        for (int i = 0; i < parts.length; i++) {
+            parts[i] = parts[i].trim();
+        }
         if (keyClass.isEnum()) {
             return Enum.valueOf((Class<Enum>) keyClass.asSubclass(Enum.class), parts[0]);
         }
         Constructor<?> ctor = pickCtor(keyClass, parts.length);
-        if (ctor == null) return null;
+        if (ctor == null) {
+            return null;
+        }
         ctor.setAccessible(true);
         Class<?>[] ptypes = ctor.getParameterTypes();
         Object[] args = new Object[parts.length];
@@ -229,19 +263,33 @@ public class CodeDataInspector {
 
     private static Constructor<?> pickCtor(Class<?> cls, int paramCount) {
         for (Constructor<?> c : cls.getDeclaredConstructors()) {
-            if (c.getParameterCount() == paramCount) return c;
+            if (c.getParameterCount() == paramCount) {
+                return c;
+            }
         }
         return null;
     }
 
     /** 单值原始/字符串 key 直转；非这些类型（枚举/record/bean）返回 null，交由构造器路径处理。 */
     private static Object singlePrimitive(Class<?> keyClass, String s) {
-        if (keyClass == String.class) return s;
-        if (keyClass == Integer.class || keyClass == int.class) return Integer.parseInt(s);
-        if (keyClass == Long.class || keyClass == long.class) return Long.parseLong(s);
-        if (keyClass == Float.class || keyClass == float.class) return Float.parseFloat(s);
-        if (keyClass == Double.class || keyClass == double.class) return Double.parseDouble(s);
-        if (keyClass == Boolean.class || keyClass == boolean.class) return Boolean.parseBoolean(s);
+        if (keyClass == String.class) {
+            return s;
+        }
+        if (keyClass == Integer.class || keyClass == int.class) {
+            return Integer.parseInt(s);
+        }
+        if (keyClass == Long.class || keyClass == long.class) {
+            return Long.parseLong(s);
+        }
+        if (keyClass == Float.class || keyClass == float.class) {
+            return Float.parseFloat(s);
+        }
+        if (keyClass == Double.class || keyClass == double.class) {
+            return Double.parseDouble(s);
+        }
+        if (keyClass == Boolean.class || keyClass == boolean.class) {
+            return Boolean.parseBoolean(s);
+        }
         return null;
     }
 
@@ -256,7 +304,9 @@ public class CodeDataInspector {
         List<Object> list = new ArrayList<>();
         if (td.isArray) {
             int len = Array.getLength(td.data);
-            for (int i = 0; i < len; i++) list.add(Array.get(td.data, i));
+            for (int i = 0; i < len; i++) {
+                list.add(Array.get(td.data, i));
+            }
         } else if (td.data instanceof Map<?, ?> map) {
             list.addAll(map.values());
         } else if (td.data instanceof Collection<?> col) {
@@ -276,14 +326,18 @@ public class CodeDataInspector {
     private static void appendFlat(JsonValue v, StringBuilder sb) {
         switch (v) {
             case Obj o -> {
-                if (o.impl() != null) sb.append(o.impl()).append(' ');
+                if (o.impl() != null) {
+                    sb.append(o.impl()).append(' ');
+                }
                 for (Member m : o.members()) {
                     sb.append(m.name()).append(' ');
                     appendFlat(m.value(), sb);
                 }
             }
             case Arr a -> {
-                for (JsonValue e : a.items()) appendFlat(e, sb);
+                for (JsonValue e : a.items()) {
+                    appendFlat(e, sb);
+                }
             }
             case Null ignored -> {
             }
@@ -298,11 +352,15 @@ public class CodeDataInspector {
     private JsonValue valueToJson(Object value, Schema sc) {
         return switch (sc) {
             case SchemaBean bean -> {
-                if (value == null) yield new Null();
+                if (value == null) {
+                    yield new Null();
+                }
                 yield new Obj(null, collectMembers(value, bean));
             }
             case SchemaInterface si -> {
-                if (value == null) yield new Null();
+                if (value == null) {
+                    yield new Null();
+                }
                 String implName = value.getClass().getSimpleName();
                 Schema impl = si.implementations.get(implName);
                 List<Member> members = impl instanceof SchemaBean bean
@@ -313,7 +371,9 @@ public class CodeDataInspector {
             case SchemaList sl -> {
                 List<JsonValue> items = new ArrayList<>();
                 if (value instanceof Iterable<?> it) {
-                    for (Object e : it) items.add(valueToJson(e, sl.ele()));
+                    for (Object e : it) {
+                        items.add(valueToJson(e, sl.ele()));
+                    }
                 }
                 yield new Arr(items);
             }
@@ -328,8 +388,12 @@ public class CodeDataInspector {
             }
             case SchemaRef ref -> {
                 Schema target = rootSchema.implementations.get(ref.type);
-                if (target instanceof SchemaBean bean) yield valueToJson(value, bean);
-                if (target instanceof SchemaInterface si) yield valueToJson(value, si);
+                if (target instanceof SchemaBean bean) {
+                    yield valueToJson(value, bean);
+                }
+                if (target instanceof SchemaInterface si) {
+                    yield valueToJson(value, si);
+                }
                 // 枚举等：getter 返回名字字符串
                 yield of(value);
             }
@@ -358,9 +422,13 @@ public class CodeDataInspector {
         List<Member> members = new ArrayList<>();
         for (Method md : value.getClass().getMethods()) {
             String n = md.getName();
-            if (!n.startsWith("get") || n.equals("getClass") || md.getParameterCount() != 0) continue;
+            if (!n.startsWith("get") || n.equals("getClass") || md.getParameterCount() != 0) {
+                continue;
+            }
             String prop = n.substring(3);
-            if (prop.isEmpty()) continue;
+            if (prop.isEmpty()) {
+                continue;
+            }
             try {
                 members.add(member(Character.toLowerCase(prop.charAt(0)) + prop.substring(1), of(md.invoke(value))));
             } catch (Exception ignored) {
@@ -401,13 +469,16 @@ public class CodeDataInspector {
     }
 
     private void dedupAddType(List<Member> members, String name, HashSet<String> done) {
-        if (!done.add(name)) return;
+        if (!done.add(name)) {
+            return;
+        }
         Schema target = rootSchema.implementations.get(name);
         switch (target) {
             case SchemaBean tb -> {
                 addBeanSchema(members, name, tb);
-                for (SchemaBean.Column col : tb.columns)
+                for (SchemaBean.Column col : tb.columns) {
                     collectDepSchema(members, col.schema(), done);
+                }
             }
             case SchemaEnum te -> {
                 // 枚举：有 int 值 → {Red: 1, Blue: 2}；否则 → [Red, Blue]
@@ -440,8 +511,9 @@ public class CodeDataInspector {
                 members.add(member(name, new Obj(null, impls)));
                 for (Schema s : ti.implementations.values()) {
                     if (s instanceof SchemaBean tb) {
-                        for (SchemaBean.Column col : tb.columns)
+                        for (SchemaBean.Column col : tb.columns) {
                             collectDepSchema(members, col.schema(), done);
+                        }
                     }
                 }
             }

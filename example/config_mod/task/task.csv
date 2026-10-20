@@ -1,0 +1,3 @@
+Task ID,Name,Description,Next task,Condition,Monster,Count,Experience,Defaults
+taskid,name,desc,nexttask,"completecondition,enum",param1,param2,exp,testDefaultBean
+1001,Mod hunt,Defeat the mod monster,1,KillMonster,1001,5,9000,

@@ -30,8 +30,12 @@ namespace Config
         internal void _resolve(LoadErrors errors, ConfigMgr config)
         {
             var rRefRank = Equip.DRankInfo.Get(config, Rank);
-            if (rRefRank == null) errors.MissingReference("LevelRank", "Rank", "equip.rank", this.Rank);
-            else RefRank = rRefRank.EEnum;
+            if (rRefRank == null) {
+                errors.MissingReference("LevelRank", "Rank", "equip.rank", this.Rank);
+            }
+            else {
+                RefRank = rRefRank.EEnum;
+            }
         }
 
     }

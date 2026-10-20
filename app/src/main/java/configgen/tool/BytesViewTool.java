@@ -12,7 +12,7 @@ public class BytesViewTool extends Tool {
 
     public BytesViewTool(Parameter parameter) {
         super(parameter);
-        bytesFilename = parameter.get("bytes", "config.bytes");
+        bytesFilename = parameter.get("bytes", "base.bytes");
         match = parameter.get("match", null, "loop when match not set");
     }
 

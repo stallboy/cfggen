@@ -9,8 +9,7 @@ namespace Config.Ai
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DAi>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
@@ -27,10 +26,14 @@ namespace Config.Ai
             var valueTrigOdds = reader.ReadInt32();
             int Count_valueActionID = reader.ReadCount(0);
             IReadOnlyList<int> valueActionID;
-            if (Count_valueActionID == 0) valueActionID = Array.Empty<int>();
+            if (Count_valueActionID == 0) {
+                valueActionID = Array.Empty<int>();
+            }
             else {
                 var values_valueActionID = new List<int>(Count_valueActionID);
-                for (int i = 0; i < Count_valueActionID; i++) values_valueActionID.Add(reader.ReadInt32());
+                for (int i = 0; i < Count_valueActionID; i++) {
+                    values_valueActionID.Add(reader.ReadInt32());
+                }
                 valueActionID = values_valueActionID.AsReadOnly();
             }
             var valueDeathRemove = reader.ReadBool();
@@ -70,8 +73,7 @@ namespace Config.Ai
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DAiAction>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
@@ -86,18 +88,26 @@ namespace Config.Ai
             var valueFormulaID = reader.ReadInt32();
             int Count_valueArgIList = reader.ReadCount(0);
             IReadOnlyList<int> valueArgIList;
-            if (Count_valueArgIList == 0) valueArgIList = Array.Empty<int>();
+            if (Count_valueArgIList == 0) {
+                valueArgIList = Array.Empty<int>();
+            }
             else {
                 var values_valueArgIList = new List<int>(Count_valueArgIList);
-                for (int i = 0; i < Count_valueArgIList; i++) values_valueArgIList.Add(reader.ReadInt32());
+                for (int i = 0; i < Count_valueArgIList; i++) {
+                    values_valueArgIList.Add(reader.ReadInt32());
+                }
                 valueArgIList = values_valueArgIList.AsReadOnly();
             }
             int Count_valueArgSList = reader.ReadCount(0);
             IReadOnlyList<int> valueArgSList;
-            if (Count_valueArgSList == 0) valueArgSList = Array.Empty<int>();
+            if (Count_valueArgSList == 0) {
+                valueArgSList = Array.Empty<int>();
+            }
             else {
                 var values_valueArgSList = new List<int>(Count_valueArgSList);
-                for (int i = 0; i < Count_valueArgSList; i++) values_valueArgSList.Add(reader.ReadInt32());
+                for (int i = 0; i < Count_valueArgSList; i++) {
+                    values_valueArgSList.Add(reader.ReadInt32());
+                }
                 valueArgSList = values_valueArgSList.AsReadOnly();
             }
             return new DAiAction {
@@ -134,8 +144,7 @@ namespace Config.Ai
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DAiCondition>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
@@ -150,18 +159,26 @@ namespace Config.Ai
             var valueFormulaID = reader.ReadInt32();
             int Count_valueArgIList = reader.ReadCount(0);
             IReadOnlyList<int> valueArgIList;
-            if (Count_valueArgIList == 0) valueArgIList = Array.Empty<int>();
+            if (Count_valueArgIList == 0) {
+                valueArgIList = Array.Empty<int>();
+            }
             else {
                 var values_valueArgIList = new List<int>(Count_valueArgIList);
-                for (int i = 0; i < Count_valueArgIList; i++) values_valueArgIList.Add(reader.ReadInt32());
+                for (int i = 0; i < Count_valueArgIList; i++) {
+                    values_valueArgIList.Add(reader.ReadInt32());
+                }
                 valueArgIList = values_valueArgIList.AsReadOnly();
             }
             int Count_valueArgSList = reader.ReadCount(0);
             IReadOnlyList<int> valueArgSList;
-            if (Count_valueArgSList == 0) valueArgSList = Array.Empty<int>();
+            if (Count_valueArgSList == 0) {
+                valueArgSList = Array.Empty<int>();
+            }
             else {
                 var values_valueArgSList = new List<int>(Count_valueArgSList);
-                for (int i = 0; i < Count_valueArgSList; i++) values_valueArgSList.Add(reader.ReadInt32());
+                for (int i = 0; i < Count_valueArgSList; i++) {
+                    values_valueArgSList.Add(reader.ReadInt32());
+                }
                 valueArgSList = values_valueArgSList.AsReadOnly();
             }
             return new DAiCondition {

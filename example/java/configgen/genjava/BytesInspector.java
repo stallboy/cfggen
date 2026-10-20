@@ -37,16 +37,20 @@ public class BytesInspector {
     public String match(String tableMatch) {
         out.setLength(0);
         printedSchemas.clear();
-        try (ConfigInput input = new ConfigInput(Path.of(bytesFilename))) {
-            ConfigPackage pack = ConfigPackage.read(input);
+        try {
+            ConfigPackage pack = ConfigPackage.read(Path.of(bytesFilename));
             var schema = pack.block("schema");
             rootSchema = (SchemaInterface) SchemaDeserializer.deserialize(schema);
             schema.requireEnd();
             println("metadata: %s", pack.metadata());
             for (String block : pack.blockNames()) {
-                if (!block.startsWith(".")) continue;
+                if (!block.startsWith(".")) {
+                    continue;
+                }
                 String table = block.substring(1);
-                if (tableMatch != null && !table.startsWith(tableMatch)) continue;
+                if (tableMatch != null && !table.startsWith(tableMatch)) {
+                    continue;
+                }
                 var tableInput = pack.block(block);
                 if (printTableInfo(table, (int) tableInput.remaining(), tableInput)) {
                     tableInput.requireEnd();

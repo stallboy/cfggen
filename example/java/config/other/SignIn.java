@@ -34,7 +34,9 @@ public class SignIn {
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readInt();
-                    if (self.item2countMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.sign_in.item2countMap", key);
+                    if (self.item2countMap.putIfAbsent(key, value) != null) {
+                        input.errors().duplicateKey("other.sign_in.item2countMap", key);
+                    }
                 }
                 self.item2countMap = java.util.Collections.unmodifiableMap(self.item2countMap);
             }
@@ -48,7 +50,9 @@ public class SignIn {
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readInt();
-                    if (self.vipitem2vipcountMap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.sign_in.vipitem2vipcountMap", key);
+                    if (self.vipitem2vipcountMap.putIfAbsent(key, value) != null) {
+                        input.errors().duplicateKey("other.sign_in.vipitem2vipcountMap", key);
+                    }
                 }
                 self.vipitem2vipcountMap = java.util.Collections.unmodifiableMap(self.vipitem2vipcountMap);
             }
@@ -109,7 +113,9 @@ public class SignIn {
             this.RefVipitem2vipcountMap = new java.util.LinkedHashMap<>(this.vipitem2vipcountMap.size());
             for (java.util.Map.Entry<Integer, Integer> e : this.vipitem2vipcountMap.entrySet()) {
                 var ref = mgr.getOtherLoot(e.getValue());
-                if (ref == null) errors.missingReference("other.sign_in", "vipitem2vipcountMap", "other.loot", e.getValue());
+                if (ref == null) {
+                    errors.missingReference("other.sign_in", "vipitem2vipcountMap", "other.loot", e.getValue());
+                }
                 this.RefVipitem2vipcountMap.put(e.getKey(), ref);
             }
         }

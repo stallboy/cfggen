@@ -29,6 +29,8 @@ config/
 
 ### 生成的代码目录
 
+`config_mod/` 是 Java、C# 共用的增量数据示例，不含独立 `.cfg`。通过 `-schema ../config` 复用结构，以 `pack:demo-mod,requires:base,deps:...` 导出；Java/C# 各自生成 `demo-mod.bytes`，不从 Mod 生成类型。两个普通示例演示基础实例与组合实例并存、默认实例切换、跨包引用、enum 详情覆盖和来源查询。C# 保留 XOR `xyz`，构建依赖使用 `obj/base-pack/base.bytes` 明文副本。
+
 | 目录 | 语言 | 多语言支持 | 说明 |
 |------|------|------------|------|
 | java/ | Java | 无 | 单语言版本 |

@@ -3,7 +3,6 @@ package configgen.genbytes;
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
-import configgen.genjava.ConfigInput;
 import configgen.genjava.ConfigPackage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,9 +32,9 @@ class PackageBuildTest {
         Files.writeString(modDir.resolve("unit.csv"), "id,name,department\nid,name,department\n1,changed,1\n3,new,0\n");
         Path output = root.resolve("mod-pack");
         String arguments = "bytes,pack:map,requires:base,deps:"
-                + baseOut.resolve("config.bytes") + ",dir:" + output;
+                + baseOut.resolve("base.bytes") + ",dir:" + output;
         new BytesGenerator(new ParameterParser(arguments)).generate(new Context(Context.ContextCfg.of(modDir), base.cfgSchema()));
-        ConfigPackage pack = ConfigPackage.read(new ConfigInput(output.resolve("config.bytes")));
+        ConfigPackage pack = ConfigPackage.read(output.resolve("map.bytes"));
         assertTrue(pack.blockNames().contains(".unit"));
         assertFalse(pack.blockNames().contains(".department"), "Export only rows owned by this mod");
         assertEquals(2, pack.block(".unit").readInt());

@@ -1,6 +1,5 @@
 package configgen.genjava;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -12,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class ConfigInput implements Closeable {
+public class ConfigInput {
     // 小端序的 layout 常量，UNALIGNED 避免 MemorySegment 按地址对齐做额外检查
     private static final OfInt INT_LE = OfInt.JAVA_INT_UNALIGNED.withOrder(ByteOrder.LITTLE_ENDIAN);
     private static final OfLong LONG_LE = OfLong.JAVA_LONG_UNALIGNED.withOrder(ByteOrder.LITTLE_ENDIAN);
@@ -30,7 +29,12 @@ public class ConfigInput implements Closeable {
     private LangTextPool[] langTextPools;
     private LoadValueErrs errors;
 
-    public LoadValueErrs errors() { if (errors == null) errors = new LoadValueErrs(); return errors; }
+    public LoadValueErrs errors() {
+        if (errors == null) {
+            errors = new LoadValueErrs();
+        }
+        return errors;
+    }
     void setErrors(LoadValueErrs errors) { this.errors = errors; }
 
     public ConfigInput(byte[] bytes) {
@@ -78,7 +82,9 @@ public class ConfigInput implements Closeable {
 
     public byte[] readRawBytes(int len) {
         require(len);
-        if (len == 0) return EMPTY_BYTES;
+        if (len == 0) {
+            return EMPTY_BYTES;
+        }
         byte[] bytes = new byte[len];
         MemorySegment.copy(segment, ValueLayout.JAVA_BYTE, pos, bytes, 0, len);
         pos += len;
@@ -102,7 +108,9 @@ public class ConfigInput implements Closeable {
     }
 
     public void requireEnd() {
-        if (remaining() != 0) throw errors().unconsumedBytes(remaining());
+        if (remaining() != 0) {
+            throw errors().unconsumedBytes(remaining());
+        }
     }
 
     /** A bounded view over the same bytes; advancing it cannot consume the following block. */
@@ -135,7 +143,9 @@ public class ConfigInput implements Closeable {
         for (int i = 0; i < names.length; i++) {
             LangTextPool pool = new LangTextPool(inputs[i], names[i]);
             inputs[i].requireEnd();
-            if (textCount >= 0 && textCount != pool.indices.length) throw errors().languageCountMismatch(names[i], textCount, pool.indices.length);
+            if (textCount >= 0 && textCount != pool.indices.length) {
+                throw errors().languageCountMismatch(names[i], textCount, pool.indices.length);
+            }
             textCount = pool.indices.length;
             langTextPools[i] = pool;
         }
@@ -143,7 +153,9 @@ public class ConfigInput implements Closeable {
 
     public int readCount(int minimumBytes) {
         int count = readInt();
-        if (count < 0 || minimumBytes > 0 && count > remaining() / minimumBytes) throw errors().invalidCount(count, minimumBytes, remaining());
+        if (count < 0 || minimumBytes > 0 && count > remaining() / minimumBytes) {
+            throw errors().invalidCount(count, minimumBytes, remaining());
+        }
         return count;
     }
 
@@ -152,7 +164,9 @@ public class ConfigInput implements Closeable {
     public String readString() {
         int len = readInt();
         require(len);
-        if (len == 0) return "";
+        if (len == 0) {
+            return "";
+        }
         // 直接从已有 byte[] 解码，省掉 readRawBytes 的临时数组。
         String s = new String(fileBytes, (int) pos, len, StandardCharsets.UTF_8);
         pos += len;
@@ -191,7 +205,9 @@ public class ConfigInput implements Closeable {
                 pool[i] = input.readString();
             }
             for (int index : indices) {
-                if (index < 0 || index >= pool.length) throw input.errors().invalidPoolIndex("text/" + name, index, pool.length);
+                if (index < 0 || index >= pool.length) {
+                    throw input.errors().invalidPoolIndex("text/" + name, index, pool.length);
+                }
             }
         }
 
@@ -233,7 +249,9 @@ public class ConfigInput implements Closeable {
             throw new IllegalStateException("Language pools not initialized");
         }
 
-        if (langTextPools.length == 0) throw errors().invalidPoolIndex("text", index, 0);
+        if (langTextPools.length == 0) {
+            throw errors().invalidPoolIndex("text", index, 0);
+        }
         LangTextPool pool = langTextPools[0];
         if (index < 0 || index >= pool.indices.length) {
             throw errors().invalidPoolIndex("text/" + pool.langName, index, pool.indices.length);
@@ -244,10 +262,4 @@ public class ConfigInput implements Closeable {
     public String textInPool(int language, int index) { return langTextPools[language].getText(index); }
 
     public String readTextInPool() { return textInPool(0, readTextIndex()); }
-
-    @Override
-    public void close() throws IOException {
-        // InputStream 在构造时（readAllBytes 后）已通过 try-with-resources 关闭，
-        // fileBytes 由 GC 回收，这里无需操作。保留签名以满足 Closeable 与现有 try-with-resources 调用。
-    }
 }

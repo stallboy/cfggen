@@ -2,7 +2,10 @@
 import config.ConfigCodeSchema;
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
+import config.equip.Rank;
+import config.other.Monster;
 import config.task.Task;
+import config.task.completecondition.KillMonster;
 import configgen.genjava.*;
 
 import java.io.IOException;
@@ -16,15 +19,33 @@ public class LoadConfig {
 
     private static final Logger logger = Logger.getLogger("LoadConfig");
 
-    public static void load(String fn) throws IOException {
-        try (ConfigInput input = new ConfigInput(Path.of(fn))) {
-            ConfigPackage pack = ConfigPackage.read(input);
-            // Schema/引用校验、扩展初始化全部成功后，才发布新的默认实例。
-            ConfigMgr configMgr = ConfigMgrLoader.loadPackagesAndSetMgr(pack);
-            System.out.println("config.bytes version=" + ConfigPackage.FORMAT_VERSION + ", metadata=" + pack.metadata());
-        }
+    public static ConfigPackage load(String fn) throws IOException {
+        ConfigPackage pack = ConfigPackage.read(Path.of(fn));
+        // Schema/引用校验、扩展初始化全部成功后，才发布新的默认实例。
+        ConfigMgrLoader.loadPackagesAndSetMgr(pack);
+        System.out.println("base.bytes version=" + ConfigPackage.FORMAT_VERSION + ", metadata=" + pack.metadata());
+        return pack;
     }
 
+    private static void showMod(ConfigPackage base) throws IOException {
+        ConfigMgr original = ConfigMgr.getMgr();
+        ConfigPackage mod = ConfigPackage.read(Path.of("demo-mod.bytes"));
+        ConfigMgr modified = ConfigMgrLoader.loadPackages(base, mod);
+        ConfigMgr.setMgr(modified);
+        Task hunt = Task.get(1001);
+        var condition = (KillMonster) hunt.getCompletecondition();
+
+        System.out.println("\n=== Mod example ===");
+        System.out.println("monster 1: base x=" + original.getOtherMonster(1).getPosList().getFirst().getX()
+                + ", mod x=" + Monster.get(1).getPosList().getFirst().getX());
+        System.out.println("monster 2 unchanged: x=" + Monster.get(2).getPosList().getFirst().getX());
+        System.out.println("monster 1001: base=" + original.getOtherMonster(1001) + ", mod=" + Monster.get(1001));
+        System.out.println("green: base=" + Rank.GREEN.ref(original).getRankShowName() + ", mod=" + Rank.GREEN.getRankShowName());
+        System.out.println("task 1001: " + hunt.getName() + ", target monster=" + condition.refMonsterid().getId()
+                + ", exp=" + hunt.getExp());
+        System.out.println("monster 1 sources=" + modified.explain("other.monster", 1));
+        System.out.println("monster 1001 sources=" + modified.explain("other.monster", 1001));
+    }
 
     public static void autoReload(ScheduledExecutorService executorService, String fn, Runnable afterReload) throws IOException {
         listen(executorService, Paths.get(fn), () -> {
@@ -62,8 +83,9 @@ public class LoadConfig {
     }
 
     public static void main(String[] args) throws IOException {
-        String fn = "config.bytes";
-        load(fn);
+        String fn = "base.bytes";
+        ConfigPackage base = load(fn);
+        showMod(base);
         System.out.println(Task.get(1));
 
         boolean isRepl = false;
@@ -81,16 +103,6 @@ public class LoadConfig {
             repl.run();
 
         } else {
-
-            ConfigMgr original = ConfigMgr.getMgr();
-            Task originalTask = original.getTaskTask(1);
-            load(fn);
-            ConfigMgr reloaded = ConfigMgr.getMgr();
-            if (original == reloaded || originalTask == reloaded.getTaskTask(1)) {
-                throw new IllegalStateException("Reload must create an independent configuration instance");
-            }
-            System.out.println("reload: independent instances, original task=" + originalTask);
-            System.out.println("task 1 sources=" + reloaded.explain("task.task", 1));
 
             new BytesInspector(fn).match("eq");
             CodeDataInspector inspector = new CodeDataInspector(ConfigMgr.getMgr(), ConfigCodeSchema.getCodeSchema());

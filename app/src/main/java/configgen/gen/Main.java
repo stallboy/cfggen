@@ -10,7 +10,6 @@ import configgen.gencs.CsCodeGenerator;
 import configgen.tool.BytesViewTool;
 import configgen.gents.TsCodeGenerator;
 import configgen.gengo.GoCodeGenerator;
-// GenJavaData 已被合并到 GenBytes 中
 import configgen.genjava.code.JavaCodeGenerator;
 import configgen.genjson.JsonGenerator;
 import configgen.genbyai.ByAIGenerator;
@@ -23,7 +22,6 @@ import configgen.geni18n.I18nByIdGenerator;
 import configgen.geni18n.TodoTranslator;
 import configgen.mcpserver.CfgMcpServer;
 import configgen.tool.*;
-import configgen.util.CachedFiles;
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 

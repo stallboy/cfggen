@@ -24,8 +24,9 @@ public static class ${Name.keyClassName(cfg, keySchema)} {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof ${Name.keyClassName(cfg, keySchema)} o))
+            if (!(other instanceof ${Name.keyClassName(cfg, keySchema)} o)) {
                 return false;
+            }
             return ${MethodStr.equals(keySchema.fieldSchemas())};
         }
 

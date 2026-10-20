@@ -17,11 +17,15 @@ export class Stream {
     Remaining(): number { return this.view.byteLength - this.offset; }
     RequireEnd(): void { if (this.Remaining() !== 0) throw new Error("Unconsumed block bytes"); }
     private Require(length: number): void {
-        if (!Number.isInteger(length) || length < 0 || length > this.Remaining()) throw new Error(`Read outside input block: ${length}`);
+        if (!Number.isInteger(length) || length < 0 || length > this.Remaining()) {
+            throw new Error(`Read outside input block: ${length}`);
+        }
     }
     ReadCount(minimumBytes: number = 4): number {
         const count = this.ReadInt32();
-        if (count < 0 || minimumBytes > 0 && count > this.Remaining() / minimumBytes) throw new Error(`Invalid count: ${count}`);
+        if (count < 0 || minimumBytes > 0 && count > this.Remaining() / minimumBytes) {
+            throw new Error(`Invalid count: ${count}`);
+        }
         return count;
     }
     Slice(length: number): Stream {
@@ -52,13 +56,17 @@ export class Stream {
         this.langTextPools = blocks.map(input => {
             const texts = input.ReadTextBlock(); input.RequireEnd(); return texts;
         });
-        if (this.langTextPools.some(pool => pool.length !== this.langTextPools![0].length)) throw new Error("Language text count mismatch");
+        if (this.langTextPools.some(pool => pool.length !== this.langTextPools![0].length)) {
+            throw new Error("Language text count mismatch");
+        }
     }
     private ReadTextBlock(): string[] {
         const indices = Array.from({length: this.ReadCount()}, () => this.ReadInt32());
         const pool = Array.from({length: this.ReadCount()}, () => this.ReadString());
         return indices.map(index => {
-            if (index < 0 || index >= pool.length) throw new Error(`Invalid text pool index: ${index}`);
+            if (index < 0 || index >= pool.length) {
+                throw new Error(`Invalid text pool index: ${index}`);
+            }
             return pool[index];
         });
     }
@@ -81,7 +89,9 @@ export class Stream {
 
     ReadSize(): number {
         const count = this.ReadInt32();
-        if (count < 0) throw new Error(`Negative count or length: ${count}`);
+        if (count < 0) {
+            throw new Error(`Negative count or length: ${count}`);
+        }
         return count;
     }
 
@@ -121,7 +131,9 @@ export class Stream {
         const index = this.ReadTextIndex();
         const pools = this.langTextPools!;
         const texts = new Array<string>(pools.length);
-        for (let i = 0; i < pools.length; i++) texts[i] = pools[i][index];
+        for (let i = 0; i < pools.length; i++) {
+            texts[i] = pools[i][index];
+        }
         return texts;
     }
 
@@ -133,7 +145,9 @@ export class Stream {
 
     ReadTextIndex(): number {
         const index = this.ReadInt32();
-        if (!this.langTextPools || this.langTextPools.length === 0 || index < 0 || index >= this.langTextPools[0].length) throw new Error(`Invalid text index: ${index}`);
+        if (!this.langTextPools || this.langTextPools.length === 0 || index < 0 || index >= this.langTextPools[0].length) {
+            throw new Error(`Invalid text index: ${index}`);
+        }
         return index;
     }
 
@@ -159,37 +173,53 @@ export class ConfigPackage {
     static Read(bytes: ArrayBuffer): ConfigPackage {
         const input = new Stream(bytes);
         const version = input.ReadInt32();
-        if (version !== ConfigPackage.FormatVersion) throw new Error(`Unsupported config format version ${version}; reader supports [1]. Regenerate the reader or export compatible data.`);
+        if (version !== ConfigPackage.FormatVersion) {
+            throw new Error(`Unsupported config format version ${version}; reader supports [1]. Regenerate the reader or export compatible data.`);
+        }
         const metadata = new Map<string, string>();
         for (let count = input.ReadCount(8); count > 0; count--) {
             const key = input.ReadString(); const value = input.ReadString();
-            if (metadata.has(key)) throw new Error(`Duplicate metadata: ${key}`);
+            if (metadata.has(key)) {
+                throw new Error(`Duplicate metadata: ${key}`);
+            }
             metadata.set(key, value);
         }
         const blocks = new Map<string, Stream>();
         for (let count = input.ReadCount(8); count > 0; count--) {
             const name = input.ReadString(); const block = input.Slice(input.ReadInt32());
-            if (blocks.has(name)) throw new Error(`Duplicate block: ${name}`);
+            if (blocks.has(name)) {
+                throw new Error(`Duplicate block: ${name}`);
+            }
             blocks.set(name, block);
         }
         input.RequireEnd(); return new ConfigPackage(metadata, blocks);
     }
     get Name(): string {
         const name = this.Metadata.get("pack");
-        if (!name || name.trim() !== name || name.includes(",")) throw new Error("Missing or invalid pack name");
+        if (!name || name.trim() !== name || name.includes(",")) {
+            throw new Error("Missing or invalid pack name");
+        }
         return name;
     }
     Block(name: string): Stream {
         const block = this.blocks.get(name);
-        if (!block) throw new Error(`Missing block: ${name}`);
+        if (!block) {
+            throw new Error(`Missing block: ${name}`);
+        }
         return block.Fork();
     }
     Attach(language: ConfigPackage): ConfigPackage {
-        if (this.Name !== language.Name) throw new Error("Language resource belongs to another pack");
+        if (this.Name !== language.Name) {
+            throw new Error("Language resource belongs to another pack");
+        }
         const blocks = new Map(this.blocks);
-        if (language.blocks.size === 0) throw new Error("Empty language resource");
+        if (language.blocks.size === 0) {
+            throw new Error("Empty language resource");
+        }
         for (const [name, block] of language.blocks) {
-            if (!name.startsWith("text/") || blocks.has(name)) throw new Error(`Invalid or duplicate language block: ${name}`);
+            if (!name.startsWith("text/") || blocks.has(name)) {
+                throw new Error(`Invalid or duplicate language block: ${name}`);
+            }
             blocks.set(name, block);
         }
         return new ConfigPackage(this.Metadata, blocks);
@@ -200,7 +230,11 @@ export class ConfigPackage {
         const names = languages?.length ? languages : [this.Metadata.get("defaultLanguage") ?? "default"];
         input.ReadLanguageBlocks(names, names.map(name => this.Block("text/" + name)));
         const tables = new Map<string, Stream>();
-        for (const [name, block] of this.blocks) if (name.startsWith(".")) tables.set(name.substring(1), block);
+        for (const [name, block] of this.blocks) {
+            if (name.startsWith(".")) {
+                tables.set(name.substring(1), block);
+            }
+        }
         input.SetTableBlocks(tables); return input;
     }
 }
@@ -279,7 +313,9 @@ export class Loader {
                        errors: LoadErrors, languages?: readonly string[]): Stream {
         pack.Name;
         // These runtimes load complete single packages; sparse Mod composition is provided by Java/C#.
-        if (pack.Metadata.get("requires")) throw new Error("This loader supports standalone packages; Mod composition requires Java/C#");
+        if (pack.Metadata.get("requires")) {
+            throw new Error("This loader supports standalone packages; Mod composition requires Java/C#");
+        }
         const stream = pack.OpenData(languages); processor(stream, errors); return stream;
     }
     static LoadBytes(

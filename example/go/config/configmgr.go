@@ -130,35 +130,81 @@ func GetTaskTask_extra_expMgr() *TaskTask_extra_expMgr {
 
 func Init(reader io.Reader) *Stream {
     data, err := io.ReadAll(reader)
-    if err != nil { panic(err) }
+    if err != nil {
+        panic(err)
+    }
     return InitPackage(ReadPackage(data))
 }
 
 // InitPackage reads a complete versioned package. Mod composition remains a Java/C# API.
 func InitPackage(pack *ConfigPackage) *Stream {
     pack.Name()
-    if pack.metadata["requires"] != "" { panic("this loader supports standalone packages; Mod composition requires Java/C#") }
-    if _, exists := pack.blocks[".ai.ai"]; !exists { panic("missing table in standalone package: ai.ai") }
-    if _, exists := pack.blocks[".ai.ai_action"]; !exists { panic("missing table in standalone package: ai.ai_action") }
-    if _, exists := pack.blocks[".ai.ai_condition"]; !exists { panic("missing table in standalone package: ai.ai_condition") }
-    if _, exists := pack.blocks[".equip.ability"]; !exists { panic("missing table in standalone package: equip.ability") }
-    if _, exists := pack.blocks[".equip.equip_config"]; !exists { panic("missing table in standalone package: equip.equip_config") }
-    if _, exists := pack.blocks[".equip.jewelry"]; !exists { panic("missing table in standalone package: equip.jewelry") }
-    if _, exists := pack.blocks[".equip.jewelry_random"]; !exists { panic("missing table in standalone package: equip.jewelry_random") }
-    if _, exists := pack.blocks[".equip.jewelry_suit"]; !exists { panic("missing table in standalone package: equip.jewelry_suit") }
-    if _, exists := pack.blocks[".equip.jewelry_type"]; !exists { panic("missing table in standalone package: equip.jewelry_type") }
-    if _, exists := pack.blocks[".equip.rank"]; !exists { panic("missing table in standalone package: equip.rank") }
-    if _, exists := pack.blocks[".other.ArgCaptureMode"]; !exists { panic("missing table in standalone package: other.ArgCaptureMode") }
-    if _, exists := pack.blocks[".other.drop"]; !exists { panic("missing table in standalone package: other.drop") }
-    if _, exists := pack.blocks[".other.key_test"]; !exists { panic("missing table in standalone package: other.key_test") }
-    if _, exists := pack.blocks[".other.loot"]; !exists { panic("missing table in standalone package: other.loot") }
-    if _, exists := pack.blocks[".other.loot_item"]; !exists { panic("missing table in standalone package: other.loot_item") }
-    if _, exists := pack.blocks[".other.monster"]; !exists { panic("missing table in standalone package: other.monster") }
-    if _, exists := pack.blocks[".other.sign_in"]; !exists { panic("missing table in standalone package: other.sign_in") }
-    if _, exists := pack.blocks[".task.complete_condition_type"]; !exists { panic("missing table in standalone package: task.complete_condition_type") }
-    if _, exists := pack.blocks[".task.task"]; !exists { panic("missing table in standalone package: task.task") }
-    if _, exists := pack.blocks[".task.task2"]; !exists { panic("missing table in standalone package: task.task2") }
-    if _, exists := pack.blocks[".task.task_extra_exp"]; !exists { panic("missing table in standalone package: task.task_extra_exp") }
+    if pack.metadata["requires"] != "" {
+        panic("this loader supports standalone packages; Mod composition requires Java/C#")
+    }
+    if _, exists := pack.blocks[".ai.ai"]; !exists {
+        panic("missing table in standalone package: ai.ai")
+    }
+    if _, exists := pack.blocks[".ai.ai_action"]; !exists {
+        panic("missing table in standalone package: ai.ai_action")
+    }
+    if _, exists := pack.blocks[".ai.ai_condition"]; !exists {
+        panic("missing table in standalone package: ai.ai_condition")
+    }
+    if _, exists := pack.blocks[".equip.ability"]; !exists {
+        panic("missing table in standalone package: equip.ability")
+    }
+    if _, exists := pack.blocks[".equip.equip_config"]; !exists {
+        panic("missing table in standalone package: equip.equip_config")
+    }
+    if _, exists := pack.blocks[".equip.jewelry"]; !exists {
+        panic("missing table in standalone package: equip.jewelry")
+    }
+    if _, exists := pack.blocks[".equip.jewelry_random"]; !exists {
+        panic("missing table in standalone package: equip.jewelry_random")
+    }
+    if _, exists := pack.blocks[".equip.jewelry_suit"]; !exists {
+        panic("missing table in standalone package: equip.jewelry_suit")
+    }
+    if _, exists := pack.blocks[".equip.jewelry_type"]; !exists {
+        panic("missing table in standalone package: equip.jewelry_type")
+    }
+    if _, exists := pack.blocks[".equip.rank"]; !exists {
+        panic("missing table in standalone package: equip.rank")
+    }
+    if _, exists := pack.blocks[".other.ArgCaptureMode"]; !exists {
+        panic("missing table in standalone package: other.ArgCaptureMode")
+    }
+    if _, exists := pack.blocks[".other.drop"]; !exists {
+        panic("missing table in standalone package: other.drop")
+    }
+    if _, exists := pack.blocks[".other.key_test"]; !exists {
+        panic("missing table in standalone package: other.key_test")
+    }
+    if _, exists := pack.blocks[".other.loot"]; !exists {
+        panic("missing table in standalone package: other.loot")
+    }
+    if _, exists := pack.blocks[".other.loot_item"]; !exists {
+        panic("missing table in standalone package: other.loot_item")
+    }
+    if _, exists := pack.blocks[".other.monster"]; !exists {
+        panic("missing table in standalone package: other.monster")
+    }
+    if _, exists := pack.blocks[".other.sign_in"]; !exists {
+        panic("missing table in standalone package: other.sign_in")
+    }
+    if _, exists := pack.blocks[".task.complete_condition_type"]; !exists {
+        panic("missing table in standalone package: task.complete_condition_type")
+    }
+    if _, exists := pack.blocks[".task.task"]; !exists {
+        panic("missing table in standalone package: task.task")
+    }
+    if _, exists := pack.blocks[".task.task2"]; !exists {
+        panic("missing table in standalone package: task.task2")
+    }
+    if _, exists := pack.blocks[".task.task_extra_exp"]; !exists {
+        panic("missing table in standalone package: task.task_extra_exp")
+    }
     return initTables(pack.OpenData())
 }
 

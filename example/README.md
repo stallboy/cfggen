@@ -68,6 +68,12 @@ gui.bat    # gui来配置参数和启动
 
 
 
+## 增量 Mod 示例
+
+`config_mod/` 共享 `config/` 的结构，演示覆盖怪物 1、新增怪物和任务 1001，以及覆盖固定 enum 的详情。`java/genjava.bat` 和 `cs/gencs.bat` 会分别导出基础包与 `demo-mod.bytes`，对应的 `run.bat` 展示基础实例和组合实例并存、显式切换默认配置、跨包引用与来源查询。
+
+具体数据及只重新导出 Mod 数据的命令见 [config_mod/README.md](config_mod/README.md)。
+
 ## 多语言代码生成测试
 
 ### ☕ Java

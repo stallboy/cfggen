@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// 初始化cfgMgr
-	file, err := os.Open("config.bytes")
+	file, err := os.Open("base.bytes")
 	if err != nil {
 		return
 	}

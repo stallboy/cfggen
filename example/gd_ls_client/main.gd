@@ -8,7 +8,7 @@ func _ready():
 	var processor = ConfigProcessor.new()
 
 	# 加载配置并获取 stream
-	var stream = processor.load_from_package(ConfigPackage.read_file("res://config.bytes"), errors)
+	var stream = processor.load_from_package(ConfigPackage.read_file("res://base.bytes"), errors)
 	if stream == null:
 		print("Failed to load config file")
 		return

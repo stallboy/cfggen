@@ -93,7 +93,9 @@ ${model.sourceComment}
                         for (; c > 0; c--) {
                             var key = ${model.readValue(fMap.key())};
                             var value = ${model.readValue(fMap.value())};
-                            if (self.${ln}.putIfAbsent(key, value) != null) input.errors().duplicateKey("${model.structural.name()}.${field.name()}", key);
+                            if (self.${ln}.putIfAbsent(key, value) != null) {
+                                input.errors().duplicateKey("${model.structural.name()}.${field.name()}", key);
+                            }
                         }
                         self.${ln} = java.util.Collections.unmodifiableMap(self.${ln});
                     }
@@ -143,8 +145,9 @@ ${model.sourceComment}
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof ${model.className} o))
+            if (!(other instanceof ${model.className} o)) {
                 return false;
+            }
             return ${model.equals()};
         }
 

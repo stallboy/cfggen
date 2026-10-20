@@ -33,7 +33,9 @@ public class JewelrySuit_Entry {
         for (var row : mgr._get_equip_jewelry_suit_All().values()) {
             var key = row.getSuitID();
             String symbol = row.getEname();
-            if (symbol.isEmpty()) continue;
+            if (symbol.isEmpty()) {
+                continue;
+            }
             JewelrySuit_Entry expected = switch (symbol) {
                 case "SpecialSuit" -> SPECIAL_SUIT;
                 default -> null;
@@ -42,9 +44,13 @@ public class JewelrySuit_Entry {
                 errors.unknownSymbol("equip.jewelry_suit", symbol, key, mgr.explain("equip.jewelry_suit", key));
                 continue;
             }
-            if (key != expected.value) errors.changedSymbolId("equip.jewelry_suit", symbol, expected.value, key, mgr.explain("equip.jewelry_suit", key));
+            if (key != expected.value) {
+                errors.changedSymbolId("equip.jewelry_suit", symbol, expected.value, key, mgr.explain("equip.jewelry_suit", key));
+            }
         }
-        if (SPECIAL_SUIT.ref(mgr) == null) errors.missingSymbol("equip.jewelry_suit", "SpecialSuit", SPECIAL_SUIT.value);
+        if (SPECIAL_SUIT.ref(mgr) == null) {
+            errors.missingSymbol("equip.jewelry_suit", "SpecialSuit", SPECIAL_SUIT.value);
+        }
     }
 
 }

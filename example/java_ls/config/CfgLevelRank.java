@@ -47,8 +47,9 @@ public class CfgLevelRank {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgLevelRank o))
+        if (!(other instanceof CfgLevelRank o)) {
             return false;
+        }
         return level == o.level && rank == o.rank;
     }
 
@@ -59,7 +60,9 @@ public class CfgLevelRank {
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.RefRank = config.equip.CfgRank.get(this.rank);
-        if (this.RefRank == null) errors.missingReference("LevelRank", "Rank", "equip.rank", this.rank);
+        if (this.RefRank == null) {
+            errors.missingReference("LevelRank", "Rank", "equip.rank", this.rank);
+        }
 
     }
 

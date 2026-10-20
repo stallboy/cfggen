@@ -50,7 +50,11 @@ public final class LoadValueErrs {
     private final List<Error> errors = new ArrayList<>();
 
     public List<Error> getErrors() { return List.copyOf(errors); }
-    public void checkErrors() { if (!errors.isEmpty()) throw new ConfigErr(errors); }
+    public void checkErrors() {
+        if (!errors.isEmpty()) {
+            throw new ConfigErr(errors);
+        }
+    }
 
     private void add(Error error) { errors.add(error); }
     private ConfigErr fail(Error error) { add(error); return new ConfigErr(errors); }

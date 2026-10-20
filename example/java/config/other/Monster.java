@@ -43,7 +43,9 @@ public class Monster {
                 for (; c > 0; c--) {
                     var key = input.readStringInPool();
                     var value = input.readInt();
-                    if (self.enumMap1.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.monster.enumMap1", key);
+                    if (self.enumMap1.putIfAbsent(key, value) != null) {
+                        input.errors().duplicateKey("other.monster.enumMap1", key);
+                    }
                 }
                 self.enumMap1 = java.util.Collections.unmodifiableMap(self.enumMap1);
             }
@@ -57,7 +59,9 @@ public class Monster {
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readStringInPool();
-                    if (self.enumMap2.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.monster.enumMap2", key);
+                    if (self.enumMap2.putIfAbsent(key, value) != null) {
+                        input.errors().duplicateKey("other.monster.enumMap2", key);
+                    }
                 }
                 self.enumMap2 = java.util.Collections.unmodifiableMap(self.enumMap2);
             }
@@ -114,16 +118,22 @@ public class Monster {
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.RefLoot = mgr.getOtherLootItem(this.lootId, this.lootItemId);
-        if (this.RefLoot == null) errors.missingReference("other.monster", "Loot", "other.loot_item", java.util.List.of(this.lootId, this.lootItemId));
+        if (this.RefLoot == null) {
+            errors.missingReference("other.monster", "Loot", "other.loot_item", java.util.List.of(this.lootId, this.lootItemId));
+        }
         this.RefAllLoot = mgr.getOtherLoot(this.lootId);
-        if (this.RefAllLoot == null) errors.missingReference("other.monster", "AllLoot", "other.loot", this.lootId);
+        if (this.RefAllLoot == null) {
+            errors.missingReference("other.monster", "AllLoot", "other.loot", this.lootId);
+        }
         if (this.enumMap2.isEmpty()) {
             this.RefEnumMap2 = java.util.Collections.emptyMap();
         } else {
             this.RefEnumMap2 = new java.util.LinkedHashMap<>(this.enumMap2.size());
             for (java.util.Map.Entry<Integer, String> e : this.enumMap2.entrySet()) {
                 var ref = config.other.ArgCaptureMode.get(e.getValue());
-                if (ref == null) errors.missingReference("other.monster", "enumMap2", "other.ArgCaptureMode", e.getValue());
+                if (ref == null) {
+                    errors.missingReference("other.monster", "enumMap2", "other.ArgCaptureMode", e.getValue());
+                }
                 this.RefEnumMap2.put(e.getKey(), ref);
             }
         }

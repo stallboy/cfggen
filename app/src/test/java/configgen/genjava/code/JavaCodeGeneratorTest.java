@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,8 +25,9 @@ class JavaCodeGeneratorTest {
     @TempDir
     Path tempDir;
 
-    @Test
-    void importsLoadValueErrsOnlyWhenTheGeneratedClassUsesIt() throws Exception {
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 2})
+    void importsLoadValueErrsOnlyWhenTheGeneratedClassUsesIt(int schemaNumPerFile) throws Exception {
         var context = configgen.TestCtx.newContext(Files.createDirectories(tempDir.resolve("data")), """
                 struct Plain { value:int; }
                 struct WithMap { values:map<int,int> (pack); }
@@ -41,7 +44,7 @@ class JavaCodeGeneratorTest {
                 "state", "id,name,power\nid,name,power\n1,LoadValueErrs,2\n", "flag", "id,name\nid,name\n1,On\n",
                 "empty", "id,name\nid,name\n1,\n"));
         Path generated = tempDir.resolve("generated");
-        new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",pkg:config")).generate(context);
+        new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",pkg:config,schemaNumPerFile:" + schemaNumPerFile)).generate(context);
         for (String className : java.util.List.of("Plain", "WithMap", "Required", "Optional", "Nested", "choice/Choice", "Target", "Indexed", "State_Detail", "Flag")) {
             String code = Files.readString(generated.resolve("config/" + className + ".java"));
             boolean needsErrors = java.util.Set.of("Required", "Optional", "Nested", "Indexed").contains(className);
@@ -49,12 +52,13 @@ class JavaCodeGeneratorTest {
             assertFalse(code.contains("configgen.genjava.LoadValueErrs."), className);
             assertFalse(code.contains("_resolveDirect"), className);
             assertFalse(code.contains("errors.requireNonNull("), className);
-            if (className.equals("Required")) assertTrue(code.contains(" == null) errors.missingReference("));
+            if (className.equals("Required")) assertTrue(code.contains("errors.missingReference("));
             if (className.equals("Optional")) assertFalse(code.contains("errors.missingReference("));
         }
         String symbols = Files.readString(generated.resolve("config/State.java"));
         assertFalse(symbols.contains("requireSymbol("));
-        assertTrue(symbols.contains("if (e.ref(mgr) == null) errors.missingSymbol("));
+        assertTrue(symbols.contains("if (e.ref(mgr) == null) {"));
+        assertTrue(symbols.contains("errors.missingSymbol("));
         assertTrue(symbols.contains("State expected = switch (symbol)"));
         assertTrue(symbols.contains("key != expected.value"));
         var classes = Files.createDirectories(tempDir.resolve("classes"));
@@ -65,6 +69,15 @@ class JavaCodeGeneratorTest {
         }
         assertEquals(0, javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null, args.toArray(String[]::new)),
                 "Imports must compile even when an enum constant is named LoadValueErrs");
+        try (var loader = new java.net.URLClassLoader(new java.net.URL[]{classes.toUri().toURL()}, getClass().getClassLoader())) {
+            var schemaClass = loader.loadClass("config.ConfigCodeSchema");
+            var codeSchema = (configgen.genjava.SchemaInterface) schemaClass.getMethod("getCodeSchema").invoke(null);
+            var packageSchema = (configgen.genjava.SchemaInterface) schemaClass.getMethod("getPackageSchema").invoke(null);
+            var packageOnly = new java.util.HashSet<>(packageSchema.implementations.keySet());
+            assertTrue(packageOnly.containsAll(codeSchema.implementations.keySet()));
+            packageOnly.removeAll(codeSchema.implementations.keySet());
+            assertEquals(java.util.Set.of("flag_Detail"), packageOnly);
+        }
     }
 
     @BeforeAll

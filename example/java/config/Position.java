@@ -40,8 +40,9 @@ public class Position {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof Position o))
+        if (!(other instanceof Position o)) {
             return false;
+        }
         return x == o.x && y == o.y && z == o.z;
     }
 

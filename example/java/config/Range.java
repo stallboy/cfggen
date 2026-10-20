@@ -39,8 +39,9 @@ public class Range {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof Range o))
+        if (!(other instanceof Range o)) {
             return false;
+        }
         return min == o.min && max == o.max;
     }
 

@@ -25,8 +25,8 @@ class MultiLanguagePackageTest {
                 Map.of("t", "id,text\nid,text\n1,你好\n"), languages, "zh_cn");
         Path out = root.resolve("out");
         new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + out)).generate(ctx);
-        var base = ConfigPackage.read(new ConfigInput(out.resolve("config.bytes")));
-        var english = ConfigPackage.read(new ConfigInput(out.resolve("en.bytes")));
+        var base = ConfigPackage.read(out.resolve("base.bytes"));
+        var english = ConfigPackage.read(out.resolve("base_en.bytes"));
         assertFalse(base.blockNames().contains("text/en"));
         var combined = base.attach(english);
         Path generated = root.resolve("java");

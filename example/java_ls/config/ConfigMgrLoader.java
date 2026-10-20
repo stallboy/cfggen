@@ -21,12 +21,18 @@ public class ConfigMgrLoader {
         var expected = ConfigCodeSchema.getPackageSchema();
         for (var pack : packages) {
             String packName = pack.name();
-            if (!pack.validateSchema(expected, errors)) continue;
+            if (!pack.validateSchema(expected, errors)) {
+                continue;
+            }
             for (String block : pack.blockNames()) {
-                if (!block.startsWith(".")) continue;
+                if (!block.startsWith(".")) {
+                    continue;
+                }
                 String table = block.substring(1);
                 var loader = loaders.get(table);
-                if (loader != null) loader.read(pack.block(block, LANGUAGES), packName);
+                if (loader != null) {
+                    loader.read(pack.block(block, LANGUAGES), packName, pack == packages[0]);
+                }
             }
         }
         return finish(mgr, loaders, errors);
@@ -42,7 +48,9 @@ public class ConfigMgrLoader {
         config.equip.CfgJewelry_suit_Entry.setAllRefs(mgr, errors);
         config.equip.CfgRank.setAllRefs(mgr, errors);
         config.other.CfgArgCaptureMode.setAllRefs(mgr, errors);
-        for (var loader : loaders.values()) loader.resolveAll();
+        for (var loader : loaders.values()) {
+            loader.resolveAll();
+        }
         errors.checkErrors();
         mgr.markReady();
         return mgr;

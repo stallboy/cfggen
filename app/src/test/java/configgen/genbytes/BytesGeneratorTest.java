@@ -51,12 +51,47 @@ class BytesGeneratorTest {
             """;
 
     @Test
+    void packageNameCannotCreatePathsOrInvalidFileNames() {
+        for (String name : java.util.List.of("../outside", "a/b", "a\\b", "C:\\pack", "bad?name", "bad|name")) {
+            assertThrows(configgen.gen.CliException.class, () -> new BytesGenerator(new ParameterParser("bytes,pack:" + name)), name);
+        }
+    }
+
+    @Test
+    void packageNamesKeepMainAndLanguageFilesDistinctInOneDirectory() throws IOException {
+        Path data = java.nio.file.Files.createDirectories(tempDir.resolve("data"));
+        Path languages = java.nio.file.Files.createDirectories(tempDir.resolve("languages"));
+        java.nio.file.Files.writeString(languages.resolve("en.csv"), "user,你好世界,Hello world\n");
+        Context context = TestCtx.newLangSwitchContext(data, CFG, java.util.Map.of("user", CSV), languages, "zh_cn");
+        Path output = tempDir.resolve("packages");
+        for (String name : java.util.List.of("base", "demo-mod")) {
+            new BytesGenerator(new ParameterParser("bytes,pack:" + name + ",langSeparated,dir:" + output)).generate(context);
+        }
+        try (var files = java.nio.file.Files.list(output)) {
+            assertEquals(java.util.Set.of("base.bytes", "base_en.bytes", "demo-mod.bytes", "demo-mod_en.bytes"),
+                    files.map(path -> path.getFileName().toString()).collect(java.util.stream.Collectors.toSet()));
+        }
+        for (String name : java.util.List.of("base", "demo-mod")) {
+            var pack = ConfigPackage.read(output.resolve(name + ".bytes"));
+            var language = ConfigPackage.read(output.resolve(name + "_en.bytes"));
+            assertEquals(name, pack.name());
+            assertEquals(name, language.name());
+            assertEquals(java.util.Set.of("text/en"), language.blockNames());
+            var table = pack.attach(language).block(".user", "en");
+            assertEquals(1, table.readInt());
+            assertEquals(1, table.readInt());
+            assertEquals("Alice", table.readStringInPool());
+            assertEquals("Hello world", table.readTextInPool());
+        }
+    }
+
+    @Test
     void defaultOutputIsVersionedBasePackageAndDefaultInspectorReadsIt() throws IOException {
         Path output = tempDir.resolve("default");
         Context context = TestCtx.newContext(tempDir, CFG, java.util.Map.of("user", CSV));
         new BytesGenerator(new ParameterParser("bytes,dir:" + output)).generate(context);
-        Path file = output.resolve("config.bytes");
-        var pack = ConfigPackage.read(new ConfigInput(file));
+        Path file = output.resolve("base.bytes");
+        var pack = ConfigPackage.read(file);
         assertEquals("base", pack.name());
         org.junit.jupiter.api.Assertions.assertTrue(pack.blockNames().containsAll(java.util.List.of("schema", "strings", "text/default", ".user")));
         org.junit.jupiter.api.Assertions.assertTrue(new configgen.genjava.BytesInspector(file.toString()).match("user").contains("Alice"));
@@ -68,18 +103,17 @@ class BytesGeneratorTest {
         Context ctx = TestCtx.newContext(tempDir, CFG, java.util.Map.of("user", CSV));
         new BytesGenerator(new ParameterParser("bytes,dir:" + outDir)).generate(ctx);
 
-        var pack = ConfigPackage.read(new ConfigInput(outDir.resolve("config.bytes")));
-        try (ConfigInput in = pack.block("schema")) {
-            SchemaInterface si = (SchemaInterface) SchemaDeserializer.deserialize(in);
-            in.requireEnd();
+        var pack = ConfigPackage.read(outDir.resolve("base.bytes"));
+        ConfigInput in = pack.block("schema");
+        SchemaInterface si = (SchemaInterface) SchemaDeserializer.deserialize(in);
+        in.requireEnd();
 
-            SchemaBean user = (SchemaBean) si.implementations.get("user");
-            assertEquals(SStr, user.columns.get(1).schema(), "str字段应为SStr");
-            // 回归：TEXT曾被标成SStr，按schema读数据会走StringPool读错池
-            assertEquals(SText, user.columns.get(2).schema(), "text字段应为SText（读LangTextPool）");
+        SchemaBean user = (SchemaBean) si.implementations.get("user");
+        assertEquals(SStr, user.columns.get(1).schema(), "str字段应为SStr");
+        // 回归：TEXT曾被标成SStr，按schema读数据会走StringPool读错池
+        assertEquals(SText, user.columns.get(2).schema(), "text字段应为SText（读LangTextPool）");
 
-            readAndAssertUserData(pack.block(".user"));
-        }
+        readAndAssertUserData(pack.block(".user"));
     }
 
     private static void readAndAssertUserData(ConfigInput in) {
@@ -98,22 +132,13 @@ class BytesGeneratorTest {
         Path output = tempDir.resolve("blocks");
         Context ctx = TestCtx.newContext(tempDir, CFG, java.util.Map.of("user", CSV));
         new BytesGenerator(new ParameterParser("bytes,dir:" + output + ",pack:base")).generate(ctx);
-        var pack = ConfigPackage.read(new ConfigInput(output.resolve("config.bytes")));
+        var pack = ConfigPackage.read(output.resolve("base.bytes"));
         assertEquals("base", pack.name());
         org.junit.jupiter.api.Assertions.assertTrue(pack.blockNames().contains("schema"));
-        String inspected = new configgen.genjava.BytesInspector(output.resolve("config.bytes").toString()).match("user");
+        String inspected = new configgen.genjava.BytesInspector(output.resolve("base.bytes").toString()).match("user");
         org.junit.jupiter.api.Assertions.assertTrue(inspected.contains("Alice"));
         org.junit.jupiter.api.Assertions.assertTrue(inspected.contains("你好世界"));
-        try (ConfigInput in = pack.block(".user")) {
-            assertEquals(1, in.readInt());
-            assertEquals(1, in.readInt());
-            assertEquals("Alice", in.readStringInPool());
-            assertEquals("你好世界", in.readTextInPool());
-            assertEquals(2, in.readInt());
-            assertEquals("tag1", in.readStringInPool());
-            assertEquals("tag2", in.readStringInPool());
-            in.requireEnd();
-        }
+        readAndAssertUserData(pack.block(".user"));
     }
 
     @Test
@@ -121,7 +146,7 @@ class BytesGeneratorTest {
         var ctx = TestCtx.newContext(tempDir, "table schema[id] { id:int; }",
                 java.util.Map.of("schema", "id\nid\n7\n"));
         new BytesGenerator(new ParameterParser("bytes,dir:" + tempDir.resolve("schema"))).generate(ctx);
-        var pack = ConfigPackage.read(new ConfigInput(tempDir.resolve("schema/config.bytes")));
+        var pack = ConfigPackage.read(tempDir.resolve("schema/base.bytes"));
         assertEquals(java.util.Set.of("schema", "strings", "text/default", ".schema"), pack.blockNames());
         var table = pack.block(".schema");
         assertEquals(1, table.readInt());

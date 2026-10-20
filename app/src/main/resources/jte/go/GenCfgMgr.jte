@@ -28,16 +28,22 @@ func Get${ClassName}Mgr() *${ClassName}Mgr {
 @endfor
 func Init(reader io.Reader) *Stream {
     data, err := io.ReadAll(reader)
-    if err != nil { panic(err) }
+    if err != nil {
+        panic(err)
+    }
     return InitPackage(ReadPackage(data))
 }
 
 // InitPackage reads a complete versioned package. Mod composition remains a Java/C# API.
 func InitPackage(pack *ConfigPackage) *Stream {
     pack.Name()
-    if pack.metadata["requires"] != "" { panic("this loader supports standalone packages; Mod composition requires Java/C#") }
+    if pack.metadata["requires"] != "" {
+        panic("this loader supports standalone packages; Mod composition requires Java/C#")
+    }
     @for(VTable vTable : cfgValue.sortedTables())
-        if _, exists := pack.blocks[".${vTable.name()}"]; !exists { panic("missing table in standalone package: ${vTable.name()}") }
+        if _, exists := pack.blocks[".${vTable.name()}"]; !exists {
+            panic("missing table in standalone package: ${vTable.name()}")
+        }
     @endfor
     return initTables(pack.OpenData(${model.languageArguments()}))
 }

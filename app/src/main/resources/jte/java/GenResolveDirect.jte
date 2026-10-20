@@ -14,7 +14,9 @@
                 @if(firstField.type() instanceof FieldType.SimpleType)
                     this.${refName} = ${MethodStr.tableGet(cfg, refTable, refSimple, MethodStr.actualParamsKeyRaw(fk.key(), "this."))};
                     @if(!refSimple.nullable())
-                        if (this.${refName} == null) errors.missingReference("${structural.name()}", "${fk.name()}", "${refTable.name()}", ${MethodStr.referenceKey(fk.key())});
+                        if (this.${refName} == null) {
+                            errors.missingReference("${structural.name()}", "${fk.name()}", "${refTable.name()}", ${MethodStr.referenceKey(fk.key())});
+                        }
                     @endif
                 @elseif(firstField.type() instanceof FieldType.FList fList)
                     !{
@@ -26,7 +28,9 @@
                         this.${refName} = new java.util.ArrayList<>(this.${firstFieldName}.size());
                         for (${TypeStr.boxType(cfg, fList.item())} e : this.${firstFieldName}) {
                             var ref = ${MethodStr.tableGet(cfg, refTable, refSimple, "e")};
-                            if (ref == null) errors.missingReference("${structural.name()}", "${fk.name()}", "${refTable.name()}", e);
+                            if (ref == null) {
+                                errors.missingReference("${structural.name()}", "${fk.name()}", "${refTable.name()}", e);
+                            }
                             this.${refName}.add(ref);
                         }
                     }
@@ -40,7 +44,9 @@
                         this.${refName} = new java.util.LinkedHashMap<>(this.${firstFieldName}.size());
                         for (java.util.Map.Entry<${TypeStr.boxType(cfg, fMap.key())}, ${TypeStr.boxType(cfg, fMap.value())}> e : this.${firstFieldName}.entrySet()) {
                             var ref = ${MethodStr.tableGet(cfg, refTable, refSimple, "e.getValue()")};
-                            if (ref == null) errors.missingReference("${structural.name()}", "${fk.name()}", "${refTable.name()}", e.getValue());
+                            if (ref == null) {
+                                errors.missingReference("${structural.name()}", "${fk.name()}", "${refTable.name()}", e.getValue());
+                            }
                             this.${refName}.put(e.getKey(), ref);
                         }
                     }
@@ -59,7 +65,9 @@
                 @elseif(isEnum)
                     for (${refN.fullName} vv : ${refN.fullName}.values()) {
                         ${Name.tableDataFullName(cfg, refTable)} v = vv.ref(mgr);
-                        if (v == null) continue;
+                        if (v == null) {
+                            continue;
+                        }
                 @else
                     @if(refTable.primaryKey().fieldSchemas().size() == 1 && refTable.primaryKey().fieldSchemas().getFirst().isSeq())
                         for (${Name.refType(cfg, refTable)} v : mgr._get_${refN.containerPrefix}All()) {
@@ -75,7 +83,7 @@
                             eqs.add(MethodStr.equal("v.get" + StringUtil.upper1(rk) + "()", "this." + StringUtil.lower1(k.name()), k.type()));
                         }
                     }
-                    if (${String.join(" && ", eqs)})
+                    if (${String.join(" && ", eqs)}) {
                         @if(isEnumAndNoDetail)
                             this.${refName}.add(v);
                         @elseif(isEnum)
@@ -83,6 +91,7 @@
                         @else
                             this.${refName}.add(v);
                         @endif
+                    }
                 }
                 this.${refName} = java.util.Collections.unmodifiableList(this.${refName});
             @endif

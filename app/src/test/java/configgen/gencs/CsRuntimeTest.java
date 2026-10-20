@@ -5,7 +5,6 @@ import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
 import configgen.genbytes.BytesGenerator;
 import configgen.genbytes.PackageSerializer;
-import configgen.genjava.ConfigInput;
 import configgen.genjava.ConfigOutput;
 import configgen.genjava.ConfigPackage;
 import org.junit.jupiter.api.Tag;
@@ -37,7 +36,7 @@ class CsRuntimeTest {
                     Map.of("message", "id,desc\nid,desc\n" + (base ? "1,甲\n" : "1,B\n2,C\n")));
             if (base) new CsCodeGenerator(new ParameterParser("cs,dir:" + project + (unity ? ",unity" : ""))).generate(ctx);
             new BytesGenerator(new ParameterParser("bytes,dir:" + data)).generate(ctx);
-            var pack = ConfigPackage.read(new ConfigInput(data.resolve("config.bytes")));
+            var pack = ConfigPackage.read(data.resolve("base.bytes"));
             var metadata = new java.util.LinkedHashMap<>(pack.metadata());
             metadata.put("defaultLanguage", language);
             if (!base) { metadata.put("pack", "mod"); metadata.put("requires", "base"); }
@@ -46,9 +45,20 @@ class CsRuntimeTest {
                 var input = pack.block(block);
                 blocks.put(block.equals("text/default") ? "text/" + language : block, input.readRawBytes((int) input.remaining()));
             }
-            var bytes = new java.io.ByteArrayOutputStream();
-            try (var out = new ConfigOutput(bytes)) { PackageSerializer.write(out, metadata, blocks); }
-            Files.write(data.resolve("localized.bytes"), bytes.toByteArray());
+            writePackage(data.resolve("localized.bytes"), metadata, blocks);
+            if (!base) {
+                metadata.put("pack", "balance");
+                metadata.put("requires", "mod");
+                buffer(blocks.get(".message")).putInt(8, 1);
+                writePackage(data.resolve("balance.bytes"), metadata, blocks);
+                metadata.put("pack", "duplicate");
+                metadata.put("requires", "base");
+                byte[] rows = blocks.get(".message");
+                var duplicate = buffer(new byte[rows.length + 8]);
+                duplicate.putInt(3).put(rows, 4, rows.length - 4).put(rows, 4, 8);
+                blocks.put(".message", duplicate.array());
+                writePackage(data.resolve("duplicate.bytes"), metadata, blocks);
+            }
         }
         Files.writeString(project.resolve("runtime.csproj"), """
                 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>
@@ -70,14 +80,28 @@ class CsRuntimeTest {
                         var combined = Processor.LoadPackages(pack, ConfigPackage.ReadFile(args[2]));
                         if (DMessage.Get(original, 1)!.Desc != "甲" || DMessage.Get(baseConfig, 1)!.Desc != "甲"
                             || DMessage.Get(combined, 1)!.Desc != "B" || DMessage.Get(combined, 2)!.Desc != "C") throw new Exception("wrong default language");
-                        if (combined.Explain("message", 1).Count != 2 || combined.Explain("message", "1").Count != 0
+                        if (combined.Explain("message", 1).Count != 1 || combined.Explain("message", "1").Count != 0
                             || combined.Explain("unknown", 1).Count != 0) throw new Exception("wrong origins");
+                        if (baseConfig._message_Origins.Count != 0 || combined.Explain("message", 2)[0] != "mod") throw new Exception("base origins were retained");
+                        var mod = ConfigPackage.ReadFile(args[2]);
+                        var layered = Processor.LoadPackages(pack, mod, ConfigPackage.ReadFile(args[3]));
+                        if (DMessage.Get(layered, 1)!.Desc != "C" || DMessage.Get(layered, 2)!.Desc != "C"
+                            || string.Join(",", layered.Explain("message", 1)) != "mod,balance"
+                            || string.Join(",", layered.Explain("message", 2)) != "mod,balance") throw new Exception("wrong layered origins");
+                        try {
+                            Processor.LoadPackages(pack, ConfigPackage.ReadFile(args[4]));
+                            throw new Exception("duplicate mod row was accepted");
+                        } catch (ConfigException failure) {
+                            if (failure.Errors.Count != 1 || failure.Errors[0] is not LoadError.DuplicateRecord duplicate
+                                || duplicate.Pack != "duplicate" || (int)duplicate.Key != 1) throw new Exception("wrong duplicate error");
+                        }
                         Console.WriteLine("runtime-ok");
                     }
                 }
                 """);
-        runProject(project, root.resolve("dotnet.log"), root.resolve("zh_cn/config.bytes").toString(),
-                root.resolve("zh_cn/localized.bytes").toString(), root.resolve("en/localized.bytes").toString());
+        runProject(project, root.resolve("dotnet.log"), root.resolve("zh_cn/base.bytes").toString(),
+                root.resolve("zh_cn/localized.bytes").toString(), root.resolve("en/localized.bytes").toString(),
+                root.resolve("en/balance.bytes").toString(), root.resolve("en/duplicate.bytes").toString());
     }
 
     @ParameterizedTest
@@ -155,7 +179,7 @@ class CsRuntimeTest {
         new BytesGenerator(new ParameterParser("bytes,dir:" + bDir)).generate(b);
         // Empty structs occupy zero bytes; encode two explicitly to exercise collection count bounds.
         for (Path directory : java.util.List.of(aDir, bDir)) {
-            rewritePackage(directory, "config", blocks -> blocks.put(".hollow", buffer(new byte[12]).putInt(1).putInt(1).putInt(2).array()));
+            rewritePackage(directory, "base", blocks -> blocks.put(".hollow", buffer(new byte[12]).putInt(1).putInt(1).putInt(2).array()));
         }
         rewritePackage(aDir, "bad-symbol", blocks -> buffer(blocks.get(".rank")).putInt(8, buffer(blocks.get(".other.preset")).getInt(8)));
         rewritePackage(aDir, "bad-rank-id", blocks -> buffer(blocks.get(".rank")).putInt(4, 11));
@@ -197,7 +221,7 @@ class CsRuntimeTest {
         new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("basepack") + ",pack:base,langSeparated")).generate(a);
         Files.writeString(bDir.resolve("step.csv"), "id,name\nid,name\n3,three\n2,two\n");
         Context mod = new Context(b.contextCfg(), a.cfgSchema());
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("modpack") + ",pack:map,langSeparated,requires:base,deps:" + root.resolve("basepack/config.bytes"))).generate(mod);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("modpack") + ",pack:map,langSeparated,requires:base,deps:" + root.resolve("basepack/base.bytes"))).generate(mod);
         Files.writeString(project.resolve("runtime.csproj"), """
                 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>
                 <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
@@ -343,7 +367,7 @@ class CsRuntimeTest {
                                         Check(missing.Target == "rank" && (int)missing.Key == 999);
                                         Check(missing.Source == (test.Item1 == "bad-reference" ? "monster" : "Key"));
                                     }
-                                    if (error is LoadError.DuplicateUniqueKey duplicate) Check(duplicate.Table == "other.pair" && duplicate.Packs.Count == 1 && failure.Message.Contains("Packs = [base]"));
+                                    if (error is LoadError.DuplicateUniqueKey duplicate) Check(duplicate.Table == "other.pair" && duplicate.Packs.Count == 0);
                                     if (error is LoadError.InvalidSeq seq) Check(seq.Table == "step" && seq.Value == 9 && seq.Size == 2);
                                 }
                             }
@@ -364,8 +388,8 @@ class CsRuntimeTest {
                             Check(snapshot.Count == 1 && failure.Errors.Count == 1 && collector.Errors.Count == 2);
                             try { ((IList<LoadError>)failure.Errors).Clear(); throw new Exception("mutable errors"); } catch (NotSupportedException) { }
                         }
-                        var basePack = ConfigPackage.ReadFile(args[2]).Attach(ConfigPackage.ReadFile(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(args[2])!, "en.bytes")));
-                        var modPack = ConfigPackage.ReadFile(args[3]).Attach(ConfigPackage.ReadFile(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(args[3])!, "en.bytes")));
+                        var basePack = ConfigPackage.ReadFile(args[2]).Attach(ConfigPackage.ReadFile(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(args[2])!, "base_en.bytes")));
+                        var modPack = ConfigPackage.ReadFile(args[3]).Attach(ConfigPackage.ReadFile(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(args[3])!, "map_en.bytes")));
                         int readyBefore = DMonster.ReadyCalls, keysBefore = DKey.ReadyCalls, cachedBefore = DCached.ReadyCalls;
                         int branchesBefore = Config.Tree.DBranch.ReadyCalls, leavesBefore = Config.Tree.DLeaf.ReadyCalls, pairsBefore = Config.Tree.DPair.ReadyCalls;
                         var combined = Processor.LoadPackages(basePack, modPack);
@@ -376,20 +400,22 @@ class CsRuntimeTest {
                         Check(DRank.Green.Info(combined).Multiplier == 3 && DRank.Green.Info(a).Multiplier == 2);
                         foreach (var key in DHolder.Get(combined, 1)!.Links.Keys) Check(key.Calls == 1 && key.Multiplier == 3);
                         Check(ReferenceEquals(DMonster.Get(1), y));
-                        Check(combined.Explain("monster", 1).Count == 2);
+                        Check(a.Explain("monster", 1).Count == 0);
+                        Check(a._monster_Origins.Count == 0);
+                        Check(combined.Explain("monster", 1).Count == 1 && combined.Explain("monster", 1)[0] == "map");
                         Check(combined.Explain("monster", "1").Count == 0);
                         Check(combined.Explain("monster", 1L).Count == 0);
-                        Check(combined.Explain("monster", (int?)1).Count == 2);
+                        Check(combined.Explain("monster", (int?)1).Count == 1);
                         Check(combined.Explain<string?>("monster", null).Count == 0);
                         Check(combined.Explain("monster", 999).Count == 0);
                         Check(combined.Explain("unknown", 1).Count == 0);
-                        Check(combined.Explain("signal", "High").Count == 2);
+                        Check(combined.Explain("signal", "High").Count == 1);
                         try { ((IList<string>)combined.Explain("monster", 1))[0] = "mutated"; throw new Exception("mutable origins"); }
                         catch (NotSupportedException) { }
                         Check(Config.Other.DPair.Get(a, 1, "a")!.Name == "old");
                         Check(Config.Other.DPair.Get(combined, 1, "a")!.Name == "changed");
                         Check(Config.Other.DPair.GetByName(combined, "old") == null);
-                        Check(combined.Explain("other.pair", new Config.Other.DPair.IdCodeKey(1, "a")).Count == 2);
+                        Check(combined.Explain("other.pair", new Config.Other.DPair.IdCodeKey(1, "a")).Count == 1);
                         Check(Config.Other.DPreset.HomeIn(a).Power == 10 && Config.Other.DPreset.HomeIn(combined).Power == 20);
                         ConfigMgr.SetMgr(combined);
                         Check(DRank.Green.Info().Multiplier == 3 && Config.Other.DPreset.Home.Power == 20);
@@ -414,8 +440,8 @@ class CsRuntimeTest {
         }
         Files.writeString(project.resolve("Program.cs"), program);
         Path log = root.resolve("dotnet.log");
-        runProject(project, log, aDir.resolve("config.bytes").toString(), bDir.resolve("config.bytes").toString(),
-                root.resolve("basepack/config.bytes").toString(), root.resolve("modpack/config.bytes").toString());
+        runProject(project, log, aDir.resolve("base.bytes").toString(), bDir.resolve("base.bytes").toString(),
+                root.resolve("basepack/base.bytes").toString(), root.resolve("modpack/map.bytes").toString());
     }
 
     private static void runProject(Path project, Path log, String... arguments) throws Exception {
@@ -434,15 +460,19 @@ class CsRuntimeTest {
     }
 
     private static void rewritePackage(Path directory, String name, java.util.function.Consumer<Map<String, byte[]>> mutate) throws Exception {
-        var pack = ConfigPackage.read(new ConfigInput(directory.resolve("config.bytes")));
+        var pack = ConfigPackage.read(directory.resolve("base.bytes"));
         var blocks = new java.util.LinkedHashMap<String, byte[]>();
         for (String block : pack.blockNames()) {
             var input = pack.block(block);
             blocks.put(block, input.readRawBytes((int) input.remaining()));
         }
         mutate.accept(blocks);
+        writePackage(directory.resolve(name + ".bytes"), pack.metadata(), blocks);
+    }
+
+    private static void writePackage(Path path, Map<String, String> metadata, Map<String, byte[]> blocks) throws Exception {
         var bytes = new java.io.ByteArrayOutputStream();
-        try (var out = new ConfigOutput(bytes)) { PackageSerializer.write(out, pack.metadata(), blocks); }
-        Files.write(directory.resolve(name + ".bytes"), bytes.toByteArray());
+        try (var out = new ConfigOutput(bytes)) { PackageSerializer.write(out, metadata, blocks); }
+        Files.write(path, bytes.toByteArray());
     }
 }

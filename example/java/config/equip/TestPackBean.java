@@ -33,8 +33,9 @@ public class TestPackBean {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof TestPackBean o))
+        if (!(other instanceof TestPackBean o)) {
             return false;
+        }
         return name.equals(o.name) && iRange.equals(o.iRange);
     }
 

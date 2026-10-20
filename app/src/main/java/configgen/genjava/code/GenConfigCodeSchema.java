@@ -6,17 +6,23 @@ import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 final class GenConfigCodeSchema {
     static void generateAll(JavaCodeGenerator gen, GenCfg cfg, int schemaNumPerFile, CfgValue cfgValue, LangSwitchable ls) {
         SchemaInterface schemaInterface = SchemaParser.parsePackage(cfgValue, ls);
-        var packageOnly = new java.util.HashSet<>(schemaInterface.implementations.keySet());
-        packageOnly.removeAll(SchemaParser.parse(cfgValue, ls).implementations.keySet());
+        Set<String> packageOnly = new HashSet<>();
+        for (var table : cfgValue.tables()) {
+            if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(table.schema())) {
+                packageOnly.add(table.name() + "_Detail");
+            }
+        }
         List<Map.Entry<String, Schema>> all = new ArrayList<>(schemaInterface.implementations.entrySet());
         List<Map.Entry<String, Schema>> main;
-        List<List<Map.Entry<String, Schema>>> nullableOthers = null;
+        List<List<Map.Entry<String, Schema>>> others = List.of();
         if (schemaNumPerFile == -1 || all.size() <= schemaNumPerFile) {
             main = all;
         } else {
@@ -24,39 +30,27 @@ final class GenConfigCodeSchema {
             int left = all.size() - schemaNumPerFile;
             int separateFileNum = (left + schemaNumPerFile - 1) / schemaNumPerFile;
 
-            nullableOthers = new ArrayList<>();
+            others = new ArrayList<>();
             for (int i = 0; i < separateFileNum; i++) {
                 int start = (i + 1) * schemaNumPerFile;
-                int end = start + schemaNumPerFile;
-                if (end > all.size()) {
-                    end = all.size();
-                }
-                nullableOthers.add(all.subList(start, end));
+                int end = Math.min(start + schemaNumPerFile, all.size());
+                others.add(all.subList(start, end));
             }
         }
 
-        generateFile(gen, cfg, 0, main, nullableOthers, packageOnly);
-        if (nullableOthers != null) {
-            int idx = 0;
-            for (List<Map.Entry<String, Schema>> nullableOther : nullableOthers) {
-                idx++;
-                generateFile(gen, cfg, idx, nullableOther, null, packageOnly);
-            }
+        generateFile(gen, cfg, 0, main, others, packageOnly);
+        for (int i = 0; i < others.size(); i++) {
+            generateFile(gen, cfg, i + 1, others.get(i), List.of(), packageOnly);
         }
     }
 
-    static String getClassName(int idx) {
-        String className = "ConfigCodeSchema";
-        if (idx > 0) {
-            className = String.format("%s%d", className, idx);
-        }
-
-        return className;
+    private static String getClassName(int idx) {
+        return idx > 0 ? "ConfigCodeSchema" + idx : "ConfigCodeSchema";
     }
 
-    static void generateFile(JavaCodeGenerator gen, GenCfg cfg, int idx,
+    private static void generateFile(JavaCodeGenerator gen, GenCfg cfg, int idx,
                              List<Map.Entry<String, Schema>> schemas,
-                             List<List<Map.Entry<String, Schema>>> nullableOthers, java.util.Set<String> packageOnly) {
+                             List<List<Map.Entry<String, Schema>>> others, Set<String> packageOnly) {
 
         String className = getClassName(idx);
         try (CachedIndentPrinter ps = gen.createCode(className + ".java")) {
@@ -69,18 +63,16 @@ final class GenConfigCodeSchema {
             ps.println();
 
             if (idx == 0) {
-                printMain(schemas, nullableOthers, ps, packageOnly);
-                print(schemas, ps);
-            } else {
-                print(schemas, ps);
+                printMain(schemas, others, ps, packageOnly);
             }
+            print(schemas, ps);
             ps.println("}");
         }
     }
 
     private static void printMain(List<Map.Entry<String, Schema>> main,
-                                  List<List<Map.Entry<String, Schema>>> nullableOthers,
-                                  CachedIndentPrinter ip, java.util.Set<String> packageOnly) {
+                                  List<List<Map.Entry<String, Schema>>> others,
+                                  CachedIndentPrinter ip, Set<String> packageOnly) {
 
         ip.println1("public static SchemaInterface getCodeSchema() { return createSchema(false); }");
         ip.println1("public static SchemaInterface getPackageSchema() { return createSchema(true); }");
@@ -88,30 +80,28 @@ final class GenConfigCodeSchema {
         ip.inc();
         ip.inc();
 
-        String name = "schema";
-        ip.println("SchemaInterface %s = new SchemaInterface();", name);
-
-        for (Map.Entry<String, Schema> stringSchemaEntry : main) {
-            String key = stringSchemaEntry.getKey();
-            String func = key.replace('.', '_');
-            ip.println("%s%s.addImp(\"%s\", %s());", packageOnly.contains(key) ? "if (packageLayout) " : "", name, key, func);
-        }
-
-        if (nullableOthers != null) {
-            int idx = 0;
-            for (List<Map.Entry<String, Schema>> other : nullableOthers) {
-                idx++;
-                for (Map.Entry<String, Schema> stringSchemaEntry : other) {
-                    String key = stringSchemaEntry.getKey();
-                    String func = key.replace('.', '_');
-                    ip.println("%s%s.addImp(\"%s\", %s.%s());", packageOnly.contains(key) ? "if (packageLayout) " : "", name, key, getClassName(idx), func);
+        ip.println("SchemaInterface schema = new SchemaInterface();");
+        for (int i = 0; i <= others.size(); i++) {
+            var schemas = i == 0 ? main : others.get(i - 1);
+            String prefix = i == 0 ? "" : getClassName(i) + ".";
+            for (var entry : schemas) {
+                String key = entry.getKey();
+                boolean conditional = packageOnly.contains(key);
+                if (conditional) {
+                    ip.println("if (packageLayout) {");
+                    ip.inc();
+                }
+                ip.println("schema.addImp(\"%s\", %s%s());", key, prefix, key.replace('.', '_'));
+                if (conditional) {
+                    ip.dec();
+                    ip.println("}");
                 }
             }
         }
 
         ip.dec();
         ip.dec();
-        ip.println2("return %s;", name);
+        ip.println2("return schema;");
         ip.println1("}");
         ip.println();
     }
@@ -178,23 +168,13 @@ final class GenConfigCodeSchema {
     }
 
     private static String parse(Schema schema) {
-        switch (schema) {
-            case SchemaBean ignored -> throw new IllegalStateException();
-            case SchemaEnum ignored -> throw new IllegalStateException();
-            case SchemaInterface ignored -> throw new IllegalStateException();
-            case SchemaList schemaList -> {
-                return "new SchemaList(" + parse(schemaList.ele()) + ")";
-            }
-            case SchemaMap schemaMap -> {
-                return "new SchemaMap(" + parse(schemaMap.key()) + ", " + parse(schemaMap.value()) + ")";
-            }
-            case SchemaPrimitive schemaPrimitive -> {
-                return "SchemaPrimitive." + schemaPrimitive.name();
-            }
-            case SchemaRef schemaRef -> {
-                return "new SchemaRef(\"" + schemaRef.type + "\")";
-            }
-        }
+        return switch (schema) {
+            case SchemaList list -> "new SchemaList(" + parse(list.ele()) + ")";
+            case SchemaMap map -> "new SchemaMap(" + parse(map.key()) + ", " + parse(map.value()) + ")";
+            case SchemaPrimitive primitive -> "SchemaPrimitive." + primitive.name();
+            case SchemaRef ref -> "new SchemaRef(\"" + ref.type + "\")";
+            default -> throw new IllegalStateException();
+        };
     }
 }
 

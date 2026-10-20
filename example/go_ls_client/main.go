@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	file, err := os.Open("config.bytes")
+	file, err := os.Open("base.bytes")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return

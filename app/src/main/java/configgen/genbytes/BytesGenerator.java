@@ -37,8 +37,11 @@ public class BytesGenerator extends GeneratorWithTag {
         requires = parameter.get("requires", "").replace(';', ',');
         String deps = parameter.get("deps", "");
         dependencies = deps.isEmpty() ? List.of() : java.util.Arrays.stream(deps.split(";", -1)).map(Path::of).toList();
-        if (pack.isBlank() || !pack.equals(pack.strip()) || pack.contains(",") || pack.contains(";")) throw new CliException("pack requires a nonempty name without commas or semicolons");
-        if (!deps.isEmpty() && java.util.Arrays.stream(deps.split(";", -1)).anyMatch(String::isBlank)) throw new CliException("Empty dependency file in deps");
+        if (pack.isBlank() || !pack.equals(pack.strip()) || pack.contains(",") || pack.contains(";")
+                || pack.chars().anyMatch(c -> c < 32 || "/\\:*?\"<>|".indexOf(c) >= 0))
+            throw new CliException("pack requires a nonempty file name without path separators, reserved characters, commas or semicolons");
+        if (!deps.isEmpty() && java.util.Arrays.stream(deps.split(";", -1)).anyMatch(String::isBlank))
+            throw new CliException("Empty dependency file in deps");
         isLangSeparated = parameter.has("langSeparated");
     }
 
@@ -81,14 +84,14 @@ public class BytesGenerator extends GeneratorWithTag {
             TextPool text = texts.getTextPools()[i];
             if (!isLangSeparated || i == 0) entries.put("text/" + text.getLangName(), encode(text::serializeBody));
             else {
-                try (ConfigOutput out = createConfigOutput(text.getLangName() + ".bytes")) {
+                try (ConfigOutput out = createConfigOutput(pack + "_" + text.getLangName() + ".bytes")) {
                     PackageSerializer.write(out, Map.of("pack", pack),
                             Map.of("text/" + text.getLangName(), encode(text::serializeBody)));
                 }
             }
         }
         entries.putAll(tables);
-        try (ConfigOutput out = createConfigOutput("config.bytes")) { PackageSerializer.write(out, metadata, entries); }
+        try (ConfigOutput out = createConfigOutput(pack + ".bytes")) { PackageSerializer.write(out, metadata, entries); }
     }
 
     private static byte[] encode(Consumer<ConfigOutput> writer) {

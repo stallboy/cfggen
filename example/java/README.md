@@ -1,4 +1,4 @@
-# Java 新格式示例
+# Java 配置与 Mod 示例
 
 生成器、生成的 Java 代码和支持源码统一使用 JDK 25；示例 Gradle 工具链也是 JDK 25。
 
@@ -10,35 +10,58 @@
 .\example\java\run.bat
 ```
 
-`genjava.bat` 使用 `app/build/libs/cfggen.jar`，更新此示例的生成类型和支持源码。`-gen bytes` 使用默认的新格式和 `pack=base`；不再需要 `schema` flag。
+`genjava.bat` 使用 `app/build/libs/cfggen.jar`，更新此示例的生成类型和支持源码，导出基础包 `base.bytes`，再从 `../config_mod` 导出增量包 `demo-mod.bytes`。两者使用同一结构与 `own:-noserver` 字段筛选；Mod 只生成数据。
 
 `LoadConfig.java` 的加载入口是：
 
 ```java
-try (ConfigInput input = new ConfigInput(Path.of("config.bytes"))) {
-    ConfigPackage pack = ConfigPackage.read(input);
-    ConfigMgrLoader.loadPackagesAndSetMgr(pack);
-}
+ConfigPackage pack = ConfigPackage.read(Path.of("base.bytes"));
+ConfigMgrLoader.loadPackagesAndSetMgr(pack);
 ```
 
-加载器检查包版本、依赖和 schema，建立索引、解析引用并初始化扩展后，才发布默认实例。示例再次加载同一包，检查新旧 ConfigMgr 和表记录相互独立；旧对象仍可通过原实例查询。运行输出包含：
+`ConfigPackage.read(Path)` 直接读取并解析文件，无需手动创建读取器或关闭资源。
+
+加载器检查包版本、依赖和 schema，建立索引、解析引用并初始化扩展后，才发布默认实例。随后 `showMod` 按显式顺序加载基础包和 Mod：
+
+```java
+ConfigMgr original = ConfigMgr.getMgr();
+ConfigMgr modified = ConfigMgrLoader.loadPackages(base, mod);
+Monster oldMonster = original.getOtherMonster(1);
+Monster modMonster = modified.getOtherMonster(1);
+
+ConfigMgr.setMgr(modified);
+Monster added = Monster.get(1001);
+var oldRank = Rank.GREEN.ref(original);
+var modRank = Rank.GREEN.ref();
+```
+
+示例展示替换、新增、未修改记录、跨包引用、固定 enum 详情缓存及默认实例切换，基础实例仍可独立查询。运行输出包含：
 
 ```text
-config.bytes version=1, metadata={defaultLanguage=default, pack=base}
-reload: independent instances, original task=...
-task 1 sources=[base]
+base.bytes version=1, metadata={defaultLanguage=default, pack=base}
+monster 1: base x=1, mod x=100
+monster 2 unchanged: x=33
+green: base=中品, mod=Mod Green
+task 1001: [Mod hunt, Defeat the mod monster], target monster=1001, exp=9000
+monster 1 sources=[demo-mod]
+monster 1001 sources=[demo-mod]
 ```
+
+`origins` 只记录 Mod 的新增与覆盖，省去基础包每条记录的来源项。未改动的基础记录和不存在的记录，`explain` / `Explain` 均返回空列表；记录是否存在通过表查询判断。多个 Mod 的来源按加载顺序排列。
 
 执行 `.\example\java\repl.bat` 可交互查看：
 
 ```text
 bytes eq
 get other.monster 1
+get other.monster 1001
 schema monster
 q
 ```
 
 `bytes` 读取新文件，`get` / `query` 查看已加载实例；查看器支持只读索引和 seq 列表。
+
+Mod 数据和只重新导出数据、不编译业务代码的命令见 [config_mod/README.md](../config_mod/README.md)。REPL 的对象查询使用组合实例，`bytes` 仍查看基础包文件。
 
 旧数据须重新导出；导出器、加载器和查看器仅支持当前版本的容器。
 

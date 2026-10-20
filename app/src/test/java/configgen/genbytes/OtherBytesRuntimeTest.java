@@ -47,23 +47,23 @@ class OtherBytesRuntimeTest {
                     const {Config} = require('./out/Config.js'); const {Loader, ConfigPackage, LoadErrors, TextPoolManager} = require('./out/ConfigUtil.js');
                     const read = name => { const b = fs.readFileSync(path.join(process.env.CFGGEN_FIXTURE, name)); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); };
                     const check = value => { if (!value) throw Error('runtime assertion failed'); };
-                    let stream = Loader.LoadBytes(read('initial/config.bytes'), Config.Processor.Process, new LoadErrors(), ['zh_cn', 'en']);
+                    let stream = Loader.LoadBytes(read('initial/base.bytes'), Config.Processor.Process, new LoadErrors(), ['zh_cn', 'en']);
                     TextPoolManager.SetGlobalTexts(stream.GetLangTextPools()[0]);
                     check(Config.Item.Get(1).Name === 'Alice'); check(CHINESE === '你好');
                     TextPoolManager.SetGlobalTexts(stream.GetLangTextPools()[1]); check(ENGLISH === 'hello');
-                    const pack = ConfigPackage.Read(read('pack/config.bytes')).Attach(ConfigPackage.Read(read('pack/en.bytes')));
+                    const pack = ConfigPackage.Read(read('pack/base.bytes')).Attach(ConfigPackage.Read(read('pack/base_en.bytes')));
                     stream = Config.Processor.ProcessPackage(pack, new LoadErrors());
                     check(Config.Item.Get(2) === undefined);
                     TextPoolManager.SetGlobalTexts(stream.GetLangTextPools()[0]); check(CHINESE === '你好');
                     TextPoolManager.SetGlobalTexts(stream.GetLangTextPools()[1]); check(ENGLISH === 'hello');
                     const reject = (action, message) => { try { action(); throw Error('accepted invalid data'); } catch (e) { check(e.message.includes(message)); } };
-                    const attach = file => ConfigPackage.Read(read(file)).Attach(ConfigPackage.Read(read('pack/en.bytes')));
+                    const attach = file => ConfigPackage.Read(read(file)).Attach(ConfigPackage.Read(read('pack/base_en.bytes')));
                     reject(() => Config.Processor.ProcessPackage(attach('pack/incomplete.bytes'), new LoadErrors()), 'Missing table');
                     check(Config.Item.Get(1).Name === 'Alice');
                     reject(() => Config.Processor.ProcessPackage(attach('pack/bad-text.bytes'), new LoadErrors()), 'text');
-                    const bytes = read('pack/config.bytes'); new DataView(bytes).setInt32(0, 99, true);
+                    const bytes = read('pack/base.bytes'); new DataView(bytes).setInt32(0, 99, true);
                     try { ConfigPackage.Read(bytes); throw Error('accepted version'); } catch (e) { check(e.message.includes('version 99')); }
-                    try { ConfigPackage.Read(read('pack/config.bytes').slice(0, -1)); throw Error('accepted truncation'); } catch (e) { check(!e.message.includes('accepted truncation')); }
+                    try { ConfigPackage.Read(read('pack/base.bytes').slice(0, -1)); throw Error('accepted truncation'); } catch (e) { check(!e.message.includes('accepted truncation')); }
                     console.log('runtime-ok');
                     """;
             script = script.replace("CHINESE", "Config.Item.Get(1).Desc." + (server ? "zh_cn" : "T"))
@@ -79,10 +79,10 @@ class OtherBytesRuntimeTest {
                     import ("testing"; "os"; "path/filepath"; "bytes"; "encoding/binary"; "strings")
                     func TestPackages(t *testing.T) {
                         read := func(name string) []byte { data, err := os.ReadFile(filepath.Join(os.Getenv("CFGGEN_FIXTURE"), name)); if err != nil { t.Fatal(err) }; return data }
-                        stream := Init(bytes.NewReader(read("initial/config.bytes")))
+                        stream := Init(bytes.NewReader(read("initial/base.bytes")))
                         CLIENT_SET_ZERO
                         if GetItemMgr().Get(1).Name() != "Alice" || CHINESE != "你好" { t.Fatal("initial decode") }
-                        pack := ReadPackage(read("pack/config.bytes")).Attach(ReadPackage(read("pack/en.bytes")))
+                        pack := ReadPackage(read("pack/base.bytes")).Attach(ReadPackage(read("pack/base_en.bytes")))
                         stream = InitPackage(pack)
                         if GetItemMgr().Get(2) != nil { t.Fatal("previous records survived standalone replacement") }
                         CLIENT_SET_ZERO
@@ -90,15 +90,15 @@ class OtherBytesRuntimeTest {
                         CLIENT_SET_ONE
                         if ENGLISH != "hello" { t.Fatal("package translated text") }
                         rejectOperation := func(action func(), message string) { defer func() { failure := recover(); if failure == nil || !strings.Contains(fmt.Sprint(failure), message) { t.Fatalf("unexpected failure: %v", failure) } }(); action() }
-                        attach := func(name string) *ConfigPackage { return ReadPackage(read(name)).Attach(ReadPackage(read("pack/en.bytes"))) }
+                        attach := func(name string) *ConfigPackage { return ReadPackage(read(name)).Attach(ReadPackage(read("pack/base_en.bytes"))) }
                         rejectOperation(func() { InitPackage(attach("pack/incomplete.bytes")) }, "missing table")
                         if GetItemMgr().Get(1).Name() != "Alice" { t.Fatal("incomplete package changed old data") }
                         rejectOperation(func() { InitPackage(attach("pack/bad-text.bytes")) }, "text")
                         _ = stream
                         rejected := func(data []byte, message string) { defer func() { failure := recover(); if failure == nil || (message != "" && !strings.Contains(failure.(string), message)) { t.Fatalf("invalid failure: %v", failure) } }(); ReadPackage(data) }
-                        data := read("pack/config.bytes"); binary.LittleEndian.PutUint32(data, 99)
+                        data := read("pack/base.bytes"); binary.LittleEndian.PutUint32(data, 99)
                         rejected(data, "version 99")
-                        data = read("pack/config.bytes"); rejected(data[:len(data)-1], "")
+                        data = read("pack/base.bytes"); rejected(data[:len(data)-1], "")
                     }
                     """;
             // Version errors use formatted strings; all malformed reads panic, preserving the existing Go API convention.
@@ -113,7 +113,7 @@ class OtherBytesRuntimeTest {
     }
 
     private void writeMalformedVariants() throws Exception {
-        var pack = configgen.genjava.ConfigPackage.read(new configgen.genjava.ConfigInput(root.resolve("pack/config.bytes")));
+        var pack = configgen.genjava.ConfigPackage.read(root.resolve("pack/base.bytes"));
         var blocks = new java.util.LinkedHashMap<String, byte[]>();
         for (String name : pack.blockNames()) {
             var input = pack.block(name);

@@ -75,14 +75,16 @@ public class CfgLoot {
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.ListRefLootid = new java.util.ArrayList<>();
         for (config.other.CfgLoot_item v : mgr._get_other_loot_item_All().values()) {
-            if (v.getLootid() == this.lootid)
+            if (v.getLootid() == this.lootid) {
                 this.ListRefLootid.add(v);
+            }
         }
         this.ListRefLootid = java.util.Collections.unmodifiableList(this.ListRefLootid);
         this.ListRefAnotherWay = new java.util.ArrayList<>();
         for (config.other.CfgLoot_item v : mgr._get_other_loot_item_All().values()) {
-            if (v.getLootid() == this.lootid)
+            if (v.getLootid() == this.lootid) {
                 this.ListRefAnotherWay.add(v);
+            }
         }
         this.ListRefAnotherWay = java.util.Collections.unmodifiableList(this.ListRefAnotherWay);
 

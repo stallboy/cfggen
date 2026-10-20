@@ -1,5 +1,5 @@
 ---
-title: config.bytes 格式优化设计
+title: 配置包二进制格式设计
 description: 以协议版本、字符串 metadata 和命名数据块组织配置包，保留现有字段编码并支持包隔离及分语言资源
 sidebar:
   order: 98
@@ -189,7 +189,7 @@ writer 推荐输出 `schema → strings → text → table`，便于查看；rea
 
 ## 5. 分离语言文件与传输
 
-已有 `<language>.bytes` 文件继续保留，但新格式的语言文件采用相同容器，内容只需 metadata 和对应 text 块：
+主包命名为 `<pack>.bytes`，分离语言文件命名为 `<pack>_<language>.bytes`，例如 `desert-map.bytes` 和 `desert-map_en.bytes`。语言文件采用相同容器，内容只需 metadata 和对应 text 块：
 
 ```text
 formatVersion = 1

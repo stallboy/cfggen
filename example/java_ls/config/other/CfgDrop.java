@@ -34,7 +34,9 @@ public class CfgDrop {
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readInt();
-                    if (self.testmap.putIfAbsent(key, value) != null) input.errors().duplicateKey("other.drop.testmap", key);
+                    if (self.testmap.putIfAbsent(key, value) != null) {
+                        input.errors().duplicateKey("other.drop.testmap", key);
+                    }
                 }
                 self.testmap = java.util.Collections.unmodifiableMap(self.testmap);
             }

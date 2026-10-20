@@ -3,7 +3,7 @@ package config;
 public class ConfigMgr {
     private static volatile ConfigMgr mgr;
     private boolean ready;
-    private final java.util.Map<String, java.util.Map<?, java.util.List<String>>> origins = new java.util.LinkedHashMap<>();
+    private final java.util.Map<String, java.util.Map<?, java.util.List<String>>> origins = new java.util.HashMap<>();
 
     public <K> java.util.List<String> explain(String table, K key) {
         var rows = origins.get(table);
@@ -12,19 +12,27 @@ public class ConfigMgr {
 
     void setOrigins(String table, java.util.Map<?, java.util.List<String>> rows) {
         requireBuilding();
-        origins.put(table, rows);
+        if (!rows.isEmpty()) {
+            origins.put(table, rows);
+        }
     }
 
     boolean isReady() { return ready; }
     void markReady() { ready = true; }
-    private void requireBuilding() { if (ready) throw new IllegalStateException("Configuration is read-only"); }
+    private void requireBuilding() {
+        if (ready) {
+            throw new IllegalStateException("Configuration is read-only");
+        }
+    }
 
     public static ConfigMgr getMgr() {
         return mgr;
     }
 
     public static void setMgr(ConfigMgr newMgr) {
-        if (newMgr == null || !newMgr.ready) throw new IllegalStateException("Configuration is not ready");
+        if (newMgr == null || !newMgr.ready) {
+            throw new IllegalStateException("Configuration is not ready");
+        }
         mgr = newMgr;
     }
 

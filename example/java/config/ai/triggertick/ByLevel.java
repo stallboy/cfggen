@@ -33,8 +33,9 @@ public final class ByLevel implements config.ai.triggertick.TriggerTick {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ByLevel o))
+        if (!(other instanceof ByLevel o)) {
             return false;
+        }
         return init == o.init && coefficient == o.coefficient;
     }
 

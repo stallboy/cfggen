@@ -59,20 +59,25 @@ namespace ${group.ns}
                             var seq_${field.name()} = new bool[count];
                         @endif
                     @endfor
-                    foreach (var self in list)
-                    {
+                    foreach (var self in list) {
                         var key = PrimaryKey(self);
                         @for(FieldSchema field : table.fields())
                             @if(field.isSeq())
                                 {
                                     int seq = self.${sm.upper1(field.name())};
-                                    if (seq < 0 || seq >= count || seq_${field.name()}[seq]) errors.InvalidSeq("${table.name()}", "${field.name()}", key, seq, count, config.Explain("${table.name()}", key));
-                                    else seq_${field.name()}[seq] = true;
+                                    if (seq < 0 || seq >= count || seq_${field.name()}[seq]) {
+                                        errors.InvalidSeq("${table.name()}", "${field.name()}", key, seq, count, config.Explain("${table.name()}", key));
+                                    }
+                                    else {
+                                        seq_${field.name()}[seq] = true;
+                                    }
                                 }
                             @endif
                         @endfor
                         @if(primarySeq)
-                            if (key >= 0 && key < count) s_all[key] = self;
+                            if (key >= 0 && key < count) {
+                                s_all[key] = self;
+                            }
                         @else
                             s_all.Add(key, self);
                         @endif
@@ -80,12 +85,16 @@ namespace ${group.ns}
                             @if(sm.isSeqKey(uk))
                                 {
                                     int index = ${sm.actualParamsKeySelf(uk)};
-                                    if (index >= 0 && index < count) s${sm.uniqueKeyMapName(uk)}[index] = self;
+                                    if (index >= 0 && index < count) {
+                                        s${sm.uniqueKeyMapName(uk)}[index] = self;
+                                    }
                                 }
                             @else
                                 {
                                     var uniqueKey = ${sm.actualParamsKeySelf(uk)};
-                                    if (!s${sm.uniqueKeyMapName(uk)}.TryAdd(uniqueKey, self)) errors.DuplicateUniqueKey("${table.name()}", "${String.join(",", uk.fields())}", key, uniqueKey, config.Explain("${table.name()}", key));
+                                    if (!s${sm.uniqueKeyMapName(uk)}.TryAdd(uniqueKey, self)) {
+                                        errors.DuplicateUniqueKey("${table.name()}", "${String.join(",", uk.fields())}", key, uniqueKey, config.Explain("${table.name()}", key));
+                                    }
                                 }
                             @endif
                         @endfor
@@ -95,13 +104,17 @@ namespace ${group.ns}
                                 @if(sm.isEnum())
                                     errors.UnknownSymbol("${table.name()}", name, key, config.Explain("${table.name()}", key));
                                 @else
-                                    if (name.Length != 0) errors.UnknownSymbol("${table.name()}", name, key, config.Explain("${table.name()}", key));
+                                    if (name.Length != 0) {
+                                        errors.UnknownSymbol("${table.name()}", name, key, config.Explain("${table.name()}", key));
+                                    }
                                 @endif
                             @else
                                 @if(sm.isEnum())
                                     int symbol = (int)self.EEnum;
                                 @else
-                                    if (name.Length == 0) continue;
+                                    if (name.Length == 0) {
+                                        continue;
+                                    }
                                     @if(sm._vTable.enumNames().size() == 1)
                                         int symbol = name == "${sm._vTable.enumNames().getFirst()}" ? 0 : -1;
                                     @else
@@ -114,14 +127,20 @@ namespace ${group.ns}
                                         };
                                     @endif
                                 @endif
-                                if (symbol < 0) errors.UnknownSymbol("${table.name()}", name, key, config.Explain("${table.name()}", key));
+                                if (symbol < 0) {
+                                    errors.UnknownSymbol("${table.name()}", name, key, config.Explain("${table.name()}", key));
+                                }
                                 @if(!table.primaryKey().fields().getFirst().equals(symbolField) || fixedId)
                                 else {
                                     @if(!table.primaryKey().fields().getFirst().equals(symbolField))
-                                        if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("${table.name()}", name, _symbolKeys[symbol], key, config.Explain("${table.name()}", key));
+                                        if (!key.Equals(_symbolKeys[symbol])) {
+                                            errors.ChangedSymbolId("${table.name()}", name, _symbolKeys[symbol], key, config.Explain("${table.name()}", key));
+                                        }
                                     @endif
                                     @if(fixedId)
-                                        if (self.Id != _symbolIds[symbol]) errors.ChangedSymbolId("${table.name()}", name, _symbolIds[symbol], self.Id, config.Explain("${table.name()}", key));
+                                        if (self.Id != _symbolIds[symbol]) {
+                                            errors.ChangedSymbolId("${table.name()}", name, _symbolIds[symbol], self.Id, config.Explain("${table.name()}", key));
+                                        }
                                     @endif
                                 }
                                 @endif
@@ -137,7 +156,9 @@ namespace ${group.ns}
                         @for(String enumName : sm._vTable.enumNames())
                             !{String slot = sm.isEnum() ? sm.tableField("Symbols") + "[(int)" + sm.name.className + "." + sm.upper1(enumName) + "]" : sm.tableField("Symbol_" + sm.upper1(enumName));}
                             config.${slot} = Get(config, ${sm.symbolKey(enumName)});
-                            if (config.${slot} == null) errors.MissingSymbol("${table.name()}", "${enumName}", ${sm.symbolKey(enumName)});
+                            if (config.${slot} == null) {
+                                errors.MissingSymbol("${table.name()}", "${enumName}", ${sm.symbolKey(enumName)});
+                            }
                         @endfor
                     @endif
                     config.${sm.tableField("Rows")} = ${primarySeq ? "Array.AsReadOnly(s_all)" : "list.AsReadOnly()"};
@@ -153,10 +174,14 @@ namespace ${group.ns}
                     @if(t instanceof FList(SimpleType item))
                         int Count_${n} = reader.ReadCount(0);
                         ${sm.type(t)} ${n};
-                        if (Count_${n} == 0) ${n} = Array.Empty<${sm.type(item)}>();
+                        if (Count_${n} == 0) {
+                            ${n} = Array.Empty<${sm.type(item)}>();
+                        }
                         else {
                             var values_${n} = new List<${sm.type(item)}>(Count_${n});
-                            for (int i = 0; i < Count_${n}; i++) values_${n}.Add(${sm.create(item)});
+                            for (int i = 0; i < Count_${n}; i++) {
+                                values_${n}.Add(${sm.create(item)});
+                            }
                             ${n} = values_${n}.AsReadOnly();
                         }
                     @elseif(t instanceof FMap(SimpleType key, SimpleType value))
@@ -165,7 +190,9 @@ namespace ${group.ns}
                         for (int i = 0; i < Count_${n}; i++) {
                             var key = ${sm.create(key)};
                             var value = ${sm.create(value)};
-                            if (!${n}.TryAdd(key, value)) reader.Errors.DuplicateKey("${sm.structural.name()}.${field.name()}", key);
+                            if (!${n}.TryAdd(key, value)) {
+                                reader.Errors.DuplicateKey("${sm.structural.name()}.${field.name()}", key);
+                            }
                         }
                     @else
                         var ${n} = ${sm.create(t)};
@@ -237,14 +264,19 @@ namespace ${group.ns}
                         @if(type instanceof StructRef && HasRef.hasRef(type))
                             ${sm.upper1(field.name())}._resolve(errors, config);
                         @elseif(type instanceof FList list && HasRef.hasRef(list.item()))
-                            foreach(var e in ${sm.upper1(field.name())})
+                            foreach(var e in ${sm.upper1(field.name())}) {
                                 e._resolve(errors, config);
+                            }
                         @elseif(type instanceof FMap map)
                             @if(HasRef.hasRef(map.key()))
-                                foreach(var e in ${sm.upper1(field.name())}.Keys) e._resolve(errors, config);
+                                foreach(var e in ${sm.upper1(field.name())}.Keys) {
+                                    e._resolve(errors, config);
+                                }
                             @endif
                             @if(HasRef.hasRef(map.value()))
-                                foreach(var e in ${sm.upper1(field.name())}.Values) e._resolve(errors, config);
+                                foreach(var e in ${sm.upper1(field.name())}.Values) {
+                                    e._resolve(errors, config);
+                                }
                             @endif
                         @endif
                     @endfor
@@ -260,26 +292,36 @@ namespace ${group.ns}
                                     ${refName} = ${sm.tableGet(fk.refTableSchema(), refSimple, sm.actualParams(fk.key()))}${StructModel.isEnum(fk.refTableSchema())? "?.EEnum" : ""};
                                 @else
                                     var r${refName} = ${sm.tableGet(fk.refTableSchema(), refSimple, sm.actualParams(fk.key()))};
-                                    if (r${refName} == null) errors.MissingReference("${sm.structural.name()}", "${fkStr}", "${fk.refTableSchema().name()}", ${sm.referenceKey(fk.key())});
-                                    else ${refName} = r${refName}${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""};
+                                    if (r${refName} == null) {
+                                        errors.MissingReference("${sm.structural.name()}", "${fkStr}", "${fk.refTableSchema().name()}", ${sm.referenceKey(fk.key())});
+                                    }
+                                    else {
+                                        ${refName} = r${refName}${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""};
+                                    }
                                 @endif
                             @elseif(firstField.type() instanceof FList flist)
                                 var resolved${refName} = ${sm.refAssignExpr(fk)};
-                                foreach(var e in ${sm.upper1(firstField.name())})
-                                {
+                                foreach(var e in ${sm.upper1(firstField.name())}) {
                                     var r = ${sm.tableGet(fk.refTableSchema(), refSimple, "e")};
-                                    if (r == null) errors.MissingReference("${sm.structural.name()}", "${fkStr}", "${fk.refTableSchema().name()}", e);
-                                    else resolved${refName}.Add(r${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""});
+                                    if (r == null) {
+                                        errors.MissingReference("${sm.structural.name()}", "${fkStr}", "${fk.refTableSchema().name()}", e);
+                                    }
+                                    else {
+                                        resolved${refName}.Add(r${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""});
+                                    }
                                 }
                                 ${refName} = ${sm.freezeRef(fk, "resolved" + refName)};
                             @elseif(firstField.type() instanceof FMap fmap)
                                 var resolved${refName} = ${sm.refAssignExpr(fk)};
-                                foreach(var kv in ${sm.upper1(firstField.name())})
-                                {
+                                foreach(var kv in ${sm.upper1(firstField.name())}) {
                                     var k = kv.Key;
                                     var v = ${sm.tableGet(fk.refTableSchema(), refSimple, "kv.Value")};
-                                    if (v == null) errors.MissingReference("${sm.structural.name()}", "${fkStr}", "${fk.refTableSchema().name()}", kv.Value);
-                                    else resolved${refName}.TryAdd(k, v${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""});
+                                    if (v == null) {
+                                        errors.MissingReference("${sm.structural.name()}", "${fkStr}", "${fk.refTableSchema().name()}", kv.Value);
+                                    }
+                                    else {
+                                        resolved${refName}.TryAdd(k, v${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""});
+                                    }
                                 }
                                 ${refName} = ${sm.freezeRef(fk, "resolved" + refName)};
                             @endif
@@ -290,14 +332,14 @@ namespace ${group.ns}
                         @if(fk.refKey() instanceof RefKey.RefList refList)
                             !{var refName = sm.refName(fk);}
                             var resolved${refName} = ${sm.refAssignExpr(fk)};
-                            foreach (var v in ${sm.tableDataName(fk.refTableSchema())}.All(config))
-                            {
+                            foreach (var v in ${sm.tableDataName(fk.refTableSchema())}.All(config)) {
                                 !{var eqs = new java.util.ArrayList<String>();}
                                 @for(int i = 0; i < fk.key().fields().size(); i++)
                                     !{eqs.add("v." + sm.upper1(refList.keyNames().get(i)) + ".Equals(" + sm.upper1(fk.key().fields().get(i)) + ")");}
                                 @endfor
-                                if (${String.join(" && ", eqs)})
+                                if (${String.join(" && ", eqs)}) {
                                     resolved${refName}.Add(v${StructModel.isEnum(fk.refTableSchema()) ? ".EEnum" : ""});
+                                }
                             }
                             ${refName} = ${sm.freezeRef(fk, "resolved" + refName)};
                         @endif

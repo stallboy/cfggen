@@ -164,7 +164,9 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 var key = row.get${StringUtil.upper1(model.table.primaryKey().fieldSchemas().getFirst().name())}();
                 String symbol = row.get${StringUtil.upper1(model.entryBase.fieldSchema().name())}();
                 @if(!model.isEnum)
-                    if (symbol.isEmpty()) continue;
+                    if (symbol.isEmpty()) {
+                        continue;
+                    }
                 @endif
                 @if(model.isEnum && model.hasNoIntValue)
                     ${model.className} expected = get(symbol);
@@ -181,19 +183,27 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                     continue;
                 }
                 @if(!model.hasNoIntValue)
-                    if (key != expected.value) errors.changedSymbolId("${model.table.name()}", symbol, expected.value, key, mgr.explain("${model.table.name()}", key));
+                    if (key != expected.value) {
+                        errors.changedSymbolId("${model.table.name()}", symbol, expected.value, key, mgr.explain("${model.table.name()}", key));
+                    }
                 @endif
                 @if(model.hasFixedId)
-                    if (row.getId() != expected.fixedId) errors.changedSymbolId("${model.table.name()}", symbol, expected.fixedId, row.getId(), mgr.explain("${model.table.name()}", key));
+                    if (row.getId() != expected.fixedId) {
+                        errors.changedSymbolId("${model.table.name()}", symbol, expected.fixedId, row.getId(), mgr.explain("${model.table.name()}", key));
+                    }
                 @endif
             }
             @if(model.isEnum)
                 for (${model.className} e : map.values()) {
-                    if (e.ref(mgr) == null) errors.missingSymbol("${model.table.name()}", ${model.hasNoIntValue ? "e.value" : "e.name"}, e.value);
+                    if (e.ref(mgr) == null) {
+                        errors.missingSymbol("${model.table.name()}", ${model.hasNoIntValue ? "e.value" : "e.name"}, e.value);
+                    }
                 }
             @else
                 @for(String enumName : model.enumNames)
-                    if (${model.enumFieldName(enumName)}.ref(mgr) == null) errors.missingSymbol("${model.table.name()}", "${enumName}", ${model.enumFieldName(enumName)}.value);
+                    if (${model.enumFieldName(enumName)}.ref(mgr) == null) {
+                        errors.missingSymbol("${model.table.name()}", "${enumName}", ${model.enumFieldName(enumName)}.value);
+                    }
                 @endfor
             @endif
         }

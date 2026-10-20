@@ -70,7 +70,12 @@ namespace Config
     {
         private readonly List<LoadError> _errors = new List<LoadError>();
         public IReadOnlyList<LoadError> Errors => Array.AsReadOnly(_errors.ToArray());
-        public void CheckErrors() { if (_errors.Count != 0) throw new ConfigException(_errors); }
+        public void CheckErrors()
+        {
+            if (_errors.Count != 0) {
+                throw new ConfigException(_errors);
+            }
+        }
         private void Add(LoadError error) => _errors.Add(error);
         private ConfigException Fail(LoadError error) { Add(error); return new ConfigException(_errors); }
         public void MissingReference(string source, string field, string target, object key) => Add(new LoadError.MissingReference(source, field, target, key));
@@ -115,15 +120,23 @@ namespace Config
         { Strings = strings; Languages = (string[])languages.Clone(); Texts = texts; }
         internal bool Matches(string[] languages)
         {
-            if (Languages.Length != languages.Length) return false;
-            for (int i = 0; i < languages.Length; i++) if (Languages[i] != languages[i]) return false;
+            if (Languages.Length != languages.Length) {
+                return false;
+            }
+            for (int i = 0; i < languages.Length; i++) {
+                if (Languages[i] != languages[i]) {
+                    return false;
+                }
+            }
             return true;
         }
         internal string GetText(int index)
         {
             string? language = TextPoolManager.Language;
             int position = language == null ? 0 : Array.IndexOf(Languages, language);
-            if (position < 0) throw new InvalidOperationException("Language is not loaded: " + language);
+            if (position < 0) {
+                throw new InvalidOperationException("Language is not loaded: " + language);
+            }
             return Texts[position][index];
         }
     }
@@ -150,8 +163,18 @@ namespace Config
             _position += length;
             return input;
         }
-        internal void Require(int length) { if (length < 0 || length > Remaining) throw Errors.OutOfBounds(length, Remaining); }
-        public void RequireEnd() { if (Remaining != 0) throw Errors.UnconsumedBytes(Remaining); }
+        internal void Require(int length)
+        {
+            if (length < 0 || length > Remaining) {
+                throw Errors.OutOfBounds(length, Remaining);
+            }
+        }
+        public void RequireEnd()
+        {
+            if (Remaining != 0) {
+                throw Errors.UnconsumedBytes(Remaining);
+            }
+        }
         public int ReadInt32()
         {
             Require(4); int p = _position; _position += 4;
@@ -163,7 +186,9 @@ namespace Config
         public int ReadCount(int minimumBytes = 1)
         {
             int count = ReadInt32();
-            if (count < 0 || minimumBytes > 0 && count > Remaining / minimumBytes) throw Errors.InvalidCount(count, minimumBytes, Remaining);
+            if (count < 0 || minimumBytes > 0 && count > Remaining / minimumBytes) {
+                throw Errors.InvalidCount(count, minimumBytes, Remaining);
+            }
             return count;
         }
         public string ReadString()
@@ -174,13 +199,17 @@ namespace Config
         public string ReadStringInPool()
         {
             int index = ReadInt32(); var strings = CaptureTextPool().Strings;
-            if (index < 0 || index >= strings.Length) throw Errors.InvalidPoolIndex("strings", index, strings.Length);
+            if (index < 0 || index >= strings.Length) {
+                throw Errors.InvalidPoolIndex("strings", index, strings.Length);
+            }
             return strings[index];
         }
         public int ReadTextIndex()
         {
             int index = ReadInt32(); int size = CaptureTextPool().Texts[0].Length;
-            if (index < 0 || index >= size) throw Errors.InvalidPoolIndex("text", index, size);
+            if (index < 0 || index >= size) {
+                throw Errors.InvalidPoolIndex("text", index, size);
+            }
             return index;
         }
         public string ReadTextInPool() => CaptureTextPool().Texts[0][ReadTextIndex()];
@@ -195,13 +224,31 @@ namespace Config
         { _lookup = new Dictionary<TKey, TValue>(capacity); _entries = new List<KeyValuePair<TKey, TValue>>(capacity); }
         internal bool TryAdd(TKey key, TValue value)
         {
-            if (!_lookup.TryAdd(key, value)) return false;
+            if (!_lookup.TryAdd(key, value)) {
+                return false;
+            }
             _entries.Add(new KeyValuePair<TKey, TValue>(key, value)); return true;
         }
         public int Count => _entries.Count;
         public TValue this[TKey key] => _lookup[key];
-        public IEnumerable<TKey> Keys { get { foreach (var pair in _entries) yield return pair.Key; } }
-        public IEnumerable<TValue> Values { get { foreach (var pair in _entries) yield return pair.Value; } }
+        public IEnumerable<TKey> Keys
+        {
+            get
+            {
+                foreach (var pair in _entries) {
+                    yield return pair.Key;
+                }
+            }
+        }
+        public IEnumerable<TValue> Values
+        {
+            get
+            {
+                foreach (var pair in _entries) {
+                    yield return pair.Value;
+                }
+            }
+        }
         public bool ContainsKey(TKey key) => _lookup.ContainsKey(key);
         public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value) => _lookup.TryGetValue(key, out value);
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _entries.GetEnumerator();

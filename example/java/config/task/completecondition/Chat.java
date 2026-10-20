@@ -31,8 +31,9 @@ public final class Chat implements config.task.completecondition.Completeconditi
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof Chat o))
+        if (!(other instanceof Chat o)) {
             return false;
+        }
         return msg.equals(o.msg);
     }
 

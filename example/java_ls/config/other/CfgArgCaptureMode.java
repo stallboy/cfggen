@@ -63,10 +63,14 @@ public enum CfgArgCaptureMode {
                 errors.unknownSymbol("other.ArgCaptureMode", symbol, key, mgr.explain("other.ArgCaptureMode", key));
                 continue;
             }
-            if (row.getId() != expected.fixedId) errors.changedSymbolId("other.ArgCaptureMode", symbol, expected.fixedId, row.getId(), mgr.explain("other.ArgCaptureMode", key));
+            if (row.getId() != expected.fixedId) {
+                errors.changedSymbolId("other.ArgCaptureMode", symbol, expected.fixedId, row.getId(), mgr.explain("other.ArgCaptureMode", key));
+            }
         }
         for (CfgArgCaptureMode e : map.values()) {
-            if (e.ref(mgr) == null) errors.missingSymbol("other.ArgCaptureMode", e.value, e.value);
+            if (e.ref(mgr) == null) {
+                errors.missingSymbol("other.ArgCaptureMode", e.value, e.value);
+            }
         }
     }
 

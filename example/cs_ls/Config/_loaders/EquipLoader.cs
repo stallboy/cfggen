@@ -38,32 +38,49 @@ namespace Config.Equip
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DAbilityInfo>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
                 string name = self.Name;
                 int symbol = (int)self.EEnum;
-                if (symbol < 0) errors.UnknownSymbol("equip.ability", name, key, config.Explain("equip.ability", key));
+                if (symbol < 0) {
+                    errors.UnknownSymbol("equip.ability", name, key, config.Explain("equip.ability", key));
+                }
                 else {
-                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("equip.ability", name, _symbolKeys[symbol], key, config.Explain("equip.ability", key));
+                    if (!key.Equals(_symbolKeys[symbol])) {
+                        errors.ChangedSymbolId("equip.ability", name, _symbolKeys[symbol], key, config.Explain("equip.ability", key));
+                    }
                 }
             }
             config._equip_dability_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DAbilityInfo>(s_all);
             config._equip_dability_Symbols[(int)DAbility.Attack] = Get(config, 1);
-            if (config._equip_dability_Symbols[(int)DAbility.Attack] == null) errors.MissingSymbol("equip.ability", "attack", 1);
+            if (config._equip_dability_Symbols[(int)DAbility.Attack] == null) {
+                errors.MissingSymbol("equip.ability", "attack", 1);
+            }
             config._equip_dability_Symbols[(int)DAbility.Defence] = Get(config, 2);
-            if (config._equip_dability_Symbols[(int)DAbility.Defence] == null) errors.MissingSymbol("equip.ability", "defence", 2);
+            if (config._equip_dability_Symbols[(int)DAbility.Defence] == null) {
+                errors.MissingSymbol("equip.ability", "defence", 2);
+            }
             config._equip_dability_Symbols[(int)DAbility.Hp] = Get(config, 3);
-            if (config._equip_dability_Symbols[(int)DAbility.Hp] == null) errors.MissingSymbol("equip.ability", "hp", 3);
+            if (config._equip_dability_Symbols[(int)DAbility.Hp] == null) {
+                errors.MissingSymbol("equip.ability", "hp", 3);
+            }
             config._equip_dability_Symbols[(int)DAbility.Critical] = Get(config, 4);
-            if (config._equip_dability_Symbols[(int)DAbility.Critical] == null) errors.MissingSymbol("equip.ability", "critical", 4);
+            if (config._equip_dability_Symbols[(int)DAbility.Critical] == null) {
+                errors.MissingSymbol("equip.ability", "critical", 4);
+            }
             config._equip_dability_Symbols[(int)DAbility.Critical_resist] = Get(config, 5);
-            if (config._equip_dability_Symbols[(int)DAbility.Critical_resist] == null) errors.MissingSymbol("equip.ability", "critical_resist", 5);
+            if (config._equip_dability_Symbols[(int)DAbility.Critical_resist] == null) {
+                errors.MissingSymbol("equip.ability", "critical_resist", 5);
+            }
             config._equip_dability_Symbols[(int)DAbility.Block] = Get(config, 6);
-            if (config._equip_dability_Symbols[(int)DAbility.Block] == null) errors.MissingSymbol("equip.ability", "block", 6);
+            if (config._equip_dability_Symbols[(int)DAbility.Block] == null) {
+                errors.MissingSymbol("equip.ability", "block", 6);
+            }
             config._equip_dability_Symbols[(int)DAbility.Break_armor] = Get(config, 7);
-            if (config._equip_dability_Symbols[(int)DAbility.Break_armor] == null) errors.MissingSymbol("equip.ability", "break_armor", 7);
+            if (config._equip_dability_Symbols[(int)DAbility.Break_armor] == null) {
+                errors.MissingSymbol("equip.ability", "break_armor", 7);
+            }
             config._equip_dability_Rows = list.AsReadOnly();
         }
 
@@ -112,24 +129,31 @@ namespace Config.Equip
         {
             int count = list.Count;
             var s_all = new Dictionary<string, DEquipConfig>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
                 string name = self.Entry;
-                if (name.Length == 0) continue;
+                if (name.Length == 0) {
+                    continue;
+                }
                 int symbol = name switch {
                     "Instance" => 0,
                     "Instance2" => 1,
                     _ => -1
                 };
-                if (symbol < 0) errors.UnknownSymbol("equip.equip_config", name, key, config.Explain("equip.equip_config", key));
+                if (symbol < 0) {
+                    errors.UnknownSymbol("equip.equip_config", name, key, config.Explain("equip.equip_config", key));
+                }
             }
             config._equip_dequip_uconfig_All = new System.Collections.ObjectModel.ReadOnlyDictionary<string, DEquipConfig>(s_all);
             config._equip_dequip_uconfig_Symbol_Instance = Get(config, "Instance");
-            if (config._equip_dequip_uconfig_Symbol_Instance == null) errors.MissingSymbol("equip.equip_config", "Instance", "Instance");
+            if (config._equip_dequip_uconfig_Symbol_Instance == null) {
+                errors.MissingSymbol("equip.equip_config", "Instance", "Instance");
+            }
             config._equip_dequip_uconfig_Symbol_Instance2 = Get(config, "Instance2");
-            if (config._equip_dequip_uconfig_Symbol_Instance2 == null) errors.MissingSymbol("equip.equip_config", "Instance2", "Instance2");
+            if (config._equip_dequip_uconfig_Symbol_Instance2 == null) {
+                errors.MissingSymbol("equip.equip_config", "Instance2", "Instance2");
+            }
             config._equip_dequip_uconfig_Rows = list.AsReadOnly();
         }
 
@@ -176,8 +200,7 @@ namespace Config.Equip
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DJewelry>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
@@ -230,15 +253,27 @@ namespace Config.Equip
         {
             LvlRank._resolve(errors, config);
             var rRefLvlRank = Equip.DJewelryRandom.Get(config, LvlRank);
-            if (rRefLvlRank == null) errors.MissingReference("equip.jewelry", "LvlRank", "equip.jewelry_random", this.LvlRank);
-            else RefLvlRank = rRefLvlRank;
+            if (rRefLvlRank == null) {
+                errors.MissingReference("equip.jewelry", "LvlRank", "equip.jewelry_random", this.LvlRank);
+            }
+            else {
+                RefLvlRank = rRefLvlRank;
+            }
             var rRefJType = Equip.DJewelryTypeInfo.Get(config, JType);
-            if (rRefJType == null) errors.MissingReference("equip.jewelry", "JType", "equip.jewelry_type", this.JType);
-            else RefJType = rRefJType.EEnum;
+            if (rRefJType == null) {
+                errors.MissingReference("equip.jewelry", "JType", "equip.jewelry_type", this.JType);
+            }
+            else {
+                RefJType = rRefJType.EEnum;
+            }
             NullableRefSuitID = Equip.DJewelrySuit.Get(config, SuitID);
             var rRefKeyAbility = Equip.DAbilityInfo.Get(config, KeyAbility);
-            if (rRefKeyAbility == null) errors.MissingReference("equip.jewelry", "KeyAbility", "equip.ability", this.KeyAbility);
-            else RefKeyAbility = rRefKeyAbility.EEnum;
+            if (rRefKeyAbility == null) {
+                errors.MissingReference("equip.jewelry", "KeyAbility", "equip.ability", this.KeyAbility);
+            }
+            else {
+                RefKeyAbility = rRefKeyAbility.EEnum;
+            }
         }
 
     }
@@ -250,8 +285,7 @@ namespace Config.Equip
         {
             int count = list.Count;
             var s_all = new Dictionary<DLevelRank, DJewelryRandom>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
             }
@@ -265,18 +299,26 @@ namespace Config.Equip
             var valueAttackRange = DRange._create(reader);
             int Count_valueOtherRange = reader.ReadCount(0);
             IReadOnlyList<DRange> valueOtherRange;
-            if (Count_valueOtherRange == 0) valueOtherRange = Array.Empty<DRange>();
+            if (Count_valueOtherRange == 0) {
+                valueOtherRange = Array.Empty<DRange>();
+            }
             else {
                 var values_valueOtherRange = new List<DRange>(Count_valueOtherRange);
-                for (int i = 0; i < Count_valueOtherRange; i++) values_valueOtherRange.Add(DRange._create(reader));
+                for (int i = 0; i < Count_valueOtherRange; i++) {
+                    values_valueOtherRange.Add(DRange._create(reader));
+                }
                 valueOtherRange = values_valueOtherRange.AsReadOnly();
             }
             int Count_valueTestPack = reader.ReadCount(0);
             IReadOnlyList<Equip.DTestPackBean> valueTestPack;
-            if (Count_valueTestPack == 0) valueTestPack = Array.Empty<Equip.DTestPackBean>();
+            if (Count_valueTestPack == 0) {
+                valueTestPack = Array.Empty<Equip.DTestPackBean>();
+            }
             else {
                 var values_valueTestPack = new List<Equip.DTestPackBean>(Count_valueTestPack);
-                for (int i = 0; i < Count_valueTestPack; i++) values_valueTestPack.Add(Equip.DTestPackBean._create(reader));
+                for (int i = 0; i < Count_valueTestPack; i++) {
+                    values_valueTestPack.Add(Equip.DTestPackBean._create(reader));
+                }
                 valueTestPack = values_valueTestPack.AsReadOnly();
             }
             return new DJewelryRandom {
@@ -317,21 +359,28 @@ namespace Config.Equip
         {
             int count = list.Count;
             var s_all = new Dictionary<int, DJewelrySuit>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
                 string name = self.Ename;
-                if (name.Length == 0) continue;
+                if (name.Length == 0) {
+                    continue;
+                }
                 int symbol = name == "SpecialSuit" ? 0 : -1;
-                if (symbol < 0) errors.UnknownSymbol("equip.jewelry_suit", name, key, config.Explain("equip.jewelry_suit", key));
+                if (symbol < 0) {
+                    errors.UnknownSymbol("equip.jewelry_suit", name, key, config.Explain("equip.jewelry_suit", key));
+                }
                 else {
-                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("equip.jewelry_suit", name, _symbolKeys[symbol], key, config.Explain("equip.jewelry_suit", key));
+                    if (!key.Equals(_symbolKeys[symbol])) {
+                        errors.ChangedSymbolId("equip.jewelry_suit", name, _symbolKeys[symbol], key, config.Explain("equip.jewelry_suit", key));
+                    }
                 }
             }
             config._equip_djewelry_usuit_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DJewelrySuit>(s_all);
             config._equip_djewelry_usuit_Symbol_SpecialSuit = Get(config, 4);
-            if (config._equip_djewelry_usuit_Symbol_SpecialSuit == null) errors.MissingSymbol("equip.jewelry_suit", "SpecialSuit", 4);
+            if (config._equip_djewelry_usuit_Symbol_SpecialSuit == null) {
+                errors.MissingSymbol("equip.jewelry_suit", "SpecialSuit", 4);
+            }
             config._equip_djewelry_usuit_Rows = list.AsReadOnly();
         }
 
@@ -348,10 +397,14 @@ namespace Config.Equip
             var valueAbility3Value = reader.ReadInt32();
             int Count_valueSuitList = reader.ReadCount(0);
             IReadOnlyList<int> valueSuitList;
-            if (Count_valueSuitList == 0) valueSuitList = Array.Empty<int>();
+            if (Count_valueSuitList == 0) {
+                valueSuitList = Array.Empty<int>();
+            }
             else {
                 var values_valueSuitList = new List<int>(Count_valueSuitList);
-                for (int i = 0; i < Count_valueSuitList; i++) values_valueSuitList.Add(reader.ReadInt32());
+                for (int i = 0; i < Count_valueSuitList; i++) {
+                    values_valueSuitList.Add(reader.ReadInt32());
+                }
                 valueSuitList = values_valueSuitList.AsReadOnly();
             }
             return new DJewelrySuit {
@@ -393,23 +446,32 @@ namespace Config.Equip
         {
             int count = list.Count;
             var s_all = new Dictionary<string, DJewelryTypeInfo>(count);
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 s_all.Add(key, self);
                 string name = self.TypeName;
                 int symbol = (int)self.EEnum;
-                if (symbol < 0) errors.UnknownSymbol("equip.jewelry_type", name, key, config.Explain("equip.jewelry_type", key));
+                if (symbol < 0) {
+                    errors.UnknownSymbol("equip.jewelry_type", name, key, config.Explain("equip.jewelry_type", key));
+                }
             }
             config._equip_djewelry_utype_All = new System.Collections.ObjectModel.ReadOnlyDictionary<string, DJewelryTypeInfo>(s_all);
             config._equip_djewelry_utype_Symbols[(int)DJewelryType.Jade] = Get(config, "Jade");
-            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Jade] == null) errors.MissingSymbol("equip.jewelry_type", "Jade", "Jade");
+            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Jade] == null) {
+                errors.MissingSymbol("equip.jewelry_type", "Jade", "Jade");
+            }
             config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bracelet] = Get(config, "Bracelet");
-            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bracelet] == null) errors.MissingSymbol("equip.jewelry_type", "Bracelet", "Bracelet");
+            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bracelet] == null) {
+                errors.MissingSymbol("equip.jewelry_type", "Bracelet", "Bracelet");
+            }
             config._equip_djewelry_utype_Symbols[(int)DJewelryType.Magic] = Get(config, "Magic");
-            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Magic] == null) errors.MissingSymbol("equip.jewelry_type", "Magic", "Magic");
+            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Magic] == null) {
+                errors.MissingSymbol("equip.jewelry_type", "Magic", "Magic");
+            }
             config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bottle] = Get(config, "Bottle");
-            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bottle] == null) errors.MissingSymbol("equip.jewelry_type", "Bottle", "Bottle");
+            if (config._equip_djewelry_utype_Symbols[(int)DJewelryType.Bottle] == null) {
+                errors.MissingSymbol("equip.jewelry_type", "Bottle", "Bottle");
+            }
             config._equip_djewelry_utype_Rows = list.AsReadOnly();
         }
 
@@ -455,35 +517,56 @@ namespace Config.Equip
             int count = list.Count;
             var s_all = new DRankInfo[count];
             var seq_RankID = new bool[count];
-            foreach (var self in list)
-            {
+            foreach (var self in list) {
                 var key = PrimaryKey(self);
                 {
                     int seq = self.RankID;
-                    if (seq < 0 || seq >= count || seq_RankID[seq]) errors.InvalidSeq("equip.rank", "RankID", key, seq, count, config.Explain("equip.rank", key));
-                    else seq_RankID[seq] = true;
+                    if (seq < 0 || seq >= count || seq_RankID[seq]) {
+                        errors.InvalidSeq("equip.rank", "RankID", key, seq, count, config.Explain("equip.rank", key));
+                    }
+                    else {
+                        seq_RankID[seq] = true;
+                    }
                 }
-                if (key >= 0 && key < count) s_all[key] = self;
+                if (key >= 0 && key < count) {
+                    s_all[key] = self;
+                }
                 string name = self.RankName;
                 int symbol = (int)self.EEnum;
-                if (symbol < 0) errors.UnknownSymbol("equip.rank", name, key, config.Explain("equip.rank", key));
+                if (symbol < 0) {
+                    errors.UnknownSymbol("equip.rank", name, key, config.Explain("equip.rank", key));
+                }
                 else {
-                    if (!key.Equals(_symbolKeys[symbol])) errors.ChangedSymbolId("equip.rank", name, _symbolKeys[symbol], key, config.Explain("equip.rank", key));
+                    if (!key.Equals(_symbolKeys[symbol])) {
+                        errors.ChangedSymbolId("equip.rank", name, _symbolKeys[symbol], key, config.Explain("equip.rank", key));
+                    }
                 }
             }
             config._equip_drank_All = s_all;
             config._equip_drank_Symbols[(int)DRank.White] = Get(config, 0);
-            if (config._equip_drank_Symbols[(int)DRank.White] == null) errors.MissingSymbol("equip.rank", "white", 0);
+            if (config._equip_drank_Symbols[(int)DRank.White] == null) {
+                errors.MissingSymbol("equip.rank", "white", 0);
+            }
             config._equip_drank_Symbols[(int)DRank.Green] = Get(config, 1);
-            if (config._equip_drank_Symbols[(int)DRank.Green] == null) errors.MissingSymbol("equip.rank", "green", 1);
+            if (config._equip_drank_Symbols[(int)DRank.Green] == null) {
+                errors.MissingSymbol("equip.rank", "green", 1);
+            }
             config._equip_drank_Symbols[(int)DRank.Blue] = Get(config, 2);
-            if (config._equip_drank_Symbols[(int)DRank.Blue] == null) errors.MissingSymbol("equip.rank", "blue", 2);
+            if (config._equip_drank_Symbols[(int)DRank.Blue] == null) {
+                errors.MissingSymbol("equip.rank", "blue", 2);
+            }
             config._equip_drank_Symbols[(int)DRank.Purple] = Get(config, 3);
-            if (config._equip_drank_Symbols[(int)DRank.Purple] == null) errors.MissingSymbol("equip.rank", "purple", 3);
+            if (config._equip_drank_Symbols[(int)DRank.Purple] == null) {
+                errors.MissingSymbol("equip.rank", "purple", 3);
+            }
             config._equip_drank_Symbols[(int)DRank.Yellow] = Get(config, 4);
-            if (config._equip_drank_Symbols[(int)DRank.Yellow] == null) errors.MissingSymbol("equip.rank", "yellow", 4);
+            if (config._equip_drank_Symbols[(int)DRank.Yellow] == null) {
+                errors.MissingSymbol("equip.rank", "yellow", 4);
+            }
             config._equip_drank_Symbols[(int)DRank.Red] = Get(config, 5);
-            if (config._equip_drank_Symbols[(int)DRank.Red] == null) errors.MissingSymbol("equip.rank", "red", 5);
+            if (config._equip_drank_Symbols[(int)DRank.Red] == null) {
+                errors.MissingSymbol("equip.rank", "red", 5);
+            }
             config._equip_drank_Rows = Array.AsReadOnly(s_all);
         }
 

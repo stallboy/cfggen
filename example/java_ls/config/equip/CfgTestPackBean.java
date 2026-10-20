@@ -33,8 +33,9 @@ public class CfgTestPackBean {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgTestPackBean o))
+        if (!(other instanceof CfgTestPackBean o)) {
             return false;
+        }
         return name.equals(o.name) && iRange.equals(o.iRange);
     }
 

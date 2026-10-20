@@ -61,7 +61,9 @@ namespace ${model.topPkg}
 
         public static void SetMgr(ConfigMgr? config)
         {
-            if (config == null || !config._ready) throw new InvalidOperationException("Configuration is not ready");
+            if (config == null || !config._ready) {
+                throw new InvalidOperationException("Configuration is not ready");
+            }
             System.Threading.Volatile.Write(ref _default, config);
         }
 

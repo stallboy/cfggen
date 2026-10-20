@@ -26,7 +26,7 @@ final class PackageBuilder {
         }
         var packs = new ArrayList<ConfigPackage>();
         for (Path path : paths) {
-            try (var input = new ConfigInput(path)) { packs.add(ConfigPackage.read(input)); }
+            packs.add(ConfigPackage.read(path));
         }
         if (!packs.isEmpty()) ConfigPackage.validateOrder(packs);
         var available = new HashMap<String, ConfigPackage>();

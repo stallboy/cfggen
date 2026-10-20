@@ -18,10 +18,14 @@ public void _resolve(${cfg.codeTopPkg()}.ConfigMgr mgr, ${errorsClass} errors) {
                     }
                 @elseif(field.type() instanceof FieldType.FMap fMap)
                     @if(HasRef.hasRef(fMap.key()))
-                        for (var key : this.${ln}.keySet()) key._resolve(mgr, errors);
+                        for (var key : this.${ln}.keySet()) {
+                            key._resolve(mgr, errors);
+                        }
                     @endif
                     @if(HasRef.hasRef(fMap.value()))
-                        for (var value : this.${ln}.values()) value._resolve(mgr, errors);
+                        for (var value : this.${ln}.values()) {
+                            value._resolve(mgr, errors);
+                        }
                     @endif
                 @endif
             @endif

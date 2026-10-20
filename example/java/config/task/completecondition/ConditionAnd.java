@@ -40,8 +40,9 @@ public final class ConditionAnd implements config.task.completecondition.Complet
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ConditionAnd o))
+        if (!(other instanceof ConditionAnd o)) {
             return false;
+        }
         return cond1.equals(o.cond1) && cond2.equals(o.cond2);
     }
 

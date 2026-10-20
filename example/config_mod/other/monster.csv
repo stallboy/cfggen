@@ -1,0 +1,4 @@
+ID,Positions,Loot,Item,Enum map,Enum references
+id,posList,lootId,lootItemId,enumMap1,enumMap2
+1,100;200;300,2,40005,,
+1001,10;20;30,2,40006,,

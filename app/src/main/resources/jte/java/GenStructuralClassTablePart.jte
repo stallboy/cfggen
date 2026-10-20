@@ -61,14 +61,18 @@
             @endfor
             @if(primarySeq)
                 int key = ${model.actualParamsKey(table.primaryKey(), "self.")};
-                if (key >= 0 && key < c) ${primaryMapName}.set(key, self);
+                if (key >= 0 && key < c) {
+                    ${primaryMapName}.set(key, self);
+                }
             @endif
             @for(KeySchema uk : table.uniqueKeys())
                 !{ boolean ukSeq = uk.fieldSchemas().size() == 1 && uk.fieldSchemas().getFirst().isSeq(); }
                 @if(ukSeq)
                     {
                         int uniqueKey = ${model.actualParamsKey(uk, "self.")};
-                        if (uniqueKey >= 0 && uniqueKey < c) ${model.name.containerPrefix + Name.uniqueKeyMapName(uk)}.set(uniqueKey, self);
+                        if (uniqueKey >= 0 && uniqueKey < c) {
+                            ${model.name.containerPrefix + Name.uniqueKeyMapName(uk)}.set(uniqueKey, self);
+                        }
                     }
                 @else
                     if (${model.name.containerPrefix + Name.uniqueKeyMapName(uk)}.putIfAbsent(${model.actualParamsKey(uk, "self.")}, self) != null) {

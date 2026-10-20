@@ -31,8 +31,9 @@ public final class CfgChat implements config.task.completecondition.CfgCompletec
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgChat o))
+        if (!(other instanceof CfgChat o)) {
             return false;
+        }
         return msg.equals(o.msg);
     }
 

@@ -57,7 +57,9 @@ public final class SchemaDeserializer {
         var names = new java.util.HashSet<String>();
         for (int i = 0; i < size; i++) {
             String name = input.readString();
-            if (!names.add(name)) input.errors().duplicateKey("schema field", name);
+            if (!names.add(name)) {
+                input.errors().duplicateKey("schema field", name);
+            }
             Schema schema = deserialize();
             bean.addColumn(name, schema);
         }
@@ -71,7 +73,9 @@ public final class SchemaDeserializer {
         int size = input.readCount(hasIntValue ? 8 : 4);
         for (int i = 0; i < size; i++) {
             String name = input.readString();
-            if (enumSchema.values.containsKey(name)) input.errors().duplicateKey("schema symbol", name);
+            if (enumSchema.values.containsKey(name)) {
+                input.errors().duplicateKey("schema symbol", name);
+            }
             if (hasIntValue) {
                 int value = input.readInt();
                 enumSchema.addValue(name, value);
@@ -88,7 +92,9 @@ public final class SchemaDeserializer {
         for (int i = 0; i < size; i++) {
             String name = input.readString();
             Schema schema = deserialize();
-            if (interfaceSchema.implementations.putIfAbsent(name, schema) != null) input.errors().duplicateKey("schema implementation", name);
+            if (interfaceSchema.implementations.putIfAbsent(name, schema) != null) {
+                input.errors().duplicateKey("schema implementation", name);
+            }
         }
         return interfaceSchema;
     }

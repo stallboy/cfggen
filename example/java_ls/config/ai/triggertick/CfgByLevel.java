@@ -33,8 +33,9 @@ public final class CfgByLevel implements config.ai.triggertick.CfgTriggerTick {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgByLevel o))
+        if (!(other instanceof CfgByLevel o)) {
             return false;
+        }
         return init == o.init && coefficient == o.coefficient;
     }
 

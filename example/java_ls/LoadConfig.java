@@ -2,7 +2,6 @@
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
 import config.task.CfgTask;
-import configgen.genjava.ConfigInput;
 import configgen.genjava.ConfigPackage;
 
 import java.io.IOException;
@@ -17,9 +16,7 @@ public class LoadConfig {
     private static final Logger logger = Logger.getLogger("LoadConfig");
 
     public static void load(String fn) throws IOException {
-        try (ConfigInput input = new ConfigInput(Path.of(fn))) {
-            ConfigMgrLoader.loadPackagesAndSetMgr(ConfigPackage.read(input));
-        }
+        ConfigMgrLoader.loadPackagesAndSetMgr(ConfigPackage.read(Path.of(fn)));
     }
 
     public static void autoReload(ScheduledExecutorService executorService, String fn, Runnable afterReload) throws IOException {
@@ -58,7 +55,7 @@ public class LoadConfig {
     }
 
     public static void main(String[] args) throws IOException {
-        String fn = "config.bytes";
+        String fn = "base.bytes";
         load(fn);
         System.out.println(CfgTask.get(1));
 //        new BytesInspector(fn).match("eq");

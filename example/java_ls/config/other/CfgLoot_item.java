@@ -76,8 +76,9 @@ public class CfgLoot_item {
 
         @Override
         public boolean equals(Object other) {
-            if (!(other instanceof LootidItemidKey o))
+            if (!(other instanceof LootidItemidKey o)) {
                 return false;
+            }
             return lootid == o.lootid && itemid == o.itemid;
         }
 

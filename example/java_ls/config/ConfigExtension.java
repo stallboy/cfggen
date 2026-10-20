@@ -9,7 +9,9 @@ public abstract class ConfigExtension {
     protected void onConfigReady() {}
 
     final void _bind(ConfigMgr value) {
-        if (config != null) throw new IllegalStateException("Extension is already bound");
+        if (config != null) {
+            throw new IllegalStateException("Extension is already bound");
+        }
         config = value;
     }
 }

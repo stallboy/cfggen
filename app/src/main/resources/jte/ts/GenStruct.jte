@@ -81,8 +81,7 @@
                 this.${model.uniqueKeyMapName(uk)} = new Map<${model.mapKeyType(uk)}, ${className}>();
             @endfor
 
-            for (let c = os.ReadCount(1); c > 0; c--)
-            {
+            for (let c = os.ReadCount(1); c > 0; c--) {
                 let self = this._create(os);
                 this.all.set(${model.actualParamsKeySelf(table.primaryKey())}, self);
                 @for(KeySchema uk : table.uniqueKeys())
@@ -97,8 +96,9 @@
                     switch(self._${ef}.trim()) {
                         @for(String enumName : model._vTable.enumNames())
                             case "${enumName}":
-                                if (this._${enumName} != null)
+                                if (this._${enumName} != null) {
                                     errors.EnumDup("${model.structural.name()}", "${enumName}");
+                                }
                                 this._${enumName} = self;
                                 break;
                         @endfor
@@ -136,8 +136,9 @@
             !{FieldType t = field.type();}
             @if(t instanceof FList(SimpleType item))
                 self._${(n)} = [];
-                for (let c = os.ReadCount(0); c > 0; c--)
+                for (let c = os.ReadCount(0); c > 0; c--) {
                     self._${n}.push(${model.create(item)});
+                }
             @elseif(field.type() instanceof FMap(SimpleType key, SimpleType value))
                 self._${(n)}  = new ${model.type(t)}();
                 for (let c = os.ReadCount(0); c > 0; c--) {
@@ -165,10 +166,14 @@
                         }
                     @elseif(t instanceof FMap map)
                         @if(HasRef.hasRef(map.key()))
-                            for (const key of this._${n}.keys()) key._resolve(errors);
+                            for (const key of this._${n}.keys()) {
+                                key._resolve(errors);
+                            }
                         @endif
                         @if(HasRef.hasRef(map.value()))
-                            for (const value of this._${n}.values()) value._resolve(errors);
+                            for (const value of this._${n}.values()) {
+                                value._resolve(errors);
+                            }
                         @endif
                     @endif
                 @endif
@@ -217,14 +222,14 @@
                 @if(fk.refKey() instanceof RefKey.RefList refList)
                     !{var refName = model.refName(fk);}
                     this._${refName} = [];
-                    for (const v of ${model.className(fk.refTableSchema())}.All().values())
-                    {
+                    for (const v of ${model.className(fk.refTableSchema())}.All().values()) {
                         !{var eqs = new java.util.ArrayList<String>();}
                         @for(int i = 0; i < fk.key().fields().size(); i++)
                             !{eqs.add("v." + model.upper1(refList.keyNames().get(i)) + " === this._" + (fk.key().fields().get(i)));}
                         @endfor
-                        if (${String.join(" && ", eqs)})
+                        if (${String.join(" && ", eqs)}) {
                             this._${refName}.push(v);
+                        }
                     }
                 @endif
             @endfor

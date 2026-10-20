@@ -20,7 +20,9 @@ public class ConfigCodeSchema {
         schema.addImp("ai.ai_action", ai_ai_action());
         schema.addImp("ai.ai_condition", ai_ai_condition());
         schema.addImp("equip.ability", equip_ability());
-        if (packageLayout) schema.addImp("equip.ability_Detail", equip_ability_Detail());
+        if (packageLayout) {
+            schema.addImp("equip.ability_Detail", equip_ability_Detail());
+        }
         schema.addImp("equip.equip_config", equip_equip_config());
         schema.addImp("equip.equip_config_Entry", equip_equip_config_Entry());
         schema.addImp("equip.jewelry", equip_jewelry());
@@ -28,7 +30,9 @@ public class ConfigCodeSchema {
         schema.addImp("equip.jewelry_suit", equip_jewelry_suit());
         schema.addImp("equip.jewelry_suit_Entry", equip_jewelry_suit_Entry());
         schema.addImp("equip.jewelry_type", equip_jewelry_type());
-        if (packageLayout) schema.addImp("equip.jewelry_type_Detail", equip_jewelry_type_Detail());
+        if (packageLayout) {
+            schema.addImp("equip.jewelry_type_Detail", equip_jewelry_type_Detail());
+        }
         schema.addImp("equip.rank", equip_rank());
         schema.addImp("equip.rank_Detail", equip_rank_Detail());
         schema.addImp("other.ArgCaptureMode", other_ArgCaptureMode());
@@ -40,7 +44,9 @@ public class ConfigCodeSchema {
         schema.addImp("other.monster", other_monster());
         schema.addImp("other.sign_in", other_sign_in());
         schema.addImp("task.complete_condition_type", task_complete_condition_type());
-        if (packageLayout) schema.addImp("task.complete_condition_type_Detail", task_complete_condition_type_Detail());
+        if (packageLayout) {
+            schema.addImp("task.complete_condition_type_Detail", task_complete_condition_type_Detail());
+        }
         schema.addImp("task.task", task_task());
         schema.addImp("task.task2", task_task2());
         schema.addImp("task.task_extra_exp", task_task_extra_exp());

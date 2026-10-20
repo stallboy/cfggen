@@ -167,7 +167,9 @@ public class CodeDataPrinter {
         sb.append("{");
         List<Member> members = o.members();
         for (int i = 0; i < members.size(); i++) {
-            if (i > 0) sb.append(", ");
+            if (i > 0) {
+                sb.append(", ");
+            }
             Member m = members.get(i);
             sb.append(m.name()).append(": ").append(inline(m.value(), depth + 1));
         }
@@ -177,7 +179,9 @@ public class CodeDataPrinter {
     private static String inlineArr(List<JsonValue> items, int depth) {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < items.size(); i++) {
-            if (i > 0) sb.append(", ");
+            if (i > 0) {
+                sb.append(", ");
+            }
             sb.append(inline(items.get(i), depth + 1));
         }
         return sb.append("]").toString();

@@ -70,8 +70,9 @@ public class DropItem {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof DropItem o))
+        if (!(other instanceof DropItem o)) {
             return false;
+        }
         return chance == o.chance && itemids.equals(o.itemids) && countmin == o.countmin && countmax == o.countmax;
     }
 

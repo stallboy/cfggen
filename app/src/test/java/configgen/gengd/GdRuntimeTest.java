@@ -30,7 +30,7 @@ class GdRuntimeTest {
         new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("initial"))).generate(context);
         Files.writeString(source.resolve("item.csv"), "id,name,desc,target\nid,name,desc,target\n1,Alice,你好,1\n");
         new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + root.resolve("pack"))).generate(new Context(context.contextCfg()));
-        var initial = configgen.genjava.ConfigPackage.read(new configgen.genjava.ConfigInput(root.resolve("initial/config.bytes")));
+        var initial = configgen.genjava.ConfigPackage.read(root.resolve("initial/base.bytes"));
         var blocks = new java.util.LinkedHashMap<String, byte[]>();
         for (String block : initial.blockNames()) {
             if (block.equals(".target")) continue;
@@ -40,8 +40,8 @@ class GdRuntimeTest {
         try (var output = new configgen.genjava.ConfigOutput(Files.newOutputStream(root.resolve("incomplete.bytes")))) {
             configgen.genbytes.PackageSerializer.write(output, initial.metadata(), blocks);
         }
-        var full = configgen.genjava.ConfigPackage.read(new configgen.genjava.ConfigInput(root.resolve("pack/config.bytes")))
-                .attach(configgen.genjava.ConfigPackage.read(new configgen.genjava.ConfigInput(root.resolve("pack/en.bytes"))));
+        var full = configgen.genjava.ConfigPackage.read(root.resolve("pack/base.bytes"))
+                .attach(configgen.genjava.ConfigPackage.read(root.resolve("pack/base_en.bytes")));
         blocks.clear();
         for (String block : full.blockNames()) {
             var input = full.block(block);
@@ -68,13 +68,13 @@ class GdRuntimeTest {
                     var root = OS.get_environment("CFGGEN_FIXTURE")
                     var errors = ConfigErrors.new()
                     var processor = ConfigProcessor.new()
-                    var stream = processor.load_from_package(ConfigPackage.read_file(root.path_join("initial/config.bytes")), errors)
+                    var stream = processor.load_from_package(ConfigPackage.read_file(root.path_join("initial/base.bytes")), errors)
                     check(stream != null)
                     TextPoolManager.set_global_texts(stream.get_lang_text_pools()[0])
                     check(DataItem.find(1).name == "Alice" and DataItem.find(1).desc.get_text() == "你好")
                     check(DataItem.find(2) != null)
-                    var package = ConfigPackage.read_file(root.path_join("pack/config.bytes"))
-                    package = package.attach(ConfigPackage.read_file(root.path_join("pack/en.bytes")))
+                    var package = ConfigPackage.read_file(root.path_join("pack/base.bytes"))
+                    package = package.attach(ConfigPackage.read_file(root.path_join("pack/base_en.bytes")))
                     stream = processor.load_from_package(package, errors)
                     check(stream != null)
                     check(DataItem.find(2) == null)
@@ -86,7 +86,7 @@ class GdRuntimeTest {
                     check(processor.load_from_package(incomplete, errors) == null)
                     check(DataItem.find(1) == previous and DataItem.find(2) == null)
                     check(processor.load_from_package(ConfigPackage.read_file(root.path_join("bad-variant.bytes")), errors) == null)
-                    var bad = FileAccess.get_file_as_bytes(root.path_join("pack/config.bytes"))
+                    var bad = FileAccess.get_file_as_bytes(root.path_join("pack/base.bytes"))
                     bad.encode_s32(0, 99)
                     check(ConfigPackage.read(bad) == null)
                     check(errors.get_error_count() == 0)

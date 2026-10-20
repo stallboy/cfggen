@@ -29,7 +29,9 @@ public static class Processor
     {
         ConfigPackage.ValidateOrder(packages);
         var errors = new LoadErrors();
-        foreach (var pack in packages) pack.ValidateSchema(Schema, errors);
+        foreach (var pack in packages) {
+            pack.ValidateSchema(Schema, errors);
+        }
         errors.CheckErrors();
         var config = new ConfigMgr();
         @for(TableSchema table : model.tableSchemas)
@@ -43,12 +45,16 @@ public static class Processor
         errors.CheckErrors();
         @for(TableSchema table : model.tableSchemas)
             @if(HasRef.hasRef(table))
-                foreach (var row in ${model.fullName(table)}.All(config)) row._resolve(errors, config);
+                foreach (var row in ${model.fullName(table)}.All(config)) {
+                    row._resolve(errors, config);
+                }
             @endif
         @endfor
         errors.CheckErrors();
         @for(TableSchema table : model.tableSchemas)
-            foreach (var row in ${model.fullName(table)}.All(config)) Ready(row, config);
+            foreach (var row in ${model.fullName(table)}.All(config)) {
+                Ready(row, config);
+            }
         @endfor
         config.MarkReady();
         return config;
@@ -56,7 +62,9 @@ public static class Processor
 
     private static void Ready<T>(T value, ConfigMgr config)
     {
-        if (value is IConfigExtension extension) extension.OnConfigReady(config);
+        if (value is IConfigExtension extension) {
+            extension.OnConfigReady(config);
+        }
     }
 
     @for(Structural structural : model.readyStructs)
@@ -67,7 +75,9 @@ public static class Processor
                 @if(field.type() instanceof StructRef)
                     Ready(${fieldName}, config);
                 @elseif(field.type() instanceof FList list && list.item() instanceof StructRef)
-                    foreach (var item in ${fieldName}) Ready(item, config);
+                    foreach (var item in ${fieldName}) {
+                        Ready(item, config);
+                    }
                 @elseif(field.type() instanceof FMap map && (map.key() instanceof StructRef || map.value() instanceof StructRef))
                     foreach (var pair in ${fieldName}) {
                         @if(map.key() instanceof StructRef)
@@ -88,8 +98,12 @@ public static class Processor
         {
             !{var nested = union.impls().stream().filter(StructModel::hasNested).toList();}
             @if(nested.size() == 1)
-                if (value is ${model.fullName(nested.getFirst())} item) Ready(item, config);
-                else Ready<${model.fullName(union)}>(value, config);
+                if (value is ${model.fullName(nested.getFirst())} item) {
+                    Ready(item, config);
+                }
+                else {
+                    Ready<${model.fullName(union)}>(value, config);
+                }
             @else
                 switch (value) {
                     @for(StructSchema impl : nested)
@@ -109,18 +123,38 @@ public static class Processor
         var slots = new Dictionary<K, int>();
         string block = "." + table;
         foreach (var pack in packages) {
-            if (!pack.HasBlock(block)) continue;
+            if (!pack.HasBlock(block)) {
+                continue;
+            }
+            bool isBase = ReferenceEquals(pack, packages[0]);
             string packName = pack.Name;
             var input = pack.Block(block${model.languageLiterals.isEmpty() ? "" : ", Languages"}); input.SetErrors(errors);
             int count = input.ReadCount();
             for (int j = 0; j < count; j++) {
                 var row = readRow(input);
                 K key = primaryKey(row);
-                if (!origins.TryGetValue(key, out var chain)) { chain = new List<string>(); origins.Add(key, chain); }
-                if (chain.Count != 0 && chain[chain.Count - 1] == packName) { errors.DuplicateRecord(table, packName, key); continue; }
-                if (slots.TryGetValue(key, out var slot)) rows[slot] = row;
-                else { slots.Add(key, rows.Count); rows.Add(row); }
-                chain.Add(packName);
+                bool exists = slots.TryGetValue(key, out var slot);
+                bool duplicate = exists;
+                if (!isBase) {
+                    if (!origins.TryGetValue(key, out var chain)) {
+                        chain = new List<string>();
+                        origins.Add(key, chain);
+                    }
+                    duplicate = chain.Count != 0 && chain[chain.Count - 1] == packName;
+                    if (!duplicate) {
+                        chain.Add(packName);
+                    }
+                }
+                if (duplicate) {
+                    errors.DuplicateRecord(table, packName, key);
+                    continue;
+                }
+                if (exists) {
+                    rows[slot] = row;
+                } else {
+                    slots.Add(key, rows.Count);
+                    rows.Add(row);
+                }
             }
             input.RequireEnd();
         }

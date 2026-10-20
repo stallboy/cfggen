@@ -34,7 +34,9 @@ public interface ${model.className} {
         String tag = input.readStringInPool();
         @if(model.impls.size() == 1)
             !{var impl = model.impls.getFirst();}
-            if (tag.equals("${impl.name()}")) return ${impl.fullName()}._create(input);
+            if (tag.equals("${impl.name()}")) {
+                return ${impl.fullName()}._create(input);
+            }
             throw input.errors().unknownVariant("${model.className}", tag);
         @elseif(model.impls.isEmpty())
             throw input.errors().unknownVariant("${model.className}", tag);

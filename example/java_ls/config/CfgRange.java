@@ -39,8 +39,9 @@ public class CfgRange {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgRange o))
+        if (!(other instanceof CfgRange o)) {
             return false;
+        }
         return min == o.min && max == o.max;
     }
 

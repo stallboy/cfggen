@@ -78,9 +78,9 @@ func _load_config():
 	"""加载配置数据"""
 	print("开始加载配置...")
 
-	var file = FileAccess.open("res://config.bytes", FileAccess.READ)
+	var file = FileAccess.open("res://base.bytes", FileAccess.READ)
 	if file == null:
-		push_error("无法打开配置文件: res://config.bytes")
+		push_error("无法打开配置文件: res://base.bytes")
 		result_text.text = "错误：无法打开配置文件"
 		return
 

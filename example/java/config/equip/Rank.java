@@ -88,10 +88,14 @@ public enum Rank {
                 errors.unknownSymbol("equip.rank", symbol, key, mgr.explain("equip.rank", key));
                 continue;
             }
-            if (key != expected.value) errors.changedSymbolId("equip.rank", symbol, expected.value, key, mgr.explain("equip.rank", key));
+            if (key != expected.value) {
+                errors.changedSymbolId("equip.rank", symbol, expected.value, key, mgr.explain("equip.rank", key));
+            }
         }
         for (Rank e : map.values()) {
-            if (e.ref(mgr) == null) errors.missingSymbol("equip.rank", e.name, e.value);
+            if (e.ref(mgr) == null) {
+                errors.missingSymbol("equip.rank", e.name, e.value);
+            }
         }
     }
 

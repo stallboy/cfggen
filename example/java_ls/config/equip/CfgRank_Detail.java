@@ -69,7 +69,9 @@ public class CfgRank_Detail {
                 }
             }
             int key = self.rankID;
-            if (key >= 0 && key < c) equip_rank_All.set(key, self);
+            if (key >= 0 && key < c) {
+                equip_rank_All.set(key, self);
+            }
         }
         mgr._set_equip_rank_All(equip_rank_All);
     }

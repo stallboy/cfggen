@@ -33,7 +33,9 @@ public class CfgEquip_config_Entry {
         for (var row : mgr._get_equip_equip_config_All().values()) {
             var key = row.getEntry();
             String symbol = row.getEntry();
-            if (symbol.isEmpty()) continue;
+            if (symbol.isEmpty()) {
+                continue;
+            }
             CfgEquip_config_Entry expected = switch (symbol) {
                 case "Instance" -> INSTANCE;
                 case "Instance2" -> INSTANCE2;
@@ -44,8 +46,12 @@ public class CfgEquip_config_Entry {
                 continue;
             }
         }
-        if (INSTANCE.ref(mgr) == null) errors.missingSymbol("equip.equip_config", "Instance", INSTANCE.value);
-        if (INSTANCE2.ref(mgr) == null) errors.missingSymbol("equip.equip_config", "Instance2", INSTANCE2.value);
+        if (INSTANCE.ref(mgr) == null) {
+            errors.missingSymbol("equip.equip_config", "Instance", INSTANCE.value);
+        }
+        if (INSTANCE2.ref(mgr) == null) {
+            errors.missingSymbol("equip.equip_config", "Instance2", INSTANCE2.value);
+        }
     }
 
 }

@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `ConfigStream.gd` - 二进制配置读取流
   - `Data*.gd` - 各配置表的数据类
   - `Ai/`, `Equip/`, `Other/`, `Task/` - 按模块分组的配置类
-- **`config.bytes`** - 二进制配置数据文件
+- **`base.bytes`** - 二进制配置数据文件
 - **`project.godot`** - Godot 项目配置文件
 
 ## 代码生成
@@ -28,17 +28,17 @@ gengd.bat
 
 该命令会：
 1. 根据 `../config/` 中的 `.cfg` schema 定义生成 GDScript 代码到 `config/` 目录
-2. 生成二进制配置数据到 `config.bytes`
+2. 生成二进制配置数据到 `base.bytes`
 
 ### 生成命令详解
 
 ```bash
-java -jar ../cfggen.jar -datadir config -gen gd,own:-nogd,dir:gd/config,encoding:UTF-8 -gen bytes,own:-nogd,file=gd/config.bytes,stringpool
+java -jar ../cfggen.jar -datadir config -gen gd,own:-nogd,dir:gd/config,encoding:UTF-8 -gen bytes,own:-nogd,file=gd/base.bytes,stringpool
 ```
 
 - `-datadir config` - 配置数据源目录
 - `-gen gd,own:-nogd,dir:gd/config` - 生成 GDScript 代码到 `gd/config/`
-- `-gen bytes,file=gd/config.bytes,stringpool` - 生成二进制数据文件（启用字符串池优化）
+- `-gen bytes,file=gd/base.bytes,stringpool` - 生成二进制数据文件（启用字符串池优化）
   - `stringpool` 参数启用字符串池，可以显著减少文件大小
   - 字符串池会将重复的字符串只存储一份，数据中存储索引而非实际字符串
   - 启用后需要在代码中先调用 `stream.read_string_pool()` 读取字符串池
@@ -48,7 +48,7 @@ java -jar ../cfggen.jar -datadir config -gen gd,own:-nogd,dir:gd/config,encoding
 ### 核心加载流程
 
 ```
-ConfigLoader.load_from_bytes(config.bytes)
+ConfigLoader.load_from_bytes(base.bytes)
 	↓
 创建 ConfigProcessor
 	↓
@@ -99,7 +99,7 @@ var attack_ability = DataEquip_Ability.Attack
 
 ```gdscript
 # 加载配置
-var file = FileAccess.open("res://config.bytes", FileAccess.READ)
+var file = FileAccess.open("res://base.bytes", FileAccess.READ)
 var bytes = file.get_buffer(file.get_length())
 
 # 创建流并读取字符串池（如果启用了 stringpool）
@@ -125,7 +125,7 @@ print(jewelry.RefKeyAbility.name)
 1. **config/ 目录完全由 cfggen 生成，不要手工修改**
 2. 如需修改配置结构，应修改 `../config/` 中的 `.cfg` schema 文件
 3. 如需修改生成逻辑，应修改 `../../app/` 中的 cfggen 代码生成器
-4. `config.bytes` 必须与生成的代码版本匹配
+4. `base.bytes` 必须与生成的代码版本匹配
 
 ## 配置数据源
 

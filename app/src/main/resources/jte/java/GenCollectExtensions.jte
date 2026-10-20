@@ -15,13 +15,19 @@
             @if(field.type() instanceof FieldType.StructRef && GenJavaUtil.hasExtension(field.type()))
                 ${n}._collectExtensions(collect);
             @elseif(field.type() instanceof FieldType.FList list && GenJavaUtil.hasExtension(list.item()))
-                for (var child : ${n}) child._collectExtensions(collect);
+                for (var child : ${n}) {
+                    child._collectExtensions(collect);
+                }
             @elseif(field.type() instanceof FieldType.FMap map)
                 @if(GenJavaUtil.hasExtension(map.key()))
-                    for (var child : ${n}.keySet()) child._collectExtensions(collect);
+                    for (var child : ${n}.keySet()) {
+                        child._collectExtensions(collect);
+                    }
                 @endif
                 @if(GenJavaUtil.hasExtension(map.value()))
-                    for (var child : ${n}.values()) child._collectExtensions(collect);
+                    for (var child : ${n}.values()) {
+                        child._collectExtensions(collect);
+                    }
                 @endif
             @endif
         @endfor

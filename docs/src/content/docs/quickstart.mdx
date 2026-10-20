@@ -178,45 +178,23 @@ jar {
 创建 `LoadConfig.java`:
 
 ```java
-import config.ConfigCodeSchema;
-import config.ConfigMgr;
 import config.ConfigMgrLoader;
-import configgen.genjava.ConfigInput;
-import configgen.genjava.Schema;
-import configgen.genjava.SchemaCompatibleException;
+import configgen.genjava.ConfigPackage;
 
-import java.io.DataInputStream;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
+import java.nio.file.Path;
 
 public class LoadConfig {
     public static void main(String[] args) throws Exception {
-        // 1. 检查 Schema 兼容性
-        Schema codeSchema = ConfigCodeSchema.getCodeSchema();
+        // 1. 读取配置包，校验 Schema、索引和引用后发布默认实例
+        ConfigPackage pack = ConfigPackage.read(Path.of("base.bytes"));
+        ConfigMgrLoader.loadPackagesAndSetMgr(pack);
 
-        try (ConfigInput input = new ConfigInput(
-                new DataInputStream(new BufferedInputStream(
-                    new FileInputStream("config.data"))))) {
-
-            // 2. 读取数据文件的 Schema
-            Schema dataSchema = Schema.create(input);
-
-            // 3. 检查兼容性
-            if (!codeSchema.compatible(dataSchema)) {
-                throw new SchemaCompatibleException("schema not compatible");
-            }
-
-            // 4. 加载配置数据
-            ConfigMgr mgr = ConfigMgrLoader.load(input);
-            ConfigMgr.setMgr(mgr);
-        }
-
-        // 5. 使用配置
+        // 2. 使用配置
         config.item.Item item = config.item.Item.get(1001);
         System.out.println(item.getName());   // 输出: 铁剑
         System.out.println(item.getPrice());  // 输出: 100
 
-        // 6. 遍历所有道具
+        // 3. 遍历所有道具
         for (config.item.Item i : config.item.Item.all()) {
             System.out.println(i.getId() + ": " + i);
         }

@@ -26,8 +26,9 @@ public final class CfgConstValue implements config.ai.triggertick.CfgTriggerTick
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgConstValue o))
+        if (!(other instanceof CfgConstValue o)) {
             return false;
+        }
         return value == o.value;
     }
 

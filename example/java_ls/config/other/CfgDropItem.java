@@ -70,8 +70,9 @@ public class CfgDropItem {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgDropItem o))
+        if (!(other instanceof CfgDropItem o)) {
             return false;
+        }
         return chance == o.chance && itemids.equals(o.itemids) && countmin == o.countmin && countmax == o.countmax;
     }
 

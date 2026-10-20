@@ -40,8 +40,9 @@ public class CfgPosition {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgPosition o))
+        if (!(other instanceof CfgPosition o)) {
             return false;
+        }
         return x == o.x && y == o.y && z == o.z;
     }
 

@@ -47,10 +47,16 @@ public class Repl {
         while (true) {
             System.out.print(prompt);
             String line = br.readLine();
-            if (line == null) break;
+            if (line == null) {
+                break;
+            }
             line = line.trim();
-            if (line.isEmpty()) continue;
-            if (line.equals("q") || line.equals("quit")) break;
+            if (line.isEmpty()) {
+                continue;
+            }
+            if (line.equals("q") || line.equals("quit")) {
+                break;
+            }
             try {
                 String out = dispatch(line);
                 if (out != null) {

@@ -14,7 +14,9 @@ public static class Processor
     {
         ConfigPackage.ValidateOrder(packages);
         var errors = new LoadErrors();
-        foreach (var pack in packages) pack.ValidateSchema(Schema, errors);
+        foreach (var pack in packages) {
+            pack.ValidateSchema(Schema, errors);
+        }
         errors.CheckErrors();
         var config = new ConfigMgr();
         {
@@ -123,43 +125,103 @@ public static class Processor
             Task.DTaskExtraExp.InitializeAll(rows, errors, config);
         }
         errors.CheckErrors();
-        foreach (var row in Equip.DJewelry.All(config)) row._resolve(errors, config);
-        foreach (var row in Equip.DJewelryRandom.All(config)) row._resolve(errors, config);
-        foreach (var row in Other.DKeyTest.All(config)) row._resolve(errors, config);
-        foreach (var row in Other.DLoot.All(config)) row._resolve(errors, config);
-        foreach (var row in Other.DMonster.All(config)) row._resolve(errors, config);
-        foreach (var row in Other.DSignIn.All(config)) row._resolve(errors, config);
-        foreach (var row in Task.DTask.All(config)) row._resolve(errors, config);
-        foreach (var row in Task.DTask2.All(config)) row._resolve(errors, config);
+        foreach (var row in Equip.DJewelry.All(config)) {
+            row._resolve(errors, config);
+        }
+        foreach (var row in Equip.DJewelryRandom.All(config)) {
+            row._resolve(errors, config);
+        }
+        foreach (var row in Other.DKeyTest.All(config)) {
+            row._resolve(errors, config);
+        }
+        foreach (var row in Other.DLoot.All(config)) {
+            row._resolve(errors, config);
+        }
+        foreach (var row in Other.DMonster.All(config)) {
+            row._resolve(errors, config);
+        }
+        foreach (var row in Other.DSignIn.All(config)) {
+            row._resolve(errors, config);
+        }
+        foreach (var row in Task.DTask.All(config)) {
+            row._resolve(errors, config);
+        }
+        foreach (var row in Task.DTask2.All(config)) {
+            row._resolve(errors, config);
+        }
         errors.CheckErrors();
-        foreach (var row in Ai.DAi.All(config)) Ready(row, config);
-        foreach (var row in Ai.DAiAction.All(config)) Ready(row, config);
-        foreach (var row in Ai.DAiCondition.All(config)) Ready(row, config);
-        foreach (var row in Equip.DAbilityInfo.All(config)) Ready(row, config);
-        foreach (var row in Equip.DEquipConfig.All(config)) Ready(row, config);
-        foreach (var row in Equip.DJewelry.All(config)) Ready(row, config);
-        foreach (var row in Equip.DJewelryRandom.All(config)) Ready(row, config);
-        foreach (var row in Equip.DJewelrySuit.All(config)) Ready(row, config);
-        foreach (var row in Equip.DJewelryTypeInfo.All(config)) Ready(row, config);
-        foreach (var row in Equip.DRankInfo.All(config)) Ready(row, config);
-        foreach (var row in Other.DArgCaptureModeInfo.All(config)) Ready(row, config);
-        foreach (var row in Other.DDrop.All(config)) Ready(row, config);
-        foreach (var row in Other.DKeyTest.All(config)) Ready(row, config);
-        foreach (var row in Other.DLoot.All(config)) Ready(row, config);
-        foreach (var row in Other.DLootItem.All(config)) Ready(row, config);
-        foreach (var row in Other.DMonster.All(config)) Ready(row, config);
-        foreach (var row in Other.DSignIn.All(config)) Ready(row, config);
-        foreach (var row in Task.DCompleteConditionTypeInfo.All(config)) Ready(row, config);
-        foreach (var row in Task.DTask.All(config)) Ready(row, config);
-        foreach (var row in Task.DTask2.All(config)) Ready(row, config);
-        foreach (var row in Task.DTaskExtraExp.All(config)) Ready(row, config);
+        foreach (var row in Ai.DAi.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Ai.DAiAction.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Ai.DAiCondition.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Equip.DAbilityInfo.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Equip.DEquipConfig.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Equip.DJewelry.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Equip.DJewelryRandom.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Equip.DJewelrySuit.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Equip.DJewelryTypeInfo.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Equip.DRankInfo.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Other.DArgCaptureModeInfo.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Other.DDrop.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Other.DKeyTest.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Other.DLoot.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Other.DLootItem.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Other.DMonster.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Other.DSignIn.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Task.DCompleteConditionTypeInfo.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Task.DTask.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Task.DTask2.All(config)) {
+            Ready(row, config);
+        }
+        foreach (var row in Task.DTaskExtraExp.All(config)) {
+            Ready(row, config);
+        }
         config.MarkReady();
         return config;
     }
 
     private static void Ready<T>(T value, ConfigMgr config)
     {
-        if (value is IConfigExtension extension) extension.OnConfigReady(config);
+        if (value is IConfigExtension extension) {
+            extension.OnConfigReady(config);
+        }
     }
 
     private static void Ready(Ai.DAi value, ConfigMgr config)
@@ -184,20 +246,28 @@ public static class Processor
     {
         Ready(value.LvlRank, config);
         Ready(value.AttackRange, config);
-        foreach (var item in value.OtherRange) Ready(item, config);
-        foreach (var item in value.TestPack) Ready(item, config);
+        foreach (var item in value.OtherRange) {
+            Ready(item, config);
+        }
+        foreach (var item in value.TestPack) {
+            Ready(item, config);
+        }
         Ready<Equip.DJewelryRandom>(value, config);
     }
 
     private static void Ready(Other.DDrop value, ConfigMgr config)
     {
-        foreach (var item in value.Items) Ready(item, config);
+        foreach (var item in value.Items) {
+            Ready(item, config);
+        }
         Ready<Other.DDrop>(value, config);
     }
 
     private static void Ready(Other.DMonster value, ConfigMgr config)
     {
-        foreach (var item in value.PosList) Ready(item, config);
+        foreach (var item in value.PosList) {
+            Ready(item, config);
+        }
         Ready<Other.DMonster>(value, config);
     }
 
@@ -225,15 +295,23 @@ public static class Processor
     {
         Ready(value.Completecondition, config);
         Ready(value.TestStruct, config);
-        foreach (var item in value.TestListStruct) Ready(item, config);
-        foreach (var item in value.TestListInterface) Ready(item, config);
+        foreach (var item in value.TestListStruct) {
+            Ready(item, config);
+        }
+        foreach (var item in value.TestListInterface) {
+            Ready(item, config);
+        }
         Ready<Task.DTask2>(value, config);
     }
 
     private static void Ready(Task.DCompletecondition value, ConfigMgr config)
     {
-        if (value is Task.Completecondition.DConditionAnd item) Ready(item, config);
-        else Ready<Task.DCompletecondition>(value, config);
+        if (value is Task.Completecondition.DConditionAnd item) {
+            Ready(item, config);
+        }
+        else {
+            Ready<Task.DCompletecondition>(value, config);
+        }
     }
 
     private static List<T> ReadTable<K, T>(ConfigPackage[] packages, string table,
@@ -244,18 +322,38 @@ public static class Processor
         var slots = new Dictionary<K, int>();
         string block = "." + table;
         foreach (var pack in packages) {
-            if (!pack.HasBlock(block)) continue;
+            if (!pack.HasBlock(block)) {
+                continue;
+            }
+            bool isBase = ReferenceEquals(pack, packages[0]);
             string packName = pack.Name;
             var input = pack.Block(block); input.SetErrors(errors);
             int count = input.ReadCount();
             for (int j = 0; j < count; j++) {
                 var row = readRow(input);
                 K key = primaryKey(row);
-                if (!origins.TryGetValue(key, out var chain)) { chain = new List<string>(); origins.Add(key, chain); }
-                if (chain.Count != 0 && chain[chain.Count - 1] == packName) { errors.DuplicateRecord(table, packName, key); continue; }
-                if (slots.TryGetValue(key, out var slot)) rows[slot] = row;
-                else { slots.Add(key, rows.Count); rows.Add(row); }
-                chain.Add(packName);
+                bool exists = slots.TryGetValue(key, out var slot);
+                bool duplicate = exists;
+                if (!isBase) {
+                    if (!origins.TryGetValue(key, out var chain)) {
+                        chain = new List<string>();
+                        origins.Add(key, chain);
+                    }
+                    duplicate = chain.Count != 0 && chain[chain.Count - 1] == packName;
+                    if (!duplicate) {
+                        chain.Add(packName);
+                    }
+                }
+                if (duplicate) {
+                    errors.DuplicateRecord(table, packName, key);
+                    continue;
+                }
+                if (exists) {
+                    rows[slot] = row;
+                } else {
+                    slots.Add(key, rows.Count);
+                    rows.Add(row);
+                }
             }
             input.RequireEnd();
         }

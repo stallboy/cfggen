@@ -40,8 +40,9 @@ public final class CfgConditionAnd implements config.task.completecondition.CfgC
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CfgConditionAnd o))
+        if (!(other instanceof CfgConditionAnd o)) {
             return false;
+        }
         return cond1.equals(o.cond1) && cond2.equals(o.cond2);
     }
 

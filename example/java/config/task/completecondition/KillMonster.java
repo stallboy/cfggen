@@ -46,8 +46,9 @@ public final class KillMonster implements config.task.completecondition.Complete
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof KillMonster o))
+        if (!(other instanceof KillMonster o)) {
             return false;
+        }
         return monsterid == o.monsterid && count == o.count;
     }
 
@@ -59,7 +60,9 @@ public final class KillMonster implements config.task.completecondition.Complete
     @Override
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.RefMonsterid = mgr.getOtherMonster(this.monsterid);
-        if (this.RefMonsterid == null) errors.missingReference("KillMonster", "monsterid", "other.monster", this.monsterid);
+        if (this.RefMonsterid == null) {
+            errors.missingReference("KillMonster", "monsterid", "other.monster", this.monsterid);
+        }
 
     }
 

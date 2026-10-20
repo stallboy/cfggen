@@ -38,8 +38,9 @@ public final class CollectItem implements config.task.completecondition.Complete
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof CollectItem o))
+        if (!(other instanceof CollectItem o)) {
             return false;
+        }
         return itemid == o.itemid && count == o.count;
     }
 
