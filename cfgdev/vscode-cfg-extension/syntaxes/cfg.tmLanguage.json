@@ -6,6 +6,14 @@
 	],
 	"patterns": [
 		{
+			"name": "keyword.operator.reference.cfg",
+			"match": "->|=>|::|@"
+		},
+		{
+			"name": "storage.modifier.cfg",
+			"match": "\\b(index|nullable)\\b"
+		},
+		{
 			"name": "storage.type.primitive.cfg",
 			"match": "\\b(int|str|bool|long|float|text)\\b"
 		},

@@ -81,15 +81,22 @@ description: 游戏架构师与数据驱动配置生成助手。当用户提到"
 * 跨模块引用必须加前缀：`[模块名].[类型]` (例如 `item.ItemConfig`)。
 * **定义时不要加前缀**
 
+### 2.4 Record 内部对象引用
+
+需要让状态机跳转、技能分支或事件指向内嵌对象时，阅读 [内部引用](references/internal-references.md)。保留对象的包含所有权，通过集合局部索引寻址；不要为获得引用能力就自动拆成子表。
+
+本 record 使用 `->::path`，跨 record 使用 `->table::path`，最近祖先使用 `->@Type::path`。多个来源可分别使用当前字段、固定成员、`::` 源根或 `@Type::` 祖先路径；每项都从原引用对象独立取值。无集合键的固定对象使用 `[]`。`nullable` 允许整条新引用找不到目标，不豁免缺失祖先、错误声明或重复索引。
+
 ---
 
 ## 阶段 3：验证与交付 (Validation)
 
 **目标**：验证 Schema 语法并生成 CSV 模板。
 
-1. **查找工具**：寻找工作目录或根目录下的 `cfggen.jar`。找不到则提示用户提供或跳过。
+1. **查找工具**：使用项目约定的最新生成器；cfggen 源码工程优先 `app/build/libs/cfggen.jar`，其他工程查找工作目录或根目录下的 `cfggen.jar`。找不到则说明未执行验证。
 2. **执行验证**：运行命令（假设工具在根目录，数据在 config）：
 `java -jar cfggen.jar -tool schematocsv,datadir=./config`
+有实际数据时再运行 `java -jar cfggen.jar -datadir ./config -gen verify`，检查局部索引、祖先作用域和引用目标。源码格式化不能替代数据校验。
 3. **处理结果**：
 * **成功**：列出生成的 CSV 模板文件列表。
 * **失败**：按文件整理错误信息（语法错误、引用丢失、pack 缺失等），**给出修改建议并等待用户指示**，禁止擅自循环修复。
@@ -196,16 +203,19 @@ interface Condition {
 }
 
 // 3. 数据表与外键
-table task[id] (entry='entry') {
+table item[id] { id:int; type:int; }
+
+table task[id] (json) {
     [nextTask];                          // 唯一键约束
     id:int;
     name:text;                           // 国际化文本
     condition:Condition;                 // 多态逻辑
-    nextTask:int ->task.id (nullable);   // 可空外键 (单向)
-    typeid:int =>item.type;              // 非主键外键 (多向)
+    nextTask:int ->task (nullable);       // 普通表主键引用
+    typeid:int =>item[type];             // 按目标字段匹配多条记录
 }
 
 ```
 
 > **专业参考建议**：
 > * 若涉及复杂 Excel 映射排版，**参考** `references/tabular-mapping.md`。
+> * 若涉及 record 内部对象、集合索引或分层源键，阅读 [内部引用](references/internal-references.md)。

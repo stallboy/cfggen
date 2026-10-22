@@ -26,6 +26,10 @@ node_modules/
 test/
 test-results/
 test-output/
+.vscode-test-*/
+scripts/
+dist/**/*.d.ts
+dist/**/*.d.ts.map
 
 # 锁文件
 package-lock.json

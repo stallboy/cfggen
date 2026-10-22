@@ -11,7 +11,6 @@
         "输出包含 table item 定义",
         "item 表包含 id, name, type, price, description, stackable 字段",
         "使用 Schema Enum 而不是 Table Enum",
-        "生成了 architecture-plan.md 文档",
         "目录结构正确（config/config.cfg）"
       ]
     },
@@ -33,7 +32,7 @@
     {
       "id": 3,
       "prompt": "设计一个技能系统的核心配置：\n1. 技能表包含id、名称、技能标签、施放消耗、冷却时间、效果\n2. 效果接口支持：造成伤害、治疗、挂载Buff\n3. Buff表包含id、名称、持续时间、修改属性、周期效果\n4. 支持事件触发器，监听受击事件触发反伤",
-      "expected_output": "参考 skill-system-design.md 生成 GAS 风格战斗架构。",
+      "expected_output": "生成模块化战斗架构和对应的技能、Buff、效果及触发器 schema。",
       "files": [],
       "expectations": [
         "输出包含 GameplayTag 系统或类似的标签机制",
@@ -43,7 +42,51 @@
         "Behavior 接口包含 Trigger 实现（事件触发器）",
         "Trigger 支持监听事件并响应",
         "模块化拆分（core/skill/buff 等模块）",
-        "生成了 architecture-plan.md 文档"
+        "生成了 architecture.md 文档"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "技能的每个状态机内嵌 phases，阶段需要跳转到同一台机器内的另一阶段，不同机器可以各有 Idle。不要拆成子表。",
+      "expected_output": "集合字段声明局部唯一索引，跳转使用最近 Machine 祖先内的 Phase。",
+      "files": [],
+      "expectations": [
+        "list<Phase> 字段声明 index='key'，不把 index 放在 Phase 类型上",
+        "跳转使用 ->@Machine::phases，不搜索其他机器",
+        "保留原始键，JSON 不写派生对象引用"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "abilityId 在 AbilityUse.binding，machineKey 在子层 MachineUse，phaseKey 在其 targets 元素内；引用 ability 表 machines.phases，同时支持用施法根记录的 abilityCode 查唯一键。",
+      "expected_output": "使用独立有序来源路径，从两层祖先、当前对象或源根取键，目标写为外部表的内部路径。",
+      "files": [],
+      "expectations": [
+        "主键形式包含 @AbilityUse::binding.abilityId、@MachineUse::machineKey、phaseKey",
+        "唯一键形式使用 ::abilityCode 和 ->ability[code]::machines.phases",
+        "各来源从同一源对象上下文独立取值，不补造叶节点字段"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "当前技能需要直接引用自己的 origin 固定对象，timeline 的 map<PhaseKey,Effect> 需要用完整 PhaseKey 引用一个多态效果。",
+      "expected_output": "固定对象使用空来源列表；map 使用自然键和同类型完整 struct 源值。",
+      "files": [],
+      "expectations": [
+        "固定引用使用 ->spawn:[] ->::origin",
+        "map 不声明 index，不把 struct 键展开成多个源字段",
+        "Effect 可以作为终点，不继续读取其实现字段"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "我想让 nullable 跳转在内层机器找不到阶段时回退到外层，同时穿过 Effect 的具体 Damage 实现访问字段，可以直接这么写吗？",
+      "expected_output": "说明这些要求不属于当前内部引用语义，给出保留明确所有权和固定终点的最小合法替代。",
+      "files": [],
+      "expectations": [
+        "不生成最近祖先查找失败后继续回退的声明",
+        "不把 nullable 用于忽略缺少祖先或重复索引",
+        "不生成穿透 interface 或沿派生外键的路径"
       ]
     }
   ]

@@ -11,7 +11,8 @@ export const TOKEN_TYPE_NAMES: string[] = [
     'metadata',             // 3: metadata keywords
     'primaryKey',           // 4: primary key fields
     'uniqueKey',            // 5: unique key fields
-    'enumMember'            // 6: enum value names
+    'enumMember',           // 6: enum value names
+    'property'              // 7: internal reference source/target fields
 ];
 
 // 内部使用的标记类型常量
@@ -22,7 +23,8 @@ export const TOKEN_TYPES = {
     METADATA: 3,              // metadata keywords
     PRIMARY_KEY: 4,           // primary key field names
     UNIQUE_KEY: 5,            // unique key field names
-    ENUM_MEMBER: 6            // enum value names
+    ENUM_MEMBER: 6,           // enum value names
+    REFERENCE_FIELD: 7        // internal source/target path fields
 } as const;
 
 export type TokenType = keyof typeof TOKEN_TYPES;

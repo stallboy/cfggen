@@ -53,6 +53,7 @@ coverage/
 
 # VSCode
 .vscode-test/
+.vscode-test-*/
 .vscode-test-user/
 
 # Test results

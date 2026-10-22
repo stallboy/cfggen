@@ -4,7 +4,7 @@
 
 ## 安装
 
-将整个 `schema-gen-plugin\cfggen-architect` 目录复制到 项目的`.claude\skills` 目录下：
+将本目录中的 `cfggen-architect` 整个文件夹复制到项目的 `.claude\skills` 目录。涉及内部对象引用时，技能会按需读取随包附带的 `references/internal-references.md`。
 
 
 ## 使用方法

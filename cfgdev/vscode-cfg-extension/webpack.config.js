@@ -3,11 +3,10 @@
 'use strict';
 
 const path = require('path');
-const webpack = require('webpack');
 
 /**@type {import('webpack').Configuration}*/
 const config = {
-    target: 'webworker', // vscode extensions run in webworker context for VS Code web
+    target: 'node', // Desktop extension host.
     mode: 'production',
     entry: './src/extension.ts',
     output: {
@@ -21,12 +20,7 @@ const config = {
         vscode: "commonjs vscode"
     },
     resolve: {
-        mainFields: ['browser', 'module', 'main'],
         extensions: ['.ts', '.js'],
-        fallback: {
-            "assert": false,
-            "util": false
-        }
     },
     module: {
         rules: [{
@@ -37,10 +31,5 @@ const config = {
             }]
         }]
     },
-    plugins: [
-        new webpack.DefinePlugin({
-            'util.inspect.custom': JSON.stringify('inspect')
-        })
-    ],
 }
 module.exports = config;

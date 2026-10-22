@@ -18,6 +18,8 @@ import { TypeMapContext } from "./CfgParser.js";
 import { TypeBasicContext } from "./CfgParser.js";
 import { Type_eleContext } from "./CfgParser.js";
 import { RefContext } from "./CfgParser.js";
+import { Source_valuesContext } from "./CfgParser.js";
+import { Source_valueContext } from "./CfgParser.js";
 import { KeyContext } from "./CfgParser.js";
 import { MetadataContext } from "./CfgParser.js";
 import { Ident_with_opt_single_valueContext } from "./CfgParser.js";
@@ -137,6 +139,18 @@ export class CfgVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      * @return the visitor result
      */
     visitRef?: (ctx: RefContext) => Result;
+    /**
+     * Visit a parse tree produced by `CfgParser.source_values`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitSource_values?: (ctx: Source_valuesContext) => Result;
+    /**
+     * Visit a parse tree produced by `CfgParser.source_value`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitSource_value?: (ctx: Source_valueContext) => Result;
     /**
      * Visit a parse tree produced by `CfgParser.key`.
      * @param ctx the parse tree

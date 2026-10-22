@@ -1,39 +1,15 @@
+# 高亮规则
 
-# 语法高亮规则
+TextMate 负责基础词法高亮，ANTLR visitor 负责精确的语义 token：
 
-以下.cfg文件元素需要语法高亮显示：
+- struct/interface/table/enum 的名字：`structureDefinition`。
+- 自定义字段类型、每个 `@Type`：`typeIdentifier`。
+- 外键目标表：`foreignKey`。
+- 内部来源和目标的字段段：标准 `property`。
+- metadata 名字（含 index、nullable）、主键、唯一键、enum 成员保留各自类型。
 
-- **结构定义**：`struct xx`, `interface xx`, `table xx`，只高亮xx
-- **复杂结构类型声明**：对于非基本类型，高亮
-- **主键字段名称**：`PK:int`里的PK
-- **唯一键字段名称**：key_decl里的`[UK];`里的UK，以及具体的field定义比如`UK:int`里的UK
-- **外键引用**：`-> tt`, `-> tt[kk]`, `=> tt[kk]`,整体统一对待。
-- **特定元数据**：nullable, mustFill, enumRef, enum, entry, sep, pack, fix, block
+每个名字从 parser context 取 range，经 `SourcePositions` 转成 UTF-16；不按整条外键起止列拼 token，不能让跨行范围、emoji 或后续声明错位。不把字段路径着色成目标表。
 
+语法权威是 app 的 `Cfg.g4`。`npm run generate-parser` 同步并生成，`npm run check-grammar` 检查一致性。不要手改生成 parser 来修特定 fixture。
 
-```
-struct Range {
-	rmin:int; // 最小
-	rmax:int; // 最大
-}
-
-struct RewardItem {
-	chance:int; // 掉落概率
-	itemids:list<int> ->item.item (fix=2); // 掉落物品
-	range:Range; // 数量范围
-}
-
-table task[id] {
-    id:int;
-    reward:RewardItem;
-}
-```
-
-对以上例子高亮
-- **结构定义**：`Range`, `RewardItem`, `task`
-- **复杂结构类型声明**：RewardItem 中的`list<int>`, `Range`,  task中的`RewardItem`
-- **主键字段名称**：`id:int`中的`id`
-- **外键引用**：`->item.item`
-
-
-注意以上`list<int>`, `->item.item`视为一个整体来高亮
+真实 ExtensionHost 测试解码语义 token，检查其覆盖的原文、字段类别及 emoji 后同一行位置。

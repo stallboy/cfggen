@@ -1,6 +1,6 @@
 # CFG 语言支持扩展
 
-一个专为 `.cfg` 配置文件设计的 VSCode 扩展，提供语法高亮、跳转到定义、大纲视图、查找引用功能。
+一个专为 `.cfg` 配置文件设计的 VSCode 桌面扩展，提供语法高亮、跳转到定义、大纲视图、查找引用功能。
 
 > **项目背景**: 本扩展是 [cfggen 策划配置系统](https://github.com/stallboy/cfggen) 的配套工具，为 cfggen 的配置文件提供完整的 IDE 支持。
 
@@ -9,13 +9,15 @@
 ### 🎨 语法高亮
 - **结构定义高亮**：`struct`、`interface`、`table` 名称
 - **类型标识符高亮**：自定义类型名称（非基础类型）
-- **外键引用高亮**：`->table1`、`=>table1[field2]` 等外键语法
-- **元数据关键字高亮**：`nullable`、`mustFill`、`enumRef` 等
+- **外键引用高亮**：旧表外键和 `->::path`、`->table::path`、`->@Type::path`、混合来源路径
+- **元数据关键字高亮**：`index`、`nullable`、`mustFill`、`enumRef` 等
 - **主键字段高亮**：在表定义中的主键字段
 
 ### 🔗 跳转到定义
 - **跳转到定义**：Ctrl+点击类型名称或外键引用跳转到定义位置
 - **多级查找策略**：当前接口内 → 当前文件内 → 模块内 → 根目录
+- **祖先类型导航**：支持同一声明中的多个 `@Type` 和 `@Interface.Impl`，跨行与未保存编辑均可用
+- **字段路径边界**：内部字段按字段着色；暂不提供逐段字段跳转，避免把字段误认为同名表
 
 ### 📋 大纲视图
 - **结构层级导航**：显示所有结构定义的层级关系
@@ -24,7 +26,7 @@
 ### 🔍 查找引用
 - **引用查找**：查找类型和表的所有引用位置
 - **跨文件支持**：支持跨文件的引用查找
-
+- **深层模块**：递归查找配置根目录下的合法模块，包含三级及更深模块
 
 ## 📁 支持的文件类型
 
@@ -70,9 +72,11 @@ table player[id] {
 
 ### 外键引用
 ```cfg
-item: Item ->item.item;          // 单体外键
-items: list<Item> =>item.item;   // 列表外键
-complex: Item ->item.item[id];   // 带键的外键
+itemId:int ->item;                 // 表主键
+itemCode:str ->item[code];         // 表唯一键
+phaseKey:str ->@Machine::phases;   // 最近祖先内的对象
+->target:[abilityId,machineKey,phaseKey] ->ability::machines.phases;
+->origin:[] ->::origin;            // 本 record 固定成员
 ```
 
 ## 🎯 使用技巧
@@ -89,6 +93,19 @@ complex: Item ->item.item[id];   // 带键的外键
 ### 查找引用
 - **引用查找**：右键点击类型或表名选择"查找所有引用"
 - **跨文件分析**：支持分析整个项目的引用关系
+
+## 开发与验证
+
+`npm run generate-parser` 从仓库中 app 的权威 `Cfg.g4` 同步，再生成 TypeScript parser。独立源码包没有 app 目录时使用已携带的 grammar。`npm run check-grammar` 检查两份 grammar 一致。
+
+```powershell
+npm test
+npm run webpack
+```
+
+`npm test` 先生成 parser、检查类型和 lint，再使用本机 VSCode 启动独立 ExtensionHost；不下载编辑器。Windows 默认查找 `C:/Program Files/Microsoft VS Code/Code.exe`，其他位置用 `VSCODE_EXECUTABLE` 指定。测试使用独立 profile 和隐藏窗口，输出日志保存在忽略的 `.vscode-test-*` 目录。
+
+实际测试覆盖新旧语法、真实 combat schema、多来源和跨行导航、类型/表命名空间、接口实现、emoji 的 UTF-16 位置、高亮、查找引用和未保存编辑/undo。
 
 ## 🤝 问题反馈
 
