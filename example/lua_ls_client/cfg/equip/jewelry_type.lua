@@ -11,13 +11,14 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.equip.jewelry_type
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 1, nil, 
+local mk = cfg[0].table('equip.jewelry_type', this, {{'all','get',{'typeName'}}}, {fields={
     'typeName' -- str, 程序用名字
-    )
+    }, uniqkeys={ { 'all', 'get', 1 }, }, enumidx=1, refs=nil}, nil)
 
 mk("Jade")
 mk("Bracelet")
 mk("Magic")
 mk("Bottle")
 
+cfg[0].complete('equip.jewelry_type')
 return this

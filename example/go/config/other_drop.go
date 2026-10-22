@@ -22,13 +22,14 @@ func createOtherDrop(stream *Stream) *OtherDrop {
     v.testmap = make(map[int32]int32, testmapSize)
     for i := 0; i < testmapSize; i++ {
         var k = stream.ReadInt32()
+        if _, exists := v.testmap[k]; exists { panic("duplicate map key: other.drop.testmap") }
         v.testmap[k] = stream.ReadInt32()
     }
     return v
 }
 
 func (t *OtherDrop) String() string {
-    return fmt.Sprintf("OtherDrop{dropid=%v, name=%v, items=%v, testmap=%v}", t.dropid, t.name, fmt.Sprintf("%v", t.items), fmt.Sprintf("%v", t.testmap))
+    return fmt.Sprintf("OtherDrop{dropid=%v, name=%v, items=%v, testmap=%v}", t.dropid, t.name, t.items, t.testmap)
 }
 
 //getters

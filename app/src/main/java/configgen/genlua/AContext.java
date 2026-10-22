@@ -14,6 +14,7 @@ class AContext {
     private final boolean shared;
     private final boolean packBool;
     private final boolean noStr; //只用于测试
+    private final boolean relations;
 
     private final String emptyTableStr;
     private final String listMapPrefixStr;
@@ -29,14 +30,20 @@ class AContext {
 
     AContext(String pkg, LangSwitchable ls, boolean shareEmptyTable, boolean shared,
              boolean packBool, boolean noStr, boolean rForOldShared) {
+        this(pkg, ls, shareEmptyTable, shared, packBool, noStr, rForOldShared, false);
+    }
+
+    AContext(String pkg, LangSwitchable ls, boolean shareEmptyTable, boolean shared,
+             boolean packBool, boolean noStr, boolean rForOldShared, boolean relations) {
 
         nullableLangSwitchSupport = ls != null ? new LangSwitchSupport(ls) : null;
         this.shared = shared;
         this.packBool = packBool;
         this.noStr = noStr;
+        this.relations = relations;
 
         if (shareEmptyTable) {
-            emptyTableStr = "E";
+            emptyTableStr = relations ? "E()" : "E";
         } else {
             emptyTableStr = "{}";
         }
@@ -79,6 +86,9 @@ class AContext {
     boolean isNoStr() {
         return noStr;
     }
+
+    boolean hasRelations() { return relations; }
+    String relations() { return pkgPrefixStr.substring(0, pkgPrefixStr.length() - 1) + "[0]"; }
 
 
     String getEmptyTableStr() {

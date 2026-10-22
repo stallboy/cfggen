@@ -13,8 +13,8 @@ var fieldd: String
 # 内部存储
 static var _data: Dictionary[int, DataTask_Task_extra_exp] = {}
 # 主键查询
-static func find(id: int) -> DataTask_Task_extra_exp:
-	return _data.get(id)
+static func find(key_0: int) -> DataTask_Task_extra_exp:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataTask_Task_extra_exp]:
 	return _data.values()

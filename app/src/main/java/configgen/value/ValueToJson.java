@@ -18,7 +18,22 @@ import static configgen.value.ValueRefCollector.collectStructRef;
 public class ValueToJson {
     private final CfgValue cfgValue;
     private final Map<RefId, VStruct> refIdToRecordMap;
+    private final ValueReferences pathReferences;
     private boolean isSaveDefault;
+    private boolean editorLongStrings;
+    private String editorRevision;
+
+    /** Editor transport only; ordinary JSON generators keep numeric long values. */
+    public static ValueToJson forEditor(CfgValue cfgValue, Map<RefId, VStruct> records, ValueReferences references) {
+        return forEditor(cfgValue, records, references, null);
+    }
+
+    public static ValueToJson forEditor(CfgValue cfgValue, Map<RefId, VStruct> records, ValueReferences references, String revision) {
+        ValueToJson result = new ValueToJson(cfgValue, records, references);
+        result.editorLongStrings = true;
+        result.editorRevision = revision;
+        return result;
+    }
 
     public static String toJsonStr(VStruct record) {
         ValueToJson toJson = new ValueToJson();
@@ -32,8 +47,13 @@ public class ValueToJson {
     }
 
     public ValueToJson(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap) {
+        this(cfgValue, refIdToRecordMap, cfgValue != null && refIdToRecordMap != null ? ValueReferences.forQuery(cfgValue) : null);
+    }
+
+    public ValueToJson(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap, ValueReferences references) {
         this.cfgValue = cfgValue;
         this.refIdToRecordMap = refIdToRecordMap;
+        pathReferences = references;
         this.isSaveDefault = true;
     }
 
@@ -45,7 +65,7 @@ public class ValueToJson {
         return switch (value) {
             case VBool vBool -> vBool.value();
             case VInt vInt -> vInt.value();
-            case VLong vLong -> vLong.value();
+            case VLong vLong -> editorLongStrings ? Long.toString(vLong.value()) : vLong.value();
             case VFloat vFloat -> vFloat.value();
             case VString vStr -> vStr.value();
             case VText vText -> vText.original(); // 用original，因为我们用这个类ValueToJson主要是为了编辑，当保存时需要用原始文本
@@ -82,7 +102,7 @@ public class ValueToJson {
         }
 
         if (refIdToRecordMap != null) {
-            List<FieldRef> fieldRefs = collectStructRef(cfgValue, vStruct, refIdToRecordMap, null, "");
+            List<FieldRef> fieldRefs = collectStructRef(cfgValue, vStruct, refIdToRecordMap, null, "", pathReferences, editorRevision);
             if (!fieldRefs.isEmpty()) {
                 json.put("$refs", fieldRefs);
             }

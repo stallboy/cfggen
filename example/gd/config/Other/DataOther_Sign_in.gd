@@ -12,8 +12,8 @@ var RefVipitem2vipcountMap: Dictionary[int, DataOther_Loot]
 # 内部存储
 static var _data: Dictionary[int, DataOther_Sign_in] = {}
 # 主键查询
-static func find(id: int) -> DataOther_Sign_in:
-	return _data.get(id)
+static func find(key_0: int) -> DataOther_Sign_in:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataOther_Sign_in]:
 	return _data.values()
@@ -37,10 +37,16 @@ static func _create(stream: ConfigStream) -> DataOther_Sign_in:
 	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_int32()
+		if instance.item2countMap.has(k):
+			stream.fail("Duplicate map key: other.sign_in.item2countMap")
+			return instance
 		instance.item2countMap[k] = v
 	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_int32()
+		if instance.vipitem2vipcountMap.has(k):
+			stream.fail("Duplicate map key: other.sign_in.vipitem2vipcountMap")
+			return instance
 		instance.vipitem2vipcountMap[k] = v
 	instance.viplevel = stream.read_int32()
 	instance.iconFile = stream.read_string_in_pool()
@@ -49,6 +55,7 @@ static func _create(stream: ConfigStream) -> DataOther_Sign_in:
 
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
+	pass
 	for k in vipitem2vipcountMap.keys():
 		var v = DataOther_Loot.find(vipitem2vipcountMap[k])
 		if v == null:

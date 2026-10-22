@@ -42,7 +42,6 @@ public class TsCodeGenerator extends GeneratorWithTag {
         cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
         cfgSchema = cfgValue.schema();
         nullableLanguageSwitch = ctx.nullableLangSwitch();
-
         try (var ps = new CachedIndentPrinter(dstDir.resolve("Config.ts"), encoding, ctx.outputFiles())) {
             JteEngine.render("ts/Config.jte", this, ps);
         }
@@ -62,5 +61,8 @@ public class TsCodeGenerator extends GeneratorWithTag {
         return (nullableLanguageSwitch == null ? java.util.List.<String>of() : nullableLanguageSwitch.languages())
                 .stream().map(name -> "\"" + name + "\"").collect(java.util.stream.Collectors.joining(", "));
     }
+
+    public boolean hasRelations() { return cfgSchema.references().hasRelations(); }
+    public java.util.List<configgen.gen.Relations.Type> relations() { return configgen.gen.Relations.of(cfgSchema); }
 
 }

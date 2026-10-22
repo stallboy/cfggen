@@ -16,3 +16,5 @@ static func _create(stream: ConfigStream) -> DataPosition:
 	instance.y = stream.read_int32()
 	instance.z = stream.read_int32()
 	return instance
+
+

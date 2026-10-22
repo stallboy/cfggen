@@ -8,18 +8,34 @@ public class ForeignKeySchema {
     private final String refTable;
     private final RefKey refKey;
     private final Metadata meta;
+    private final PathReference pathReference;
 
     private TableSchema refTableSchema;
     private int[] keyIndices;
+    private Nameable referenceResultType;
+
+    public Nameable referenceResultType() { return referenceResultType; }
+
+    void setReferenceResultType(Nameable type) { referenceResultType = type; }
 
     public ForeignKeySchema(String name, KeySchema key, String refTable, RefKey refKey, Metadata meta) {
+        this(name, Objects.requireNonNull(key), refTable, refKey, meta, null);
+    }
+
+    public ForeignKeySchema(String name, PathReference reference, RefKey.RefSimple refKey, Metadata meta) {
+        this(name, null, reference.target().start() == ReferencePath.Start.TABLE
+                ? reference.target().owner() : "", refKey, meta, Objects.requireNonNull(reference));
+    }
+
+    private ForeignKeySchema(String name, KeySchema key, String refTable, RefKey refKey,
+                             Metadata meta, PathReference pathReference) {
         this.name = name;
         this.key = key;
         this.refTable = refTable;
         this.refKey = refKey;
         this.meta = meta;
+        this.pathReference = pathReference;
         Objects.requireNonNull(name);
-        Objects.requireNonNull(key);
         Objects.requireNonNull(refTable);
         Objects.requireNonNull(refKey);
         Objects.requireNonNull(meta);
@@ -29,6 +45,9 @@ public class ForeignKeySchema {
     }
 
     public ForeignKeySchema copy() {
+        if (pathReference != null) {
+            return new ForeignKeySchema(name, pathReference, (RefKey.RefSimple) refKey.copy(), meta.copy());
+        }
         return new ForeignKeySchema(name, key.copy(), refTable, refKey.copy(), meta.copy());
     }
 
@@ -37,7 +56,11 @@ public class ForeignKeySchema {
     }
 
     public KeySchema key() {
-        return key;
+        return Objects.requireNonNull(key, "path references use typed sources instead of a local key");
+    }
+
+    public PathReference pathReference() {
+        return pathReference;
     }
 
     public String refTable() {
@@ -80,6 +103,7 @@ public class ForeignKeySchema {
                 ", key=" + key +
                 ", refTable='" + refTable + '\'' +
                 ", refKey=" + refKey +
+                ", pathReference=" + pathReference +
                 ", meta=" + meta +
                 '}';
     }
@@ -89,12 +113,12 @@ public class ForeignKeySchema {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ForeignKeySchema that = (ForeignKeySchema) o;
-        return Objects.equals(name, that.name) && Objects.equals(key, that.key) && Objects.equals(refTable, that.refTable) && Objects.equals(refKey, that.refKey) && Objects.equals(meta, that.meta);
+        return Objects.equals(name, that.name) && Objects.equals(key, that.key) && Objects.equals(refTable, that.refTable) && Objects.equals(refKey, that.refKey) && Objects.equals(meta, that.meta) && Objects.equals(pathReference, that.pathReference);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, key, refTable, refKey, meta);
+        return Objects.hash(name, key, refTable, refKey, meta, pathReference);
     }
 
 

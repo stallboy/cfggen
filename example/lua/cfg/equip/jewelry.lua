@@ -1,5 +1,5 @@
 local cfg = require "cfg._cfgs"
-local Beans = cfg._beans
+local Beans = require "cfg._beans"
 
 ---@class cfg.equip.jewelry
 ---@field iD number , 首饰ID
@@ -21,11 +21,7 @@ local Beans = cfg._beans
 
 local this = cfg.equip.jewelry
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, { 
-    { 'RefLvlRank', 0, cfg.equip.jewelry_random, 'get', 4 }, 
-    { 'RefJType', 0, cfg.equip.jewelry_type, 'get', 5 }, 
-    { 'NullableRefSuitID', 0, cfg.equip.jewelry_suit, 'get', 6 }, 
-    { 'RefKeyAbility', 0, cfg.equip.ability, 'get', 7 }, }, 
+local mk = cfg[0].table('equip.jewelry', this, {{'all','get',{'iD'}}}, {fields={
     'iD', -- int, 首饰ID
     'name', -- str, 首饰名称
     'iconFile', -- str, 图标ID
@@ -36,7 +32,11 @@ local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, {
     'keyAbilityValue', -- int, 关键属性数值
     'salePrice', -- int, 售卖价格
     'description' -- str, 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
-    )
+    }, uniqkeys={ { 'all', 'get', 1 }, }, enumidx=nil, refs={
+    { 'RefLvlRank', 0, cfg.equip.jewelry_random, 'get', 4 },
+    { 'RefJType', 0, cfg.equip.jewelry_type, 'get', 5 },
+    { 'NullableRefSuitID', 0, cfg.equip.jewelry_suit, 'get', 6 },
+    { 'RefKeyAbility', 0, cfg.equip.ability, 'get', 7 }, }}, nil)
 
 local levelrank = Beans.levelrank
 
@@ -84,4 +84,5 @@ mk(40, "神王·翠微镯", "texture/t_jew_2_045.bundle", levelrank(40, 5), "Bra
 require "cfg.equip.jewelry_1"(mk)
 require "cfg.equip.jewelry_2"(mk)
 
+cfg[0].complete('equip.jewelry')
 return this

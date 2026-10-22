@@ -58,6 +58,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             "ConfigInput.java",
             "ConfigLoader.java",
             "ConfigPackage.java",
+            "RelationResolver.java",
             "LoadValueErrs.java",
 
             "BytesInspector.java",

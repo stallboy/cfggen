@@ -18,17 +18,6 @@ func (t *EquipAbility) String() string {
     return fmt.Sprintf("EquipAbility{id=%v, name=%v}", t.id, t.name)
 }
 
-//entries
-var (
-    attack EquipAbility
-    defence EquipAbility
-    hp EquipAbility
-    critical EquipAbility
-    critical_resist EquipAbility
-    block EquipAbility
-    break_armor EquipAbility
-)
-
 //getters
 func (t *EquipAbility) Id() int32 {
     return t.id
@@ -39,35 +28,36 @@ func (t *EquipAbility) Name() string {
 }
 
 func (t *EquipAbilityMgr) GetAttack() *EquipAbility {
-	return &attack
+    return t.symbols["attack"]
 }
 
 func (t *EquipAbilityMgr) GetDefence() *EquipAbility {
-	return &defence
+    return t.symbols["defence"]
 }
 
 func (t *EquipAbilityMgr) GetHp() *EquipAbility {
-	return &hp
+    return t.symbols["hp"]
 }
 
 func (t *EquipAbilityMgr) GetCritical() *EquipAbility {
-	return &critical
+    return t.symbols["critical"]
 }
 
 func (t *EquipAbilityMgr) GetCritical_resist() *EquipAbility {
-	return &critical_resist
+    return t.symbols["critical_resist"]
 }
 
 func (t *EquipAbilityMgr) GetBlock() *EquipAbility {
-	return &block
+    return t.symbols["block"]
 }
 
 func (t *EquipAbilityMgr) GetBreak_armor() *EquipAbility {
-	return &break_armor
+    return t.symbols["break_armor"]
 }
 
 type EquipAbilityMgr struct {
     all []*EquipAbility
+    symbols map[string]*EquipAbility
     idMap map[int32]*EquipAbility
 }
 
@@ -82,6 +72,7 @@ func(t *EquipAbilityMgr) Get(id int32) *EquipAbility {
 func (t *EquipAbilityMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipAbility, 0, cnt)
+    t.symbols = make(map[string]*EquipAbility)
     t.idMap = make(map[int32]*EquipAbility, cnt)
     for i := 0; i < int(cnt); i++ {
         v := createEquipAbility(stream)
@@ -89,19 +80,19 @@ func (t *EquipAbilityMgr) Init(stream *Stream) {
         t.idMap[v.id] = v
         switch v.name {
         case "Attack":
-            attack = *v
+            t.symbols["attack"] = v
         case "Defence":
-            defence = *v
+            t.symbols["defence"] = v
         case "Hp":
-            hp = *v
+            t.symbols["hp"] = v
         case "Critical":
-            critical = *v
+            t.symbols["critical"] = v
         case "Critical_resist":
-            critical_resist = *v
+            t.symbols["critical_resist"] = v
         case "Block":
-            block = *v
+            t.symbols["block"] = v
         case "Break_armor":
-            break_armor = *v
+            t.symbols["break_armor"] = v
         }
     }
 }

@@ -5,6 +5,22 @@ import java.util.List;
 import java.util.Objects;
 
 public class KeySchema {
+    public static boolean isPrimitiveKey(FieldType type) {
+        return type == FieldType.Primitive.BOOL || type == FieldType.Primitive.INT
+                || type == FieldType.Primitive.LONG || type == FieldType.Primitive.STRING;
+    }
+
+    public static boolean isKeyType(FieldType type) {
+        return isPrimitiveKey(type) || type instanceof FieldType.StructRef ref
+                && ref.obj() instanceof StructSchema struct
+                && struct.fields().stream().allMatch(f -> isPrimitiveKey(f.type()));
+    }
+
+    public static boolean typesMatch(FieldType a, FieldType b) {
+        if (a instanceof FieldType.StructRef x && b instanceof FieldType.StructRef y) return x.obj() == y.obj();
+        return a == b;
+    }
+
     private final List<String> fields;
     private List<FieldSchema> fieldSchemas;
 

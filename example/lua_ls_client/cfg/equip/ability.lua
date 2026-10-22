@@ -15,10 +15,10 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.equip.ability
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil, 
+local mk = cfg[0].table('equip.ability', this, {{'all','get',{'id'}}}, {fields={
     'id', -- int, 属性类型
     'name' -- str, 程序用名字
-    )
+    }, uniqkeys={ { 'all', 'get', 1 }, }, enumidx=2, refs=nil}, nil)
 
 mk(1, "attack")
 mk(2, "defence")
@@ -28,4 +28,5 @@ mk(5, "critical_resist")
 mk(6, "block")
 mk(7, "break_armor")
 
+cfg[0].complete('equip.ability')
 return this

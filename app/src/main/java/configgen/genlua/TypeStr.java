@@ -5,6 +5,7 @@ import configgen.schema.cfg.CfgWriter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static configgen.util.StringUtil.lower1;
 import static configgen.schema.FieldType.Primitive.*;
@@ -31,18 +32,11 @@ class TypeStr {
 
         TableSchema table = ctx.vTable().schema();
 
-        String keystr1 = getColumnStrOrIndex(ctx.aCtx(), keySchema.fieldSchemas().get(0), table);
-
-        if (keySchema.fieldSchemas().size() > 1) {
-            if (keySchema.fieldSchemas().size() != 2) {
-                throw new RuntimeException("uniqkeys size != 2 " + table.name());
-            }
-            String keystr2 = getColumnStrOrIndex(ctx.aCtx(), keySchema.fieldSchemas().get(1), table);
-
-            return String.format("{ '%s', '%s', %s, %s }, ", allname, getname, keystr1, keystr2);
-        } else {
-            return String.format("{ '%s', '%s', %s }, ", allname, getname, keystr1);
-        }
+        if (!ctx.aCtx().hasRelations() && keySchema.fields().size() > 2) throw new RuntimeException("uniqkeys size != 2 " + table.name());
+        String columns = keySchema.fieldSchemas().stream()
+                .map(field -> Integer.toString(findColumnIndex(ctx.aCtx(), field, table, ctx.aCtx().hasRelations())))
+                .collect(Collectors.joining(", "));
+        return String.format("{ '%s', '%s', %s }, ", allname, getname, columns);
     }
 
 
@@ -52,18 +46,25 @@ class TypeStr {
     }
 
     private static int findColumnIndex(AContext aCtx, FieldSchema field, Structural structural) {
+        return findColumnIndex(aCtx, field, structural, false);
+    }
+
+    private static int findColumnIndex(AContext aCtx, FieldSchema field, Structural structural, boolean allowPackedKey) {
         boolean doPack = isDoPackBool(aCtx, structural);
         if (doPack) {
             boolean meetBool = false;
+            int boolIndex = 0;
             int cnt = 0;
             for (FieldSchema column : structural.fields()) {
                 if (column.type() == BOOL) {
                     if (column == field) {
+                        if (allowPackedKey) return meetBool ? boolIndex : cnt + 1;
                         throw new RuntimeException("现在不支持packbool的同时，bool引用到其他表");
                     }
                     if (!meetBool) {
                         meetBool = true;
                         cnt++;
+                        boolIndex = cnt;
                     }
                 } else {
                     cnt++;
@@ -131,9 +132,10 @@ class TypeStr {
      */
     static String getLuaRefsString(AContext aCtx, Structural structural) {
         StringBuilder sb = new StringBuilder();
-        sb.append("{ ");
+        sb.append("{");
 
         for (ForeignKeySchema fk : structural.foreignKeys()) {
+            if (fk.pathReference() != null) continue;
             String refName = Name.refName(fk);
             String dstTable = Name.fullName(aCtx, fk.refTableSchema());
 
@@ -144,7 +146,7 @@ class TypeStr {
                     String thisColumnIdx = getColumnStrOrIndex(aCtx, fk.key().fieldSchemas().getFirst(), structural);
                     String dstColumnIdx = getColumnStrOrIndex(aCtx, refList.key().fieldSchemas().getFirst(), fk.refTableSchema());
 
-                    sb.append(String.format("\n    { '%s', 2, %s, '%s', %s, %s }, ",
+                    sb.append(String.format("\n    { '%s', 2, %s, '%s', %s, %s },",
                             refName, dstTable, dstAllName, thisColumnIdx, dstColumnIdx));
 
                 }
@@ -162,29 +164,29 @@ class TypeStr {
                             // {refName, 0, dstTable, dstGetName, thisColumnIdx}  --最常见类型
                             if (fk.key().fieldSchemas().size() > 1) {
                                 String thisColumnIdx2 = getColumnStrOrIndex(aCtx, fk.key().fieldSchemas().get(1), structural);
-                                sb.append(String.format("\n    { '%s', 0, %s, '%s', %s, %s }, ",
+                                sb.append(String.format("\n    { '%s', 0, %s, '%s', %s, %s },",
                                         refName, dstTable, dstGetName, thisColumnIdx, thisColumnIdx2));
                             } else {
-                                sb.append(String.format("\n    { '%s', 0, %s, '%s', %s }, ",
+                                sb.append(String.format("\n    { '%s', 0, %s, '%s', %s },",
                                         refName, dstTable, dstGetName, thisColumnIdx));
                             }
 
                         }
                         case FList ignored -> {
                             // {refName, 1, dstTable, dstGetName, thisColumnIdx}, --本身是list
-                            sb.append(String.format("\n    { '%s', 1, %s, '%s', %s }, ", refName, dstTable, dstGetName, thisColumnIdx));
+                            sb.append(String.format("\n    { '%s', 1, %s, '%s', %s },", refName, dstTable, dstGetName, thisColumnIdx));
                         }
                         case FMap ignored -> {
                             // {refName, 3, dstTable, dstGetName, thisColumnIdx}, --本身是map
-                            sb.append(String.format("\n    { '%s', 3, %s, '%s', %s }, ", refName, dstTable, dstGetName, thisColumnIdx));
+                            sb.append(String.format("\n    { '%s', 3, %s, '%s', %s },", refName, dstTable, dstGetName, thisColumnIdx));
                         }
                     }
                 }
             }
         }
-        sb.append("}");
+        sb.append(" }");
 
-        if (!structural.foreignKeys().isEmpty()) {
+        if (structural.foreignKeys().stream().anyMatch(fk -> fk.pathReference() == null)) {
             return sb.toString();
         } else {
             return "nil";
@@ -244,7 +246,9 @@ class TypeStr {
         for (FieldSchema field : structural.fields()) {
 
             String c = getCommaDescStr(field.comment());
-            sb.append("---@field ").append(lower1(field.name())).append(" ").append(typeToLuaType(aCtx, field.type())).append(" ").append(c).append("\n");
+            sb.append("---@field ").append(lower1(field.name())).append(" ").append(typeToLuaType(aCtx, field.type()));
+            if (!c.isEmpty()) sb.append(" ").append(c);
+            sb.append("\n");
             has = true;
         }
         if (has) {
@@ -300,6 +304,12 @@ class TypeStr {
         boolean hasRef = false;
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             String refName = Name.refName(fk);
+            if (fk.pathReference() != null) {
+                sb.append(String.format("---@field %s %s%s\n", refName, Name.fullName(aCtx, fk.referenceResultType()),
+                        ((RefKey.RefSimple) fk.refKey()).nullable() ? "|nil" : ""));
+                hasRef = true;
+                continue;
+            }
             String dstTable = Name.fullName(aCtx, fk.refTableSchema());
 
             boolean isList = (fk.refKey() instanceof RefKey.RefList);

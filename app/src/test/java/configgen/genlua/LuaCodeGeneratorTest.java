@@ -112,4 +112,25 @@ class LuaCodeGeneratorTest {
         assertTrue(Files.exists(outDir.resolve("cfgdata/_beans.lua")), "应生成_beans.lua");
         assertTrue(Files.exists(outDir.resolve("cfgdata/t.lua")), "应生成表的lua文件");
     }
+
+    @Test
+    void keepsRelationStateInTheExistingEntryAndRemovesTheOldModule() throws IOException {
+        Context context = TestCtx.newContext(tempDir, """
+                struct Point { x:int; }
+                table t[id] { id:int; point:Point; ->chosen:[] ->::point; }
+                """, Map.of("t", "id,point\nid,point\n1,2\n"));
+        Path output = Files.createDirectories(tempDir.resolve("luaout/cfgdata"));
+        Path obsolete = output.resolve("_relations$.lua");
+        Files.writeString(obsolete, "error('obsolete relationship module')\n");
+
+        new LuaCodeGenerator(new ParameterParser("lua,dir:" + output.getParent() + ",pkg:cfgdata")).generate(context);
+        context.outputFiles().finalizeRun();
+
+        assertFalse(Files.exists(obsolete), "迁移时应清理旧关系模块");
+        assertTrue(Files.readString(output.resolve("_cfgs.lua")).contains("cfg[0] = state"));
+        try (var files = Files.list(output)) {
+            assertTrue(files.allMatch(path -> java.util.Set.of("_cfgs.lua", "_beans.lua", "t.lua").contains(path.getFileName().toString())),
+                    "内部引用不应增加独立模块");
+        }
+    }
 }

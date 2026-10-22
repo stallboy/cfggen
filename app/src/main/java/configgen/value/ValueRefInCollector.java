@@ -13,10 +13,16 @@ import configgen.schema.FindFieldIndex;
 public class ValueRefInCollector {
     private final TableSchemaRefGraph graph;
     private final CfgValue cfgValue;
+    private final ValueReferences pathReferences;
 
     public ValueRefInCollector(TableSchemaRefGraph graph, CfgValue cfgValue) {
+        this(graph, cfgValue, ValueReferences.forQuery(cfgValue));
+    }
+
+    public ValueRefInCollector(TableSchemaRefGraph graph, CfgValue cfgValue, ValueReferences references) {
         this.graph = graph;
         this.cfgValue = cfgValue;
+        pathReferences = references;
     }
 
     public Map<RefId, ForeachVStruct.Context> collect(VTable vTable, Value pkValue) {
@@ -113,7 +119,7 @@ public class ValueRefInCollector {
      * @param stopAtFirst 是否在找到第一个引用时停止
      * @return 是否找到引用
      */
-    private static boolean searchInTable(VTable searchTable,
+    private boolean searchInTable(VTable searchTable,
                                          VTable targetTable,
                                          Value targetPkValue,
                                          Map<RefId, ForeachVStruct.Context> result,
@@ -129,6 +135,16 @@ public class ValueRefInCollector {
         ForeachVStruct.VStructVisitor visitor = (vStruct, ctx) -> {
             Structural structural = vStruct.schema();
             for (ForeignKeySchema fk : structural.foreignKeys()) {
+                if (fk.pathReference() != null) {
+                    ValueReferences.Result link = pathReferences.result(vStruct, fk);
+                    if (link != null && link.target() != null && link.targetRecord() == targetRecord
+                            && targetRecord != ctx.recordValue()) {
+                        if (result != null) addCtx(result, ctx);
+                        found[0] = true;
+                        if (stopAtFirst) return false;
+                    }
+                    continue;
+                }
                 if (fk.refTableSchema() != targetTable.schema()) {
                     continue;
                 }

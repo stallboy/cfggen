@@ -21,7 +21,9 @@ blocks: count + repeated { name: string, length: int32, payload: bytes }
 
 表名加一个 `.` 区分内部块：`config/schema.csv` 对应 `.schema`，不会与 `schema` 冲突。前缀只占一个字节。块头已有名称和长度，不额外存目录、总表数或表名副本。读取器为每个块建立独立的有界游标，可跳过未知块，不依赖块的物理顺序。
 
-`metadata` 默认含 `pack=base` 和 `defaultLanguage`，可用 `requires` 声明依赖。重复 metadata 键、重复块名及越界长度报错。仅支持当前版本；旧数据须重新导出，导出器和读取器均无格式切换选项。
+`metadata` 默认含 `pack=base` 和 `defaultLanguage`，可用 `requires` 声明依赖。重复 metadata 键、重复块名及越界长度报错。读取器支持版本 1，无版本前缀的旧文件仍须重新导出。
+
+内部引用、局部索引和分离的语言资源均使用版本 1，不增加关系元数据。加载时沿用原有 schema 检查，并在最终数据上校验索引和绑定引用。详见 [内部对象引用](../../docs/src/content/docs/core/internal-reference-design.md)。
 
 所有语言的普通加载入口均按包内 `defaultLanguage` 选择文本池。多语言入口按生成代码需要的语言顺序加载；TS 的通用 `Loader.LoadBytes` 接受可选语言列表，省略或传空列表表示默认语言，生成的 `Processor.ProcessPackage` 会自动传入所需语言。Mod 构建读取依赖包时也遵循这套默认语言约定。
 

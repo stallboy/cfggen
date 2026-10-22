@@ -8,6 +8,10 @@ import java.util.*;
 public record CfgSchemaErrs(List<Err> errs,
                             List<Warn> warns,
                             List<WeakWarn> weakWarns) {
+    public record InvalidReference(String structural, String reference, String reason) implements Err {}
+    public record InvalidIndex(String structural, String field, String reason) implements Err {}
+    public record FilteredReferenceDependency(String structural, String reference, String reason) implements WeakWarn {}
+
     public static CfgSchemaErrs of() {
         return new CfgSchemaErrs(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }

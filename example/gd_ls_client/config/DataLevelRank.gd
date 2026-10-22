@@ -20,6 +20,7 @@ static func _create(stream: ConfigStream) -> DataLevelRank:
 
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
+	pass
 	RefRank = DataEquip_Rank.find(rank)
 	if RefRank == null:
 		errors.ref_null("LevelRank", "Rank")

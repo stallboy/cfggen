@@ -51,7 +51,7 @@ func createTaskTask2(stream *Stream) *TaskTask2 {
 }
 
 func (t *TaskTask2) String() string {
-    return fmt.Sprintf("TaskTask2{taskid=%v, name=%v, nexttask=%v, completecondition=%v, exp=%v, testBool=%v, testString=%v, testStruct=%v, testList=%v, testListStruct=%v, testListInterface=%v}", t.taskid, fmt.Sprintf("%v", t.name), t.nexttask, fmt.Sprintf("%v", t.completecondition), t.exp, t.testBool, t.testString, fmt.Sprintf("%v", t.testStruct), fmt.Sprintf("%v", t.testList), fmt.Sprintf("%v", t.testListStruct), fmt.Sprintf("%v", t.testListInterface))
+    return fmt.Sprintf("TaskTask2{taskid=%v, name=%v, nexttask=%v, completecondition=%v, exp=%v, testBool=%v, testString=%v, testStruct=%v, testList=%v, testListStruct=%v, testListInterface=%v}", t.taskid, t.name, t.nexttask, t.completecondition, t.exp, t.testBool, t.testString, t.testStruct, t.testList, t.testListStruct, t.testListInterface)
 }
 
 //getters
@@ -99,19 +99,19 @@ func (t *TaskTask2) TestListInterface() []AiTriggerTick {
     return t.testListInterface
 }
 
-func (t *TaskTask2) NullableRefTaskid() *TaskTask_extra_exp {
-    if t.nullableRefTaskid == nil {
-        t.nullableRefTaskid = GetTaskTask_extra_expMgr().Get(t.taskid)
+    func (t *TaskTask2) NullableRefTaskid() *TaskTask_extra_exp {
+        if t.nullableRefTaskid == nil {
+            t.nullableRefTaskid = GetTaskTask_extra_expMgr().Get(t.taskid)
+        }
+        return t.nullableRefTaskid
     }
-    return t.nullableRefTaskid
-}
 
-func (t *TaskTask2) NullableRefNexttask() *TaskTask {
-    if t.nullableRefNexttask == nil {
-        t.nullableRefNexttask = GetTaskTaskMgr().Get(t.nexttask)
+    func (t *TaskTask2) NullableRefNexttask() *TaskTask {
+        if t.nullableRefNexttask == nil {
+            t.nullableRefNexttask = GetTaskTaskMgr().Get(t.nexttask)
+        }
+        return t.nullableRefNexttask
     }
-    return t.nullableRefNexttask
-}
 
 type TaskTask2Mgr struct {
     all []*TaskTask2

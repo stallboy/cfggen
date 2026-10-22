@@ -46,7 +46,7 @@ field_decl
     ;
 
 foreign_decl
-    : leading_comment* REF identifier COLON key ref metadata SEMI_COMMENT
+    : leading_comment* REF identifier COLON source_values ref metadata SEMI_COMMENT
     ;
 
 key_decl
@@ -76,7 +76,18 @@ type_ele
 
 // 5. References & Keys (引用与键)
 ref
-    : (REF | LISTREF) ns_ident key?
+    : REF (ns_ident key? (SCOPE ns_ident)? | SCOPE ns_ident | AT ns_ident SCOPE ns_ident)
+    | LISTREF ns_ident key?
+    ;
+
+source_values
+    : '[' (source_value (',' source_value)*)? ']'
+    ;
+
+source_value
+    : ns_ident
+    | SCOPE ns_ident
+    | AT ns_ident SCOPE ns_ident
     ;
 
 key
@@ -169,6 +180,8 @@ RC          : '}';
 DOT         : '.';
 COMMA       : ',';
 COLON       : ':';
+SCOPE       : '::';
+AT          : '@';
 PLUS        : '+';
 MINUS       : '-';
 

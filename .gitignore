@@ -48,7 +48,6 @@
 /app/src/test/test.iml
 /docs/Gemfile.lock
 /example/jte-classes
-/example/ts/package-lock.json
 /example/ts/pnpm-lock.yaml
 /example/i18n/backup
 /example/log_tw.txt

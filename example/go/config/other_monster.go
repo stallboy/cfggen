@@ -28,19 +28,21 @@ func createOtherMonster(stream *Stream) *OtherMonster {
     v.enumMap1 = make(map[string]int32, enumMap1Size)
     for i := 0; i < enumMap1Size; i++ {
         var k = stream.ReadStringInPool()
+        if _, exists := v.enumMap1[k]; exists { panic("duplicate map key: other.monster.enumMap1") }
         v.enumMap1[k] = stream.ReadInt32()
     }
     enumMap2Size := stream.ReadCount(0)
     v.enumMap2 = make(map[int32]string, enumMap2Size)
     for i := 0; i < enumMap2Size; i++ {
         var k = stream.ReadInt32()
+        if _, exists := v.enumMap2[k]; exists { panic("duplicate map key: other.monster.enumMap2") }
         v.enumMap2[k] = stream.ReadStringInPool()
     }
     return v
 }
 
 func (t *OtherMonster) String() string {
-    return fmt.Sprintf("OtherMonster{id=%v, posList=%v, lootId=%v, lootItemId=%v, enumMap1=%v, enumMap2=%v}", t.id, fmt.Sprintf("%v", t.posList), t.lootId, t.lootItemId, fmt.Sprintf("%v", t.enumMap1), fmt.Sprintf("%v", t.enumMap2))
+    return fmt.Sprintf("OtherMonster{id=%v, posList=%v, lootId=%v, lootItemId=%v, enumMap1=%v, enumMap2=%v}", t.id, t.posList, t.lootId, t.lootItemId, t.enumMap1, t.enumMap2)
 }
 
 //getters
@@ -68,29 +70,29 @@ func (t *OtherMonster) EnumMap2() map[int32]string {
     return t.enumMap2
 }
 
-//map ref
-func (t *OtherMonster) RefEnumMap2() map[int32]*OtherArgCaptureMode {
-    if t.refEnumMap2 == nil {
-        t.refEnumMap2 = make(map[int32]*OtherArgCaptureMode, len(t.enumMap2))
-        for k, v := range t.enumMap2 {
-            t.refEnumMap2[k] = GetOtherArgCaptureModeMgr().Get(v)
+    func (t *OtherMonster) RefLoot() *OtherLoot_item {
+        if t.refLoot == nil {
+            t.refLoot = GetOtherLoot_itemMgr().Get(t.lootId, t.lootItemId)
         }
+        return t.refLoot
     }
-    return t.refEnumMap2
-}
-func (t *OtherMonster) RefLoot() *OtherLoot_item {
-    if t.refLoot == nil {
-        t.refLoot = GetOtherLoot_itemMgr().Get(t.lootId, t.lootItemId)
-    }
-    return t.refLoot
-}
 
-func (t *OtherMonster) RefAllLoot() *OtherLoot {
-    if t.refAllLoot == nil {
-        t.refAllLoot = GetOtherLootMgr().Get(t.lootId)
+    func (t *OtherMonster) RefAllLoot() *OtherLoot {
+        if t.refAllLoot == nil {
+            t.refAllLoot = GetOtherLootMgr().Get(t.lootId)
+        }
+        return t.refAllLoot
     }
-    return t.refAllLoot
-}
+
+    func (t *OtherMonster) RefEnumMap2() map[int32]*OtherArgCaptureMode {
+        if t.refEnumMap2 == nil {
+            t.refEnumMap2 = make(map[int32]*OtherArgCaptureMode, len(t.enumMap2))
+            for key, value := range t.enumMap2 {
+                t.refEnumMap2[key] = GetOtherArgCaptureModeMgr().Get(value)
+            }
+        }
+        return t.refEnumMap2
+    }
 
 type OtherMonsterMgr struct {
     all []*OtherMonster

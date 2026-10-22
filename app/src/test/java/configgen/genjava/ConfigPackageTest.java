@@ -61,7 +61,7 @@ class ConfigPackageTest {
             var err = assertThrows(ConfigErr.class,
                     () -> ConfigPackage.read(new ConfigInput(bytes(out -> out.writeInt(version)))));
             assertTrue(err.getMessage().contains(Integer.toString(version)));
-            assertTrue(err.getMessage().contains("1"));
+            assertTrue(err.getMessage().contains(Integer.toString(ConfigPackage.FORMAT_VERSION)));
         }
     }
 

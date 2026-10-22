@@ -5,6 +5,7 @@
 @param configgen.genjava.code.GenCfg cfg
 @param Structural structural
         @for(ForeignKeySchema fk : structural.foreignKeys())
+        @if(fk.pathReference() == null)
             @if(fk.refKey() instanceof RefKey.RefSimple refSimple)
                 !{
                     FieldSchema firstField = fk.key().fieldSchemas().getFirst();
@@ -100,4 +101,5 @@
             @elseif(fk.refKey() instanceof RefKey.RefSimple && fk.key().fieldSchemas().getFirst().type() instanceof FieldType.FMap)
                 this.${Name.refName(fk)} = java.util.Collections.unmodifiableMap(this.${Name.refName(fk)});
             @endif
+        @endif
         @endfor

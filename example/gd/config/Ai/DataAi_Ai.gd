@@ -12,8 +12,8 @@ var deathRemove: bool  # 死亡移除
 # 内部存储
 static var _data: Dictionary[int, DataAi_Ai] = {}
 # 主键查询
-static func find(id: int) -> DataAi_Ai:
-	return _data.get(id)
+static func find(key_0: int) -> DataAi_Ai:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataAi_Ai]:
 	return _data.values()
@@ -42,3 +42,5 @@ static func _create(stream: ConfigStream) -> DataAi_Ai:
 		instance.actionID.append(stream.read_int32())
 	instance.deathRemove = stream.read_bool()
 	return instance
+
+

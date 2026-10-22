@@ -15,7 +15,7 @@ func createEquipTestPackBean(stream *Stream) *EquipTestPackBean {
 }
 
 func (t *EquipTestPackBean) String() string {
-    return fmt.Sprintf("EquipTestPackBean{name=%v, iRange=%v}", t.name, fmt.Sprintf("%v", t.iRange))
+    return fmt.Sprintf("EquipTestPackBean{name=%v, iRange=%v}", t.name, t.iRange)
 }
 
 //getters

@@ -20,16 +20,6 @@ func (t *EquipRank) String() string {
     return fmt.Sprintf("EquipRank{rankID=%v, rankName=%v, rankShowName=%v}", t.rankID, t.rankName, t.rankShowName)
 }
 
-//entries
-var (
-    white EquipRank
-    green EquipRank
-    blue EquipRank
-    purple EquipRank
-    yellow EquipRank
-    red EquipRank
-)
-
 //getters
 func (t *EquipRank) RankID() int32 {
     return t.rankID
@@ -44,31 +34,32 @@ func (t *EquipRank) RankShowName() string {
 }
 
 func (t *EquipRankMgr) GetWhite() *EquipRank {
-	return &white
+    return t.symbols["white"]
 }
 
 func (t *EquipRankMgr) GetGreen() *EquipRank {
-	return &green
+    return t.symbols["green"]
 }
 
 func (t *EquipRankMgr) GetBlue() *EquipRank {
-	return &blue
+    return t.symbols["blue"]
 }
 
 func (t *EquipRankMgr) GetPurple() *EquipRank {
-	return &purple
+    return t.symbols["purple"]
 }
 
 func (t *EquipRankMgr) GetYellow() *EquipRank {
-	return &yellow
+    return t.symbols["yellow"]
 }
 
 func (t *EquipRankMgr) GetRed() *EquipRank {
-	return &red
+    return t.symbols["red"]
 }
 
 type EquipRankMgr struct {
     all []*EquipRank
+    symbols map[string]*EquipRank
     rankIDArr []*EquipRank
 }
 
@@ -86,6 +77,7 @@ func(t *EquipRankMgr) Get(rankID int32) *EquipRank {
 func (t *EquipRankMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipRank, 0, cnt)
+    t.symbols = make(map[string]*EquipRank)
     t.rankIDArr = make([]*EquipRank, cnt)
     for i := 0; i < int(cnt); i++ {
         v := createEquipRank(stream)
@@ -93,17 +85,17 @@ func (t *EquipRankMgr) Init(stream *Stream) {
         t.rankIDArr[v.rankID] = v
         switch v.rankName {
         case "White":
-            white = *v
+            t.symbols["white"] = v
         case "Green":
-            green = *v
+            t.symbols["green"] = v
         case "Blue":
-            blue = *v
+            t.symbols["blue"] = v
         case "Purple":
-            purple = *v
+            t.symbols["purple"] = v
         case "Yellow":
-            yellow = *v
+            t.symbols["yellow"] = v
         case "Red":
-            red = *v
+            t.symbols["red"] = v
         }
     }
 }

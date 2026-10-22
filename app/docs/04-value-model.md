@@ -68,6 +68,10 @@ Value
 
 查找用 `ValueUtil.getForeignKeyValueMap`——即目标表 `VTable` 预建的主键/唯一键索引，**O(1)**。错误进 `CfgValueErrs`（收集不抛，见 [`08`](08-errors-and-validation.md)）。
 
+内部对象引用由 `ValueReferences` 按最终快照解析。包含位置保存父上下文和单段路径，祖先作用域从当前对象开始沿父链匹配；诊断路径及编辑器 JSON `fieldChain` 仅在输出时展开。位置和索引缓存按对象身份区分，不能把内容相等的不同包含对象合并。
+
+局部索引中的重复键标记为歧义，不保留任意首项作为目标。严格验证报告重复键及受影响的引用；编辑器查询省略这些无效链接，仍返回同一集合中其他唯一键对应的合法链接。`nullable` 只允许目标缺失，不豁免歧义或作用域错误。
+
 ## i18n 桥（`TextValue`，仅直接替换模式）
 
 见 `value/TextValue.java`。`-i18nfile` 模式下，每张表解析后按 **(主键 `packStr`, `fieldChain`, `original`)** 三元组查 `LangTextFinder`，命中就 `VText.setTranslated`。

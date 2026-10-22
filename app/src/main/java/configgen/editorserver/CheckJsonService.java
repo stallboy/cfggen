@@ -40,12 +40,17 @@ public class CheckJsonService {
             return new CheckJsonResult(JsonNotFound, table, "json empty");
         }
 
-        String jsonResult = ByAIGenerator.extractJson(raw);
+        String jsonResult = raw.stripLeading().startsWith("{") ? raw : ByAIGenerator.extractJson(raw);
         if (jsonResult == null) {
             return new CheckJsonResult(JsonNotFound, table, "json not found");
         }
 
         TableSchema tableSchema = vTable.schema();
+        try {
+            jsonResult = EditorValueJson.decode(tableSchema, jsonResult);
+        } catch (IllegalArgumentException e) {
+            return new CheckJsonResult(ParseJsonError, table, e.getMessage());
+        }
         CfgValueErrs parseErrs = CfgValueErrs.of();
         CfgValue.VStruct record = new ValueJsonParser(tableSchema, parseErrs).fromJson(jsonResult);
         parseErrs.checkErrors("check json", true, true);
@@ -55,7 +60,9 @@ public class CheckJsonService {
             return new CheckJsonResult(ParseJsonError, table, err);
         }
 
-        String jsonString = ValueToJson.toJsonStr(record);
+        ValueToJson serializer = ValueToJson.forEditor(null, null, null);
+        serializer.setSaveDefault(false);
+        String jsonString = com.alibaba.fastjson2.JSON.toJSONString(serializer.toJson(record), com.alibaba.fastjson2.JSONWriter.Feature.PrettyFormat);
         return new CheckJsonResult(ok, table, jsonString);
     }
 

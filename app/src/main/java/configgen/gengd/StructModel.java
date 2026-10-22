@@ -63,6 +63,7 @@ public class StructModel {
     }
 
     public String refType(ForeignKeySchema fk) {
+        if (fk.pathReference() != null) return fullName(fk.referenceResultType());
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
                 return "Array[" + fullName(fk.refTableSchema()) + "]";
@@ -161,21 +162,16 @@ public class StructModel {
         return lower1(field.name());
     }
 
-    public String primaryKeyFieldName() {
-        if (structural instanceof TableSchema tableSchema) {
-            return fieldName(tableSchema.primaryKey().fieldSchemas().getFirst());
-        }
-        return null;
-    }
-
     public String keyType() {
         if (structural instanceof TableSchema tableSchema) {
+            if (tupleKey(tableSchema.primaryKey())) return "String";
             return type(tableSchema.primaryKey().fieldSchemas().getFirst().type());
         }
         return null;
     }
 
     public String dictionaryType(KeySchema keySchema, String valueType) {
+        if (tupleKey(keySchema)) return "Dictionary[String, " + valueType + "]";
         // 生成Dictionary类型声明，如 Dictionary[int, ClassName]
         if (keySchema.fieldSchemas().size() > 1) {
             throw new RuntimeException("gd script not support composite key");
@@ -185,12 +181,27 @@ public class StructModel {
         }
     }
 
-    public String actualParamsKeySelf(KeySchema keySchema) {
-        // GDScript中，复合键使用Dictionary，单键直接返回值
-        if (keySchema.fieldSchemas().size() > 1) {
-            throw new RuntimeException("gd script not support composite key");
-        } else {
-            return lower1(keySchema.fieldSchemas().getFirst().name());
-        }
+    public boolean hasRelations() { return gen.hasRelations; }
+    private boolean tupleKey(KeySchema key) {
+        return hasRelations() && (key.fields().size() > 1 || key.fieldSchemas().getFirst().type() instanceof StructRef);
+    }
+    public String keyParams(KeySchema key) {
+        if (!hasRelations()) return actualParams(key);
+        return java.util.stream.IntStream.range(0, key.fields().size())
+                .mapToObj(i -> "key_" + i + ": " + type(key.fieldSchemas().get(i).type()))
+                .collect(Collectors.joining(", "));
+    }
+    public String argumentKey(KeySchema key) {
+        if (!hasRelations()) return actualParams(key);
+        String arguments = java.util.stream.IntStream.range(0, key.fields().size())
+                .mapToObj(i -> "key_" + i).collect(Collectors.joining(", "));
+        return tupleKey(key) ? "ConfigProcessor._object_key([" + arguments + "])" : arguments;
+    }
+    public String valueKey(KeySchema key, String prefix) {
+        String fields = key.fields().stream().map(f -> prefix + lower1(f)).collect(Collectors.joining(", "));
+        return tupleKey(key) ? "ConfigProcessor._object_key([" + fields + "])" : fields;
+    }
+    public boolean keyStruct() {
+        return gen.keyStructs.contains(structural);
     }
 }

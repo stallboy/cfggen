@@ -14,8 +14,8 @@ static var Instance2: DataEquip_Equip_config
 # 内部存储
 static var _data: Dictionary[String, DataEquip_Equip_config] = {}
 # 主键查询
-static func find(id: String) -> DataEquip_Equip_config:
-	return _data.get(id)
+static func find(key_0: String) -> DataEquip_Equip_config:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataEquip_Equip_config]:
 	return _data.values()

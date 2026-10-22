@@ -11,7 +11,28 @@ const TABLE_NAMES: Array[String] = [
 ]
 
 func load_from_package(package: ConfigPackage, errors: ConfigErrors) -> ConfigStream:
+	@if(model.hasRelations())
+	var previous: Array = [
+		@for(TableSchema table : model.tableSchemas)
+		[${String.join(", ", model.stateFields(table))}],
+		@endfor
+	]
+	var before := errors.get_error_count()
+	var result := ConfigLoader.load_package(package, load_from_stream, errors${model.languageArguments().isEmpty() ? "" : ", [" + model.languageArguments() + "]"})
+	if result == null or errors.get_error_count() != before:
+		!{int tableIndex = 0;}
+		@for(TableSchema table : model.tableSchemas)
+			!{int fieldIndex = 0;}
+			@for(String field : model.stateFields(table))
+			${field} = previous[${tableIndex}][${fieldIndex++}]
+			@endfor
+			!{tableIndex++;}
+		@endfor
+		return null
+	return result
+	@else
 	return ConfigLoader.load_package(package, load_from_stream, errors${model.languageArguments().isEmpty() ? "" : ", [" + model.languageArguments() + "]"})
+	@endif
 
 # 从流加载所有配置（新格式）
 func load_from_stream(stream: ConfigStream, _errors: ConfigErrors):
@@ -44,4 +65,14 @@ func load_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 			${model.fullName(table)}._resolve_refs(_errors)
 		@endif
 	@endfor
+	@if(model.hasRelations())
+	var resolver := ${model.relationClass}.new(stream, _errors)
+	resolver.resolve()
+	if stream.valid():
+		stream.set_meta(&"_cfggen_snapshot", resolver._tables)
+	@endif
+
+@if(model.hasRelations())
+@template.gd.Relations(model = model)
+@endif
 

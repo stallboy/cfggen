@@ -26,12 +26,6 @@ func (t *EquipEquip_config) String() string {
     return fmt.Sprintf("EquipEquip_config{entry=%v, stone_count_for_set=%v, draw_protect_name=%v, broadcastid=%v, broadcast_least_quality=%v, week_reward_mailid=%v}", t.entry, t.stone_count_for_set, t.draw_protect_name, t.broadcastid, t.broadcast_least_quality, t.week_reward_mailid)
 }
 
-//entries
-var (
-    instance EquipEquip_config
-    instance2 EquipEquip_config
-)
-
 //getters
 func (t *EquipEquip_config) Entry() string {
     return t.entry
@@ -58,15 +52,16 @@ func (t *EquipEquip_config) Week_reward_mailid() int32 {
 }
 
 func (t *EquipEquip_configMgr) GetInstance() *EquipEquip_config {
-	return &instance
+    return t.symbols["Instance"]
 }
 
 func (t *EquipEquip_configMgr) GetInstance2() *EquipEquip_config {
-	return &instance2
+    return t.symbols["Instance2"]
 }
 
 type EquipEquip_configMgr struct {
     all []*EquipEquip_config
+    symbols map[string]*EquipEquip_config
     entryMap map[string]*EquipEquip_config
 }
 
@@ -81,6 +76,7 @@ func(t *EquipEquip_configMgr) Get(entry string) *EquipEquip_config {
 func (t *EquipEquip_configMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipEquip_config, 0, cnt)
+    t.symbols = make(map[string]*EquipEquip_config)
     t.entryMap = make(map[string]*EquipEquip_config, cnt)
     for i := 0; i < int(cnt); i++ {
         v := createEquipEquip_config(stream)
@@ -88,9 +84,9 @@ func (t *EquipEquip_configMgr) Init(stream *Stream) {
         t.entryMap[v.entry] = v
         switch v.entry {
         case "Instance":
-            instance = *v
+            t.symbols["Instance"] = v
         case "Instance2":
-            instance2 = *v
+            t.symbols["Instance2"] = v
         }
     }
 }

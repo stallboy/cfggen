@@ -23,7 +23,7 @@ func createOtherDropItem(stream *Stream) *OtherDropItem {
 }
 
 func (t *OtherDropItem) String() string {
-    return fmt.Sprintf("OtherDropItem{chance=%v, itemids=%v, countmin=%v, countmax=%v}", t.chance, fmt.Sprintf("%v", t.itemids), t.countmin, t.countmax)
+    return fmt.Sprintf("OtherDropItem{chance=%v, itemids=%v, countmin=%v, countmax=%v}", t.chance, t.itemids, t.countmin, t.countmax)
 }
 
 //getters

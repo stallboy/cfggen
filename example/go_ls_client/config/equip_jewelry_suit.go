@@ -35,13 +35,8 @@ func createEquipJewelry_suit(stream *Stream) *EquipJewelry_suit {
 }
 
 func (t *EquipJewelry_suit) String() string {
-    return fmt.Sprintf("EquipJewelry_suit{suitID=%v, ename=%v, name=%v, ability1=%v, ability1Value=%v, ability2=%v, ability2Value=%v, ability3=%v, ability3Value=%v, suitList=%v}", t.suitID, t.ename, t.name, t.ability1, t.ability1Value, t.ability2, t.ability2Value, t.ability3, t.ability3Value, fmt.Sprintf("%v", t.suitList))
+    return fmt.Sprintf("EquipJewelry_suit{suitID=%v, ename=%v, name=%v, ability1=%v, ability1Value=%v, ability2=%v, ability2Value=%v, ability3=%v, ability3Value=%v, suitList=%v}", t.suitID, t.ename, t.name, t.ability1, t.ability1Value, t.ability2, t.ability2Value, t.ability3, t.ability3Value, t.suitList)
 }
-
-//entries
-var (
-    specialSuit EquipJewelry_suit
-)
 
 //getters
 func (t *EquipJewelry_suit) SuitID() int32 {
@@ -85,11 +80,12 @@ func (t *EquipJewelry_suit) SuitList() []int32 {
 }
 
 func (t *EquipJewelry_suitMgr) GetSpecialSuit() *EquipJewelry_suit {
-	return &specialSuit
+    return t.symbols["SpecialSuit"]
 }
 
 type EquipJewelry_suitMgr struct {
     all []*EquipJewelry_suit
+    symbols map[string]*EquipJewelry_suit
     suitIDMap map[int32]*EquipJewelry_suit
 }
 
@@ -104,6 +100,7 @@ func(t *EquipJewelry_suitMgr) Get(suitID int32) *EquipJewelry_suit {
 func (t *EquipJewelry_suitMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipJewelry_suit, 0, cnt)
+    t.symbols = make(map[string]*EquipJewelry_suit)
     t.suitIDMap = make(map[int32]*EquipJewelry_suit, cnt)
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelry_suit(stream)
@@ -111,7 +108,7 @@ func (t *EquipJewelry_suitMgr) Init(stream *Stream) {
         t.suitIDMap[v.suitID] = v
         switch v.ename {
         case "SpecialSuit":
-            specialSuit = *v
+            t.symbols["SpecialSuit"] = v
         }
     }
 }

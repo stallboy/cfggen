@@ -11,8 +11,8 @@ static var Bottle: DataEquip_Jewelry_type
 # 内部存储
 static var _data: Dictionary[String, DataEquip_Jewelry_type] = {}
 # 主键查询
-static func find(id: String) -> DataEquip_Jewelry_type:
-	return _data.get(id)
+static func find(key_0: String) -> DataEquip_Jewelry_type:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataEquip_Jewelry_type]:
 	return _data.values()

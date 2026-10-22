@@ -39,6 +39,11 @@
         get ${model.upper1(n)}(): ${t} { return this._${n}; }
     @endfor
 
+    @if(model.hasRelations())
+    $relationFields$(): readonly unknown[] {
+        return [${model.structural.fields().stream().map(f -> "this._" + f.name()).collect(java.util.stream.Collectors.joining(", "))}];
+    }
+    @endif
 
     <%--ref property--%>
     @for(ForeignKeySchema fk : model.structural.foreignKeys())
@@ -51,6 +56,9 @@
         @else
             private _${n}!: ${t};
             get ${n}(): ${t} { return this._${n}; }
+        @endif
+        @if(fk.pathReference() != null)
+        _bind${n}$ (value: ${t} | undefined): void { this._${n} = value!; }
         @endif
     @endfor
 
@@ -142,7 +150,13 @@
             @elseif(field.type() instanceof FMap(SimpleType key, SimpleType value))
                 self._${(n)}  = new ${model.type(t)}();
                 for (let c = os.ReadCount(0); c > 0; c--) {
+                    @if(model.hasRelations())
+                    const key$ = ${model.create(key)};
+                    if (self._${n}.has(key$)) throw Error("Duplicate map key: ${model.structural.fullName()}.${n}");
+                    self._${n}.set(key$, ${model.create(value)});
+                    @else
                     self._${n}.set(${model.create(key)}, ${model.create(value)});
+                    @endif
                 }
             @else
                 self._${n} = ${model.create(t)};
@@ -180,7 +194,7 @@
             @endfor
 
             @for(ForeignKeySchema fk : model.structural.foreignKeys())
-                @if(fk.refKey() instanceof RefKey.RefSimple refSimple)
+                @if(fk.pathReference() == null && fk.refKey() instanceof RefKey.RefSimple refSimple)
                     !{var firstField = fk.key().fieldSchemas().getFirst();}
                     !{var refName = model.refName(fk);}
 

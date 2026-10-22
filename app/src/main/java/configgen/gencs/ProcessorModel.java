@@ -14,6 +14,7 @@ public class ProcessorModel {
     public final boolean unity;
     public final boolean implicitUsings;
     public final String schemaBase64;
+    public final List<configgen.gen.Relations.Type> relations;
     public final String languageLiterals;
     public final List<Structural> readyStructs = new ArrayList<>();
     public final List<InterfaceSchema> readyInterfaces = new ArrayList<>();
@@ -26,6 +27,8 @@ public class ProcessorModel {
         this.unity = gen.unity;
         this.implicitUsings = gen.implicitUsings;
         this.schemaBase64 = schemaBase64;
+        this.relations = cfgValue.schema().references().hasRelations()
+                ? configgen.gen.Relations.of(cfgValue.schema()) : List.of();
         this.languageLiterals = languages.stream().map(s -> "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"")
                 .collect(java.util.stream.Collectors.joining(", "));
         ForeachSchema.foreachNameable(item -> {
@@ -38,7 +41,7 @@ public class ProcessorModel {
     }
 
     public String fullName(Nameable schema) {
-        return new Name(gen.pkg, gen.prefix, schema).fullName
+        return "global::" + topPkg + "." + new Name(gen.pkg, gen.prefix, schema).fullName
                 + (schema instanceof TableSchema table && table.entry() instanceof EntryType.EEnum ? "Info" : "");
     }
 
@@ -48,5 +51,14 @@ public class ProcessorModel {
 
     public StructModel tableModel(TableSchema table) {
         return new StructModel(gen, table, cfgValue.vTableMap().get(table.name()));
+    }
+
+    public String ints(List<Integer> values) {
+        return "new int[]{" + values.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(", ")) + "}";
+    }
+
+    public String relationField(FieldSchema field) {
+        String value = "row." + configgen.util.StringUtil.upper1(field.name());
+        return field.type() instanceof FieldType.FMap ? "RelationResolver.WrapMap(" + value + ")" : value;
     }
 }

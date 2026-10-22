@@ -1,6 +1,7 @@
 package config
 
 type TaskCompleteconditionAa struct {
+    _identity byte
 }
 
 func createTaskCompleteconditionAa(_ *Stream) *TaskCompleteconditionAa {

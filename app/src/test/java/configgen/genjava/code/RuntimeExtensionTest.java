@@ -56,12 +56,15 @@ class RuntimeExtensionTest {
                 table pair[id,code] { id:int; code:str; name:str; [name]; }
                 table step[id] { id:int (seq); name:str; }
                 table marker[id] (entry='name') { id:int; name:str; }
+                table flag[id] (enum='name') { id:int; name:str; }
                 """, Map.of("monster", "id,attack,tags,rank\nid,attack,tags,rank\n1,10,a|b,10\n", "rank", "id,name,multiplier\nid,name,multiplier\n10,Green,2\n"));
         Path generated = root.resolve("generated");
         Files.writeString(root.resolve("builders.txt"), "monster\n");
         new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",configgenDir:" + generated + ",pkg:config,builders:" + root.resolve("builders.txt") + (sealed ? "" : ",noSealed"))).generate(ctx);
         assertFalse(Files.exists(generated.resolve("config/ConfigNode.java")));
         assertFalse(Files.exists(generated.resolve("config/ConfigLoader.java")));
+        assertFalse(Files.readString(generated.resolve("config/ConfigMgrLoader.java")).contains("loaders.put(\"flag\""),
+                "The known pure enum table has a block but needs no runtime loader");
         new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("bytes"))).generate(ctx);
         Files.createDirectories(generated.resolve("hand"));
         Files.writeString(generated.resolve("hand/MonsterBase.java"), """
@@ -150,6 +153,21 @@ class RuntimeExtensionTest {
             new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("mod") + ",pack:map,requires:base,deps:" + root.resolve("base/base.bytes"))).generate(mod);
             ConfigPackage basePack = ConfigPackage.read(root.resolve("base/base.bytes"));
             ConfigPackage modPack = ConfigPackage.read(root.resolve("mod/map.bytes"));
+            assertTrue(basePack.blockNames().contains(".flag"), "Known pure enum blocks remain accepted without a loader");
+            var unknownTable = rewritePackage(modPack, blocks -> {
+                blocks.put(".unexpected", new byte[]{1});
+                blocks.put(".monster", new byte[]{1}); // The unknown block must fail before any table is decoded.
+            });
+            assertEquals(List.of(new LoadValueErrs.UnknownTableBlock("map", ".unexpected")),
+                    loadFailure(loading, basePack, unknownTable));
+            assertSame(b, mgr.getMethod("getMgr").invoke(null));
+            var sparseWithTools = rewritePackage(modPack, blocks -> {
+                blocks.keySet().removeIf(name -> name.startsWith("."));
+                blocks.put("tools/checksum", new byte[]{1});
+            });
+            Object sparse = loading.getMethod("loadPackages", ConfigPackage[].class)
+                    .invoke(null, (Object) new ConfigPackage[]{basePack, sparseWithTools});
+            assertEquals(20, property(mgr.getMethod("getMonster", int.class).invoke(sparse, 1), "power"));
             var duplicate = duplicatePairRow(modPack);
             var duplicateFailure = assertThrows(java.lang.reflect.InvocationTargetException.class,
                     () -> loading.getMethod("loadPackagesAndSetMgr", ConfigPackage[].class)
@@ -297,6 +315,7 @@ class RuntimeExtensionTest {
         Files.writeString(dir.resolve("rankgroup.csv"), "multiplier\nmultiplier\n2\n");
         Files.writeString(dir.resolve("signal.csv"), "name,power\nname,power\nHigh,3\nLow,2\n");
         Files.writeString(dir.resolve("entrance.csv"), "name,power\nname,power\nStart,5\nEnd,9\n");
+        Files.writeString(dir.resolve("flag.csv"), "id,name\nid,name\n1,Enabled\n");
         boolean mod = dir.getFileName().toString().equals("moddata");
         Files.writeString(dir.resolve("pair.csv"), "id,code,name\nid,code,name\n1,a," + (mod ? "changed\n2,b,new\n" : "old\n"));
         Files.writeString(dir.resolve("step.csv"), "id,name\nid,name\n" + (mod ? "3,three\n2,two\n0,zero\n1,one\n" : "0,zero\n1,one\n"));

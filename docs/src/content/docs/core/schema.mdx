@@ -276,10 +276,10 @@ table taskexptype[id] (enum='name') {
 // 存储所有任务数据和完成条件
 table task[taskid] (entry='entry') {
 	[nexttask];                           // 定义唯一键
-	taskid:int ->task.task_extra_exp (nullable); // 任务ID，外键（可空）
+	taskid:int ->task.task_extra_exp (nullable); // 任务ID，外键可以不存在
 	entry:str;                           // 入口标识，程序代码直接访问
 	text:text;                           // 国际化文本
-	nexttask:int ->task (nullable);      // 下一个任务ID，外键（可空）
+	nexttask:int ->task (nullable);      // 下一个任务ID，外键可以不存在
 	completecondition:task.completecondition; // 任务完成条件（多态接口）
 	exp:taskexp (mustFill);              // 经验奖励公式（多态接口，必须填写）
 	rewardItems:list<RewardItem> (block=1); // 物品奖励列表
@@ -294,6 +294,42 @@ table task[taskid] (entry='entry') {
 - **唯一键**：`[nexttask]`会生成`GetByNextTask`访问方法
 - **多态字段**：`completecondition`和`exp`字段支持多种实现
 
+## Record 内部对象引用
+
+`->` 可以定位 record 内部的 struct 或 interface 对象。原始字段保存定位键，生成代码提供确定目标类型的派生引用。
+
+```cfg
+struct Phase {
+    phaseKey:str;
+    nextPhaseKey:str ->@StateMachine::phases (nullable);
+}
+struct StateMachine {
+    machineKey:str;
+    phases:list<Phase> (index='phaseKey');
+}
+table ability[id] (json) {
+    id:int;
+    machines:list<StateMachine> (index='machineKey');
+    machineKey:str; phaseKey:str;
+    ->target:[machineKey,phaseKey] ->::machines.phases;
+}
+```
+
+`index` 为每个 list 实例声明局部唯一键；不同机器可以分别包含 `Idle`。复合键写为 `(index='phaseKey,variant')`，按顺序消费源值。map 使用自身的键，固定 struct 成员不消费键；固定目标可以用 `->target:[] ->::member` 引用。
+
+| 目标写法 | 起点 |
+| --- | --- |
+| `->::machines.phases` | 当前源 record |
+| `->ability::machines.phases` | 按 ability 主键查 record，再查内部对象 |
+| `->ability[code]::machines.phases` | 按 ability 的 code 唯一键查 record |
+| `->@StateMachine::phases` | 从自身起，最近的 StateMachine 包含实例 |
+
+源键可以独立取自不同层级，例如 `->target:[@AbilityUse::abilityId,@MachineUse::machineKey,phaseKey] ->ability::machines.phases`。`field` 从当前对象取值，`binding.field` 经过固定 struct 成员，`::field` 从源 record 取值，`@Type::field` 从最近的指定祖先取值。每个源表达式都使用原始源上下文。
+
+新增声明的 `nullable` 表示整条引用可以找不到目标，包括外部 record 或中间集合未命中；不会掩盖缺失祖先、无效声明或重复索引键。`0`、`false`、空字符串仍是合法键。最近祖先未命中不会回退到外层。旧表级外键保留原有行为。
+
+路径只经过静态 struct、已索引的 list 和 map；interface 可以作为终点。源值只接受标量或合法的平坦 struct 键。完整规则、生命周期及运行库升级说明见 [内部对象引用设计](../internal-reference-design/)。
+
 ## ️字段属性
 
 字段可以配置多种属性来控制数据验证和生成行为。
@@ -302,9 +338,10 @@ table task[taskid] (entry='entry') {
 
 | 属性 | 用途 | 适用类型 | 示例 |
 |------|------|----------|------|
-| `nullable` | 允许字段为空 | 所有类型 | `field:int (nullable)` |
+| `nullable` | 表明外键可以不存在 | 单向外键（`->`） | `field:int ->target (nullable)` |
 | `mustFill` | 必须填写，不能为空 | 所有类型 | `field:str (mustFill)` |
 | `seq` | 声明字段值为连续序列（从0开始） | int | `tagId:int (seq)` |
+| `index='字段列表'` | 声明集合实例内的唯一索引 | list&lt;具体 struct&gt; | `phases:list<Phase> (index='key')` |
 | `fix=N` | 固定长度，占用N倍元素类型的列数 | list, map | `items:list<int> (fix=3)` |
 | `block=N` | 块状映射，横向固定N个元素，纵向可扩展 | list, map | `rewards:list<Reward> (block=1)` |
 | `pack` | 压缩到1列，用逗号或分号分隔 | struct, list, map | `pos:Position (pack)` |
@@ -324,6 +361,7 @@ table task[taskid] (entry='entry') {
 | 接口 | `interface 名称 { struct 实现类 { ... } }` | 定义多态行为 |
 | 数据表 | `table 表名[主键] { [唯一键]; 字段:类型; }` | 存储配置数据 |
 | 外键 | `字段:类型 ->目标表` | 建立表间关联 |
+| 内部对象引用 | `->名称:[源值列表] ->表名::成员路径` | 引用 record 内部对象；省略表名表示当前 record |
 | 多向外键 | `字段:类型 =>目标表[字段]` | 建立反向引用 |
 
 ### 属性速查
@@ -335,9 +373,10 @@ table task[taskid] (entry='entry') {
 | `enum='字段名'` | table | 指定枚举字段 |
 | `entry='字段名'` | table | 指定入口字段 |
 | `commentText` | enum 声明 | comment 字段用 text 类型（默认 str） |
-| `nullable` | 字段 | 允许为空 |
+| `nullable` | 带外键的字段、独立外键声明 | 表明外键可以不存在 |
 | `mustFill` | 字段 | 必须填写 |
 | `seq` | 字段 (int) | 声明值为连续序列（0,1,2,...） |
+| `index='字段列表'` | list 字段 | 集合实例内的唯一键，复合键按逗号顺序绑定 |
 | `fix=N` | 映射... | ... |
 | `block=N` | 映射... | ... |
 | `pack` | 映射... | ... |

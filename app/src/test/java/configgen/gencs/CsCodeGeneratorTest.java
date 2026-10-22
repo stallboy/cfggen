@@ -55,8 +55,8 @@ class CsCodeGeneratorTest {
         String module = Files.readString(output.resolve("Config/_loaders/_rootLoader.cs"));
         assertEquals(2, module.lines().filter(line -> line.contains("void _resolve(")).count());
         String processor = Files.readString(output.resolve("Config/Processor.cs"));
-        assertFalse(processor.contains("Ready(DPlain "));
-        assertTrue(processor.contains("Ready(DBundle "));
+        assertFalse(processor.contains("Ready(global::Config.DPlain "));
+        assertTrue(processor.contains("Ready(global::Config.DBundle "));
     }
 
     @Test

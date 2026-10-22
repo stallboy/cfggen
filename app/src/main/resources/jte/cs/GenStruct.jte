@@ -61,7 +61,7 @@ ${model.nsLine()}
 
     <%--ref property--%>
     @for(ForeignKeySchema fk : model.structural.foreignKeys())
-        public ${model.refType(fk)} ${model.refName(fk)} { get; private set; }${StructModel.refInit(fk)}
+        public ${model.refType(fk)} ${model.refName(fk)} { get; ${fk.pathReference() == null ? "private" : "internal"} set; }${StructModel.refInit(fk)}
     @endfor
 
     <%--table static Get,All--%>

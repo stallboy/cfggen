@@ -76,7 +76,7 @@ config/
 ### 基本格式
 
 ```bash
-java -jar ../../cfggen.jar -datadir ../config -gen <目标类型>[,选项...] [-gen <目标类型2>...]
+java -jar ../../app/build/libs/cfggen.jar -datadir ../config -gen <目标类型>[,选项...] [-gen <目标类型2>...]
 ```
 
 ### 常用目标类型
@@ -124,10 +124,10 @@ java -jar ../../cfggen.jar -datadir ../config -gen <目标类型>[,选项...] [-
 
 - **Java**: `gradle run` 或直接运行 Java
 - **C#**: `dotnet run`
-- **TypeScript**: `npx tsx main.ts`
-- **Lua**: `lua.exe test.lua`
+- **TypeScript**: `npm test`，先严格编译后运行 Node.js；普通 `ts` 还用最终 JAR 和完整配置源执行三个断言回归，随总脚本和 Test CI 自动运行
+- **Lua**: `run.bat`，通过 `CFGGEN_LUA` 指定支持 64 位整数的 Lua 5.3+
 - **Go**: `go run main.go`
-- **GDScript**: 需要在 Godot 编辑器中运行
+- **GDScript**: `run.bat` headless 导入并验证，通过 `CFGGEN_GODOT` 指定 Godot 4.6
 
 ## 特殊说明
 
@@ -148,12 +148,12 @@ java -jar ../../cfggen.jar -datadir ../config -gen <目标类型>[,选项...] [-
 
 - 使用 npm/pnpm 管理依赖
 - `package.json` 定义项目配置
-- 使用 tsx 直接运行 TypeScript
+- `npm test` 先严格编译，再用 Node.js 运行生成的 JavaScript
 
 ## 注意事项
 
-1. 确保 `cfggen.jar` 存在于项目根目录
-2. 生成前会清理旧的生成代码（各 gen*.bat 开头的 rm 命令）
+1. 先在仓库根运行 `app\gradlew.bat -p app fatJar`；所有生成脚本使用 `app/build/libs/cfggen.jar`
+2. 运行 `example\gen_run.bat` 重新生成、编译并运行全部 15 个模式；任一模式失败时总脚本返回非零退出码
 3. 多语言版本需要配置语言表（i18n 目录）
 4. GDScript 项目使用 Godot 4.x
 5. Windows 环境下执行 .bat 文件使用 `./` 前缀

@@ -42,16 +42,18 @@ public class StructModel {
     private String _type(FieldType t, boolean asMapKey) {
         return switch (t) {
             case BOOL -> "boolean";
-            case INT, LONG, FLOAT -> "number";
+            case INT, FLOAT -> "number";
+            case LONG -> gen.hasRelations() ? "bigint" : "number";
             case STRING -> "string";
             case TEXT -> gen.nullableLanguageSwitch != null ? "Text" : "string";
-            case StructRef structRef -> asMapKey ? "number" : className(structRef.obj());
+            case StructRef structRef -> asMapKey && !gen.hasRelations() ? "number" : className(structRef.obj());
             case FList fList -> type(fList.item()) + "[]";
             case FMap fMap -> "Map<" + _type(fMap.key(), true) + ", " + type(fMap.value()) + ">";
         };
     }
 
     public String mapKeyType(KeySchema keySchema) {
+        if (gen.hasRelations() && (keySchema.fields().size() > 1 || keySchema.fieldSchemas().getFirst().type() instanceof StructRef)) return "string";
         if (keySchema.fieldSchemas().size() > 1) {
             return "number"; // 跟lua一样的约定，最多2个int，组装成一个大int
         } else {
@@ -63,7 +65,7 @@ public class StructModel {
         return switch (t) {
             case BOOL -> "os.ReadBool()";
             case INT -> "os.ReadInt32()";
-            case LONG -> "os.ReadInt64()";
+            case LONG -> gen.hasRelations() ? "os.ReadInt64BigInt()" : "os.ReadInt64()";
             case FLOAT -> "os.ReadSingle()";
             case STRING -> "os.ReadStringInPool()";
             case TEXT -> gen.nullableLanguageSwitch != null ? "Text._create(os)" : "os.ReadTextInPool()";
@@ -75,6 +77,7 @@ public class StructModel {
 
 
     public String refType(ForeignKeySchema fk) {
+        if (fk.pathReference() != null) return className(fk.referenceResultType());
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
                 return className(fk.refTableSchema()) + "[]";
@@ -105,23 +108,6 @@ public class StructModel {
         return fk.refKey() instanceof RefKey.RefSimple refSimple && refSimple.nullable();
     }
 
-    // 字段声明（使用确定赋值断言）
-    public String fieldDeclaration(FieldSchema field) {
-        return "_%s!: %s".formatted(field.name(), type(field.type()));
-    }
-
-    // 外键字段声明（区分 nullable）
-    public String refFieldDeclaration(ForeignKeySchema fk) {
-        String typeName = refType(fk);
-        String fieldName = "_%s".formatted(refName(fk));
-        if (isNullableRef(fk)) {
-            return "%s: %s | undefined".formatted(fieldName, typeName);
-        } else {
-            return "%s!: %s".formatted(fieldName, typeName);
-        }
-    }
-
-
     public String uniqueKeyGetByName(KeySchema keySchema) {
         return GenNaming.uniqueKeyGetByName(keySchema);
     }
@@ -145,6 +131,7 @@ public class StructModel {
     }
 
     public String actualParamsKeyThis(KeySchema keySchema) {
+        if (gen.hasRelations()) return keySchema.fields().stream().map(f -> "this._" + f).collect(Collectors.joining(", "));
         int count = keySchema.fields().size();
         if (count == 1) {
             return "this._" + keySchema.fields().getFirst();
@@ -158,6 +145,9 @@ public class StructModel {
     }
 
     private String actualParamsKey(KeySchema keySchema, String prefix) {
+        if (gen.hasRelations() && (keySchema.fields().size() > 1 || keySchema.fieldSchemas().getFirst().type() instanceof StructRef)) {
+            return "$relationKey$([" + keySchema.fields().stream().map(f -> prefix + f).collect(Collectors.joining(", ")) + "])";
+        }
 //        --- 2个字段可以做为uniqkey，但都必须是数字，并且第一个<1亿，第二个<1万
 //        self[getname] = function(k, j)
 //            return map[k + j * 100000000]
@@ -213,4 +203,6 @@ public class StructModel {
             }
         }
     }
+
+    public boolean hasRelations() { return gen.hasRelations(); }
 }

@@ -16,8 +16,8 @@ static var Aa: DataTask_Complete_condition_type
 # 内部存储
 static var _data: Dictionary[int, DataTask_Complete_condition_type] = {}
 # 主键查询
-static func find(id: int) -> DataTask_Complete_condition_type:
-	return _data.get(id)
+static func find(key_0: int) -> DataTask_Complete_condition_type:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataTask_Complete_condition_type]:
 	return _data.values()

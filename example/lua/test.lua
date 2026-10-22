@@ -60,8 +60,9 @@ local function testMultiColumnAsPrimaryKeyGet()
     local all = cfg.other.loot_item.all
     assert(t.lootid == 2, "主键可以是2个int字段，get(k1, k2)")
     assert(t.itemid == 40007)
-    local rawT = all[2 + 40007 * 100000000]
-    assert(rawT == t, "主键是k + j * 100000000")
+    local found = false
+    for _, row in pairs(all) do if rawequal(row, t) then found = true end end
+    assert(found, "get 使用完整复合键，all 包含同一记录")
 end
 
 -- local function testUniqueKeyGet()
@@ -78,12 +79,6 @@ local function testField()
     assert(t.nexttask == t[3]);
     assert(t.name[1] == "杀个怪");
     assert(#t.name == 2, "task.name is list");
-end
-
-local function testListField()
-    local t = cfg.task.task.get(1)
-    assert(#t.name == 2, "支持列表list");
-    assert(t.name[1] == "杀个怪");
 end
 
 local function testMapField()
@@ -130,6 +125,8 @@ local function testNullableRef()
 end
 
 local function testListRef()
+    local list = cfg.other.key_test.get(1, 2).RefIds
+    assert(#list == 2 and rawequal(list[2], cfg.other.sign_in.get(12)))
     local t = cfg.other.loot.get(2)
     assert(rawget(t, "ListRefLootid") == nil, "listRef 会缓存起来，第一次是nil")
     --print(t.name, t.lootid, #t.ListRefLootid, t.ListRefLootid[1].itemid, t.ListRefLootid[2].itemid)
@@ -137,6 +134,7 @@ local function testListRef()
     assert(#t.ListRefLootid == 7, "t.ListRefLootid")
     local itemids = {}
     for _, loot_item in ipairs(t.ListRefLootid) do
+        assert(loot_item.lootid == 2 and rawequal(loot_item, cfg.other.loot_item.get(loot_item.lootid, loot_item.itemid)))
         itemids[loot_item.itemid] = true
     end
 
@@ -167,7 +165,7 @@ local function testCsvColumnMode()
     assert(t.week_reward_mailid == 33, "csv可以一列一列配置，而不用一行一行")
 end
 
-local function testBeanAsPrimaryKeyGetError()
+local function testBeanAsPrimaryKeyGet()
     local all = cfg.equip.jewelry_random.all
     local firstK
     for k, _ in pairs(all) do
@@ -175,8 +173,8 @@ local function testBeanAsPrimaryKeyGetError()
         break
     end
     local t = cfg.equip.jewelry_random.get(Beans.levelrank(5, 1))
-    assert(t == nil, "bean做为主键，虽然能生成，但不好取到，因为lua的table的key如果是table，比较用的是引用比较")
-    assert(cfg.equip.jewelry_random.get(firstK) ~= nil, "只能先拿到引用")
+    assert(t ~= nil and t.lvlRank.level == 5 and t.lvlRank.rank == 1, "内部引用模式按完整struct键值查询")
+    assert(cfg.equip.jewelry_random.get(firstK) ~= nil, "all 中的主键也可查询")
 end
 
 -- local function testCsvPack()
@@ -232,7 +230,7 @@ end
 local function testMapValueRef()
     local t = cfg.other.sign_in.get(4)
     assert(t.vipitem2vipcountMap[10001] == 10)
-    assert(t.RefVipitem2vipcountMap[10001] == cfg.other.loot.get(10))
+    assert(rawequal(t.RefVipitem2vipcountMap[10001], cfg.other.loot.get(10)))
 end
 
 local function testDefaultBean()
@@ -311,10 +309,9 @@ testToString()
 testAllAndGet()
 testMultiColumnAsPrimaryKeyGet()
 -- testUniqueKeyGet()
-testBeanAsPrimaryKeyGetError()
+testBeanAsPrimaryKeyGet()
 
 testField()
-testListField()
 testMapField()
 testDynamicBeanField()
 
@@ -341,4 +338,5 @@ testDefaultBean()
 testAddDel()
 testMetadata()
 testCellNumberAsInterface()
+dofile("../combat_assertions.lua")(cfg)
 print("ok")

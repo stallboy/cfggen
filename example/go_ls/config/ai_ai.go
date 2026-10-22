@@ -29,7 +29,7 @@ func createAiAi(stream *Stream) *AiAi {
 }
 
 func (t *AiAi) String() string {
-    return fmt.Sprintf("AiAi{iD=%v, desc=%v, condID=%v, trigTick=%v, trigOdds=%v, actionID=%v, deathRemove=%v}", t.iD, t.desc, t.condID, fmt.Sprintf("%v", t.trigTick), t.trigOdds, fmt.Sprintf("%v", t.actionID), t.deathRemove)
+    return fmt.Sprintf("AiAi{iD=%v, desc=%v, condID=%v, trigTick=%v, trigOdds=%v, actionID=%v, deathRemove=%v}", t.iD, t.desc, t.condID, t.trigTick, t.trigOdds, t.actionID, t.deathRemove)
 }
 
 //getters

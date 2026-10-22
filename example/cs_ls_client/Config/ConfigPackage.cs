@@ -61,6 +61,7 @@ namespace Config
         }
 
         public bool HasBlock(string name) => _blocks.ContainsKey(name);
+        public IEnumerable<string> BlockNames => _blocks.Keys;
 
         public ConfigReader Block(string name, params string[] languages)
         {

@@ -20,6 +20,7 @@ static func _create(stream: ConfigStream) -> DataTaskCompletecondition_KillMonst
 
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
+	pass
 	RefMonsterid = DataOther_Monster.find(monsterid)
 	if RefMonsterid == null:
 		errors.ref_null("KillMonster", "monsterid")

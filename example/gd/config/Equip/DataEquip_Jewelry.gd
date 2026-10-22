@@ -19,8 +19,8 @@ var RefKeyAbility: DataEquip_Ability
 # 内部存储
 static var _data: Dictionary[int, DataEquip_Jewelry] = {}
 # 主键查询
-static func find(id: int) -> DataEquip_Jewelry:
-	return _data.get(id)
+static func find(key_0: int) -> DataEquip_Jewelry:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataEquip_Jewelry]:
 	return _data.values()
@@ -55,6 +55,7 @@ static func _create(stream: ConfigStream) -> DataEquip_Jewelry:
 
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
+	pass
 	if lvlRank != null:
 		lvlRank._resolve(errors)
 	RefJType = DataEquip_Jewelry_type.find(jType)

@@ -1,6 +1,7 @@
 package config
 
 type TaskCompleteconditionTestNoColumn struct {
+    _identity byte
 }
 
 func createTaskCompleteconditionTestNoColumn(_ *Stream) *TaskCompleteconditionTestNoColumn {

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -45,7 +46,7 @@ public class EditorServer extends GeneratorWithTag {
     // 消除读handler两次读字段期间reload插入导致的跨代错配
     private volatile State state;
 
-    private record State(Context context, CfgValue cfgValue, TableSchemaRefGraph graph) {
+    private record State(Context context, CfgValue cfgValue, TableSchemaRefGraph graph, String revision) {
     }
 
     private HttpServer server;
@@ -116,7 +117,7 @@ public class EditorServer extends GeneratorWithTag {
         // 可以包含tag，这样更灵活，方便查看filter过后的数据
         // 此时所有的修改指令将返回错误 serverNotEditable
         CfgValue newCfgValue = newContext.makeValue(tag, true);
-        state = new State(newContext, newCfgValue, new TableSchemaRefGraph(newCfgValue.schema()));
+        state = new State(newContext, newCfgValue, new TableSchemaRefGraph(newCfgValue.schema()), UUID.randomUUID().toString());
     }
 
     private void handleSchemas(HttpExchange exchange) throws IOException {
@@ -210,7 +211,7 @@ public class EditorServer extends GeneratorWithTag {
         }
 
         State st = state;
-        RecordResponse record = new RecordService(st.cfgValue(), st.graph(), table, id, depth, in, maxObjs, requestType).retrieve();
+        RecordResponse record = new RecordService(st.cfgValue(), st.graph(), table, id, depth, in, maxObjs, requestType, st.revision()).retrieve();
         sendResponse(exchange, record);
     }
 

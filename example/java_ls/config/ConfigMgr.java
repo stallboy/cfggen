@@ -60,6 +60,66 @@ public class ConfigMgr {
 
     public java.util.Collection<config.ai.CfgAi_condition> allAiAi_condition() { return ai_ai_condition_All.values(); }
 
+    private java.util.Map<Integer, config.combat.CfgAbility> combat_ability_All;
+    public java.util.Map<Integer, config.combat.CfgAbility> _get_combat_ability_All() { return combat_ability_All; }
+    public void _set_combat_ability_All(java.util.Map<Integer, config.combat.CfgAbility> rows) { requireBuilding(); combat_ability_All = java.util.Collections.unmodifiableMap(rows); }
+
+    public config.combat.CfgAbility getCombatAbility(int id) { return combat_ability_All.get(id); }
+
+    private java.util.Map<String, config.combat.CfgAbility> combat_ability_CodeMap;
+    public java.util.Map<String, config.combat.CfgAbility> _get_combat_ability_CodeMap() { return combat_ability_CodeMap; }
+    public void _set_combat_ability_CodeMap(java.util.Map<String, config.combat.CfgAbility> rows) { requireBuilding(); combat_ability_CodeMap = java.util.Collections.unmodifiableMap(rows); }
+
+    public config.combat.CfgAbility getCombatAbilityByCode(String code) { return combat_ability_CodeMap.get(code); }
+
+    public java.util.Collection<config.combat.CfgAbility> allCombatAbility() { return combat_ability_All.values(); }
+
+    private java.util.Map<config.combat.CfgPhaseKey, config.combat.CfgBranchreward> combat_branchreward_All;
+    public java.util.Map<config.combat.CfgPhaseKey, config.combat.CfgBranchreward> _get_combat_branchreward_All() { return combat_branchreward_All; }
+    public void _set_combat_branchreward_All(java.util.Map<config.combat.CfgPhaseKey, config.combat.CfgBranchreward> rows) { requireBuilding(); combat_branchreward_All = java.util.Collections.unmodifiableMap(rows); }
+
+    public config.combat.CfgBranchreward getCombatBranchreward(config.combat.CfgPhaseKey key) { return combat_branchreward_All.get(key); }
+
+    public java.util.Collection<config.combat.CfgBranchreward> allCombatBranchreward() { return combat_branchreward_All.values(); }
+
+    private java.util.Map<Integer, config.combat.CfgCast> combat_cast_All;
+    public java.util.Map<Integer, config.combat.CfgCast> _get_combat_cast_All() { return combat_cast_All; }
+    public void _set_combat_cast_All(java.util.Map<Integer, config.combat.CfgCast> rows) { requireBuilding(); combat_cast_All = java.util.Collections.unmodifiableMap(rows); }
+
+    public config.combat.CfgCast getCombatCast(int id) { return combat_cast_All.get(id); }
+
+    public java.util.Collection<config.combat.CfgCast> allCombatCast() { return combat_cast_All.values(); }
+
+    private java.util.Map<Integer, config.combat.CfgEncounter> combat_encounter_All;
+    public java.util.Map<Integer, config.combat.CfgEncounter> _get_combat_encounter_All() { return combat_encounter_All; }
+    public void _set_combat_encounter_All(java.util.Map<Integer, config.combat.CfgEncounter> rows) { requireBuilding(); combat_encounter_All = java.util.Collections.unmodifiableMap(rows); }
+
+    public config.combat.CfgEncounter getCombatEncounter(int id) { return combat_encounter_All.get(id); }
+
+    public java.util.Collection<config.combat.CfgEncounter> allCombatEncounter() { return combat_encounter_All.values(); }
+
+    private java.util.Map<config.combat.CfgPhasebook.SchoolTierAirborneKey, config.combat.CfgPhasebook> combat_phasebook_All;
+    public java.util.Map<config.combat.CfgPhasebook.SchoolTierAirborneKey, config.combat.CfgPhasebook> _get_combat_phasebook_All() { return combat_phasebook_All; }
+    public void _set_combat_phasebook_All(java.util.Map<config.combat.CfgPhasebook.SchoolTierAirborneKey, config.combat.CfgPhasebook> rows) { requireBuilding(); combat_phasebook_All = java.util.Collections.unmodifiableMap(rows); }
+
+    public config.combat.CfgPhasebook getCombatPhasebook(String school, int tier, boolean airborne) { return combat_phasebook_All.get(new config.combat.CfgPhasebook.SchoolTierAirborneKey(school, tier, airborne)); }
+
+    private java.util.Map<config.combat.CfgPhasebook.CodeEditionKey, config.combat.CfgPhasebook> combat_phasebook_CodeEditionMap;
+    public java.util.Map<config.combat.CfgPhasebook.CodeEditionKey, config.combat.CfgPhasebook> _get_combat_phasebook_CodeEditionMap() { return combat_phasebook_CodeEditionMap; }
+    public void _set_combat_phasebook_CodeEditionMap(java.util.Map<config.combat.CfgPhasebook.CodeEditionKey, config.combat.CfgPhasebook> rows) { requireBuilding(); combat_phasebook_CodeEditionMap = java.util.Collections.unmodifiableMap(rows); }
+
+    public config.combat.CfgPhasebook getCombatPhasebookByCodeEdition(String code, int edition) { return combat_phasebook_CodeEditionMap.get(new config.combat.CfgPhasebook.CodeEditionKey(code, edition)); }
+
+    public java.util.Collection<config.combat.CfgPhasebook> allCombatPhasebook() { return combat_phasebook_All.values(); }
+
+    private java.util.Map<Integer, config.combat.CfgTimeline> combat_timeline_All;
+    public java.util.Map<Integer, config.combat.CfgTimeline> _get_combat_timeline_All() { return combat_timeline_All; }
+    public void _set_combat_timeline_All(java.util.Map<Integer, config.combat.CfgTimeline> rows) { requireBuilding(); combat_timeline_All = java.util.Collections.unmodifiableMap(rows); }
+
+    public config.combat.CfgTimeline getCombatTimeline(int id) { return combat_timeline_All.get(id); }
+
+    public java.util.Collection<config.combat.CfgTimeline> allCombatTimeline() { return combat_timeline_All.values(); }
+
     private config.equip.CfgEquip_config[] equip_equip_config_Refs;
     public config.equip.CfgEquip_config _get_equip_equip_config_Refs(int index) { return equip_equip_config_Refs[index]; }
     public void _set_equip_equip_config_Refs(config.equip.CfgEquip_config[] refs) { requireBuilding(); equip_equip_config_Refs = refs; }

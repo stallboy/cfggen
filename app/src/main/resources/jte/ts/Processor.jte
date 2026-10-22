@@ -45,5 +45,8 @@ export class Processor {
                 ${model.className(table)}.Resolve(errors);
             @endif
         @endfor
+        @if(model.hasRelations())
+        $resolveRelations$(errors);
+        @endif
     }
 }

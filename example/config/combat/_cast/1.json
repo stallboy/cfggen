@@ -1,0 +1,15 @@
+{
+  "id": 1, "abilityCode": "Fireball", "origin": { "x": 10, "y": 20 },
+  "uses": [{ "binding": { "abilityId": 1001 }, "machines": [
+    { "machineKey": "Combat", "targets": [{ "phaseKey": "Idle" }, { "phaseKey": "Hit" }, { "phaseKey": "" }] },
+    { "machineKey": "Movement", "targets": [{ "phaseKey": "Idle" }] }
+  ] }],
+  "optional": [
+    { "abilityId": 9999, "machineKey": "Combat", "phaseKey": "Idle" },
+    { "abilityId": 1001, "machineKey": "Missing", "phaseKey": "Idle" },
+    { "abilityId": 1001, "machineKey": "Combat", "phaseKey": "Missing" },
+    { "abilityId": 1001, "machineKey": "Combat", "phaseKey": "" }
+  ],
+  "school": "Fire", "tier": 0, "airborne": false, "bookCode": "Starter", "edition": 1,
+  "rewardKey": { "name": "Hit", "variant": 0 }
+}

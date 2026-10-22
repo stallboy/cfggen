@@ -212,6 +212,12 @@ class ValueStringify {
     }
 
     private void addVStruct(VStruct vStruct, VInterface nullableInterface, List<String> fieldChain) {
+        boolean relations = ctx.aCtx().hasRelations();
+        boolean registerAction = relations && nullableInterface != null;
+        if (relations && isKey) res.append('[');
+        if (registerAction) {
+            res.append(ctx.aCtx().relations()).append(".node(\"").append(vStruct.schema().fullName()).append("\", ");
+        }
         CompositeValue value = nullableInterface != null ? nullableInterface : vStruct;
 
         String beanType = beanTypeStr;
@@ -234,7 +240,7 @@ class ValueStringify {
             }
             res.append(beanType);
             int sz = vStruct.values().size();
-            if (sz > 0) { // 这里来个优化，如果没有参数不加()，因为beanType其实直接就是个实例
+            if (sz > 0 || relations) { // Context-dependent empty values must remain distinct constructor calls.
                 res.append("(");
                 int idx = 0;
                 boolean meetBool = false;
@@ -287,6 +293,9 @@ class ValueStringify {
                 res.append(")");
             }
         }
+
+        if (registerAction) res.append(')');
+        if (relations && isKey) res.append(']');
 
     }
 }

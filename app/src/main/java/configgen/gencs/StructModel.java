@@ -125,6 +125,11 @@ public class StructModel {
 
 
     public String refType(ForeignKeySchema fk) {
+        if (fk.pathReference() != null) {
+            Nameable result = fk.referenceResultType();
+            String type = result instanceof TableSchema table ? tableDataName(table) : fullName(result);
+            return type + (((RefKey.RefSimple) fk.refKey()).nullable() ? "?" : "");
+        }
         switch (fk.refKey()) {
             case RefKey.RefList _ -> {
                 return "IReadOnlyList<" + fullName(fk.refTableSchema()) + ">";
@@ -246,6 +251,7 @@ public class StructModel {
     }
 
     public static String refInit(ForeignKeySchema fk) {
+        if (fk.pathReference() != null) return ((RefKey.RefSimple) fk.refKey()).nullable() ? "" : " = null!;";
         if (fk.refKey() instanceof RefKey.RefSimple refSimple) {
             if (refSimple.nullable()) {
                 return "";

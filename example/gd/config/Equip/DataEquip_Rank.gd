@@ -15,8 +15,8 @@ static var Red: DataEquip_Rank
 # 内部存储
 static var _data: Dictionary[int, DataEquip_Rank] = {}
 # 主键查询
-static func find(id: int) -> DataEquip_Rank:
-	return _data.get(id)
+static func find(key_0: int) -> DataEquip_Rank:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataEquip_Rank]:
 	return _data.values()

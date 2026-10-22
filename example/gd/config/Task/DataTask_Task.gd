@@ -14,8 +14,8 @@ var NullableRefNexttask: DataTask_Task
 # 内部存储
 static var _data: Dictionary[int, DataTask_Task] = {}
 # 主键查询
-static func find(id: int) -> DataTask_Task:
-	return _data.get(id)
+static func find(key_0: int) -> DataTask_Task:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataTask_Task]:
 	return _data.values()
@@ -47,6 +47,7 @@ static func _create(stream: ConfigStream) -> DataTask_Task:
 
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
+	pass
 	if completecondition != null:
 		completecondition._resolve(errors)
 	NullableRefTaskid = DataTask_Task_extra_exp.find(taskid)

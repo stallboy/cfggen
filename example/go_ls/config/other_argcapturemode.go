@@ -20,12 +20,6 @@ func (t *OtherArgCaptureMode) String() string {
     return fmt.Sprintf("OtherArgCaptureMode{name=%v, id=%v, comment=%v}", t.name, t.id, t.comment)
 }
 
-//entries
-var (
-    snapshot OtherArgCaptureMode
-    dynamic OtherArgCaptureMode
-)
-
 //getters
 func (t *OtherArgCaptureMode) Name() string {
     return t.name
@@ -40,15 +34,16 @@ func (t *OtherArgCaptureMode) Comment() string {
 }
 
 func (t *OtherArgCaptureModeMgr) GetSnapshot() *OtherArgCaptureMode {
-	return &snapshot
+    return t.symbols["Snapshot"]
 }
 
 func (t *OtherArgCaptureModeMgr) GetDynamic() *OtherArgCaptureMode {
-	return &dynamic
+    return t.symbols["Dynamic"]
 }
 
 type OtherArgCaptureModeMgr struct {
     all []*OtherArgCaptureMode
+    symbols map[string]*OtherArgCaptureMode
     nameMap map[string]*OtherArgCaptureMode
     idMap map[int32]*OtherArgCaptureMode
 }
@@ -68,6 +63,7 @@ func(t *OtherArgCaptureModeMgr) GetByid(id int32) *OtherArgCaptureMode {
 func (t *OtherArgCaptureModeMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
     t.all = make([]*OtherArgCaptureMode, 0, cnt)
+    t.symbols = make(map[string]*OtherArgCaptureMode)
     t.nameMap = make(map[string]*OtherArgCaptureMode, cnt)
     t.idMap = make(map[int32]*OtherArgCaptureMode, cnt)
     for i := 0; i < int(cnt); i++ {
@@ -77,9 +73,9 @@ func (t *OtherArgCaptureModeMgr) Init(stream *Stream) {
         t.idMap[v.id] = v
         switch v.name {
         case "Snapshot":
-            snapshot = *v
+            t.symbols["Snapshot"] = v
         case "Dynamic":
-            dynamic = *v
+            t.symbols["Dynamic"] = v
         }
     }
 }

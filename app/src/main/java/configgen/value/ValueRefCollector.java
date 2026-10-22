@@ -21,10 +21,17 @@ public class ValueRefCollector {
             String firstField,
             String label,   // 链接的名称
             String toTable,
-            String toId) {
+            String toId,
+            List<Object> toPath,
+            String toRevision) {
+        public FieldRef(String firstField, String label, String toTable, String toId) {
+            this(firstField, label, toTable, toId, null, null);
+        }
     }
 
     private final CfgValue cfgValue;
+    private final ValueReferences pathReferences;
+    private final String editorRevision;
     /**
      * 输出：外链到的所有的外部节点（refId-> record）
      */
@@ -35,15 +42,35 @@ public class ValueRefCollector {
     private final List<FieldRef> resultFieldRefs;
 
     public static List<FieldRef> collectRefs(Value record, CfgValue cfgValue) {
+        return collectRefs(record, cfgValue, ValueReferences.forQuery(cfgValue));
+    }
+
+    public static List<FieldRef> collectRefs(Value record, CfgValue cfgValue, ValueReferences references) {
+        return collectRefs(record, cfgValue, references, null);
+    }
+
+    public static List<FieldRef> collectRefs(Value record, CfgValue cfgValue, ValueReferences references, String editorRevision) {
         List<FieldRef> resultFieldRefs = new ArrayList<>();
         Map<RefId, VStruct> newFrontier = new LinkedHashMap<>();
-        ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, resultFieldRefs);
+        ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, resultFieldRefs, references, editorRevision);
         collector.collect(record, List.of());
         return resultFieldRefs;
     }
 
     public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> resultRefIdToRecordMap, List<FieldRef> resultFieldRefs) {
+        this(cfgValue, resultRefIdToRecordMap, resultFieldRefs, ValueReferences.forQuery(cfgValue));
+    }
+
+    public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> resultRefIdToRecordMap,
+                             List<FieldRef> resultFieldRefs, ValueReferences references) {
+        this(cfgValue, resultRefIdToRecordMap, resultFieldRefs, references, null);
+    }
+
+    public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> resultRefIdToRecordMap,
+                             List<FieldRef> resultFieldRefs, ValueReferences references, String editorRevision) {
         this.cfgValue = cfgValue;
+        pathReferences = references;
+        this.editorRevision = editorRevision;
         this.resultRefIdToRecordMap = resultRefIdToRecordMap;
         this.resultFieldRefs = resultFieldRefs;
     }
@@ -65,7 +92,7 @@ public class ValueRefCollector {
             pre = String.join(".", prefix) + ".";
         }
 
-        collectStructRef(cfgValue, vStruct, resultRefIdToRecordMap, resultFieldRefs, pre);
+        collectStructRef(cfgValue, vStruct, resultRefIdToRecordMap, resultFieldRefs, pre, pathReferences, editorRevision);
 
         int i = 0;
         for (Value value : vStruct.values()) {
@@ -82,18 +109,42 @@ public class ValueRefCollector {
         return res;
     }
 
-    static List<FieldRef> collectStructRef(CfgValue cfgValue,
-                                           VStruct vStruct,
-                                           Map<RefId, VStruct> refIdToRecordMap,
-                                           List<FieldRef> fieldRefs,
-                                           String namePrefix
-    ) {
+    static List<FieldRef> collectStructRef(CfgValue cfgValue, VStruct vStruct,
+                                                   Map<RefId, VStruct> refIdToRecordMap,
+                                                   List<FieldRef> fieldRefs, String namePrefix,
+                                                   ValueReferences references) {
+        return collectStructRef(cfgValue, vStruct, refIdToRecordMap, fieldRefs, namePrefix, references, null);
+    }
+
+    static List<FieldRef> collectStructRef(CfgValue cfgValue, VStruct vStruct,
+                                          Map<RefId, VStruct> refIdToRecordMap,
+                                          List<FieldRef> fieldRefs, String namePrefix,
+                                          ValueReferences references, String editorRevision) {
         if (fieldRefs == null) {
             fieldRefs = new ArrayList<>();
         }
 
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
+            if (fk.pathReference() != null) {
+                ValueReferences.Result result = references.result(vStruct, fk);
+                ValueReferences.Occurrence at = references.occurrence(vStruct);
+                if (result != null && result.target() != null && at != null &&
+                        (result.targetRecord() != at.root() || editorRevision != null)) {
+                    VStruct record = result.targetRecord();
+                    String table = record.schema().name();
+                    String id = ValueUtil.extractPrimaryKeyValue(record, (TableSchema) record.schema()).packStr();
+                    if (record != at.root()) refIdToRecordMap.put(new RefId(table, id), record);
+                    String sourceField = fk.pathReference().sources().stream()
+                            .filter(p -> p.start() == ReferencePath.Start.CURRENT)
+                            .map(p -> p.fields().getFirst()).findFirst()
+                            .orElse("@out"); // Existing editor protocol: node-level source handle.
+                    List<Object> path = editorRevision == null ? null : references.jsonPath(result.target());
+                    fieldRefs.add(new FieldRef(sourceField, referenceLabel(fk, vStruct, namePrefix), table, id,
+                            path, path == null ? null : editorRevision));
+                }
+                continue;
+            }
             RefKey refKey = fk.refKey();
             Map<Value, VStruct> foreignKeyValueMap = ValueUtil.getForeignKeyValueMap(cfgValue, fk);
             if (foreignKeyValueMap == null) {
@@ -104,18 +155,7 @@ public class ValueRefCollector {
                 FieldSchema firstField = fk.key().fieldSchemas().getFirst();
                 FieldType ft = firstField.type();
 
-                // 允许自定义ref的名称
-                String refName = null;
-                String refTitleFieldName = fk.meta().getStr("refTitle", null);
-                if (refTitleFieldName != null) {
-                    Value refTitleValue = ValueUtil.extractFieldValue(vStruct, refTitleFieldName);
-                    if (refTitleValue instanceof StringValue stringValue) {
-                        refName = stringValue.value();
-                    }
-                }
-                if (refName == null) {
-                    refName = namePrefix + StringUtil.lower1(GenNaming.refFieldName(fk));
-                }
+                String refName = referenceLabel(fk, vStruct, namePrefix);
 
                 switch (ft) {
                     case FieldType.SimpleType ignored -> {
@@ -147,6 +187,14 @@ public class ValueRefCollector {
             }
         }
         return fieldRefs;
+    }
+
+    private static String referenceLabel(ForeignKeySchema fk, VStruct source, String prefix) {
+        String titleField = fk.meta().getStr("refTitle", null);
+        if (titleField != null && ValueUtil.extractFieldValue(source, titleField) instanceof StringValue title) {
+            return title.value();
+        }
+        return prefix + StringUtil.lower1(GenNaming.refFieldName(fk));
     }
 
     private static void addRef(Map<RefId, VStruct> refIdToRecordMap, List<FieldRef> fieldRefs, ForeignKeySchema fk, String refName, String id, VStruct refRecord) {

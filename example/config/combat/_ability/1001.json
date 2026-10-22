@@ -1,0 +1,40 @@
+{
+  "id": 1001,
+  "code": "Fireball",
+  "origin": { "x": 0, "y": 0 },
+  "machines": [
+    {
+      "code": "Combat",
+      "phases": [
+        { "key": "Idle", "next": "Hit" },
+        { "key": "Hit", "next": "Idle" },
+        { "key": "", "next": "NotConfigured" }
+      ],
+      "impacts": [{ "ordinal": 0, "damage": 25 }],
+      "frames": [{ "tick": 9007199254740993, "effect": { "$type": "Damage", "amount": 25 } }],
+      "stances": [
+        { "airborne": false, "effect": { "$type": "Damage", "amount": 25 } },
+        { "airborne": true, "effect": { "$type": "Heal", "amount": 2 } }
+      ],
+      "variants": [{ "key": { "name": "Hit", "variant": 0 }, "effect": { "$type": "Damage", "amount": 30 } }],
+      "combos": [{ "weapon": "", "tier": 0, "airborne": false, "effect": { "$type": "Damage", "amount": 10 } }],
+      "markers": [{ "key": "Release" }],
+      "anchor": {}, "anchors": [{}, {}], "onExit": { "effect": { "$type": "None" } },
+      "initial": "Idle", "impact": 0, "frame": 9007199254740993, "stance": false,
+      "variant": { "name": "Hit", "variant": 0 }, "weapon": "", "tier": 0, "airborne": false
+    },
+    {
+      "code": "Movement",
+      "phases": [{ "key": "Idle", "next": "Hit" }],
+      "impacts": [{ "ordinal": 0, "damage": 0 }],
+      "frames": [{ "tick": 0, "effect": { "$type": "None" } }],
+      "stances": [{ "airborne": false, "effect": { "$type": "None" } }],
+      "variants": [{ "key": { "name": "Idle", "variant": 0 }, "effect": { "$type": "None" } }],
+      "combos": [{ "weapon": "", "tier": 0, "airborne": false, "effect": { "$type": "None" } }],
+      "markers": [], "anchor": {}, "anchors": [{}], "onExit": { "effect": { "$type": "None" } },
+      "initial": "Idle", "impact": 0, "frame": 0, "stance": false,
+      "variant": { "name": "Idle", "variant": 0 }, "weapon": "", "tier": 0, "airborne": false
+    }
+  ],
+  "startMachine": "Combat", "startPhase": "Idle"
+}

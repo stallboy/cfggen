@@ -12,11 +12,11 @@ static var Dynamic: DataOther_ArgCaptureMode
 static var _data: Dictionary[String, DataOther_ArgCaptureMode] = {}
 static var _id_map: Dictionary[int, DataOther_ArgCaptureMode] = {}
 # 主键查询
-static func find(id: String) -> DataOther_ArgCaptureMode:
-	return _data.get(id)
+static func find(key_0: String) -> DataOther_ArgCaptureMode:
+	return _data.get(key_0)
 # 唯一键查询
-static func find_by_id(id) -> DataOther_ArgCaptureMode:
-	return _id_map.get(id)
+static func find_by_id(key_0: int) -> DataOther_ArgCaptureMode:
+	return _id_map.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataOther_ArgCaptureMode]:
 	return _data.values()

@@ -30,7 +30,26 @@ jobs:
 
       - name: Run tests
         working-directory: app
-        run: ./gradlew test --no-daemon
+        run: ./gradlew test fatJar --no-daemon
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: example/ts/package-lock.json
+
+      - name: Install TypeScript example dependencies
+        working-directory: example/ts
+        run: npm ci
+
+      - name: Regenerate TypeScript example
+        working-directory: example/ts
+        run: java --sun-misc-unsafe-memory-access=allow -jar ../../app/build/libs/cfggen.jar -datadir ../config -gen ts -gen bytes
+
+      - name: Verify TypeScript example
+        working-directory: example/ts
+        run: npm test
 
       - name: Upload test results on failure
         if: failure()

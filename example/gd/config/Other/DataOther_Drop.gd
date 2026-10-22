@@ -9,8 +9,8 @@ var testmap: Dictionary[int, int]  # 测试map block
 # 内部存储
 static var _data: Dictionary[int, DataOther_Drop] = {}
 # 主键查询
-static func find(id: int) -> DataOther_Drop:
-	return _data.get(id)
+static func find(key_0: int) -> DataOther_Drop:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataOther_Drop]:
 	return _data.values()
@@ -37,5 +37,10 @@ static func _create(stream: ConfigStream) -> DataOther_Drop:
 	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_int32()
+		if instance.testmap.has(k):
+			stream.fail("Duplicate map key: other.drop.testmap")
+			return instance
 		instance.testmap[k] = v
 	return instance
+
+

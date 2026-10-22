@@ -35,6 +35,8 @@ public final class CfgSchemaResolver {
         step4_checkAllChainedSepFmt();
         step5_checkUnusedFieldable();
 
+        if (errs.errs().isEmpty()) cfgSchema.resolveReferences(errs);
+
         if (errs.errs().isEmpty()) {
             //预先计算hasRef， hasBlock, span, hasMap, hasText 方便生成时使用
             Span.preCalculateAllNeededSpans(cfgSchema, errs);
@@ -499,7 +501,7 @@ public final class CfgSchemaResolver {
 
 
     private boolean checkErrTypeAsKey(FieldType type) {
-        return !(type == BOOL || type == INT || type == LONG || type == STRING);
+        return !KeySchema.isPrimitiveKey(type);
     }
 
     private void errKeyTypeNotSupport(String field, String errType) {
@@ -511,28 +513,7 @@ public final class CfgSchemaResolver {
     }
 
     private void checkMapKey(SimpleType keyType, FieldSchema field) {
-        boolean err;
-        switch (keyType) {
-            case Primitive primitive -> {
-                err = checkErrTypeAsKey(primitive);
-            }
-            case StructRef structRef -> {
-                if (structRef.obj() == null) {
-                    // TypeStructNotFound 已在 resolve 时记录，这里不再重复
-                    err = true;
-                } else {
-                    switch (structRef.obj()) {
-                        case InterfaceSchema ignored -> {
-                            err = true;
-                        }
-                        case StructSchema structSchema -> {
-                            err = structSchema.fields().stream().anyMatch(f -> checkErrTypeAsKey(f.type()));
-                        }
-                    }
-                }
-            }
-        }
-        if (err) {
+        if (!KeySchema.isKeyType(keyType)) {
             errKeyTypeNotSupport(field.name(), keyType.toString());
         }
     }
@@ -550,6 +531,9 @@ public final class CfgSchemaResolver {
     }
 
     private void resolveForeignKey(Structural structural, ForeignKeySchema foreignKey) {
+        if (foreignKey.pathReference() != null) {
+            return;
+        }
         // 解析映射到的table
         boolean err = false;
         String refTable = foreignKey.refTable();
@@ -676,14 +660,7 @@ public final class CfgSchemaResolver {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean checkSimpleTypeMatch(SimpleType local, FieldType remote) {
-        switch (local) {
-            case Primitive primitive -> {
-                return primitive.equals(remote);
-            }
-            case StructRef structRef -> {
-                return remote instanceof StructRef ref && structRef.obj() == ref.obj();
-            }
-        }
+        return KeySchema.typesMatch(local, remote);
     }
 
     private void step4_checkAllChainedSepFmt() {

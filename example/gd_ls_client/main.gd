@@ -1,5 +1,7 @@
 extends Node
 
+var _config_snapshot: ConfigStream
+
 func _ready():
 	print("=== GDScript Config Loading Test (Client Mode) ===")
 
@@ -8,8 +10,8 @@ func _ready():
 	var processor = ConfigProcessor.new()
 
 	# 加载配置并获取 stream
-	var stream = processor.load_from_package(ConfigPackage.read_file("res://base.bytes"), errors)
-	if stream == null:
+	_config_snapshot = processor.load_from_package(ConfigPackage.read_file("res://base.bytes"), errors)
+	if _config_snapshot == null:
 		print("Failed to load config file")
 		return
 
@@ -22,8 +24,8 @@ func _ready():
 	print("Config loaded successfully!")
 
 	# 直接从 stream 获取语言信息
-	var lang_names = stream.get_lang_names()
-	var lang_pools = stream.get_lang_text_pools()
+	var lang_names = _config_snapshot.get_lang_names()
+	var lang_pools = _config_snapshot.get_lang_text_pools()
 
 	print("\nLanguage count: %d" % lang_names.size())
 	for i in range(lang_names.size()):

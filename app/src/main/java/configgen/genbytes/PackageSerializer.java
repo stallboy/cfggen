@@ -1,7 +1,6 @@
 package configgen.genbytes;
 
 import configgen.genjava.ConfigOutput;
-import configgen.genjava.ConfigPackage;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -11,7 +10,7 @@ public final class PackageSerializer {
     private PackageSerializer() {}
 
     public static void write(ConfigOutput output, Map<String, String> metadata, Map<String, byte[]> blocks) {
-        output.writeInt(ConfigPackage.FORMAT_VERSION);
+        output.writeInt(1);
         output.writeInt(metadata.size());
         new TreeMap<>(metadata).forEach((key, value) -> {
             output.writeString(key);

@@ -282,7 +282,7 @@ namespace ${group.ns}
                     @endfor
 
                     @for(ForeignKeySchema fk : sm.structural.foreignKeys())
-                        @if(fk.refKey() instanceof RefKey.RefSimple refSimple)
+                        @if(fk.pathReference() == null && fk.refKey() instanceof RefKey.RefSimple refSimple)
                             !{var firstField = fk.key().fieldSchemas().getFirst();}
                             !{var refName = sm.refName(fk);}
                             !{var fkStr = fk.name();}

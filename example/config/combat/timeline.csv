@@ -1,0 +1,3 @@
+id,events,channels,slots,clock,modes,eventKey,channel,slot,frame,airborne,fallback
+id,events,channels,slots,clock,modes,eventKey,channel,slot,frame,airborne,fallback
+1,"(Hit,0),Damage(25)","impact,Heal(5)","0,Damage(10)","9007199254740993,Damage(15)","false,Heal(2),true,None()","Hit,0",impact,0,9007199254740993,false,None()

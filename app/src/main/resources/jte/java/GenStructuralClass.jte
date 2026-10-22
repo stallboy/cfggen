@@ -40,6 +40,14 @@ ${model.sourceComment}
 
     @endif
 
+    @for(ForeignKeySchema fk : model.structural.foreignKeys())
+        @if(fk.pathReference() != null)
+        public void _bind${configgen.genjava.code.Name.refName(fk)}(${configgen.genjava.code.Name.refType(model.cfg, fk)} value) {
+            this.${configgen.genjava.code.Name.refName(fk)} = value;
+        }
+        @endif
+    @endfor
+
     @if(!model.isStructAndHasNoField)
         private ${model.className}() {
         }

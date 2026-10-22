@@ -18,17 +18,6 @@ func (t *TaskComplete_condition_type) String() string {
     return fmt.Sprintf("TaskComplete_condition_type{id=%v, name=%v}", t.id, t.name)
 }
 
-//entries
-var (
-    killMonster TaskComplete_condition_type
-    talkNpc TaskComplete_condition_type
-    collectItem TaskComplete_condition_type
-    conditionAnd TaskComplete_condition_type
-    chat TaskComplete_condition_type
-    testNoColumn TaskComplete_condition_type
-    aa TaskComplete_condition_type
-)
-
 //getters
 func (t *TaskComplete_condition_type) Id() int32 {
     return t.id
@@ -39,35 +28,36 @@ func (t *TaskComplete_condition_type) Name() string {
 }
 
 func (t *TaskComplete_condition_typeMgr) GetKillMonster() *TaskComplete_condition_type {
-	return &killMonster
+    return t.symbols["KillMonster"]
 }
 
 func (t *TaskComplete_condition_typeMgr) GetTalkNpc() *TaskComplete_condition_type {
-	return &talkNpc
+    return t.symbols["TalkNpc"]
 }
 
 func (t *TaskComplete_condition_typeMgr) GetCollectItem() *TaskComplete_condition_type {
-	return &collectItem
+    return t.symbols["CollectItem"]
 }
 
 func (t *TaskComplete_condition_typeMgr) GetConditionAnd() *TaskComplete_condition_type {
-	return &conditionAnd
+    return t.symbols["ConditionAnd"]
 }
 
 func (t *TaskComplete_condition_typeMgr) GetChat() *TaskComplete_condition_type {
-	return &chat
+    return t.symbols["Chat"]
 }
 
 func (t *TaskComplete_condition_typeMgr) GetTestNoColumn() *TaskComplete_condition_type {
-	return &testNoColumn
+    return t.symbols["TestNoColumn"]
 }
 
 func (t *TaskComplete_condition_typeMgr) GetAa() *TaskComplete_condition_type {
-	return &aa
+    return t.symbols["aa"]
 }
 
 type TaskComplete_condition_typeMgr struct {
     all []*TaskComplete_condition_type
+    symbols map[string]*TaskComplete_condition_type
     idMap map[int32]*TaskComplete_condition_type
 }
 
@@ -82,6 +72,7 @@ func(t *TaskComplete_condition_typeMgr) Get(id int32) *TaskComplete_condition_ty
 func (t *TaskComplete_condition_typeMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
     t.all = make([]*TaskComplete_condition_type, 0, cnt)
+    t.symbols = make(map[string]*TaskComplete_condition_type)
     t.idMap = make(map[int32]*TaskComplete_condition_type, cnt)
     for i := 0; i < int(cnt); i++ {
         v := createTaskComplete_condition_type(stream)
@@ -89,19 +80,19 @@ func (t *TaskComplete_condition_typeMgr) Init(stream *Stream) {
         t.idMap[v.id] = v
         switch v.name {
         case "KillMonster":
-            killMonster = *v
+            t.symbols["KillMonster"] = v
         case "TalkNpc":
-            talkNpc = *v
+            t.symbols["TalkNpc"] = v
         case "CollectItem":
-            collectItem = *v
+            t.symbols["CollectItem"] = v
         case "ConditionAnd":
-            conditionAnd = *v
+            t.symbols["ConditionAnd"] = v
         case "Chat":
-            chat = *v
+            t.symbols["Chat"] = v
         case "TestNoColumn":
-            testNoColumn = *v
+            t.symbols["TestNoColumn"] = v
         case "Aa":
-            aa = *v
+            t.symbols["aa"] = v
         }
     }
 }

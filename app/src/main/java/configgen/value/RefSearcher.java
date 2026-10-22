@@ -41,8 +41,9 @@ public final class RefSearcher {
         }
 
         Map<Value, Set<String>> res = new LinkedHashMap<>();
+        ValueReferences paths = ValueReferences.forQuery(cfgValue);
         ForeachVStruct.VStructVisitor vStructVisitor = (vStruct, ctx) -> search(vStruct, ctx, cfgValue,
-                refTable, nullableUniqueKeys, res);
+                refTable, nullableUniqueKeys, res, paths);
         for (VTable vTable : cfgValue.sortedTables()) {
             if (!ignoredTables.contains(vTable.name())) {
                 ForeachVStruct.foreachVTable(vStructVisitor, vTable);
@@ -52,7 +53,8 @@ public final class RefSearcher {
     }
 
     private static boolean search(VStruct vStruct, ForeachVStruct.Context ctx, CfgValue cfgValue,
-                                 TableSchema refTable, List<String> nullableUniqueKeys, Map<Value, Set<String>> res) {
+                                 TableSchema refTable, List<String> nullableUniqueKeys, Map<Value, Set<String>> res,
+                                 ValueReferences paths) {
         VTable fromTable = ctx.fromVTable();
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
@@ -69,6 +71,15 @@ public final class RefSearcher {
             }
 
             if (match) {
+                if (fk.pathReference() != null) {
+                    ValueReferences.Result link = paths.result(vStruct, fk);
+                    if (link != null && link.target() != null && link.targetRecord() != ctx.recordValue()) {
+                        KeySchema key = nullableUniqueKeys == null ? refTable.primaryKey() : refTable.findUniqueKey(nullableUniqueKeys);
+                        Value value = ValueUtil.extractKeyValue(link.targetRecord(), FindFieldIndex.findFieldIndices(refTable, key));
+                        addValueTable(res, value, fromTable.name());
+                    }
+                    continue;
+                }
                 FieldType ft = fk.key().fieldSchemas().getFirst().type();
                 switch (ft) {
                     case FieldType.SimpleType ignored -> {

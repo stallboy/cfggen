@@ -57,6 +57,7 @@ namespace Config
         public sealed record ForeignLanguageResource(string Pack, string ResourcePack) : LoadError;
         public sealed record EmptyLanguageResource(string Pack) : LoadError;
         public sealed record UnexpectedLanguageBlock(string Block) : LoadError;
+        public sealed record UnknownTableBlock(string Pack, string Block) : LoadError;
     }
 
     public sealed class ConfigException : Exception
@@ -88,6 +89,7 @@ namespace Config
         public void MissingSymbol(string table, string symbol, object key) => Add(new LoadError.MissingSymbol(table, symbol, key));
         public ConfigException UnknownVariant(string union, string tag) => Fail(new LoadError.UnknownVariant(union, tag));
         public void SchemaMismatch(string pack) => Add(new LoadError.SchemaMismatch(pack));
+        public void UnknownTableBlock(string pack, string block) => Add(new LoadError.UnknownTableBlock(pack, block));
         internal ConfigException UnsupportedVersion(int version, int supported) => Fail(new LoadError.UnsupportedVersion(version, supported));
         internal ConfigException OutOfBounds(int length, int remaining) => Fail(new LoadError.OutOfBounds(length, remaining));
         internal ConfigException UnconsumedBytes(int remaining) => Fail(new LoadError.UnconsumedBytes(remaining));

@@ -5,6 +5,7 @@ import configgen.schema.*;
 import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static configgen.schema.FieldType.Primitive.*;
@@ -16,6 +17,7 @@ public class StructModel {
     public final Structural structural;
     public final String className;
     public final CfgValue.VTable vTable;
+    public final List<FieldSchema> reverseFields;
     private final GoCodeGenerator gen;
 
     public StructModel(GoCodeGenerator gen, String pkg, GoName name, Structural structural, CfgValue.VTable vTable) {
@@ -25,6 +27,7 @@ public class StructModel {
         this.structural = structural;
         this.className = name.className;
         this.vTable = vTable;
+        this.reverseFields = vTable == null ? List.of() : gen.reverseFields(vTable.schema());
     }
 
     public String genReadField(FieldType t) {
@@ -45,7 +48,7 @@ public class StructModel {
      * 字段的Go类型。TEXT按isLangSwitch映射（*Text/string），容器递归使用同一规则——
      * 读代码模板（GenStruct.jte）对list/map元素也按本方法生成，声明与读取必须同源，
      * 拆出第二个"忽略 langswitch "的类型函数曾导致 []string 声明 + []*Text 读取的自相矛盾代码。
-     * 键类型（主键/唯一键/map键）经schema校验只可能是BOOL/INT/LONG/STRING，不会走到TEXT分支。
+     * 键类型为 BOOL/INT/LONG/STRING 或仅包含这些字段的扁平 struct，不会走到 TEXT 分支。
      */
     public String type(FieldType t) {
         return switch (t) {
@@ -73,6 +76,7 @@ public class StructModel {
     }
 
     public String refType(ForeignKeySchema fk) {
+        if (fk.pathReference() != null) return (fk.referenceResultType() instanceof InterfaceSchema ? "" : "*") + ClassName(fk.referenceResultType());
         GoName refTableName = new GoName(fk.refTableSchema());
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
@@ -99,10 +103,56 @@ public class StructModel {
         return GenNaming.refFieldName(fk);
     }
 
+    public String refGetter(ForeignKeySchema fk) {
+        return switch (fk.refKey()) {
+            case RefKey.RefPrimary ignored -> "Get";
+            case RefKey.RefUniq unique -> GetFuncName(unique.key(), false);
+            case RefKey.RefList list -> "GetAllBy" + StringUtil.upper1(list.key().fields().getFirst());
+        };
+    }
+
     public String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
             return "Key" + GenNaming.keyFieldsPascalName(keySchema);
+        else if (structKey(keySchema) != null)
+            return "key" + className + StringUtil.upper1(keySchema.fields().getFirst());
         else return type(keySchema.fieldSchemas().getFirst().type());
+    }
+
+    public static StructSchema structKey(KeySchema keySchema) {
+        return keySchema.fieldSchemas().size() == 1
+                && keySchema.fieldSchemas().getFirst().type() instanceof StructRef ref
+                ? (StructSchema) ref.obj() : null;
+    }
+
+    public String keyExpression(KeySchema keySchema, String prefix) {
+        String fields = keySchema.fieldSchemas().stream()
+                .map(f -> prefix + StringUtil.lower1(f.name())).collect(Collectors.joining(", "));
+        StructSchema struct = structKey(keySchema);
+        if (struct != null) {
+            String key = fields;
+            fields = struct.fields().stream().map(f -> key + "." + StringUtil.lower1(f.name()))
+                    .collect(Collectors.joining(", "));
+        }
+        return keySchema.fieldSchemas().size() > 1 || struct != null
+                ? keyClassName(keySchema) + "{" + fields + "}" : fields;
+    }
+
+    public String reverseKeyType(FieldSchema field) {
+        if (field.type() instanceof StructRef ref && KeySchema.isKeyType(field.type())) {
+            return "struct { " + ((StructSchema) ref.obj()).fields().stream()
+                    .map(f -> StringUtil.lower1(f.name()) + " " + type(f.type()))
+                    .collect(Collectors.joining("; ")) + " }";
+        }
+        return type(field.type());
+    }
+
+    public String reverseKeyExpression(FieldSchema field, String value) {
+        if (field.type() instanceof StructRef ref && KeySchema.isKeyType(field.type())) {
+            return reverseKeyType(field) + "{" + ((StructSchema) ref.obj()).fields().stream()
+                    .map(f -> value + "." + StringUtil.lower1(f.name())).collect(Collectors.joining(", ")) + "}";
+        }
+        return value;
     }
 
     public static String mapName(KeySchema keySchema) {
@@ -143,13 +193,5 @@ public class StructModel {
         }
     }
 
-    // 生成字段在 String() 方法中的打印格式
-    public static String toStringField(FieldSchema f) {
-        String fieldName = StringUtil.lower1(f.name());
-        FieldType t = f.type();
-        return switch (t) {
-            case FList _, FMap _, StructRef _ -> String.format("fmt.Sprintf(\"%%v\", t.%s)", fieldName);
-            case null, default -> "t." + fieldName;
-        };
-    }
+    public boolean hasRelations() { return gen.hasRelations; }
 }

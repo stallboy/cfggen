@@ -17,8 +17,8 @@ static var SpecialSuit: DataEquip_Jewelry_suit
 # 内部存储
 static var _data: Dictionary[int, DataEquip_Jewelry_suit] = {}
 # 主键查询
-static func find(id: int) -> DataEquip_Jewelry_suit:
-	return _data.get(id)
+static func find(key_0: int) -> DataEquip_Jewelry_suit:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataEquip_Jewelry_suit]:
 	return _data.values()

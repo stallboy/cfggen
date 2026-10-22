@@ -27,7 +27,7 @@ func createEquipJewelry_random(stream *Stream) *EquipJewelry_random {
 }
 
 func (t *EquipJewelry_random) String() string {
-    return fmt.Sprintf("EquipJewelry_random{lvlRank=%v, attackRange=%v, otherRange=%v, testPack=%v}", fmt.Sprintf("%v", t.lvlRank), fmt.Sprintf("%v", t.attackRange), fmt.Sprintf("%v", t.otherRange), fmt.Sprintf("%v", t.testPack))
+    return fmt.Sprintf("EquipJewelry_random{lvlRank=%v, attackRange=%v, otherRange=%v, testPack=%v}", t.lvlRank, t.attackRange, t.otherRange, t.testPack)
 }
 
 //getters
@@ -47,9 +47,14 @@ func (t *EquipJewelry_random) TestPack() []*EquipTestPackBean {
     return t.testPack
 }
 
+type keyEquipJewelry_randomLvlRank struct {
+    level int32
+    rank int32
+}
+
 type EquipJewelry_randomMgr struct {
     all []*EquipJewelry_random
-    lvlRankMap map[*LevelRank]*EquipJewelry_random
+    lvlRankMap map[keyEquipJewelry_randomLvlRank]*EquipJewelry_random
 }
 
 func(t *EquipJewelry_randomMgr) GetAll() []*EquipJewelry_random {
@@ -57,16 +62,17 @@ func(t *EquipJewelry_randomMgr) GetAll() []*EquipJewelry_random {
 }
 
 func(t *EquipJewelry_randomMgr) Get(lvlRank *LevelRank) *EquipJewelry_random {
-    return t.lvlRankMap[lvlRank]
+    if lvlRank == nil { return nil }
+    return t.lvlRankMap[keyEquipJewelry_randomLvlRank{lvlRank.level, lvlRank.rank}]
 }
 
 func (t *EquipJewelry_randomMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
     t.all = make([]*EquipJewelry_random, 0, cnt)
-    t.lvlRankMap = make(map[*LevelRank]*EquipJewelry_random, cnt)
+    t.lvlRankMap = make(map[keyEquipJewelry_randomLvlRank]*EquipJewelry_random, cnt)
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelry_random(stream)
         t.all = append(t.all, v)
-        t.lvlRankMap[v.lvlRank] = v
+        t.lvlRankMap[keyEquipJewelry_randomLvlRank{v.lvlRank.level, v.lvlRank.rank}] = v
     }
 }

@@ -32,13 +32,14 @@ func createTaskTestDefaultBean(stream *Stream) *TaskTestDefaultBean {
     v.testMap = make(map[int32]string, testMapSize)
     for i := 0; i < testMapSize; i++ {
         var k = stream.ReadInt32()
+        if _, exists := v.testMap[k]; exists { panic("duplicate map key: task.TestDefaultBean.testMap") }
         v.testMap[k] = stream.ReadStringInPool()
     }
     return v
 }
 
 func (t *TaskTestDefaultBean) String() string {
-    return fmt.Sprintf("TaskTestDefaultBean{testInt=%v, testBool=%v, testString=%v, testSubBean=%v, testList=%v, testList2=%v, testMap=%v}", t.testInt, t.testBool, t.testString, fmt.Sprintf("%v", t.testSubBean), fmt.Sprintf("%v", t.testList), fmt.Sprintf("%v", t.testList2), fmt.Sprintf("%v", t.testMap))
+    return fmt.Sprintf("TaskTestDefaultBean{testInt=%v, testBool=%v, testString=%v, testSubBean=%v, testList=%v, testList2=%v, testMap=%v}", t.testInt, t.testBool, t.testString, t.testSubBean, t.testList, t.testList2, t.testMap)
 }
 
 //getters

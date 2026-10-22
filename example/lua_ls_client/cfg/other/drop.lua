@@ -1,5 +1,5 @@
 local cfg = require "cfg._cfgs"
-local Beans = cfg._beans
+local Beans = require "cfg._beans"
 
 ---@class cfg.other.drop
 ---@field dropid number , 序号
@@ -11,20 +11,20 @@ local Beans = cfg._beans
 
 local this = cfg.other.drop
 
-local mk = cfg._mk.i18n_table(this, { { 'all', 'get', 1 }, }, nil, nil, 
-    { name = 1 },
+local mk = cfg[0].table('other.drop', this, {{'all','get',{'dropid'}}}, {fields={
     'dropid', -- int, 序号
     'name', -- text, 名字
     'items', -- list<DropItem>, 掉落概率
     'testmap' -- map<int,int>, 测试map block
-    )
+    }, uniqkeys={ { 'all', 'get', 1 }, }, enumidx=nil, refs=nil}, { name = 1 })
 
 local dropitem = Beans.other.dropitem
 
-local E = cfg._mk.E
+local function E() return setmetatable({}, getmetatable(cfg._mk.E)) end
 
 mk(1, 9, {dropitem(100, {1001, 1002, 1003}, 10, 20), dropitem(10, {2001}, 10, 10), dropitem(10, {2002}, 0, 1), dropitem(50, {3001}, 1, 1)}, {[1] = 11, [3] = 33, [5] = 55})
-mk(2, 10, {dropitem(100, {10001}, 1, 1)}, E)
-mk(3, 11, {dropitem(80, {20001}, 10, 20)}, E)
+mk(2, 10, {dropitem(100, {10001}, 1, 1)}, E())
+mk(3, 11, {dropitem(80, {20001}, 10, 20)}, E())
 
+cfg[0].complete('other.drop')
 return this

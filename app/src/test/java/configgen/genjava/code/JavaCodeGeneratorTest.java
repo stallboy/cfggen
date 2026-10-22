@@ -30,6 +30,7 @@ class JavaCodeGeneratorTest {
     void importsLoadValueErrsOnlyWhenTheGeneratedClassUsesIt(int schemaNumPerFile) throws Exception {
         var context = configgen.TestCtx.newContext(Files.createDirectories(tempDir.resolve("data")), """
                 struct Plain { value:int; }
+                struct Set { value:int; }
                 struct WithMap { values:map<int,int> (pack); }
                 struct Required { id:int ->target; mgr:int ->target; errors:int ->target; }
                 struct Optional { id:int ->target (nullable); }
@@ -45,7 +46,7 @@ class JavaCodeGeneratorTest {
                 "empty", "id,name\nid,name\n1,\n"));
         Path generated = tempDir.resolve("generated");
         new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",pkg:config,schemaNumPerFile:" + schemaNumPerFile)).generate(context);
-        for (String className : java.util.List.of("Plain", "WithMap", "Required", "Optional", "Nested", "choice/Choice", "Target", "Indexed", "State_Detail", "Flag")) {
+        for (String className : java.util.List.of("Plain", "Set", "WithMap", "Required", "Optional", "Nested", "choice/Choice", "Target", "Indexed", "State_Detail", "Flag")) {
             String code = Files.readString(generated.resolve("config/" + className + ".java"));
             boolean needsErrors = java.util.Set.of("Required", "Optional", "Nested", "Indexed").contains(className);
             assertEquals(needsErrors, code.contains("import configgen.genjava.LoadValueErrs;"), className);
@@ -68,7 +69,7 @@ class JavaCodeGeneratorTest {
             files.filter(path -> path.toString().endsWith(".java")).forEach(path -> args.add(path.toString()));
         }
         assertEquals(0, javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null, args.toArray(String[]::new)),
-                "Imports must compile even when an enum constant is named LoadValueErrs");
+                "Runtime imports must compile beside a generated Set type and a LoadValueErrs enum constant");
         try (var loader = new java.net.URLClassLoader(new java.net.URL[]{classes.toUri().toURL()}, getClass().getClassLoader())) {
             var schemaClass = loader.loadClass("config.ConfigCodeSchema");
             var codeSchema = (configgen.genjava.SchemaInterface) schemaClass.getMethod("getCodeSchema").invoke(null);

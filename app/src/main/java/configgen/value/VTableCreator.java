@@ -21,15 +21,16 @@ public class VTableCreator {
         return create(valueList, true);
     }
 
+    /** Validate merged records without imposing source-file order on seq fields. */
     public VTable createRecords(List<VStruct> valueList) {
         return create(valueList, false);
     }
 
-    private VTable create(List<VStruct> valueList, boolean synthesizeEnums) {
+    private VTable create(List<VStruct> valueList, boolean fromSource) {
         // 检查是否是 schema 定义的 enum
         MetaEnumValues enumValues = tableSchema.meta().getEnumValues();
 
-        if (enumValues != null && synthesizeEnums) {
+        if (enumValues != null && fromSource) {
             // 生成虚拟数据
             valueList = new ArrayList<>();
             Source autoSource = Source.of();  // 自动生成的数据使用空 Source
@@ -122,7 +123,7 @@ public class VTableCreator {
         }
 
         // 验证seq字段值连续性
-        validateSeqFields(valueList);
+        validateSeqFields(valueList, fromSource);
 
         return new VTable(tableSchema, valueList,
                 primaryKeyMap, uniqueKeyValueSetMap, enumNames, enumNameToIntegerValueMap);
@@ -130,18 +131,23 @@ public class VTableCreator {
     }
 
 
-    private void validateSeqFields(List<VStruct> valueList) {
+    private void validateSeqFields(List<VStruct> valueList, boolean requireSourceOrder) {
         for (FieldSchema field : tableSchema.fields()) {
             if (field.isSeq()) {
                 int fieldIdx = FindFieldIndex.findFieldIndex(tableSchema, field);
                 int nextExpected = 0;
+                boolean[] seen = requireSourceOrder ? null : new boolean[valueList.size()];
                 for (VStruct vStruct : valueList) {
                     Value v = vStruct.values().get(fieldIdx);
                     if (v instanceof VInt vInt) {
                         int val = vInt.value();
-                        if (val != nextExpected) {
+                        boolean valid = requireSourceOrder ? val == nextExpected
+                                : val >= 0 && val < seen.length && !seen[val];
+                        if (!valid) {
                             errs.addErr(new CfgValueErrs.SeqValueNotContinuous(
                                     vInt.source(), tableSchema.name(), field.name(), val));
+                        } else if (seen != null) {
+                            seen[val] = true;
                         }
                         nextExpected++;
                     }

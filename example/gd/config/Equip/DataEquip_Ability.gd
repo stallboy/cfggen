@@ -15,8 +15,8 @@ static var Break_armor: DataEquip_Ability
 # 内部存储
 static var _data: Dictionary[int, DataEquip_Ability] = {}
 # 主键查询
-static func find(id: int) -> DataEquip_Ability:
-	return _data.get(id)
+static func find(key_0: int) -> DataEquip_Ability:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataEquip_Ability]:
 	return _data.values()

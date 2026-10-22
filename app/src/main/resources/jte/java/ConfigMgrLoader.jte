@@ -5,9 +5,13 @@ package ${model.pkg};
 import configgen.genjava.ConfigLoader;
 import configgen.genjava.ConfigPackage;
 import configgen.genjava.LoadValueErrs;
+@if(!model.relationBinding.isEmpty())
+import configgen.genjava.RelationResolver;
+@endif
 import java.util.*;
 
 public class ConfigMgrLoader {
+    private static final java.util.Set<String> TABLES = java.util.Set.of(${model.tableLiterals});
     @if(!model.languageLiterals.isEmpty())
         private static final String[] LANGUAGES = { ${model.languageLiterals} };
     @endif
@@ -21,14 +25,20 @@ public class ConfigMgrLoader {
     public static ConfigMgr loadPackages(ConfigPackage... packages) {
         ConfigPackage.validateOrder(List.of(packages));
         var errors = new LoadValueErrs();
-        ConfigMgr mgr = new ConfigMgr();
-        var loaders = newLoaders(mgr, errors);
         var expected = ConfigCodeSchema.getPackageSchema();
         for (var pack : packages) {
-            String packName = pack.name();
-            if (!pack.validateSchema(expected, errors)) {
-                continue;
+            pack.validateSchema(expected, errors);
+            for (String block : pack.blockNames()) {
+                if (block.startsWith(".") && !TABLES.contains(block.substring(1))) {
+                    errors.unknownTableBlock(pack.name(), block);
+                }
             }
+        }
+        errors.checkErrors();
+        ConfigMgr mgr = new ConfigMgr();
+        var loaders = newLoaders(mgr, errors);
+        for (var pack : packages) {
+            String packName = pack.name();
             for (String block : pack.blockNames()) {
                 if (!block.startsWith(".")) {
                     continue;
@@ -55,6 +65,9 @@ public class ConfigMgrLoader {
         for (var loader : loaders.values()) {
             loader.resolveAll();
         }
+        @if(!model.relationBinding.isEmpty())
+        resolveRelations(mgr, errors);
+        @endif
         errors.checkErrors();
         @if(!model.extensionRows.isEmpty())
         var seen = Collections.newSetFromMap(new IdentityHashMap<ConfigExtension, Boolean>());
@@ -86,4 +99,6 @@ public class ConfigMgrLoader {
         @endfor
         return loaders;
     }
+
+${model.relationBinding}
 }

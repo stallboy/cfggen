@@ -115,6 +115,13 @@ export class Stream {
         return Number(value);
     }
 
+    ReadInt64BigInt(): bigint {
+        this.Require(8);
+        const value = this.view.getBigInt64(this.offset, this.littleEndian);
+        this.offset += 8;
+        return value;
+    }
+
     ReadBool(): boolean {
         const value = this.view.getInt8(this.offset);
         this.offset += 1;
@@ -174,7 +181,7 @@ export class ConfigPackage {
         const input = new Stream(bytes);
         const version = input.ReadInt32();
         if (version !== ConfigPackage.FormatVersion) {
-            throw new Error(`Unsupported config format version ${version}; reader supports [1]. Regenerate the reader or export compatible data.`);
+            throw new Error(`Unsupported config format version ${version}; reader supports ${ConfigPackage.FormatVersion}. Regenerate the reader or export compatible data.`);
         }
         const metadata = new Map<string, string>();
         for (let count = input.ReadCount(8); count > 0; count--) {
@@ -192,7 +199,8 @@ export class ConfigPackage {
             }
             blocks.set(name, block);
         }
-        input.RequireEnd(); return new ConfigPackage(metadata, blocks);
+        input.RequireEnd();
+        return new ConfigPackage(metadata, blocks);
     }
     get Name(): string {
         const name = this.Metadata.get("pack");

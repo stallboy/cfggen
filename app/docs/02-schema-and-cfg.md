@@ -120,10 +120,12 @@ metadata    : ( key(=value)? | -key )* ;                   // tag / -tag / 键�
 两个工程取舍：
 
 - **为什么自定义 DSL**：配置需要带外键、tag、命名空间、注释的类型定义，Excel / JSON 表达不了这种结构。值得专门一门小语言。
-- **注释往返**：`COMMENT` 词法规则**不 `skip`**，前导 / 后缀 / 行内（`{` 和 `;` 同行）注释全保留进模型（`CommentData`）。所以 `CfgReader` 读进来再 `CfgWriter` 写出去，**注释不丢**——这对策划很重要（注释就是文档）。
+- **注释与格式化**：`COMMENT` 不 `skip`，parser 可读取前导、后缀和行内注释；`CfgReader` 构建 schema，再由现有 `CfgWriter` 统一输出缩进、空行和引用表达式。
 - **多文件并行**：`CfgSchemas.readFromDir` 用工作窃取线程池并发解析各 `.cfg` 文件（文件间无依赖），`invokeAll` 保证合并顺序与提交顺序一致（见 `schema/CfgSchemas.java`）。
 
 > 另有 `XmlReader` 提供 XML → schema 的替代输入路径；序列化出口只有 `CfgWriter`（`CfgSchema.stringify` 也委托给它）。
+
+CFG 格式化沿用现有的 `CfgReader → CfgWriter` 读写流程，`CfgSchema.stringify()` 也委托给 `CfgWriter`。
 
 ## schema 对齐到数据
 
@@ -165,7 +167,7 @@ metadata    : ( key(=value)? | -key )* ;                   // tag / -tag / 键�
 | resolve 全流程 + 预计算 | `CfgSchemaResolver` |
 | 对齐到数据 | `CfgSchemaAlignToData`（在 `data` 包） |
 | tag 过滤 | `CfgSchemaFilterByTag` |
-| 文法 | `cfg/Cfg.g4`、`cfg/CfgReader`、`cfg/CfgWriter`、`cfg/XmlReader` |
+| 文法与格式化 | `cfg/Cfg.g4`、`cfg/CfgReader`、`cfg/CfgWriter`、`cfg/XmlReader` |
 | 错误载体 | `CfgSchemaErrs`（详见 [`08`](08-errors-and-validation.md)） |
 
 ## 接下来

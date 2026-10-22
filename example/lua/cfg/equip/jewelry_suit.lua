@@ -2,7 +2,7 @@ local cfg = require "cfg._cfgs"
 
 ---@class cfg.equip.jewelry_suit
 ---@field suitID number , 饰品套装ID
----@field ename string 
+---@field ename string
 ---@field name text , 策划用名字
 ---@field ability1 number , 套装属性类型1（装备套装中的两件时增加的属性）
 ---@field ability1Value number , 套装属性1
@@ -17,7 +17,7 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.equip.jewelry_suit
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil, 
+local mk = cfg[0].table('equip.jewelry_suit', this, {{'all','get',{'suitID'}}}, {fields={
     'suitID', -- int, 饰品套装ID
     'ename', -- str
     'name', -- text, 策划用名字
@@ -28,7 +28,7 @@ local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil,
     'ability3', -- int, 套装属性类型3（装备套装中的四件时增加的属性）
     'ability3Value', -- int, 套装属性3
     'suitList' -- list<int>, 部件1
-    )
+    }, uniqkeys={ { 'all', 'get', 1 }, }, enumidx=2, refs=nil}, nil)
 
 mk(1, "", "20级橙色套装", 3, 750, 2, 40, 6, 222, {10, 35, 60, 85})
 mk(2, "", "40级紫色套装", 2, 40, 3, 1200, 1, 123, {14, 39, 64, 89})
@@ -38,4 +38,5 @@ mk(5, "", "60级橙色套装", 3, 2600, 4, 226, 6, 556, {20, 45, 70, 95})
 mk(6, "", "80级紫色套装", 2, 70, 3, 2900, 1, 243, {24, 49, 74, 99})
 mk(7, "", "80级橙色套装", 3, 3800, 4, 286, 6, 711, {25, 50, 75, 100})
 
+cfg[0].complete('equip.jewelry_suit')
 return this

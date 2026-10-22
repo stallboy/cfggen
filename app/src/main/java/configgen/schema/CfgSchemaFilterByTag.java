@@ -67,6 +67,7 @@ public class CfgSchemaFilterByTag {
                 }
             }
         }
+        if (cfg.references().hasRelations()) FilteredReferences.prune(filtered, errs);
         return filtered;
     }
 
@@ -231,6 +232,10 @@ public class CfgSchemaFilterByTag {
                                                      Map<String, TableSchema> phase1FilteredTableMap) {
         List<ForeignKeySchema> resultFks = new ArrayList<>();
         for (ForeignKeySchema fk : originalStructural.foreignKeys()) {
+            if (fk.pathReference() != null) {
+                resultFks.add(fk.copy());
+                continue;
+            }
             if (isKeyIn(fk.key(), filteredFields)) {
                 recordForeignKeyIfOk(resultFks, fk, originalStructural, phase1FilteredTableMap);
             }

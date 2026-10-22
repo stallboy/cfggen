@@ -10,7 +10,9 @@ export class LevelRank {
     private _Rank!: number;
     /* 品质 */
     get Rank(): number { return this._Rank; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._Level, this._Rank];
+    }
     private _RefRank!: Equip_Rank;
     get RefRank(): Equip_Rank { return this._RefRank; }
     toString() : string {
@@ -40,7 +42,9 @@ export class Position {
     get Y(): number { return this._y; }
     private _z!: number;
     get Z(): number { return this._z; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._x, this._y, this._z];
+    }
     toString() : string {
         return "(" + this._x + "," + this._y + "," + this._z + ")";
     }
@@ -62,7 +66,9 @@ export class Range {
     private _Max!: number;
     /* 最大 */
     get Max(): number { return this._Max; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._Min, this._Max];
+    }
     toString() : string {
         return "(" + this._Min + "," + this._Max + ")";
     }
@@ -98,7 +104,9 @@ export abstract class Ai_TriggerTick {
 export class Ai_TriggerTick_ConstValue extends Ai_TriggerTick {
     private _value!: number;
     get Value(): number { return this._value; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._value];
+    }
     toString() : string {
         return "(" + this._value + ")";
     }
@@ -116,7 +124,9 @@ export class Ai_TriggerTick_ByLevel extends Ai_TriggerTick {
     get Init(): number { return this._init; }
     private _coefficient!: number;
     get Coefficient(): number { return this._coefficient; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._init, this._coefficient];
+    }
     toString() : string {
         return "(" + this._init + "," + this._coefficient + ")";
     }
@@ -137,7 +147,9 @@ export class Ai_TriggerTick_ByServerUpDay extends Ai_TriggerTick {
     get Coefficient1(): number { return this._coefficient1; }
     private _coefficient2!: number;
     get Coefficient2(): number { return this._coefficient2; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._init, this._coefficient1, this._coefficient2];
+    }
     toString() : string {
         return "(" + this._init + "," + this._coefficient1 + "," + this._coefficient2 + ")";
     }
@@ -152,12 +164,742 @@ export class Ai_TriggerTick_ByServerUpDay extends Ai_TriggerTick {
 
 }
 
+export class Combat_AbilityUse {
+    private _binding!: Combat_Binding;
+    get Binding(): Combat_Binding { return this._binding; }
+    private _machines!: Combat_MachineUse[];
+    get Machines(): Combat_MachineUse[] { return this._machines; }
+    $relationFields$(): readonly unknown[] {
+        return [this._binding, this._machines];
+    }
+    private _RefAbility!: Combat_Ability;
+    get RefAbility(): Combat_Ability { return this._RefAbility; }
+    _bindRefAbility$ (value: Combat_Ability | undefined): void { this._RefAbility = value!; }
+    toString() : string {
+        return "(" + this.Binding.toString() + "," + ToStringList(this._machines) + ")";
+    }
+
+    static _create(os: Stream) : Combat_AbilityUse {
+        const self = new Combat_AbilityUse();
+        self._binding = Combat_Binding._create(os);
+        self._machines = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._machines.push(Combat_MachineUse._create(os));
+        }
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+        for (const e of this._machines) {
+            e._resolve(errors);
+        }
+    }
+}
+
+export class Combat_Anchor {
+    $relationFields$(): readonly unknown[] {
+        return [];
+    }
+    toString() : string {
+        return "(" +  + ")";
+    }
+
+    static _create(os: Stream) : Combat_Anchor {
+        const self = new Combat_Anchor();
+        return self;
+    }
+
+}
+
+export class Combat_AnchorUse {
+    $relationFields$(): readonly unknown[] {
+        return [];
+    }
+    private _RefAnchor!: Combat_Anchor;
+    get RefAnchor(): Combat_Anchor { return this._RefAnchor; }
+    _bindRefAnchor$ (value: Combat_Anchor | undefined): void { this._RefAnchor = value!; }
+    toString() : string {
+        return "(" +  + ")";
+    }
+
+    static _create(os: Stream) : Combat_AnchorUse {
+        const self = new Combat_AnchorUse();
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+    }
+}
+
+export class Combat_Binding {
+    private _abilityId!: number;
+    get AbilityId(): number { return this._abilityId; }
+    $relationFields$(): readonly unknown[] {
+        return [this._abilityId];
+    }
+    toString() : string {
+        return "(" + this._abilityId + ")";
+    }
+
+    static _create(os: Stream) : Combat_Binding {
+        const self = new Combat_Binding();
+        self._abilityId = os.ReadInt32();
+        return self;
+    }
+
+}
+
+export class Combat_BookEntry {
+    private _name!: string;
+    get Name(): string { return this._name; }
+    $relationFields$(): readonly unknown[] {
+        return [this._name];
+    }
+    toString() : string {
+        return "(" + this._name + ")";
+    }
+
+    static _create(os: Stream) : Combat_BookEntry {
+        const self = new Combat_BookEntry();
+        self._name = os.ReadStringInPool();
+        return self;
+    }
+
+}
+
+export class Combat_Combo {
+    private _weapon!: string;
+    get Weapon(): string { return this._weapon; }
+    private _tier!: number;
+    get Tier(): number { return this._tier; }
+    private _airborne!: boolean;
+    get Airborne(): boolean { return this._airborne; }
+    private _effect!: Combat_Effect;
+    get Effect(): Combat_Effect { return this._effect; }
+    $relationFields$(): readonly unknown[] {
+        return [this._weapon, this._tier, this._airborne, this._effect];
+    }
+    toString() : string {
+        return "(" + this._weapon + "," + this._tier + "," + this._airborne + "," + this.Effect.toString() + ")";
+    }
+
+    static _create(os: Stream) : Combat_Combo {
+        const self = new Combat_Combo();
+        self._weapon = os.ReadStringInPool();
+        self._tier = os.ReadInt32();
+        self._airborne = os.ReadBool();
+        self._effect = Combat_Effect._create(os);
+        return self;
+    }
+
+}
+
+
+export abstract class Combat_Command {
+    _resolve(errors: LoadErrors) {
+    }
+    static _create(os: Stream) : Combat_Command {
+        const typeName = os.ReadStringInPool();
+        switch(typeName) {
+            case "StateMachine":
+                return Combat_Command_StateMachine._create(os);
+            case "Jump":
+                return Combat_Command_Jump._create(os);
+            case "Noop":
+                return Combat_Command_Noop._create(os);
+        }
+        throw new Error("Unknown type: " + typeName);
+    }
+
+    abstract toString() : string;
+}
+
+
+export class Combat_Command_StateMachine extends Combat_Command {
+    private _phases!: Combat_NestedPhase[];
+    get Phases(): Combat_NestedPhase[] { return this._phases; }
+    $relationFields$(): readonly unknown[] {
+        return [this._phases];
+    }
+    toString() : string {
+        return "(" + ToStringList(this._phases) + ")";
+    }
+
+    static _create(os: Stream) : Combat_Command_StateMachine {
+        const self = new Combat_Command_StateMachine();
+        self._phases = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._phases.push(Combat_NestedPhase._create(os));
+        }
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+        for (const e of this._phases) {
+            e._resolve(errors);
+        }
+    }
+}
+
+export class Combat_Command_Jump extends Combat_Command {
+    private _key!: string;
+    get Key(): string { return this._key; }
+    $relationFields$(): readonly unknown[] {
+        return [this._key];
+    }
+    private _NullableRefKey: Combat_NestedPhase | undefined;
+    get NullableRefKey(): Combat_NestedPhase | undefined { return this._NullableRefKey; }
+    _bindNullableRefKey$ (value: Combat_NestedPhase | undefined): void { this._NullableRefKey = value!; }
+    toString() : string {
+        return "(" + this._key + ")";
+    }
+
+    static _create(os: Stream) : Combat_Command_Jump {
+        const self = new Combat_Command_Jump();
+        self._key = os.ReadStringInPool();
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+    }
+}
+
+export class Combat_Command_Noop extends Combat_Command {
+    $relationFields$(): readonly unknown[] {
+        return [];
+    }
+    toString() : string {
+        return "(" +  + ")";
+    }
+
+    static _create(os: Stream) : Combat_Command_Noop {
+        const self = new Combat_Command_Noop();
+        return self;
+    }
+
+}
+
+
+export abstract class Combat_Effect {
+    static _create(os: Stream) : Combat_Effect {
+        const typeName = os.ReadStringInPool();
+        switch(typeName) {
+            case "Damage":
+                return Combat_Effect_Damage._create(os);
+            case "Heal":
+                return Combat_Effect_Heal._create(os);
+            case "None":
+                return Combat_Effect_None._create(os);
+        }
+        throw new Error("Unknown type: " + typeName);
+    }
+
+    abstract toString() : string;
+}
+
+
+export class Combat_Effect_Damage extends Combat_Effect {
+    private _amount!: number;
+    get Amount(): number { return this._amount; }
+    $relationFields$(): readonly unknown[] {
+        return [this._amount];
+    }
+    toString() : string {
+        return "(" + this._amount + ")";
+    }
+
+    static _create(os: Stream) : Combat_Effect_Damage {
+        const self = new Combat_Effect_Damage();
+        self._amount = os.ReadInt32();
+        return self;
+    }
+
+}
+
+export class Combat_Effect_Heal extends Combat_Effect {
+    private _amount!: number;
+    get Amount(): number { return this._amount; }
+    $relationFields$(): readonly unknown[] {
+        return [this._amount];
+    }
+    toString() : string {
+        return "(" + this._amount + ")";
+    }
+
+    static _create(os: Stream) : Combat_Effect_Heal {
+        const self = new Combat_Effect_Heal();
+        self._amount = os.ReadInt32();
+        return self;
+    }
+
+}
+
+export class Combat_Effect_None extends Combat_Effect {
+    $relationFields$(): readonly unknown[] {
+        return [];
+    }
+    toString() : string {
+        return "(" +  + ")";
+    }
+
+    static _create(os: Stream) : Combat_Effect_None {
+        const self = new Combat_Effect_None();
+        return self;
+    }
+
+}
+
+export class Combat_Exit {
+    private _effect!: Combat_Effect;
+    get Effect(): Combat_Effect { return this._effect; }
+    $relationFields$(): readonly unknown[] {
+        return [this._effect];
+    }
+    toString() : string {
+        return "(" + this.Effect.toString() + ")";
+    }
+
+    static _create(os: Stream) : Combat_Exit {
+        const self = new Combat_Exit();
+        self._effect = Combat_Effect._create(os);
+        return self;
+    }
+
+}
+
+export class Combat_Frame {
+    private _tick!: bigint;
+    get Tick(): bigint { return this._tick; }
+    private _effect!: Combat_Effect;
+    get Effect(): Combat_Effect { return this._effect; }
+    $relationFields$(): readonly unknown[] {
+        return [this._tick, this._effect];
+    }
+    toString() : string {
+        return "(" + this._tick + "," + this.Effect.toString() + ")";
+    }
+
+    static _create(os: Stream) : Combat_Frame {
+        const self = new Combat_Frame();
+        self._tick = os.ReadInt64BigInt();
+        self._effect = Combat_Effect._create(os);
+        return self;
+    }
+
+}
+
+export class Combat_Impact {
+    private _ordinal!: number;
+    get Ordinal(): number { return this._ordinal; }
+    private _damage!: number;
+    get Damage(): number { return this._damage; }
+    $relationFields$(): readonly unknown[] {
+        return [this._ordinal, this._damage];
+    }
+    toString() : string {
+        return "(" + this._ordinal + "," + this._damage + ")";
+    }
+
+    static _create(os: Stream) : Combat_Impact {
+        const self = new Combat_Impact();
+        self._ordinal = os.ReadInt32();
+        self._damage = os.ReadInt32();
+        return self;
+    }
+
+}
+
+export class Combat_Machine {
+    private _code!: string;
+    get Code(): string { return this._code; }
+    private _phases!: Combat_Phase[];
+    get Phases(): Combat_Phase[] { return this._phases; }
+    private _impacts!: Combat_Impact[];
+    get Impacts(): Combat_Impact[] { return this._impacts; }
+    private _frames!: Combat_Frame[];
+    get Frames(): Combat_Frame[] { return this._frames; }
+    private _stances!: Combat_Stance[];
+    get Stances(): Combat_Stance[] { return this._stances; }
+    private _variants!: Combat_PhaseVariant[];
+    get Variants(): Combat_PhaseVariant[] { return this._variants; }
+    private _combos!: Combat_Combo[];
+    get Combos(): Combat_Combo[] { return this._combos; }
+    private _markers!: Combat_Marker[];
+    /* 未被引用也必须保持唯一。 */
+    get Markers(): Combat_Marker[] { return this._markers; }
+    private _anchor!: Combat_Anchor;
+    get Anchor(): Combat_Anchor { return this._anchor; }
+    private _anchors!: Combat_AnchorUse[];
+    get Anchors(): Combat_AnchorUse[] { return this._anchors; }
+    private _onExit!: Combat_Exit;
+    get OnExit(): Combat_Exit { return this._onExit; }
+    private _initial!: string;
+    get Initial(): string { return this._initial; }
+    private _impact!: number;
+    get Impact(): number { return this._impact; }
+    private _frame!: bigint;
+    get Frame(): bigint { return this._frame; }
+    private _stance!: boolean;
+    get Stance(): boolean { return this._stance; }
+    private _variant!: Combat_PhaseKey;
+    get Variant(): Combat_PhaseKey { return this._variant; }
+    private _weapon!: string;
+    get Weapon(): string { return this._weapon; }
+    private _tier!: number;
+    get Tier(): number { return this._tier; }
+    private _airborne!: boolean;
+    get Airborne(): boolean { return this._airborne; }
+    $relationFields$(): readonly unknown[] {
+        return [this._code, this._phases, this._impacts, this._frames, this._stances, this._variants, this._combos, this._markers, this._anchor, this._anchors, this._onExit, this._initial, this._impact, this._frame, this._stance, this._variant, this._weapon, this._tier, this._airborne];
+    }
+    private _RefInitial!: Combat_Phase;
+    get RefInitial(): Combat_Phase { return this._RefInitial; }
+    _bindRefInitial$ (value: Combat_Phase | undefined): void { this._RefInitial = value!; }
+    private _RefImpact!: Combat_Impact;
+    get RefImpact(): Combat_Impact { return this._RefImpact; }
+    _bindRefImpact$ (value: Combat_Impact | undefined): void { this._RefImpact = value!; }
+    private _RefFrame!: Combat_Frame;
+    get RefFrame(): Combat_Frame { return this._RefFrame; }
+    _bindRefFrame$ (value: Combat_Frame | undefined): void { this._RefFrame = value!; }
+    private _RefStance!: Combat_Stance;
+    get RefStance(): Combat_Stance { return this._RefStance; }
+    _bindRefStance$ (value: Combat_Stance | undefined): void { this._RefStance = value!; }
+    private _RefVariant!: Combat_PhaseVariant;
+    get RefVariant(): Combat_PhaseVariant { return this._RefVariant; }
+    _bindRefVariant$ (value: Combat_PhaseVariant | undefined): void { this._RefVariant = value!; }
+    private _RefCombo!: Combat_Combo;
+    get RefCombo(): Combat_Combo { return this._RefCombo; }
+    _bindRefCombo$ (value: Combat_Combo | undefined): void { this._RefCombo = value!; }
+    toString() : string {
+        return "(" + this._code + "," + ToStringList(this._phases) + "," + ToStringList(this._impacts) + "," + ToStringList(this._frames) + "," + ToStringList(this._stances) + "," + ToStringList(this._variants) + "," + ToStringList(this._combos) + "," + ToStringList(this._markers) + "," + this.Anchor.toString() + "," + ToStringList(this._anchors) + "," + this.OnExit.toString() + "," + this._initial + "," + this._impact + "," + this._frame + "," + this._stance + "," + this.Variant.toString() + "," + this._weapon + "," + this._tier + "," + this._airborne + ")";
+    }
+
+    static _create(os: Stream) : Combat_Machine {
+        const self = new Combat_Machine();
+        self._code = os.ReadStringInPool();
+        self._phases = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._phases.push(Combat_Phase._create(os));
+        }
+        self._impacts = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._impacts.push(Combat_Impact._create(os));
+        }
+        self._frames = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._frames.push(Combat_Frame._create(os));
+        }
+        self._stances = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._stances.push(Combat_Stance._create(os));
+        }
+        self._variants = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._variants.push(Combat_PhaseVariant._create(os));
+        }
+        self._combos = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._combos.push(Combat_Combo._create(os));
+        }
+        self._markers = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._markers.push(Combat_Marker._create(os));
+        }
+        self._anchor = Combat_Anchor._create(os);
+        self._anchors = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._anchors.push(Combat_AnchorUse._create(os));
+        }
+        self._onExit = Combat_Exit._create(os);
+        self._initial = os.ReadStringInPool();
+        self._impact = os.ReadInt32();
+        self._frame = os.ReadInt64BigInt();
+        self._stance = os.ReadBool();
+        self._variant = Combat_PhaseKey._create(os);
+        self._weapon = os.ReadStringInPool();
+        self._tier = os.ReadInt32();
+        self._airborne = os.ReadBool();
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+        for (const e of this._phases) {
+            e._resolve(errors);
+        }
+        for (const e of this._anchors) {
+            e._resolve(errors);
+        }
+    }
+}
+
+export class Combat_MachineUse {
+    private _machineKey!: string;
+    get MachineKey(): string { return this._machineKey; }
+    private _targets!: Combat_PhaseUse[];
+    get Targets(): Combat_PhaseUse[] { return this._targets; }
+    $relationFields$(): readonly unknown[] {
+        return [this._machineKey, this._targets];
+    }
+    toString() : string {
+        return "(" + this._machineKey + "," + ToStringList(this._targets) + ")";
+    }
+
+    static _create(os: Stream) : Combat_MachineUse {
+        const self = new Combat_MachineUse();
+        self._machineKey = os.ReadStringInPool();
+        self._targets = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._targets.push(Combat_PhaseUse._create(os));
+        }
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+        for (const e of this._targets) {
+            e._resolve(errors);
+        }
+    }
+}
+
+export class Combat_Marker {
+    private _key!: string;
+    get Key(): string { return this._key; }
+    $relationFields$(): readonly unknown[] {
+        return [this._key];
+    }
+    toString() : string {
+        return "(" + this._key + ")";
+    }
+
+    static _create(os: Stream) : Combat_Marker {
+        const self = new Combat_Marker();
+        self._key = os.ReadStringInPool();
+        return self;
+    }
+
+}
+
+export class Combat_NestedPhase {
+    private _key!: string;
+    get Key(): string { return this._key; }
+    private _action!: Combat_Command;
+    get Action(): Combat_Command { return this._action; }
+    $relationFields$(): readonly unknown[] {
+        return [this._key, this._action];
+    }
+    toString() : string {
+        return "(" + this._key + "," + this.Action.toString() + ")";
+    }
+
+    static _create(os: Stream) : Combat_NestedPhase {
+        const self = new Combat_NestedPhase();
+        self._key = os.ReadStringInPool();
+        self._action = Combat_Command._create(os);
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+        this._action._resolve(errors);
+    }
+}
+
+export class Combat_OptionalAim {
+    private _abilityId!: number;
+    get AbilityId(): number { return this._abilityId; }
+    private _machineKey!: string;
+    get MachineKey(): string { return this._machineKey; }
+    private _phaseKey!: string;
+    get PhaseKey(): string { return this._phaseKey; }
+    $relationFields$(): readonly unknown[] {
+        return [this._abilityId, this._machineKey, this._phaseKey];
+    }
+    private _NullableRefTarget: Combat_Phase | undefined;
+    get NullableRefTarget(): Combat_Phase | undefined { return this._NullableRefTarget; }
+    _bindNullableRefTarget$ (value: Combat_Phase | undefined): void { this._NullableRefTarget = value!; }
+    toString() : string {
+        return "(" + this._abilityId + "," + this._machineKey + "," + this._phaseKey + ")";
+    }
+
+    static _create(os: Stream) : Combat_OptionalAim {
+        const self = new Combat_OptionalAim();
+        self._abilityId = os.ReadInt32();
+        self._machineKey = os.ReadStringInPool();
+        self._phaseKey = os.ReadStringInPool();
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+    }
+}
+
+export class Combat_Origin {
+    private _x!: number;
+    get X(): number { return this._x; }
+    private _y!: number;
+    get Y(): number { return this._y; }
+    $relationFields$(): readonly unknown[] {
+        return [this._x, this._y];
+    }
+    toString() : string {
+        return "(" + this._x + "," + this._y + ")";
+    }
+
+    static _create(os: Stream) : Combat_Origin {
+        const self = new Combat_Origin();
+        self._x = os.ReadInt32();
+        self._y = os.ReadInt32();
+        return self;
+    }
+
+}
+
+export class Combat_Phase {
+    private _key!: string;
+    get Key(): string { return this._key; }
+    private _next!: string;
+    get Next(): string { return this._next; }
+    $relationFields$(): readonly unknown[] {
+        return [this._key, this._next];
+    }
+    private _NullableRefNext: Combat_Phase | undefined;
+    get NullableRefNext(): Combat_Phase | undefined { return this._NullableRefNext; }
+    _bindNullableRefNext$ (value: Combat_Phase | undefined): void { this._NullableRefNext = value!; }
+    private _RefExit!: Combat_Effect;
+    get RefExit(): Combat_Effect { return this._RefExit; }
+    _bindRefExit$ (value: Combat_Effect | undefined): void { this._RefExit = value!; }
+    toString() : string {
+        return "(" + this._key + "," + this._next + ")";
+    }
+
+    static _create(os: Stream) : Combat_Phase {
+        const self = new Combat_Phase();
+        self._key = os.ReadStringInPool();
+        self._next = os.ReadStringInPool();
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+    }
+}
+
+export class Combat_PhaseKey {
+    private _name!: string;
+    get Name(): string { return this._name; }
+    private _variant!: number;
+    get Variant(): number { return this._variant; }
+    $relationFields$(): readonly unknown[] {
+        return [this._name, this._variant];
+    }
+    toString() : string {
+        return "(" + this._name + "," + this._variant + ")";
+    }
+
+    static _create(os: Stream) : Combat_PhaseKey {
+        const self = new Combat_PhaseKey();
+        self._name = os.ReadStringInPool();
+        self._variant = os.ReadInt32();
+        return self;
+    }
+
+}
+
+export class Combat_PhaseUse {
+    private _phaseKey!: string;
+    get PhaseKey(): string { return this._phaseKey; }
+    $relationFields$(): readonly unknown[] {
+        return [this._phaseKey];
+    }
+    private _RefTarget!: Combat_Phase;
+    get RefTarget(): Combat_Phase { return this._RefTarget; }
+    _bindRefTarget$ (value: Combat_Phase | undefined): void { this._RefTarget = value!; }
+    private _RefByCode!: Combat_Phase;
+    get RefByCode(): Combat_Phase { return this._RefByCode; }
+    _bindRefByCode$ (value: Combat_Phase | undefined): void { this._RefByCode = value!; }
+    private _RefOrigin!: Combat_Origin;
+    get RefOrigin(): Combat_Origin { return this._RefOrigin; }
+    _bindRefOrigin$ (value: Combat_Origin | undefined): void { this._RefOrigin = value!; }
+    toString() : string {
+        return "(" + this._phaseKey + ")";
+    }
+
+    static _create(os: Stream) : Combat_PhaseUse {
+        const self = new Combat_PhaseUse();
+        self._phaseKey = os.ReadStringInPool();
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+    }
+}
+
+export class Combat_PhaseVariant {
+    private _key!: Combat_PhaseKey;
+    get Key(): Combat_PhaseKey { return this._key; }
+    private _effect!: Combat_Effect;
+    get Effect(): Combat_Effect { return this._effect; }
+    $relationFields$(): readonly unknown[] {
+        return [this._key, this._effect];
+    }
+    toString() : string {
+        return "(" + this.Key.toString() + "," + this.Effect.toString() + ")";
+    }
+
+    static _create(os: Stream) : Combat_PhaseVariant {
+        const self = new Combat_PhaseVariant();
+        self._key = Combat_PhaseKey._create(os);
+        self._effect = Combat_Effect._create(os);
+        return self;
+    }
+
+}
+
+export class Combat_Reward {
+    private _count!: number;
+    get Count(): number { return this._count; }
+    $relationFields$(): readonly unknown[] {
+        return [this._count];
+    }
+    toString() : string {
+        return "(" + this._count + ")";
+    }
+
+    static _create(os: Stream) : Combat_Reward {
+        const self = new Combat_Reward();
+        self._count = os.ReadInt32();
+        return self;
+    }
+
+}
+
+export class Combat_Stance {
+    private _airborne!: boolean;
+    get Airborne(): boolean { return this._airborne; }
+    private _effect!: Combat_Effect;
+    get Effect(): Combat_Effect { return this._effect; }
+    $relationFields$(): readonly unknown[] {
+        return [this._airborne, this._effect];
+    }
+    toString() : string {
+        return "(" + this._airborne + "," + this.Effect.toString() + ")";
+    }
+
+    static _create(os: Stream) : Combat_Stance {
+        const self = new Combat_Stance();
+        self._airborne = os.ReadBool();
+        self._effect = Combat_Effect._create(os);
+        return self;
+    }
+
+}
+
 export class Equip_TestPackBean {
     private _name!: string;
     get Name(): string { return this._name; }
     private _iRange!: Range;
     get IRange(): Range { return this._iRange; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._name, this._iRange];
+    }
     toString() : string {
         return "(" + this._name + "," + this.IRange.toString() + ")";
     }
@@ -184,7 +926,9 @@ export class Other_DropItem {
     private _countmax!: number;
     /* 数量上限 */
     get Countmax(): number { return this._countmax; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._chance, this._itemids, this._countmin, this._countmax];
+    }
     toString() : string {
         return "(" + this._chance + "," + ToStringList(this._itemids) + "," + this._countmin + "," + this._countmax + ")";
     }
@@ -218,7 +962,9 @@ export class Task_TestDefaultBean {
     get TestList2(): number[] { return this._testList2; }
     private _testMap!: Map<number, string>;
     get TestMap(): Map<number, string> { return this._testMap; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._testInt, this._testBool, this._testString, this._testSubBean, this._testList, this._testList2, this._testMap];
+    }
     toString() : string {
         return "(" + this._testInt + "," + this._testBool + "," + this._testString + "," + this.TestSubBean.toString() + "," + ToStringList(this._testList) + "," + ToStringList(this._testList2) + "," + ToStringMap(this._testMap) + ")";
     }
@@ -239,7 +985,9 @@ export class Task_TestDefaultBean {
         }
         self._testMap  = new Map<number, string>();
         for (let c = os.ReadCount(0); c > 0; c--) {
-            self._testMap.set(os.ReadInt32(), os.ReadStringInPool());
+            const key$ = os.ReadInt32();
+            if (self._testMap.has(key$)) throw Error("Duplicate map key: task.TestDefaultBean.testMap");
+            self._testMap.set(key$, os.ReadStringInPool());
         }
         return self;
     }
@@ -285,7 +1033,9 @@ export class Task_Completecondition_KillMonster extends Task_Completecondition {
     get Monsterid(): number { return this._monsterid; }
     private _count!: number;
     get Count(): number { return this._count; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._monsterid, this._count];
+    }
     private _RefMonsterid!: Other_Monster;
     get RefMonsterid(): Other_Monster { return this._RefMonsterid; }
     toString() : string {
@@ -315,7 +1065,9 @@ export class Task_Completecondition_TalkNpc extends Task_Completecondition {
 
     private _npcid!: number;
     get Npcid(): number { return this._npcid; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._npcid];
+    }
     toString() : string {
         return "(" + this._npcid + ")";
     }
@@ -333,7 +1085,9 @@ export class Task_Completecondition_TestNoColumn extends Task_Completecondition 
         return Task_Complete_condition_type.TestNoColumn;
     }
 
-
+    $relationFields$(): readonly unknown[] {
+        return [];
+    }
     toString() : string {
         return "(" +  + ")";
     }
@@ -352,7 +1106,9 @@ export class Task_Completecondition_Chat extends Task_Completecondition {
 
     private _msg!: string;
     get Msg(): string { return this._msg; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._msg];
+    }
     toString() : string {
         return "(" + this._msg + ")";
     }
@@ -374,7 +1130,9 @@ export class Task_Completecondition_ConditionAnd extends Task_Completecondition 
     get Cond1(): Task_Completecondition { return this._cond1; }
     private _cond2!: Task_Completecondition;
     get Cond2(): Task_Completecondition { return this._cond2; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._cond1, this._cond2];
+    }
     toString() : string {
         return "(" + this.Cond1.toString() + "," + this.Cond2.toString() + ")";
     }
@@ -401,7 +1159,9 @@ export class Task_Completecondition_CollectItem extends Task_Completecondition {
     get Itemid(): number { return this._itemid; }
     private _count!: number;
     get Count(): number { return this._count; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._itemid, this._count];
+    }
     toString() : string {
         return "(" + this._itemid + "," + this._count + ")";
     }
@@ -420,7 +1180,9 @@ export class Task_Completecondition_Aa extends Task_Completecondition {
         return Task_Complete_condition_type.Aa;
     }
 
-
+    $relationFields$(): readonly unknown[] {
+        return [];
+    }
     toString() : string {
         return "(" +  + ")";
     }
@@ -454,7 +1216,9 @@ export class Ai_Ai {
     private _DeathRemove!: boolean;
     /* 死亡移除 */
     get DeathRemove(): boolean { return this._DeathRemove; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._ID, this._Desc, this._CondID, this._TrigTick, this._TrigOdds, this._ActionID, this._DeathRemove];
+    }
     toString() : string {
         return "(" + this._ID + "," + this._Desc + "," + this._CondID + "," + this.TrigTick.toString() + "," + this._TrigOdds + "," + ToStringList(this._ActionID) + "," + this._DeathRemove + ")";
     }
@@ -511,7 +1275,9 @@ export class Ai_Ai_action {
     private _ArgSList!: number[];
     /* 参数(string)1 */
     get ArgSList(): number[] { return this._ArgSList; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._ID, this._Desc, this._FormulaID, this._ArgIList, this._ArgSList];
+    }
     toString() : string {
         return "(" + this._ID + "," + this._Desc + "," + this._FormulaID + "," + ToStringList(this._ArgIList) + "," + ToStringList(this._ArgSList) + ")";
     }
@@ -569,7 +1335,9 @@ export class Ai_Ai_condition {
     private _ArgSList!: number[];
     /* 参数(string)1 */
     get ArgSList(): number[] { return this._ArgSList; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._ID, this._Desc, this._FormulaID, this._ArgIList, this._ArgSList];
+    }
     toString() : string {
         return "(" + this._ID + "," + this._Desc + "," + this._FormulaID + "," + ToStringList(this._ArgIList) + "," + ToStringList(this._ArgSList) + ")";
     }
@@ -612,6 +1380,459 @@ export class Ai_Ai_condition {
 
 }
 
+export class Combat_Ability {
+    private _id!: number;
+    get Id(): number { return this._id; }
+    private _code!: string;
+    get Code(): string { return this._code; }
+    private _origin!: Combat_Origin;
+    get Origin(): Combat_Origin { return this._origin; }
+    private _machines!: Combat_Machine[];
+    get Machines(): Combat_Machine[] { return this._machines; }
+    private _startMachine!: string;
+    get StartMachine(): string { return this._startMachine; }
+    private _startPhase!: string;
+    get StartPhase(): string { return this._startPhase; }
+    $relationFields$(): readonly unknown[] {
+        return [this._id, this._code, this._origin, this._machines, this._startMachine, this._startPhase];
+    }
+    private _RefInitial!: Combat_Phase;
+    get RefInitial(): Combat_Phase { return this._RefInitial; }
+    _bindRefInitial$ (value: Combat_Phase | undefined): void { this._RefInitial = value!; }
+    private _RefSpawn!: Combat_Origin;
+    get RefSpawn(): Combat_Origin { return this._RefSpawn; }
+    _bindRefSpawn$ (value: Combat_Origin | undefined): void { this._RefSpawn = value!; }
+    toString() : string {
+        return "(" + this._id + "," + this._code + "," + this.Origin.toString() + "," + ToStringList(this._machines) + "," + this._startMachine + "," + this._startPhase + ")";
+    }
+
+    
+    private static all: Map<number, Combat_Ability>;
+
+    static Get(id: number) : Combat_Ability | undefined {
+        return this.all.get(id)
+    }
+
+    
+    private static codeMap: Map<string, Combat_Ability>;
+
+    static GetByCode(code: string) : Combat_Ability | undefined {
+        return this.codeMap.get(code)
+    }
+
+    static All() : Map<number, Combat_Ability> {
+        return this.all;
+    }
+
+    static Initialize(os: Stream, errors: LoadErrors) {
+        this.all = new Map<number, Combat_Ability>();
+        this.codeMap = new Map<string, Combat_Ability>();
+        for (let c = os.ReadCount(1); c > 0; c--) {
+            let self = this._create(os);
+            this.all.set(self._id, self);
+            this.codeMap.set(self._code, self);
+        }
+
+    }
+
+    static Resolve(errors: LoadErrors) {
+        for (const v of this.all.values()) {
+            v._resolve(errors);
+        }
+    }
+    static _create(os: Stream) : Combat_Ability {
+        const self = new Combat_Ability();
+        self._id = os.ReadInt32();
+        self._code = os.ReadStringInPool();
+        self._origin = Combat_Origin._create(os);
+        self._machines = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._machines.push(Combat_Machine._create(os));
+        }
+        self._startMachine = os.ReadStringInPool();
+        self._startPhase = os.ReadStringInPool();
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+        for (const e of this._machines) {
+            e._resolve(errors);
+        }
+    }
+}
+
+export class Combat_Branchreward {
+    private _key!: Combat_PhaseKey;
+    get Key(): Combat_PhaseKey { return this._key; }
+    private _reward!: Combat_Reward;
+    get Reward(): Combat_Reward { return this._reward; }
+    $relationFields$(): readonly unknown[] {
+        return [this._key, this._reward];
+    }
+    toString() : string {
+        return "(" + this.Key.toString() + "," + this.Reward.toString() + ")";
+    }
+
+    
+    private static all: Map<string, Combat_Branchreward>;
+
+    static Get(key: Combat_PhaseKey) : Combat_Branchreward | undefined {
+        return this.all.get($relationKey$([key]))
+    }
+
+    static All() : Map<string, Combat_Branchreward> {
+        return this.all;
+    }
+
+    static Initialize(os: Stream, errors: LoadErrors) {
+        this.all = new Map<string, Combat_Branchreward>();
+        for (let c = os.ReadCount(1); c > 0; c--) {
+            let self = this._create(os);
+            this.all.set($relationKey$([self._key]), self);
+        }
+
+    }
+
+    static _create(os: Stream) : Combat_Branchreward {
+        const self = new Combat_Branchreward();
+        self._key = Combat_PhaseKey._create(os);
+        self._reward = Combat_Reward._create(os);
+        return self;
+    }
+
+}
+
+export class Combat_Cast {
+    private _id!: number;
+    get Id(): number { return this._id; }
+    private _abilityCode!: string;
+    get AbilityCode(): string { return this._abilityCode; }
+    private _origin!: Combat_Origin;
+    get Origin(): Combat_Origin { return this._origin; }
+    private _uses!: Combat_AbilityUse[];
+    get Uses(): Combat_AbilityUse[] { return this._uses; }
+    private _optional!: Combat_OptionalAim[];
+    get Optional(): Combat_OptionalAim[] { return this._optional; }
+    private _school!: string;
+    get School(): string { return this._school; }
+    private _tier!: number;
+    get Tier(): number { return this._tier; }
+    private _airborne!: boolean;
+    get Airborne(): boolean { return this._airborne; }
+    private _bookCode!: string;
+    get BookCode(): string { return this._bookCode; }
+    private _edition!: number;
+    get Edition(): number { return this._edition; }
+    private _rewardKey!: Combat_PhaseKey;
+    get RewardKey(): Combat_PhaseKey { return this._rewardKey; }
+    $relationFields$(): readonly unknown[] {
+        return [this._id, this._abilityCode, this._origin, this._uses, this._optional, this._school, this._tier, this._airborne, this._bookCode, this._edition, this._rewardKey];
+    }
+    private _RefBook!: Combat_BookEntry;
+    get RefBook(): Combat_BookEntry { return this._RefBook; }
+    _bindRefBook$ (value: Combat_BookEntry | undefined): void { this._RefBook = value!; }
+    private _RefBookByCode!: Combat_BookEntry;
+    get RefBookByCode(): Combat_BookEntry { return this._RefBookByCode; }
+    _bindRefBookByCode$ (value: Combat_BookEntry | undefined): void { this._RefBookByCode = value!; }
+    private _RefBookRecord!: Combat_Phasebook;
+    get RefBookRecord(): Combat_Phasebook { return this._RefBookRecord; }
+    _bindRefBookRecord$ (value: Combat_Phasebook | undefined): void { this._RefBookRecord = value!; }
+    private _RefReward!: Combat_Reward;
+    get RefReward(): Combat_Reward { return this._RefReward; }
+    _bindRefReward$ (value: Combat_Reward | undefined): void { this._RefReward = value!; }
+    toString() : string {
+        return "(" + this._id + "," + this._abilityCode + "," + this.Origin.toString() + "," + ToStringList(this._uses) + "," + ToStringList(this._optional) + "," + this._school + "," + this._tier + "," + this._airborne + "," + this._bookCode + "," + this._edition + "," + this.RewardKey.toString() + ")";
+    }
+
+    
+    private static all: Map<number, Combat_Cast>;
+
+    static Get(id: number) : Combat_Cast | undefined {
+        return this.all.get(id)
+    }
+
+    static All() : Map<number, Combat_Cast> {
+        return this.all;
+    }
+
+    static Initialize(os: Stream, errors: LoadErrors) {
+        this.all = new Map<number, Combat_Cast>();
+        for (let c = os.ReadCount(1); c > 0; c--) {
+            let self = this._create(os);
+            this.all.set(self._id, self);
+        }
+
+    }
+
+    static Resolve(errors: LoadErrors) {
+        for (const v of this.all.values()) {
+            v._resolve(errors);
+        }
+    }
+    static _create(os: Stream) : Combat_Cast {
+        const self = new Combat_Cast();
+        self._id = os.ReadInt32();
+        self._abilityCode = os.ReadStringInPool();
+        self._origin = Combat_Origin._create(os);
+        self._uses = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._uses.push(Combat_AbilityUse._create(os));
+        }
+        self._optional = [];
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            self._optional.push(Combat_OptionalAim._create(os));
+        }
+        self._school = os.ReadStringInPool();
+        self._tier = os.ReadInt32();
+        self._airborne = os.ReadBool();
+        self._bookCode = os.ReadStringInPool();
+        self._edition = os.ReadInt32();
+        self._rewardKey = Combat_PhaseKey._create(os);
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+        for (const e of this._uses) {
+            e._resolve(errors);
+        }
+        for (const e of this._optional) {
+            e._resolve(errors);
+        }
+    }
+}
+
+export class Combat_Encounter {
+    private _id!: number;
+    get Id(): number { return this._id; }
+    private _command!: Combat_Command;
+    get Command(): Combat_Command { return this._command; }
+    $relationFields$(): readonly unknown[] {
+        return [this._id, this._command];
+    }
+    toString() : string {
+        return "(" + this._id + "," + this.Command.toString() + ")";
+    }
+
+    
+    private static all: Map<number, Combat_Encounter>;
+
+    static Get(id: number) : Combat_Encounter | undefined {
+        return this.all.get(id)
+    }
+
+    static All() : Map<number, Combat_Encounter> {
+        return this.all;
+    }
+
+    static Initialize(os: Stream, errors: LoadErrors) {
+        this.all = new Map<number, Combat_Encounter>();
+        for (let c = os.ReadCount(1); c > 0; c--) {
+            let self = this._create(os);
+            this.all.set(self._id, self);
+        }
+
+    }
+
+    static Resolve(errors: LoadErrors) {
+        for (const v of this.all.values()) {
+            v._resolve(errors);
+        }
+    }
+    static _create(os: Stream) : Combat_Encounter {
+        const self = new Combat_Encounter();
+        self._id = os.ReadInt32();
+        self._command = Combat_Command._create(os);
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+        this._command._resolve(errors);
+    }
+}
+
+export class Combat_Phasebook {
+    private _school!: string;
+    get School(): string { return this._school; }
+    private _tier!: number;
+    get Tier(): number { return this._tier; }
+    private _airborne!: boolean;
+    get Airborne(): boolean { return this._airborne; }
+    private _code!: string;
+    get Code(): string { return this._code; }
+    private _edition!: number;
+    get Edition(): number { return this._edition; }
+    private _entry!: Combat_BookEntry;
+    get Entry(): Combat_BookEntry { return this._entry; }
+    $relationFields$(): readonly unknown[] {
+        return [this._school, this._tier, this._airborne, this._code, this._edition, this._entry];
+    }
+    toString() : string {
+        return "(" + this._school + "," + this._tier + "," + this._airborne + "," + this._code + "," + this._edition + "," + this.Entry.toString() + ")";
+    }
+
+    
+    private static all: Map<string, Combat_Phasebook>;
+
+    static Get(school: string, tier: number, airborne: boolean) : Combat_Phasebook | undefined {
+        return this.all.get($relationKey$([school, tier, airborne]))
+    }
+
+    
+    private static codeEditionMap: Map<string, Combat_Phasebook>;
+
+    static GetByCodeEdition(code: string, edition: number) : Combat_Phasebook | undefined {
+        return this.codeEditionMap.get($relationKey$([code, edition]))
+    }
+
+    static All() : Map<string, Combat_Phasebook> {
+        return this.all;
+    }
+
+    static Initialize(os: Stream, errors: LoadErrors) {
+        this.all = new Map<string, Combat_Phasebook>();
+        this.codeEditionMap = new Map<string, Combat_Phasebook>();
+        for (let c = os.ReadCount(1); c > 0; c--) {
+            let self = this._create(os);
+            this.all.set($relationKey$([self._school, self._tier, self._airborne]), self);
+            this.codeEditionMap.set($relationKey$([self._code, self._edition]), self);
+        }
+
+    }
+
+    static _create(os: Stream) : Combat_Phasebook {
+        const self = new Combat_Phasebook();
+        self._school = os.ReadStringInPool();
+        self._tier = os.ReadInt32();
+        self._airborne = os.ReadBool();
+        self._code = os.ReadStringInPool();
+        self._edition = os.ReadInt32();
+        self._entry = Combat_BookEntry._create(os);
+        return self;
+    }
+
+}
+
+export class Combat_Timeline {
+    private _id!: number;
+    get Id(): number { return this._id; }
+    private _events!: Map<Combat_PhaseKey, Combat_Effect>;
+    get Events(): Map<Combat_PhaseKey, Combat_Effect> { return this._events; }
+    private _channels!: Map<string, Combat_Effect>;
+    get Channels(): Map<string, Combat_Effect> { return this._channels; }
+    private _slots!: Map<number, Combat_Effect>;
+    get Slots(): Map<number, Combat_Effect> { return this._slots; }
+    private _clock!: Map<bigint, Combat_Effect>;
+    get Clock(): Map<bigint, Combat_Effect> { return this._clock; }
+    private _modes!: Map<boolean, Combat_Effect>;
+    get Modes(): Map<boolean, Combat_Effect> { return this._modes; }
+    private _eventKey!: Combat_PhaseKey;
+    get EventKey(): Combat_PhaseKey { return this._eventKey; }
+    private _channel!: string;
+    get Channel(): string { return this._channel; }
+    private _slot!: number;
+    get Slot(): number { return this._slot; }
+    private _frame!: bigint;
+    get Frame(): bigint { return this._frame; }
+    private _airborne!: boolean;
+    get Airborne(): boolean { return this._airborne; }
+    private _fallback!: Combat_Effect;
+    get Fallback(): Combat_Effect { return this._fallback; }
+    $relationFields$(): readonly unknown[] {
+        return [this._id, this._events, this._channels, this._slots, this._clock, this._modes, this._eventKey, this._channel, this._slot, this._frame, this._airborne, this._fallback];
+    }
+    private _RefEventKey!: Combat_Effect;
+    get RefEventKey(): Combat_Effect { return this._RefEventKey; }
+    _bindRefEventKey$ (value: Combat_Effect | undefined): void { this._RefEventKey = value!; }
+    private _RefChannel!: Combat_Effect;
+    get RefChannel(): Combat_Effect { return this._RefChannel; }
+    _bindRefChannel$ (value: Combat_Effect | undefined): void { this._RefChannel = value!; }
+    private _RefSlot!: Combat_Effect;
+    get RefSlot(): Combat_Effect { return this._RefSlot; }
+    _bindRefSlot$ (value: Combat_Effect | undefined): void { this._RefSlot = value!; }
+    private _RefFrame!: Combat_Effect;
+    get RefFrame(): Combat_Effect { return this._RefFrame; }
+    _bindRefFrame$ (value: Combat_Effect | undefined): void { this._RefFrame = value!; }
+    private _RefAirborne!: Combat_Effect;
+    get RefAirborne(): Combat_Effect { return this._RefAirborne; }
+    _bindRefAirborne$ (value: Combat_Effect | undefined): void { this._RefAirborne = value!; }
+    private _RefDefault!: Combat_Effect;
+    get RefDefault(): Combat_Effect { return this._RefDefault; }
+    _bindRefDefault$ (value: Combat_Effect | undefined): void { this._RefDefault = value!; }
+    toString() : string {
+        return "(" + this._id + "," + ToStringMap(this._events) + "," + ToStringMap(this._channels) + "," + ToStringMap(this._slots) + "," + ToStringMap(this._clock) + "," + ToStringMap(this._modes) + "," + this.EventKey.toString() + "," + this._channel + "," + this._slot + "," + this._frame + "," + this._airborne + "," + this.Fallback.toString() + ")";
+    }
+
+    
+    private static all: Map<number, Combat_Timeline>;
+
+    static Get(id: number) : Combat_Timeline | undefined {
+        return this.all.get(id)
+    }
+
+    static All() : Map<number, Combat_Timeline> {
+        return this.all;
+    }
+
+    static Initialize(os: Stream, errors: LoadErrors) {
+        this.all = new Map<number, Combat_Timeline>();
+        for (let c = os.ReadCount(1); c > 0; c--) {
+            let self = this._create(os);
+            this.all.set(self._id, self);
+        }
+
+    }
+
+    static Resolve(errors: LoadErrors) {
+        for (const v of this.all.values()) {
+            v._resolve(errors);
+        }
+    }
+    static _create(os: Stream) : Combat_Timeline {
+        const self = new Combat_Timeline();
+        self._id = os.ReadInt32();
+        self._events  = new Map<Combat_PhaseKey, Combat_Effect>();
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            const key$ = Combat_PhaseKey._create(os);
+            if (self._events.has(key$)) throw Error("Duplicate map key: combat.timeline.events");
+            self._events.set(key$, Combat_Effect._create(os));
+        }
+        self._channels  = new Map<string, Combat_Effect>();
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            const key$ = os.ReadStringInPool();
+            if (self._channels.has(key$)) throw Error("Duplicate map key: combat.timeline.channels");
+            self._channels.set(key$, Combat_Effect._create(os));
+        }
+        self._slots  = new Map<number, Combat_Effect>();
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            const key$ = os.ReadInt32();
+            if (self._slots.has(key$)) throw Error("Duplicate map key: combat.timeline.slots");
+            self._slots.set(key$, Combat_Effect._create(os));
+        }
+        self._clock  = new Map<bigint, Combat_Effect>();
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            const key$ = os.ReadInt64BigInt();
+            if (self._clock.has(key$)) throw Error("Duplicate map key: combat.timeline.clock");
+            self._clock.set(key$, Combat_Effect._create(os));
+        }
+        self._modes  = new Map<boolean, Combat_Effect>();
+        for (let c = os.ReadCount(0); c > 0; c--) {
+            const key$ = os.ReadBool();
+            if (self._modes.has(key$)) throw Error("Duplicate map key: combat.timeline.modes");
+            self._modes.set(key$, Combat_Effect._create(os));
+        }
+        self._eventKey = Combat_PhaseKey._create(os);
+        self._channel = os.ReadStringInPool();
+        self._slot = os.ReadInt32();
+        self._frame = os.ReadInt64BigInt();
+        self._airborne = os.ReadBool();
+        self._fallback = Combat_Effect._create(os);
+        return self;
+    }
+
+    _resolve(errors: LoadErrors) {
+    }
+}
+
 export class Equip_Ability {
     private static _attack : Equip_Ability;
     static get Attack() :Equip_Ability { return this._attack; }
@@ -640,7 +1861,9 @@ export class Equip_Ability {
     private _name!: string;
     /* 程序用名字 */
     get Name(): string { return this._name; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._id, this._name];
+    }
     toString() : string {
         return "(" + this._id + "," + this._name + ")";
     }
@@ -777,7 +2000,9 @@ export class Equip_Equip_config {
     private _week_reward_mailid!: number;
     /* 抽卡周奖励的邮件id */
     get Week_reward_mailid(): number { return this._week_reward_mailid; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._entry, this._stone_count_for_set, this._draw_protect_name, this._broadcastid, this._broadcast_least_quality, this._week_reward_mailid];
+    }
     toString() : string {
         return "(" + this._entry + "," + this._stone_count_for_set + "," + this._draw_protect_name + "," + this._broadcastid + "," + this._broadcast_least_quality + "," + this._week_reward_mailid + ")";
     }
@@ -874,7 +2099,9 @@ export class Equip_Jewelry {
     private _Description!: string;
     /* 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。 */
     get Description(): string { return this._Description; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._ID, this._Name, this._IconFile, this._LvlRank, this._JType, this._SuitID, this._KeyAbility, this._KeyAbilityValue, this._SalePrice, this._Description];
+    }
     private _RefLvlRank!: Equip_Jewelry_random;
     get RefLvlRank(): Equip_Jewelry_random { return this._RefLvlRank; }
     private _RefJType!: Equip_Jewelry_type;
@@ -961,27 +2188,29 @@ export class Equip_Jewelry_random {
     private _TestPack!: Equip_TestPackBean[];
     /* 测试pack */
     get TestPack(): Equip_TestPackBean[] { return this._TestPack; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._LvlRank, this._AttackRange, this._OtherRange, this._TestPack];
+    }
     toString() : string {
         return "(" + this.LvlRank.toString() + "," + this.AttackRange.toString() + "," + ToStringList(this._OtherRange) + "," + ToStringList(this._TestPack) + ")";
     }
 
     
-    private static all: Map<number, Equip_Jewelry_random>;
+    private static all: Map<string, Equip_Jewelry_random>;
 
     static Get(LvlRank: LevelRank) : Equip_Jewelry_random | undefined {
-        return this.all.get(LvlRank.Level + LvlRank.Rank * 100000000)
+        return this.all.get($relationKey$([LvlRank]))
     }
 
-    static All() : Map<number, Equip_Jewelry_random> {
+    static All() : Map<string, Equip_Jewelry_random> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
-        this.all = new Map<number, Equip_Jewelry_random>();
+        this.all = new Map<string, Equip_Jewelry_random>();
         for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
-            this.all.set(self._LvlRank.Level + self._LvlRank.Rank * 100000000, self);
+            this.all.set($relationKey$([self._LvlRank]), self);
         }
 
     }
@@ -1044,7 +2273,9 @@ export class Equip_Jewelry_suit {
     private _SuitList!: number[];
     /* 部件1 */
     get SuitList(): number[] { return this._SuitList; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._SuitID, this._Ename, this._Name, this._Ability1, this._Ability1Value, this._Ability2, this._Ability2Value, this._Ability3, this._Ability3Value, this._SuitList];
+    }
     toString() : string {
         return "(" + this._SuitID + "," + this._Ename + "," + this._Name + "," + this._Ability1 + "," + this._Ability1Value + "," + this._Ability2 + "," + this._Ability2Value + "," + this._Ability3 + "," + this._Ability3Value + "," + ToStringList(this._SuitList) + ")";
     }
@@ -1123,7 +2354,9 @@ export class Equip_Jewelry_type {
     private _TypeName!: string;
     /* 程序用名字 */
     get TypeName(): string { return this._TypeName; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._TypeName];
+    }
     toString() : string {
         return "(" + this._TypeName + ")";
     }
@@ -1232,7 +2465,9 @@ export class Equip_Rank {
     private _RankShowName!: string;
     /* 显示名称 */
     get RankShowName(): string { return this._RankShowName; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._RankID, this._RankName, this._RankShowName];
+    }
     toString() : string {
         return "(" + this._RankID + "," + this._RankName + "," + this._RankShowName + ")";
     }
@@ -1348,7 +2583,9 @@ export class Other_ArgCaptureMode {
     get Id(): number { return this._id; }
     private _comment!: string;
     get Comment(): string { return this._comment; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._name, this._id, this._comment];
+    }
     toString() : string {
         return "(" + this._name + "," + this._id + "," + this._comment + ")";
     }
@@ -1433,7 +2670,9 @@ export class Other_Drop {
     private _testmap!: Map<number, number>;
     /* 测试map block */
     get Testmap(): Map<number, number> { return this._testmap; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._dropid, this._name, this._items, this._testmap];
+    }
     toString() : string {
         return "(" + this._dropid + "," + this._name + "," + ToStringList(this._items) + "," + ToStringMap(this._testmap) + ")";
     }
@@ -1468,7 +2707,9 @@ export class Other_Drop {
         }
         self._testmap  = new Map<number, number>();
         for (let c = os.ReadCount(0); c > 0; c--) {
-            self._testmap.set(os.ReadInt32(), os.ReadInt32());
+            const key$ = os.ReadInt32();
+            if (self._testmap.has(key$)) throw Error("Duplicate map key: other.drop.testmap");
+            self._testmap.set(key$, os.ReadInt32());
         }
         return self;
     }
@@ -1478,8 +2719,8 @@ export class Other_Drop {
 export class Other_Key_test {
     private _id1!: number;
     get Id1(): number { return this._id1; }
-    private _id2!: number;
-    get Id2(): number { return this._id2; }
+    private _id2!: bigint;
+    get Id2(): bigint { return this._id2; }
     private _id3!: number;
     get Id3(): number { return this._id3; }
     private _ids!: number[];
@@ -1488,7 +2729,9 @@ export class Other_Key_test {
     get EnumTest(): string { return this._enumTest; }
     private _enumList!: string[];
     get EnumList(): string[] { return this._enumList; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._id1, this._id2, this._id3, this._ids, this._enumTest, this._enumList];
+    }
     private _RefIds!: Other_Sign_in[];
     get RefIds(): Other_Sign_in[] { return this._RefIds; }
     private _RefEnumTest!: Other_ArgCaptureMode;
@@ -1500,48 +2743,48 @@ export class Other_Key_test {
     }
 
     
-    private static all: Map<number, Other_Key_test>;
+    private static all: Map<string, Other_Key_test>;
 
-    static Get(id1: number, id2: number) : Other_Key_test | undefined {
-        return this.all.get(id1 + id2 * 100000000)
+    static Get(id1: number, id2: bigint) : Other_Key_test | undefined {
+        return this.all.get($relationKey$([id1, id2]))
     }
 
     
-    private static id1Id3Map: Map<number, Other_Key_test>;
+    private static id1Id3Map: Map<string, Other_Key_test>;
 
     static GetById1Id3(id1: number, id3: number) : Other_Key_test | undefined {
-        return this.id1Id3Map.get(id1 + id3 * 100000000)
+        return this.id1Id3Map.get($relationKey$([id1, id3]))
     }
 
     
-    private static id2Map: Map<number, Other_Key_test>;
+    private static id2Map: Map<bigint, Other_Key_test>;
 
-    static GetById2(id2: number) : Other_Key_test | undefined {
+    static GetById2(id2: bigint) : Other_Key_test | undefined {
         return this.id2Map.get(id2)
     }
 
     
-    private static id2Id3Map: Map<number, Other_Key_test>;
+    private static id2Id3Map: Map<string, Other_Key_test>;
 
-    static GetById2Id3(id2: number, id3: number) : Other_Key_test | undefined {
-        return this.id2Id3Map.get(id2 + id3 * 100000000)
+    static GetById2Id3(id2: bigint, id3: number) : Other_Key_test | undefined {
+        return this.id2Id3Map.get($relationKey$([id2, id3]))
     }
 
-    static All() : Map<number, Other_Key_test> {
+    static All() : Map<string, Other_Key_test> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
-        this.all = new Map<number, Other_Key_test>();
-        this.id1Id3Map = new Map<number, Other_Key_test>();
-        this.id2Map = new Map<number, Other_Key_test>();
-        this.id2Id3Map = new Map<number, Other_Key_test>();
+        this.all = new Map<string, Other_Key_test>();
+        this.id1Id3Map = new Map<string, Other_Key_test>();
+        this.id2Map = new Map<bigint, Other_Key_test>();
+        this.id2Id3Map = new Map<string, Other_Key_test>();
         for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
-            this.all.set(self._id1 + self._id2 * 100000000, self);
-            this.id1Id3Map.set(self._id1 + self._id3 * 100000000, self);
+            this.all.set($relationKey$([self._id1, self._id2]), self);
+            this.id1Id3Map.set($relationKey$([self._id1, self._id3]), self);
             this.id2Map.set(self._id2, self);
-            this.id2Id3Map.set(self._id2 + self._id3 * 100000000, self);
+            this.id2Id3Map.set($relationKey$([self._id2, self._id3]), self);
         }
 
     }
@@ -1554,7 +2797,7 @@ export class Other_Key_test {
     static _create(os: Stream) : Other_Key_test {
         const self = new Other_Key_test();
         self._id1 = os.ReadInt32();
-        self._id2 = os.ReadInt64();
+        self._id2 = os.ReadInt64BigInt();
         self._id3 = os.ReadInt32();
         self._ids = [];
         for (let c = os.ReadCount(0); c > 0; c--) {
@@ -1607,7 +2850,9 @@ export class Other_Loot {
     private _chanceList!: number[];
     /* 掉落0件物品的概率 */
     get ChanceList(): number[] { return this._chanceList; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._lootid, this._ename, this._name, this._chanceList];
+    }
     private _ListRefLootid!: Other_Loot_item[];
     get ListRefLootid(): Other_Loot_item[] { return this._ListRefLootid; }
     private _ListRefAnotherWay!: Other_Loot_item[];
@@ -1685,27 +2930,29 @@ export class Other_Loot_item {
     private _countmax!: number;
     /* 数量上限 */
     get Countmax(): number { return this._countmax; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._lootid, this._itemid, this._chance, this._countmin, this._countmax];
+    }
     toString() : string {
         return "(" + this._lootid + "," + this._itemid + "," + this._chance + "," + this._countmin + "," + this._countmax + ")";
     }
 
     
-    private static all: Map<number, Other_Loot_item>;
+    private static all: Map<string, Other_Loot_item>;
 
     static Get(lootid: number, itemid: number) : Other_Loot_item | undefined {
-        return this.all.get(lootid + itemid * 100000000)
+        return this.all.get($relationKey$([lootid, itemid]))
     }
 
-    static All() : Map<number, Other_Loot_item> {
+    static All() : Map<string, Other_Loot_item> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
-        this.all = new Map<number, Other_Loot_item>();
+        this.all = new Map<string, Other_Loot_item>();
         for (let c = os.ReadCount(1); c > 0; c--) {
             let self = this._create(os);
-            this.all.set(self._lootid + self._itemid * 100000000, self);
+            this.all.set($relationKey$([self._lootid, self._itemid]), self);
         }
 
     }
@@ -1737,7 +2984,9 @@ export class Other_Monster {
     get EnumMap1(): Map<string, number> { return this._enumMap1; }
     private _enumMap2!: Map<number, string>;
     get EnumMap2(): Map<number, string> { return this._enumMap2; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._id, this._posList, this._lootId, this._lootItemId, this._enumMap1, this._enumMap2];
+    }
     private _RefLoot!: Other_Loot_item;
     get RefLoot(): Other_Loot_item { return this._RefLoot; }
     private _RefAllLoot!: Other_Loot;
@@ -1784,11 +3033,15 @@ export class Other_Monster {
         self._lootItemId = os.ReadInt32();
         self._enumMap1  = new Map<string, number>();
         for (let c = os.ReadCount(0); c > 0; c--) {
-            self._enumMap1.set(os.ReadStringInPool(), os.ReadInt32());
+            const key$ = os.ReadStringInPool();
+            if (self._enumMap1.has(key$)) throw Error("Duplicate map key: other.monster.enumMap1");
+            self._enumMap1.set(key$, os.ReadInt32());
         }
         self._enumMap2  = new Map<number, string>();
         for (let c = os.ReadCount(0); c > 0; c--) {
-            self._enumMap2.set(os.ReadInt32(), os.ReadStringInPool());
+            const key$ = os.ReadInt32();
+            if (self._enumMap2.has(key$)) throw Error("Duplicate map key: other.monster.enumMap2");
+            self._enumMap2.set(key$, os.ReadStringInPool());
         }
         return self;
     }
@@ -1832,7 +3085,9 @@ export class Other_Sign_in {
     private _IconFile!: string;
     /* 礼包图标 */
     get IconFile(): string { return this._IconFile; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._id, this._item2countMap, this._vipitem2vipcountMap, this._viplevel, this._IconFile];
+    }
     private _RefVipitem2vipcountMap!: Map<number, Other_Loot>;
     get RefVipitem2vipcountMap(): Map<number, Other_Loot> { return this._RefVipitem2vipcountMap; }
     toString() : string {
@@ -1869,11 +3124,15 @@ export class Other_Sign_in {
         self._id = os.ReadInt32();
         self._item2countMap  = new Map<number, number>();
         for (let c = os.ReadCount(0); c > 0; c--) {
-            self._item2countMap.set(os.ReadInt32(), os.ReadInt32());
+            const key$ = os.ReadInt32();
+            if (self._item2countMap.has(key$)) throw Error("Duplicate map key: other.sign_in.item2countMap");
+            self._item2countMap.set(key$, os.ReadInt32());
         }
         self._vipitem2vipcountMap  = new Map<number, number>();
         for (let c = os.ReadCount(0); c > 0; c--) {
-            self._vipitem2vipcountMap.set(os.ReadInt32(), os.ReadInt32());
+            const key$ = os.ReadInt32();
+            if (self._vipitem2vipcountMap.has(key$)) throw Error("Duplicate map key: other.sign_in.vipitem2vipcountMap");
+            self._vipitem2vipcountMap.set(key$, os.ReadInt32());
         }
         self._viplevel = os.ReadInt32();
         self._IconFile = os.ReadStringInPool();
@@ -1921,7 +3180,9 @@ export class Task_Complete_condition_type {
     private _name!: string;
     /* 程序用名字 */
     get Name(): string { return this._name; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._id, this._name];
+    }
     toString() : string {
         return "(" + this._id + "," + this._name + ")";
     }
@@ -2049,7 +3310,9 @@ export class Task_Task {
     private _testDefaultBean!: Task_TestDefaultBean;
     /* 测试 */
     get TestDefaultBean(): Task_TestDefaultBean { return this._testDefaultBean; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._taskid, this._name, this._nexttask, this._completecondition, this._exp, this._testDefaultBean];
+    }
     private _NullableRefTaskid: Task_Task_extra_exp | undefined;
     get NullableRefTaskid(): Task_Task_extra_exp | undefined { return this._NullableRefTaskid; }
     private _NullableRefNexttask: Task_Task | undefined;
@@ -2128,7 +3391,9 @@ export class Task_Task2 {
     get TestListStruct(): Position[] { return this._testListStruct; }
     private _testListInterface!: Ai_TriggerTick[];
     get TestListInterface(): Ai_TriggerTick[] { return this._testListInterface; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._taskid, this._name, this._nexttask, this._completecondition, this._exp, this._testBool, this._testString, this._testStruct, this._testList, this._testListStruct, this._testListInterface];
+    }
     private _NullableRefTaskid: Task_Task_extra_exp | undefined;
     get NullableRefTaskid(): Task_Task_extra_exp | undefined { return this._NullableRefTaskid; }
     private _NullableRefNexttask: Task_Task | undefined;
@@ -2216,7 +3481,9 @@ export class Task_Task_extra_exp {
     get Fieldc(): string { return this._fieldc; }
     private _fieldd!: string;
     get Fieldd(): string { return this._fieldd; }
-
+    $relationFields$(): readonly unknown[] {
+        return [this._taskid, this._extraexp, this._test1, this._test2, this._fielda, this._fieldb, this._fieldc, this._fieldd];
+    }
     toString() : string {
         return "(" + this._taskid + "," + this._extraexp + "," + this._test1 + "," + this._test2 + "," + this._fielda + "," + this._fieldb + "," + this._fieldc + "," + this._fieldd + ")";
     }
@@ -2262,6 +3529,12 @@ export class Processor {
         "ai.ai",
         "ai.ai_action",
         "ai.ai_condition",
+        "combat.ability",
+        "combat.branchreward",
+        "combat.cast",
+        "combat.encounter",
+        "combat.phasebook",
+        "combat.timeline",
         "equip.ability",
         "equip.equip_config",
         "equip.jewelry",
@@ -2309,6 +3582,30 @@ export class Processor {
                     break;
                 case "ai.ai_condition":
                     Ai_Ai_condition.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
+                    break;
+                case "combat.ability":
+                    Combat_Ability.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
+                    break;
+                case "combat.branchreward":
+                    Combat_Branchreward.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
+                    break;
+                case "combat.cast":
+                    Combat_Cast.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
+                    break;
+                case "combat.encounter":
+                    Combat_Encounter.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
+                    break;
+                case "combat.phasebook":
+                    Combat_Phasebook.Initialize(tableInput, errors);
+                    tableInput.RequireEnd();
+                    break;
+                case "combat.timeline":
+                    Combat_Timeline.Initialize(tableInput, errors);
                     tableInput.RequireEnd();
                     break;
                 case "equip.ability":
@@ -2390,6 +3687,10 @@ export class Processor {
         }
 
         // 解析外键引用
+        Combat_Ability.Resolve(errors);
+        Combat_Cast.Resolve(errors);
+        Combat_Encounter.Resolve(errors);
+        Combat_Timeline.Resolve(errors);
         Equip_Jewelry.Resolve(errors);
         Equip_Jewelry_random.Resolve(errors);
         Other_Key_test.Resolve(errors);
@@ -2398,8 +3699,637 @@ export class Processor {
         Other_Sign_in.Resolve(errors);
         Task_Task.Resolve(errors);
         Task_Task2.Resolve(errors);
+        $resolveRelations$(errors);
     }
 }
+
+
+function $resolveRelations$(errors: LoadErrors): void {
+    const resolver = new $RelationResolver$(errors, [
+        { name: "LevelRank", ctor: LevelRank, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "Position", ctor: Position, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "Range", ctor: Range, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "ai.TriggerTick.ByLevel", ctor: Ai_TriggerTick_ByLevel, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "ai.TriggerTick.ByServerUpDay", ctor: Ai_TriggerTick_ByServerUpDay, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "ai.TriggerTick.ConstValue", ctor: Ai_TriggerTick_ConstValue, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "ai.ai", ctor: Ai_Ai, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "ai.ai_action", ctor: Ai_Ai_action, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "ai.ai_condition", ctor: Ai_Ai_condition, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.AbilityUse", ctor: Combat_AbilityUse, indexes: [
+        ], plans: [
+            { root: "combat.cast", slot: 0, name: "ability", nullable: false, sources: [
+                { scope: "", fields: [0, 0] },
+            ], target: "table:combat.ability", recordKey: [0], steps: [
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_AbilityUse;
+            row._bindRefAbility$(refs[0] as Combat_Ability | undefined);
+        } },
+        { name: "combat.Anchor", ctor: Combat_Anchor, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.AnchorUse", ctor: Combat_AnchorUse, indexes: [
+        ], plans: [
+            { root: "combat.ability", slot: 0, name: "anchor", nullable: false, sources: [
+            ], target: "ancestor:combat.Machine", recordKey: [], steps: [
+                { field: 8, kind: 0, keys: [] },
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_AnchorUse;
+            row._bindRefAnchor$(refs[0] as Combat_Anchor | undefined);
+        } },
+        { name: "combat.Binding", ctor: Combat_Binding, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.BookEntry", ctor: Combat_BookEntry, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Combo", ctor: Combat_Combo, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Command.Jump", ctor: Combat_Command_Jump, indexes: [
+        ], plans: [
+            { root: "combat.encounter", slot: 0, name: "key", nullable: true, sources: [
+                { scope: "", fields: [0] },
+            ], target: "ancestor:combat.Command.StateMachine", recordKey: [], steps: [
+                { field: 0, kind: 1, keys: [0] },
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_Command_Jump;
+            row._bindNullableRefKey$(refs[0] as Combat_NestedPhase | undefined);
+        } },
+        { name: "combat.Command.Noop", ctor: Combat_Command_Noop, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Command.StateMachine", ctor: Combat_Command_StateMachine, indexes: [
+            { field: 0, keys: [0] },
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Effect.Damage", ctor: Combat_Effect_Damage, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Effect.Heal", ctor: Combat_Effect_Heal, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Effect.None", ctor: Combat_Effect_None, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Exit", ctor: Combat_Exit, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Frame", ctor: Combat_Frame, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Impact", ctor: Combat_Impact, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Machine", ctor: Combat_Machine, indexes: [
+            { field: 1, keys: [0] },
+            { field: 2, keys: [0] },
+            { field: 3, keys: [0] },
+            { field: 4, keys: [0] },
+            { field: 5, keys: [0] },
+            { field: 6, keys: [0, 1, 2] },
+            { field: 7, keys: [0] },
+        ], plans: [
+            { root: "combat.ability", slot: 0, name: "initial", nullable: false, sources: [
+                { scope: "", fields: [11] },
+            ], target: "ancestor:combat.Machine", recordKey: [], steps: [
+                { field: 1, kind: 1, keys: [0] },
+            ] },
+            { root: "combat.ability", slot: 1, name: "impact", nullable: false, sources: [
+                { scope: "", fields: [12] },
+            ], target: "ancestor:combat.Machine", recordKey: [], steps: [
+                { field: 2, kind: 1, keys: [0] },
+            ] },
+            { root: "combat.ability", slot: 2, name: "frame", nullable: false, sources: [
+                { scope: "", fields: [13] },
+            ], target: "ancestor:combat.Machine", recordKey: [], steps: [
+                { field: 3, kind: 1, keys: [0] },
+            ] },
+            { root: "combat.ability", slot: 3, name: "stance", nullable: false, sources: [
+                { scope: "", fields: [14] },
+            ], target: "ancestor:combat.Machine", recordKey: [], steps: [
+                { field: 4, kind: 1, keys: [0] },
+            ] },
+            { root: "combat.ability", slot: 4, name: "variant", nullable: false, sources: [
+                { scope: "", fields: [15] },
+            ], target: "ancestor:combat.Machine", recordKey: [], steps: [
+                { field: 5, kind: 1, keys: [0] },
+            ] },
+            { root: "combat.ability", slot: 5, name: "combo", nullable: false, sources: [
+                { scope: "", fields: [16] },
+                { scope: "", fields: [17] },
+                { scope: "", fields: [18] },
+            ], target: "ancestor:combat.Machine", recordKey: [], steps: [
+                { field: 6, kind: 1, keys: [0, 1, 2] },
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_Machine;
+            row._bindRefInitial$(refs[0] as Combat_Phase | undefined);
+            row._bindRefImpact$(refs[1] as Combat_Impact | undefined);
+            row._bindRefFrame$(refs[2] as Combat_Frame | undefined);
+            row._bindRefStance$(refs[3] as Combat_Stance | undefined);
+            row._bindRefVariant$(refs[4] as Combat_PhaseVariant | undefined);
+            row._bindRefCombo$(refs[5] as Combat_Combo | undefined);
+        } },
+        { name: "combat.MachineUse", ctor: Combat_MachineUse, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Marker", ctor: Combat_Marker, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.NestedPhase", ctor: Combat_NestedPhase, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.OptionalAim", ctor: Combat_OptionalAim, indexes: [
+        ], plans: [
+            { root: "combat.cast", slot: 0, name: "target", nullable: true, sources: [
+                { scope: "", fields: [0] },
+                { scope: "", fields: [1] },
+                { scope: "", fields: [2] },
+            ], target: "table:combat.ability", recordKey: [0], steps: [
+                { field: 3, kind: 1, keys: [0] },
+                { field: 1, kind: 1, keys: [0] },
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_OptionalAim;
+            row._bindNullableRefTarget$(refs[0] as Combat_Phase | undefined);
+        } },
+        { name: "combat.Origin", ctor: Combat_Origin, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Phase", ctor: Combat_Phase, indexes: [
+        ], plans: [
+            { root: "combat.ability", slot: 0, name: "next", nullable: true, sources: [
+                { scope: "", fields: [1] },
+            ], target: "ancestor:combat.Machine", recordKey: [], steps: [
+                { field: 1, kind: 1, keys: [0] },
+            ] },
+            { root: "combat.ability", slot: 1, name: "exit", nullable: false, sources: [
+            ], target: "ancestor:combat.Machine", recordKey: [], steps: [
+                { field: 10, kind: 0, keys: [] },
+                { field: 0, kind: 0, keys: [] },
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_Phase;
+            row._bindNullableRefNext$(refs[0] as Combat_Phase | undefined);
+            row._bindRefExit$(refs[1] as Combat_Effect | undefined);
+        } },
+        { name: "combat.PhaseKey", ctor: Combat_PhaseKey, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.PhaseUse", ctor: Combat_PhaseUse, indexes: [
+        ], plans: [
+            { root: "combat.cast", slot: 0, name: "target", nullable: false, sources: [
+                { scope: "ancestor:combat.AbilityUse", fields: [0, 0] },
+                { scope: "ancestor:combat.MachineUse", fields: [0] },
+                { scope: "", fields: [0] },
+            ], target: "table:combat.ability", recordKey: [0], steps: [
+                { field: 3, kind: 1, keys: [0] },
+                { field: 1, kind: 1, keys: [0] },
+            ] },
+            { root: "combat.cast", slot: 1, name: "byCode", nullable: false, sources: [
+                { scope: "root", fields: [1] },
+                { scope: "ancestor:combat.MachineUse", fields: [0] },
+                { scope: "", fields: [0] },
+            ], target: "table:combat.ability", recordKey: [1], steps: [
+                { field: 3, kind: 1, keys: [0] },
+                { field: 1, kind: 1, keys: [0] },
+            ] },
+            { root: "combat.cast", slot: 2, name: "origin", nullable: false, sources: [
+            ], target: "root", recordKey: [], steps: [
+                { field: 2, kind: 0, keys: [] },
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_PhaseUse;
+            row._bindRefTarget$(refs[0] as Combat_Phase | undefined);
+            row._bindRefByCode$(refs[1] as Combat_Phase | undefined);
+            row._bindRefOrigin$(refs[2] as Combat_Origin | undefined);
+        } },
+        { name: "combat.PhaseVariant", ctor: Combat_PhaseVariant, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Reward", ctor: Combat_Reward, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.Stance", ctor: Combat_Stance, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.ability", ctor: Combat_Ability, indexes: [
+            { field: 3, keys: [0] },
+        ], plans: [
+            { root: "combat.ability", slot: 0, name: "initial", nullable: false, sources: [
+                { scope: "", fields: [4] },
+                { scope: "", fields: [5] },
+            ], target: "root", recordKey: [], steps: [
+                { field: 3, kind: 1, keys: [0] },
+                { field: 1, kind: 1, keys: [0] },
+            ] },
+            { root: "combat.ability", slot: 1, name: "spawn", nullable: false, sources: [
+            ], target: "root", recordKey: [], steps: [
+                { field: 2, kind: 0, keys: [] },
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_Ability;
+            row._bindRefInitial$(refs[0] as Combat_Phase | undefined);
+            row._bindRefSpawn$(refs[1] as Combat_Origin | undefined);
+        } },
+        { name: "combat.branchreward", ctor: Combat_Branchreward, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.cast", ctor: Combat_Cast, indexes: [
+        ], plans: [
+            { root: "combat.cast", slot: 0, name: "book", nullable: false, sources: [
+                { scope: "", fields: [5] },
+                { scope: "", fields: [6] },
+                { scope: "", fields: [7] },
+            ], target: "table:combat.phasebook", recordKey: [0, 1, 2], steps: [
+                { field: 5, kind: 0, keys: [] },
+            ] },
+            { root: "combat.cast", slot: 1, name: "bookByCode", nullable: false, sources: [
+                { scope: "", fields: [8] },
+                { scope: "", fields: [9] },
+            ], target: "table:combat.phasebook", recordKey: [3, 4], steps: [
+                { field: 5, kind: 0, keys: [] },
+            ] },
+            { root: "combat.cast", slot: 2, name: "bookRecord", nullable: false, sources: [
+                { scope: "root", fields: [5] },
+                { scope: "root", fields: [6] },
+                { scope: "root", fields: [7] },
+            ], target: "table:combat.phasebook", recordKey: [0, 1, 2], steps: [
+            ] },
+            { root: "combat.cast", slot: 3, name: "reward", nullable: false, sources: [
+                { scope: "", fields: [10] },
+            ], target: "table:combat.branchreward", recordKey: [0], steps: [
+                { field: 1, kind: 0, keys: [] },
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_Cast;
+            row._bindRefBook$(refs[0] as Combat_BookEntry | undefined);
+            row._bindRefBookByCode$(refs[1] as Combat_BookEntry | undefined);
+            row._bindRefBookRecord$(refs[2] as Combat_Phasebook | undefined);
+            row._bindRefReward$(refs[3] as Combat_Reward | undefined);
+        } },
+        { name: "combat.encounter", ctor: Combat_Encounter, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.phasebook", ctor: Combat_Phasebook, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "combat.timeline", ctor: Combat_Timeline, indexes: [
+        ], plans: [
+            { root: "combat.timeline", slot: 0, name: "eventKey", nullable: false, sources: [
+                { scope: "", fields: [6] },
+            ], target: "root", recordKey: [], steps: [
+                { field: 1, kind: 2, keys: [] },
+            ] },
+            { root: "combat.timeline", slot: 1, name: "channel", nullable: false, sources: [
+                { scope: "", fields: [7] },
+            ], target: "root", recordKey: [], steps: [
+                { field: 2, kind: 2, keys: [] },
+            ] },
+            { root: "combat.timeline", slot: 2, name: "slot", nullable: false, sources: [
+                { scope: "", fields: [8] },
+            ], target: "root", recordKey: [], steps: [
+                { field: 3, kind: 2, keys: [] },
+            ] },
+            { root: "combat.timeline", slot: 3, name: "frame", nullable: false, sources: [
+                { scope: "", fields: [9] },
+            ], target: "root", recordKey: [], steps: [
+                { field: 4, kind: 2, keys: [] },
+            ] },
+            { root: "combat.timeline", slot: 4, name: "airborne", nullable: false, sources: [
+                { scope: "", fields: [10] },
+            ], target: "root", recordKey: [], steps: [
+                { field: 5, kind: 2, keys: [] },
+            ] },
+            { root: "combat.timeline", slot: 5, name: "default", nullable: false, sources: [
+            ], target: "root", recordKey: [], steps: [
+                { field: 11, kind: 0, keys: [] },
+            ] },
+        ], bind: (value, refs) => {
+            const row = value as Combat_Timeline;
+            row._bindRefEventKey$(refs[0] as Combat_Effect | undefined);
+            row._bindRefChannel$(refs[1] as Combat_Effect | undefined);
+            row._bindRefSlot$(refs[2] as Combat_Effect | undefined);
+            row._bindRefFrame$(refs[3] as Combat_Effect | undefined);
+            row._bindRefAirborne$(refs[4] as Combat_Effect | undefined);
+            row._bindRefDefault$(refs[5] as Combat_Effect | undefined);
+        } },
+        { name: "equip.TestPackBean", ctor: Equip_TestPackBean, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "equip.ability", ctor: Equip_Ability, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "equip.equip_config", ctor: Equip_Equip_config, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "equip.jewelry", ctor: Equip_Jewelry, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "equip.jewelry_random", ctor: Equip_Jewelry_random, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "equip.jewelry_suit", ctor: Equip_Jewelry_suit, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "equip.jewelry_type", ctor: Equip_Jewelry_type, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "equip.rank", ctor: Equip_Rank, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "other.ArgCaptureMode", ctor: Other_ArgCaptureMode, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "other.DropItem", ctor: Other_DropItem, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "other.drop", ctor: Other_Drop, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "other.key_test", ctor: Other_Key_test, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "other.loot", ctor: Other_Loot, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "other.loot_item", ctor: Other_Loot_item, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "other.monster", ctor: Other_Monster, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "other.sign_in", ctor: Other_Sign_in, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.TestDefaultBean", ctor: Task_TestDefaultBean, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.complete_condition_type", ctor: Task_Complete_condition_type, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.completecondition.Chat", ctor: Task_Completecondition_Chat, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.completecondition.CollectItem", ctor: Task_Completecondition_CollectItem, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.completecondition.ConditionAnd", ctor: Task_Completecondition_ConditionAnd, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.completecondition.KillMonster", ctor: Task_Completecondition_KillMonster, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.completecondition.TalkNpc", ctor: Task_Completecondition_TalkNpc, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.completecondition.TestNoColumn", ctor: Task_Completecondition_TestNoColumn, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.completecondition.aa", ctor: Task_Completecondition_Aa, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.task", ctor: Task_Task, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.task2", ctor: Task_Task2, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+        { name: "task.task_extra_exp", ctor: Task_Task_extra_exp, indexes: [
+        ], plans: [
+        ], bind: (value, refs) => {
+        } },
+    ]);
+    resolver.table("ai.ai", [...Ai_Ai.All().values()]);
+    resolver.table("ai.ai_action", [...Ai_Ai_action.All().values()]);
+    resolver.table("ai.ai_condition", [...Ai_Ai_condition.All().values()]);
+    resolver.table("combat.ability", [...Combat_Ability.All().values()]);
+    resolver.table("combat.branchreward", [...Combat_Branchreward.All().values()]);
+    resolver.table("combat.cast", [...Combat_Cast.All().values()]);
+    resolver.table("combat.encounter", [...Combat_Encounter.All().values()]);
+    resolver.table("combat.phasebook", [...Combat_Phasebook.All().values()]);
+    resolver.table("combat.timeline", [...Combat_Timeline.All().values()]);
+    resolver.table("equip.ability", [...Equip_Ability.All().values()]);
+    resolver.table("equip.equip_config", [...Equip_Equip_config.All().values()]);
+    resolver.table("equip.jewelry", [...Equip_Jewelry.All().values()]);
+    resolver.table("equip.jewelry_random", [...Equip_Jewelry_random.All().values()]);
+    resolver.table("equip.jewelry_suit", [...Equip_Jewelry_suit.All().values()]);
+    resolver.table("equip.jewelry_type", [...Equip_Jewelry_type.All().values()]);
+    resolver.table("equip.rank", [...Equip_Rank.All().values()]);
+    resolver.table("other.ArgCaptureMode", [...Other_ArgCaptureMode.All().values()]);
+    resolver.table("other.drop", [...Other_Drop.All().values()]);
+    resolver.table("other.key_test", [...Other_Key_test.All().values()]);
+    resolver.table("other.loot", [...Other_Loot.All().values()]);
+    resolver.table("other.loot_item", [...Other_Loot_item.All().values()]);
+    resolver.table("other.monster", [...Other_Monster.All().values()]);
+    resolver.table("other.sign_in", [...Other_Sign_in.All().values()]);
+    resolver.table("task.complete_condition_type", [...Task_Complete_condition_type.All().values()]);
+    resolver.table("task.task", [...Task_Task.All().values()]);
+    resolver.table("task.task2", [...Task_Task2.All().values()]);
+    resolver.table("task.task_extra_exp", [...Task_Task_extra_exp.All().values()]);
+    resolver.resolve();
+}
+
+type $RelationSource$ = { scope: string; fields: readonly number[] };
+type $RelationStep$ = { field: number; kind: number; keys: readonly number[] };
+type $RelationPlan$ = { root: string; slot: number; name: string; nullable: boolean; sources: readonly $RelationSource$[]; target: string; recordKey: readonly number[]; steps: readonly $RelationStep$[] };
+interface $RelationValue$ { $relationFields$(): readonly unknown[] }
+type $RelationType$ = { name: string; ctor: Function; indexes: readonly { field: number; keys: readonly number[] }[]; plans: readonly $RelationPlan$[]; bind: (value: object, refs: readonly unknown[]) => void };
+type $RelationOccurrence$ = { value: object; root: object; table: string; parent: $RelationOccurrence$ | undefined };
+
+function $relationKey$(parts: readonly unknown[]): string {
+    return JSON.stringify(parts, (_key, value: unknown) => {
+        if (typeof value === "bigint") return { $long: value.toString() };
+        return value !== null && typeof value === "object" && "$relationFields$" in value
+            ? (value as $RelationValue$).$relationFields$() : value;
+    });
+}
+
+class $RelationResolver$ {
+    private readonly types = new Map<Function, $RelationType$>();
+    private readonly tables = new Map<string, readonly object[]>();
+    private readonly fields = new Map<object, readonly unknown[]>();
+    private readonly indexes = new Map<readonly unknown[], Map<string, Map<string, object>>>();
+    private readonly maps = new Map<Map<unknown, unknown>, Map<string, unknown>>();
+    private readonly occurrences: $RelationOccurrence$[] = [];
+    constructor(private readonly errors: LoadErrors, types: readonly $RelationType$[]) {
+        for (const type of types) this.types.set(type.ctor, type);
+    }
+    table(name: string, rows: readonly object[]): void { this.tables.set(name, rows); }
+    private read(value: object): readonly unknown[] {
+        let fields = this.fields.get(value);
+        if (!fields) { fields = (value as $RelationValue$).$relationFields$(); this.fields.set(value, fields); }
+        return fields;
+    }
+    resolve(): void {
+        for (const [table, rows] of this.tables) for (const row of rows) this.walk(row, row, table);
+        for (const at of this.occurrences) {
+            const type = this.types.get(at.value.constructor)!;
+            const refs: unknown[] = [];
+            for (const plan of type.plans) if (plan.root === at.table) refs[plan.slot] = this.bind(at, type, plan);
+            type.bind(at.value, refs);
+        }
+    }
+    private bind(at: $RelationOccurrence$, type: $RelationType$, plan: $RelationPlan$): unknown {
+        const keys: unknown[] = [];
+        let valid = true;
+        for (const source of plan.sources) {
+            let value: unknown = this.scope(source.scope, at);
+            if (value === undefined) { valid = false; continue; }
+            for (const field of source.fields) value = this.read(value as object)[field];
+            keys.push(value);
+        }
+        const external = plan.target.startsWith("table:");
+        let target: unknown = external ? this.tables.get(plan.target.substring(6)) : this.scope(plan.target, at);
+        if (!valid || target === undefined) throw Error("Missing reference scope: " + type.name + "." + plan.name);
+        let used = 0;
+        if (external) { target = this.index(target as readonly object[], plan.recordKey).get($relationKey$(keys.slice(0, plan.recordKey.length))); used = plan.recordKey.length; }
+        for (const step of plan.steps) {
+            if (target === undefined) break;
+            const member = this.read(target as object)[step.field];
+            if (step.kind === 0) target = member;
+            else if (step.kind === 1) target = this.index(member as readonly object[], step.keys).get($relationKey$(keys.slice(used, used + step.keys.length)));
+            else target = this.map(member as Map<unknown, unknown>).get($relationKey$([keys[used]]));
+            used += step.kind === 2 ? 1 : step.keys.length;
+        }
+        if (target === undefined && !plan.nullable) this.errors.RefNull(type.name, at.table, plan.name);
+        return target;
+    }
+    private scope(scope: string, at: $RelationOccurrence$): object | undefined {
+        if (!scope) return at.value;
+        if (scope === "root") return at.root;
+        for (let current: $RelationOccurrence$ | undefined = at; current; current = current.parent) {
+            const value = current.value;
+            if ("ancestor:" + this.types.get(value.constructor)!.name === scope) return value;
+        }
+        return undefined;
+    }
+    private walk(value: unknown, root: object, table: string, parent?: $RelationOccurrence$): void {
+        if (value === null || typeof value !== "object") return;
+        const type = this.types.get(value.constructor);
+        if (type) {
+            const at = {value, root, table, parent};
+            if (type.plans.length) this.occurrences.push(at);
+            const fields = this.read(value);
+            for (const index of type.indexes) this.index(fields[index.field] as readonly object[], index.keys);
+            for (const field of fields) this.walk(field, root, table, at);
+        } else if (Array.isArray(value)) {
+            for (const item of value) this.walk(item, root, table, parent);
+        } else if (value instanceof Map) {
+            this.map(value);
+            for (const [key, item] of value) { this.walk(key, root, table, parent); this.walk(item, root, table, parent); }
+        }
+    }
+    private index(rows: readonly object[], keys: readonly number[]): Map<string, object> {
+        let definitions = this.indexes.get(rows);
+        if (!definitions) { definitions = new Map(); this.indexes.set(rows, definitions); }
+        const definition = keys.join(",");
+        let index = definitions.get(definition);
+        if (!index) {
+            index = new Map(); definitions.set(definition, index);
+            for (const row of rows) {
+                const fields = this.read(row); const key = $relationKey$(keys.map(field => fields[field]));
+                if (index.has(key)) throw Error("Duplicate local index key: " + key);
+                index.set(key, row);
+            }
+        }
+        return index;
+    }
+    private map(rows: Map<unknown, unknown>): Map<string, unknown> {
+        let index = this.maps.get(rows);
+        if (!index) {
+            index = new Map(); this.maps.set(rows, index);
+            for (const [key, value] of rows) {
+                const canonical = $relationKey$([key]);
+                if (index.has(canonical)) throw Error("Duplicate map key: " + canonical);
+                index.set(canonical, value);
+            }
+        }
+        return index;
+    }
+}
+
+
 
 
 }

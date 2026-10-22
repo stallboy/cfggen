@@ -9,7 +9,7 @@ static func read(data: PackedByteArray) -> ConfigPackage:
 	var input = ConfigStream.new(data)
 	var version = input.read_int32()
 	if version != FORMAT_VERSION:
-		push_error("Unsupported config format version %d; reader supports [1]. Regenerate the reader or export compatible data." % version)
+		push_error("Unsupported config format version %d; reader supports 1. Regenerate the reader or export compatible data." % version)
 		return null
 	var package = ConfigPackage.new()
 	for i in range(input.read_count(8)):

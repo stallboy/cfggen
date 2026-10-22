@@ -41,6 +41,10 @@ export namespace ${model.pkg} {
 
 @template.ts.Processor(model = model)
 
+@if(model.hasRelations())
+@template.ts.Relations(model = model)
+@endif
+
 }
 
 

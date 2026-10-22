@@ -362,18 +362,19 @@ public enum CfgReader {
 
             RefContext ref = ctx.ref();
             if (ref != null) {
-                KeySchema localKey = new KeySchema(List.of(name));
                 boolean nullable = meta.removeNullable();
                 Metadata refMeta = meta.copy();
                 refMeta.removeComment();
-                ForeignKeySchema foreignKeySchema = readRef(ref, name, localKey, refMeta, nullable);
+                ForeignKeySchema foreignKeySchema = readRef(ref, name,
+                        List.of(new ReferencePath(ReferencePath.Start.CURRENT, "", List.of(name))), refMeta, nullable, true);
                 foreignKeySchemas.add(foreignKeySchema);
             }
         }
 
         for (Foreign_declContext ctx : foreignDeclContexts) {
             String name = ctx.identifier().getText();
-            KeySchema localKey = readKey(ctx.key());
+            List<ReferencePath> sources = ctx.source_values().source_value().stream()
+                    .map(this::readSource).toList();
             CommentData comment = CommentUtil.readFull2(
                     ctx.leading_comment(),
                     ctx.SEMI_COMMENT());
@@ -384,7 +385,7 @@ public enum CfgReader {
             validateMetadataPlacement(ctx, meta, Metadata.MetaPos.FOREIGN_KEY, name);
 
             boolean nullable = meta.removeNullable();
-            ForeignKeySchema foreignKeySchema = readRef(ctx.ref(), name, localKey, meta, nullable);
+            ForeignKeySchema foreignKeySchema = readRef(ctx.ref(), name, sources, meta, nullable, false);
             foreignKeySchemas.add(foreignKeySchema);
         }
 
@@ -414,9 +415,22 @@ public enum CfgReader {
         }
     }
 
-    private ForeignKeySchema readRef(RefContext ctx, String name, KeySchema localKey,
-                                     Metadata meta, boolean nullable) {
-        String refTable = readNamespaceIdentifier(ctx.ns_ident());
+    private ReferencePath readSource(Source_valueContext ctx) {
+        if (ctx.AT() != null) {
+            return new ReferencePath(ReferencePath.Start.ANCESTOR, ctx.ns_ident(0).getText(),
+                    pathFields(ctx.ns_ident(1)));
+        }
+        return new ReferencePath(ctx.SCOPE() == null ? ReferencePath.Start.CURRENT : ReferencePath.Start.ROOT,
+                "", pathFields(ctx.ns_ident(0)));
+    }
+
+    private static List<String> pathFields(Ns_identContext ctx) {
+        return ctx.identifier().stream().map(IdentifierContext::getText).toList();
+    }
+
+    private ForeignKeySchema readRef(RefContext ctx, String name, List<ReferencePath> sources,
+                                     Metadata meta, boolean nullable, boolean inline) {
+        String refTable = ctx.ns_ident(0).getText();
         RefKey refKey;
         KeySchema remoteKey = null;
         KeyContext keyCtx = ctx.key();
@@ -430,7 +444,25 @@ public enum CfgReader {
         } else {
             refKey = new RefKey.RefList(remoteKey);
         }
-        return new ForeignKeySchema(name, localKey, refTable, refKey, meta);
+        if (ctx.SCOPE() != null || sources.stream().anyMatch(s -> !s.isLocalField()) || sources.isEmpty()) {
+            if (ctx.LISTREF() != null) {
+                throw new CfgSyntaxException("path sources are not supported by => references",
+                        ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            }
+            ReferencePath target;
+            if (ctx.AT() != null) {
+                target = new ReferencePath(ReferencePath.Start.ANCESTOR, refTable, pathFields(ctx.ns_ident(1)));
+            } else if (ctx.SCOPE() != null && ctx.ns_ident().size() == 1) {
+                target = new ReferencePath(ReferencePath.Start.ROOT, "", pathFields(ctx.ns_ident(0)));
+            } else {
+                target = new ReferencePath(ReferencePath.Start.TABLE, refTable,
+                        ctx.SCOPE() == null ? List.of() : pathFields(ctx.ns_ident(1)));
+            }
+            return new ForeignKeySchema(name, new PathReference(sources, target, inline),
+                    (RefKey.RefSimple) refKey, meta);
+        }
+        return new ForeignKeySchema(name, new KeySchema(sources.stream().map(s -> s.fields().getFirst()).toList()),
+                refTable, refKey, meta);
     }
 
     private KeySchema readKey(KeyContext keyCtx) {

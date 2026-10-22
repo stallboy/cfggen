@@ -9,7 +9,7 @@ public final class LoadValueErrs {
             UnsupportedVersion, OutOfBounds, UnconsumedBytes, InvalidCount, InvalidPoolIndex,
             LanguageCountMismatch, UnsupportedSchemaTag, MissingBlock, MissingPackageName, InvalidPackageName,
             InvalidDependency, MissingDependency, DuplicatePackage, MissingBasePackage,
-            ForeignLanguageResource, EmptyLanguageResource, UnexpectedLanguageBlock {}
+            ForeignLanguageResource, EmptyLanguageResource, UnexpectedLanguageBlock, UnknownTableBlock {}
 
     public record MissingReference(String source, String field, String target, Object key) implements Error {}
     public record DuplicateKey(String field, Object key) implements Error {}
@@ -46,6 +46,7 @@ public final class LoadValueErrs {
     public record ForeignLanguageResource(String pack, String resourcePack) implements Error {}
     public record EmptyLanguageResource(String pack) implements Error {}
     public record UnexpectedLanguageBlock(String block) implements Error {}
+    public record UnknownTableBlock(String pack, String block) implements Error {}
 
     private final List<Error> errors = new ArrayList<>();
 
@@ -89,6 +90,8 @@ public final class LoadValueErrs {
     public void schemaMismatch(String pack, String reason) {
         add(new SchemaMismatch(pack, reason));
     }
+
+    public void unknownTableBlock(String pack, String block) { add(new UnknownTableBlock(pack, block)); }
 
     public ConfigErr unknownVariant(String union, String tag) { return fail(new UnknownVariant(union, tag)); }
     ConfigErr unsupportedVersion(int version, int supported) { return fail(new UnsupportedVersion(version, supported)); }

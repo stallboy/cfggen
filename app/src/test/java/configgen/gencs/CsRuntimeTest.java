@@ -197,6 +197,14 @@ class CsRuntimeTest {
         rewritePackage(aDir, "bad-single-variant", blocks -> buffer(blocks.get(".only")).putInt(8, buffer(blocks.get(".other.preset")).getInt(8)));
         rewritePackage(aDir, "bad-schema", blocks -> blocks.put("schema", buffer(new byte[8]).putInt(11).putInt(0).array()));
         rewritePackage(aDir, "bad-extra", blocks -> blocks.put(".monster", java.util.Arrays.copyOf(blocks.get(".monster"), blocks.get(".monster").length + 1)));
+        rewritePackage(aDir, "bad-unknown-table", blocks -> {
+            blocks.put(".unexpected", new byte[]{1});
+            blocks.put(".monster", new byte[]{1}); // Validate block names before decoding even a known table.
+        });
+        rewritePackage(aDir, "optional-tools", blocks -> {
+            blocks.remove(".empty");
+            blocks.put("tools/checksum", new byte[]{1});
+        });
         rewritePackage(aDir, "bad-indices", blocks -> {
             byte[] original = blocks.get(".other.pair");
             var duplicate = buffer(new byte[28]);
@@ -306,6 +314,8 @@ class CsRuntimeTest {
                     static void Check(bool condition, [System.Runtime.CompilerServices.CallerLineNumber] int line = 0) { if (!condition) throw new Exception("runtime assertion failed at line " + line); }
                     static void Main(string[] args) {
                         var a = Load(args[0]); var b = Load(args[1]);
+                        var optional = Load(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(args[0])!, "optional-tools.bytes"));
+                        Check(DMonster.Get(optional, 1)!.Power == 20);
                         Check(DHollow.Get(a, 1)!.Values.Count == 2 && DHollow.Get(a, 1)!.Values[0].Calls == 1 && DHollow.Get(a, 1)!.Values[1].Calls == 1);
                         Check(DCaches.Get(a, 1)!.Values[1].Calls == 1 && DCaches.Get(a, 1)!.Values[2].Calls == 1);
                         var branch = (Config.Tree.DBranch)DForest.Get(a, 1)!.Root;
@@ -351,6 +361,7 @@ class CsRuntimeTest {
                             ("bad-single-variant", new[] { typeof(LoadError.UnknownVariant) }),
                             ("bad-schema", new[] { typeof(LoadError.SchemaMismatch) }),
                             ("bad-extra", new[] { typeof(LoadError.UnconsumedBytes) }),
+                            ("bad-unknown-table", new[] { typeof(LoadError.UnknownTableBlock) }),
                             ("bad-indices", new[] { typeof(LoadError.DuplicateUniqueKey), typeof(LoadError.InvalidSeq) }),
                             ("bad-map", new[] { typeof(LoadError.DuplicateKey), typeof(LoadError.DuplicateKey) }),
                             ("bad-duplicates", new[] { typeof(LoadError.DuplicateRecord), typeof(LoadError.DuplicateRecord) }) }) {
@@ -369,6 +380,7 @@ class CsRuntimeTest {
                                     }
                                     if (error is LoadError.DuplicateUniqueKey duplicate) Check(duplicate.Table == "other.pair" && duplicate.Packs.Count == 0);
                                     if (error is LoadError.InvalidSeq seq) Check(seq.Table == "step" && seq.Value == 9 && seq.Size == 2);
+                                    if (error is LoadError.UnknownTableBlock unknown) Check(unknown.Pack == "base" && unknown.Block == ".unexpected");
                                 }
                             }
                             Check(ReferenceEquals(ConfigMgr.GetMgr(), b));

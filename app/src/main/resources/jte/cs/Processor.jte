@@ -14,6 +14,11 @@ ${model.nsLine()}
 public static class Processor
 {
     private static readonly string Schema = ConfigPackage.SchemaKey(new ConfigReader(Convert.FromBase64String("${model.schemaBase64}")));
+    private static readonly HashSet<string> TableBlocks = new HashSet<string>(StringComparer.Ordinal) {
+        @for(TableSchema table : model.tableSchemas)
+        ".${table.name()}",
+        @endfor
+    };
     @if(!model.languageLiterals.isEmpty())
         private static readonly string[] Languages = { ${model.languageLiterals} };
     @endif
@@ -31,6 +36,11 @@ public static class Processor
         var errors = new LoadErrors();
         foreach (var pack in packages) {
             pack.ValidateSchema(Schema, errors);
+            foreach (string block in pack.BlockNames) {
+                if (block.StartsWith(".", StringComparison.Ordinal) && !TableBlocks.Contains(block)) {
+                    errors.UnknownTableBlock(pack.Name, block);
+                }
+            }
         }
         errors.CheckErrors();
         var config = new ConfigMgr();
@@ -51,6 +61,10 @@ public static class Processor
             @endif
         @endfor
         errors.CheckErrors();
+        @if(!model.relations.isEmpty())
+        ResolveRelations(config, errors);
+        errors.CheckErrors();
+        @endif
         @for(TableSchema table : model.tableSchemas)
             foreach (var row in ${model.fullName(table)}.All(config)) {
                 Ready(row, config);
@@ -66,6 +80,11 @@ public static class Processor
             extension.OnConfigReady(config);
         }
     }
+
+    @if(!model.relations.isEmpty())
+    @template.cs.Relations(model = model)
+    @template.cs.RelationResolver()
+    @endif
 
     @for(Structural structural : model.readyStructs)
         private static void Ready(${model.fullName(structural)} value, ConfigMgr config)

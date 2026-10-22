@@ -18,6 +18,16 @@ public class CfgSchema {
     private Map<String, Fieldable> fieldableMap;
     private Map<String, TableSchema> tableMap;
     private boolean isResolved = false;
+    private ReferenceSchema references;
+
+    public ReferenceSchema references() {
+        return references;
+    }
+
+    void resolveReferences(CfgSchemaErrs errors) {
+        references = new ReferenceSchema(this);
+        references.resolve(errors);
+    }
 
     // 按包名（namespace）存储文件末尾注释
     private final Map<String, String> fileEndComments = new HashMap<>();

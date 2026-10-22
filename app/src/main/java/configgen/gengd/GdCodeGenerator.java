@@ -16,7 +16,9 @@ import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,6 +34,8 @@ public class GdCodeGenerator extends GeneratorWithTag {
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
     public CfgSchema cfgSchema;
+    public boolean hasRelations;
+    final Set<StructSchema> keyStructs = new HashSet<>();
     public boolean isLangSwitch;
     public List<String> languageNames;
 
@@ -67,6 +71,21 @@ public class GdCodeGenerator extends GeneratorWithTag {
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
+        hasRelations = cfgSchema.references().hasRelations();
+        keyStructs.clear();
+        if (hasRelations) {
+            ForeachSchema.foreachStructural(owner -> {
+                if (owner instanceof TableSchema table) {
+                    collectKeyStructs(table.primaryKey());
+                    table.uniqueKeys().forEach(this::collectKeyStructs);
+                }
+                for (FieldSchema field : owner.fields()) {
+                    if (field.type() instanceof FieldType.FMap map) collectKeyStruct(map.key());
+                    KeySchema index = cfgSchema.references().index(field);
+                    if (index != null) collectKeyStructs(index);
+                }
+            }, cfgSchema);
+        }
 
         // gd 不支持复合键：提前报清涉及的表并给出处理办法，而不是渲染中途抛裸异常栈
         List<String> compositeKeyTables = new ArrayList<>();
@@ -77,7 +96,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
                 compositeKeyTables.add(s.name());
             }
         }
-        if (!compositeKeyTables.isEmpty()) {
+        if (!hasRelations && !compositeKeyTables.isEmpty()) {
             throw new CliException("gd not support composite key: " + String.join(", ", compositeKeyTables)
                     + "; add (nogd) tag to these tables or filter with own:-nogd");
         }
@@ -100,7 +119,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
                     ENCODING, outputFiles);
         }
 
-        generateProcessor(cfgSchema);
+        generateProcessor(cfgValue);
 
         // struct/interface/table 类各自生成独立文件，互不依赖；单阶段并发渲染。
         // 唯一共享可变状态是打印机缓冲区，已用 ThreadLocal（mainCc）按线程隔离。
@@ -146,6 +165,14 @@ public class GdCodeGenerator extends GeneratorWithTag {
         }
     }
 
+    private void collectKeyStructs(KeySchema key) {
+        for (FieldSchema field : key.fieldSchemas()) collectKeyStruct(field.type());
+    }
+
+    private void collectKeyStruct(FieldType type) {
+        if (type instanceof FieldType.StructRef ref && ref.obj() instanceof StructSchema struct) keyStructs.add(struct);
+    }
+
     private void generateStruct(StructSchema structSchema) {
         generateStructOrTable(structSchema, null);
     }
@@ -161,9 +188,9 @@ public class GdCodeGenerator extends GeneratorWithTag {
         }
     }
 
-    private void generateProcessor(CfgSchema cfgSchema) {
+    private void generateProcessor(CfgValue cfgValue) {
         try (var ps = createCode("ConfigProcessor.gd")) {
-            JteEngine.render("gd/Processor.jte", new ProcessorModel(this, cfgSchema.sortedTables()), ps);
+            JteEngine.render("gd/Processor.jte", new ProcessorModel(this, cfgValue), ps);
         }
     }
 

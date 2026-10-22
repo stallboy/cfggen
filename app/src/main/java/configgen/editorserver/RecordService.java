@@ -33,7 +33,8 @@ public class RecordService {
             String id,
             int maxObjs,
             JSONObject object,
-            Collection<BriefRecord> refs) implements RecordResponse {
+            Collection<BriefRecord> refs,
+            String revision) implements RecordResponse {
     }
 
     public record TableRecordRefs(
@@ -43,14 +44,16 @@ public class RecordService {
             int depth,
             boolean in,
             int maxObjs,
-            Collection<BriefRecord> refs) implements RecordResponse {
+            Collection<BriefRecord> refs,
+            String revision) implements RecordResponse {
     }
 
     public record UnreferencedRecords(
             ResultCode resultCode,
             String table,
             int maxObjs,
-            Collection<BriefRecord> refs) implements RecordResponse {
+            Collection<BriefRecord> refs,
+            String revision) implements RecordResponse {
     }
 
 
@@ -98,10 +101,23 @@ public class RecordService {
     private final boolean in;
     private final int maxObjs;
     private final RequestType requestType;
+    private final String revision;
+    private ValueReferences pathReferences;
+
+    private ValueReferences pathReferences() {
+        if (pathReferences == null) pathReferences = ValueReferences.forQuery(cfgValue);
+        return pathReferences;
+    }
 
     public RecordService(CfgValue cfgValue, TableSchemaRefGraph graph,
                          String tableName, String id,
                          int depth, boolean in, int maxObjs, RequestType requestType) {
+        this(cfgValue, graph, tableName, id, depth, in, maxObjs, requestType, null);
+    }
+
+    public RecordService(CfgValue cfgValue, TableSchemaRefGraph graph,
+                         String tableName, String id,
+                         int depth, boolean in, int maxObjs, RequestType requestType, String revision) {
         this.cfgValue = cfgValue;
         this.graph = graph;
         this.table = tableName;
@@ -110,13 +126,14 @@ public class RecordService {
         this.in = in;
         this.maxObjs = maxObjs;
         this.requestType = requestType;
+        this.revision = revision;
     }
 
     private RecordResponse ofErr(ResultCode code) {
         return switch (requestType) {
-            case requestRecord -> new TableRecord(code, table, id, maxObjs, null, null);
-            case requestRefs -> new TableRecordRefs(code, table, id, depth, in, maxObjs, null);
-            case requestUnreferenced -> new UnreferencedRecords(code, table, maxObjs, null);
+            case requestRecord -> new TableRecord(code, table, id, maxObjs, null, null, revision);
+            case requestRefs -> new TableRecordRefs(code, table, id, depth, in, maxObjs, null, revision);
+            case requestUnreferenced -> new UnreferencedRecords(code, table, maxObjs, null, revision);
         };
     }
 
@@ -168,7 +185,7 @@ public class RecordService {
         int startDepth;
         switch (requestType) {
             case requestRecord -> {
-                object = new ValueToJson(cfgValue, frontier).toJson(vRecord);
+                object = ValueToJson.forEditor(cfgValue, frontier, pathReferences(), revision).toJson(vRecord);
                 frontier.remove(thisObjId);
                 startDepth = 1;
             }
@@ -183,7 +200,7 @@ public class RecordService {
         Map<RefId, BriefRecord> result = expandRefOut(frontier, startDepth, Set.of(thisObjId));
 
         if (in) {
-            ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
+            ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue, pathReferences());
             Map<RefId, ForeachVStruct.Context> refIns = refInCollector.collect(vTable, pkValue);
             if (!refIns.isEmpty()) {
                 for (RefId r : result.keySet()) {
@@ -194,7 +211,7 @@ public class RecordService {
             for (Map.Entry<RefId, ForeachVStruct.Context> e : refIns.entrySet()) {
                 RefId refId = e.getKey();
                 VStruct vStruct = e.getValue().recordValue();
-                List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(vStruct, cfgValue);
+                List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(vStruct, cfgValue, pathReferences(), revision);
                 result.put(refId, vStructToBriefRecord(refId, vStruct, fieldRefs, -1));
                 if (result.size() > maxObjs + 8) {
                     break;
@@ -204,8 +221,8 @@ public class RecordService {
 
 
         return switch (requestType) {
-            case requestRecord -> new TableRecord(ok, table, id, maxObjs, object, result.values());
-            case requestRefs -> new TableRecordRefs(ok, table, id, depth, in, maxObjs, result.values());
+            case requestRecord -> new TableRecord(ok, table, id, maxObjs, object, result.values(), revision);
+            case requestRefs -> new TableRecordRefs(ok, table, id, depth, in, maxObjs, result.values(), revision);
             case requestUnreferenced -> throw new AssertionError("Should not reach here");
         };
 
@@ -223,7 +240,7 @@ public class RecordService {
                 VStruct record = e.getValue();
 
                 List<FieldRef> fieldRefs = new ArrayList<>();
-                ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, fieldRefs);
+                ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, fieldRefs, pathReferences(), revision);
                 collector.collect(record, List.of());
 
                 result.put(refId, vStructToBriefRecord(refId, record, fieldRefs, curDepth));
@@ -254,7 +271,7 @@ public class RecordService {
 
     private RecordResponse handleRequestUnreferenced(VTable vTable) {
         UnreferencedInTable unreferencedInTable = UnreferencedRecordCollector.collectUnreferencedInTable(
-                cfgValue, vTable, graph);
+                cfgValue, vTable, graph, pathReferences());
 
 
         Map<RefId, BriefRecord> unreferencedRecords = new LinkedHashMap<>();
@@ -263,12 +280,12 @@ public class RecordService {
                 break;
             }
             RefId refId = new RefId(vTable.name(), rec.primaryKey());
-            List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(rec.record(), cfgValue);
+            List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(rec.record(), cfgValue, pathReferences(), revision);
             BriefRecord briefRecord = vStructToBriefRecord(refId, rec.record(), fieldRefs, 0);
             unreferencedRecords.put(refId, briefRecord);
         }
 
-        return new UnreferencedRecords(ok, table, maxObjs, unreferencedRecords.values());
+        return new UnreferencedRecords(ok, table, maxObjs, unreferencedRecords.values(), revision);
     }
 
     private static BriefRecord vStructToBriefRecord(RefId refId, VStruct vStruct, Collection<FieldRef> refs, int depth) {

@@ -26,7 +26,21 @@ class_name ${model.name.className}
 @if(!model.structural.foreignKeys().isEmpty())
 	# 外键引用属性
 	@for(ForeignKeySchema fk : model.structural.foreignKeys())
+	@if(fk.pathReference() != null)
+		var ${model.refName(fk)}: ${model.refType(fk)}:
+			get:
+				if not has_meta(&"_cfggen_${model.refName(fk)}"):
+					return null
+				var target: WeakRef = get_meta(&"_cfggen_${model.refName(fk)}") as WeakRef
+				return target.get_ref() as ${model.refType(fk)} if target != null else null
+			set(value):
+				if value != null:
+					set_meta(&"_cfggen_${model.refName(fk)}", weakref(value))
+				elif has_meta(&"_cfggen_${model.refName(fk)}"):
+					remove_meta(&"_cfggen_${model.refName(fk)}")
+	@else
 		var ${model.refName(fk)}: ${model.refType(fk)}
+	@endif
 	@endfor
 @endif
 
@@ -42,18 +56,23 @@ class_name ${model.name.className}
 	@endif
 
 	# 内部存储
-	static var _data: Dictionary[${model.keyType()}, ${model.name.className}] = {}
+	static var _data: ${model.dictionaryType(table.primaryKey(), model.name.className)} = {}
 	@for(KeySchema uk : table.uniqueKeys())
 		static var ${model.uniqueKeyMapName(uk)}: ${model.dictionaryType(uk, model.name.className)} = {}
 	@endfor
 
 	# 主键查询
+	@if(model.hasRelations())
+	static func find(${model.keyParams(table.primaryKey())}) -> ${model.name.className}:
+		return _data.get(${model.argumentKey(table.primaryKey())})
+	@else
 	static func find(id: ${model.keyType()}) -> ${model.name.className}:
 		return _data.get(id)
+	@endif
 	@for(KeySchema uk : table.uniqueKeys())
 		# 唯一键查询
-		static func ${model.uniqueKeyGetByName(uk)}(${model.actualParams(uk)}) -> ${model.name.className}:
-			return ${model.uniqueKeyMapName(uk)}.get(${model.actualParams(uk)})
+		static func ${model.uniqueKeyGetByName(uk)}(${model.keyParams(uk)}) -> ${model.name.className}:
+			return ${model.uniqueKeyMapName(uk)}.get(${model.argumentKey(uk)})
 	@endfor
 	# 获取所有数据
 	static func all() -> Array[${model.name.className}]:
@@ -88,9 +107,9 @@ func _to_string() -> String:
 		var count = stream.read_count(1)
 		for i in range(count):
 			var item = _create(stream)
-			_data[item.${model.primaryKeyFieldName()}] = item
+			_data[${model.valueKey(table.primaryKey(), "item.")}] = item
 			@for(KeySchema uk : table.uniqueKeys())
-				${model.uniqueKeyMapName(uk)}[item.${model.actualParamsKeySelf(uk)}] = item
+				${model.uniqueKeyMapName(uk)}[${model.valueKey(uk, "item.")}] = item
 			@endfor
 
 			@if(table.entry() instanceof EntryType.EntryBase entryBase)
@@ -118,6 +137,12 @@ func _to_string() -> String:
 @endif
 
 # 创建实例
+@if(model.keyStruct())
+func _init():
+	set_meta(&"_cfggen_key_fields", [${model.structural.fields().stream().map(f -> "\"" + model.fieldName(f) + "\"").collect(java.util.stream.Collectors.joining(", "))}])
+	set_meta(&"_cfggen_key_type", "${model.structural.fullName()}")
+
+@endif
 static func _create(stream: ConfigStream) -> ${model.name.className}:
 	var instance = ${model.name.className}.new()
 	@for(FieldSchema field : model.structural.fields())
@@ -130,6 +155,11 @@ static func _create(stream: ConfigStream) -> ${model.name.className}:
 			for c in range(stream.read_count(0)):
 				var k = ${model.create(key)}
 				var v = ${model.create(value)}
+				@if(model.hasRelations())
+				if instance.${model.fieldName(field)}.has(k):
+					stream.fail("Duplicate map key: ${model.structural.fullName()}.${n}")
+					return instance
+				@endif
 				instance.${model.fieldName(field)}[k] = v
 		@else
 			instance.${model.fieldName(field)} = ${model.create(t)}
@@ -141,6 +171,7 @@ static func _create(stream: ConfigStream) -> ${model.name.className}:
 @if(configgen.schema.HasRef.hasRef(model.structural))
 	# 解析外键引用
 	func _resolve(errors: ConfigErrors):
+		pass
 		@for(FieldSchema field : model.structural.fields())
 			!{FieldType type = field.type();}
 			@if(configgen.schema.HasRef.hasRef(type))
@@ -167,7 +198,7 @@ static func _create(stream: ConfigStream) -> ${model.name.className}:
 		@endfor
 
 		@for(ForeignKeySchema fk : model.structural.foreignKeys())
-			@if(fk.refKey() instanceof RefKey.RefSimple refSimple)
+			@if(fk.pathReference() == null && fk.refKey() instanceof RefKey.RefSimple refSimple)
 				!{var firstField = fk.key().fieldSchemas().getFirst();}
 				!{var refName = model.refName(fk);}
 				!{var fkStr = "\"" + fk.name() + "\"";}

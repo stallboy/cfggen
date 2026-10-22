@@ -19,7 +19,7 @@ func ReadPackage(data []byte) *ConfigPackage {
 	input := &Stream{reader: bytes.NewReader(data)}
 	version := input.ReadInt32()
 	if version != ConfigFormatVersion {
-		panic(fmt.Sprintf("unsupported config format version %d; reader supports [1]. Regenerate the reader or export compatible data.", version))
+		panic(fmt.Sprintf("unsupported config format version %d; reader supports 1. Regenerate the reader or export compatible data.", version))
 	}
 	pack := &ConfigPackage{metadata: make(map[string]string), blocks: make(map[string][]byte)}
 	for count := input.ReadCount(8); count > 0; count-- {

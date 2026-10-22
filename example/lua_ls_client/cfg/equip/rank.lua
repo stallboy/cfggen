@@ -15,11 +15,11 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.equip.rank
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil, 
+local mk = cfg[0].table('equip.rank', this, {{'all','get',{'rankID'}}}, {fields={
     'rankID', -- int, 稀有度
     'rankName', -- str, 程序用名字
     'rankShowName' -- str, 显示名称
-    )
+    }, uniqkeys={ { 'all', 'get', 1 }, }, enumidx=2, refs=nil}, nil)
 
 mk(0, "white", "下品")
 mk(1, "green", "中品")
@@ -28,4 +28,5 @@ mk(3, "purple", "绝品")
 mk(4, "yellow", "准神")
 mk(5, "red", "神")
 
+cfg[0].complete('equip.rank')
 return this

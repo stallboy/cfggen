@@ -66,7 +66,7 @@ public class TableSchemaRefGraph {
                 case Structural structural -> {
                     for (ForeignKeySchema fk : structural.foreignKeys()) {
                         TableSchema t = fk.refTableSchema();
-                        refOut.put(t.name(), t);
+                        if (t != null) refOut.put(t.name(), t);
                     }
                 }
             }

@@ -18,6 +18,7 @@ public class RefValidator {
     }
 
     public void validate() {
+        if (cfgValue.schema().references().hasRelations()) new ValueReferences(cfgValue).resolve(errs);
         ForeachVStruct.foreach(this::validateVStruct, cfgValue);
     }
 
@@ -25,6 +26,7 @@ public class RefValidator {
         VTable fromTable = ctx.fromVTable();
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
+            if (fk.pathReference() != null) continue;
             RefKey refKey = fk.refKey();
 
             if (refKey instanceof RefKey.RefSimple refSimple) {

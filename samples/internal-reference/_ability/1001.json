@@ -1,0 +1,20 @@
+{
+  "id": 1001,
+  "machines": [
+    {
+      "machineKey": "Combat",
+      "phases": [
+        { "phaseKey": "Idle", "nextPhaseKey": "Hit" },
+        { "phaseKey": "Hit", "nextPhaseKey": "Idle" }
+      ],
+      "initialPhaseKey": "Idle"
+    },
+    {
+      "machineKey": "Movement",
+      "phases": [
+        { "phaseKey": "Idle", "nextPhaseKey": "" }
+      ],
+      "initialPhaseKey": "Idle"
+    }
+  ]
+}

@@ -14,16 +14,17 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.equip.equip_config
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 1, nil, 
+local mk = cfg[0].table('equip.equip_config', this, {{'all','get',{'entry'}}}, {fields={
     'entry', -- str, 入口，程序填
     'stone_count_for_set', -- int, 形成套装的音石数量
     'draw_protect_name', -- str, 保底策略名称
     'broadcastid', -- int, 公告Id
     'broadcast_least_quality', -- int, 公告的最低品质
     'week_reward_mailid' -- int, 抽卡周奖励的邮件id
-    )
+    }, uniqkeys={ { 'all', 'get', 1 }, }, enumidx=1, refs=nil}, nil)
 
 mk("Instance", 2, "测试", 9500, 1003, 100)
 mk("Instance2", 3, "aa", 1, 2, 33)
 
+cfg[0].complete('equip.equip_config')
 return this

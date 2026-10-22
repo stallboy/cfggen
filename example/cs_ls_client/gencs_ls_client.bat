@@ -1,5 +1,10 @@
+@echo off
+setlocal
+cd /d "%~dp0"
+
 if exist "Config\Loader.cs" del /q "Config\Loader.cs"
 
-call %~dp0..\cfggen_common.bat
+call "%~dp0..\cfggen_common.bat"
 %CFGGEN% -langswitchdir ../i18n/langs -gen cs,dir:.,encoding:UTF-8,unity -gen bytes
+exit /b %errorlevel%
 

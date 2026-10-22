@@ -10,8 +10,8 @@ var argSList: Array[int]  # 参数(string)1
 # 内部存储
 static var _data: Dictionary[int, DataAi_Ai_action] = {}
 # 主键查询
-static func find(id: int) -> DataAi_Ai_action:
-	return _data.get(id)
+static func find(key_0: int) -> DataAi_Ai_action:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataAi_Ai_action]:
 	return _data.values()

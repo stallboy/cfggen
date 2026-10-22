@@ -79,7 +79,7 @@ public class Name {
         // 这样 beautifulName 时 "_Detail" 会被一并 pascal 化（ai_action_Detail -> AiActionDetail），
         // 而不是在这里拼出与实际类名不一致的 "AiAction_Detail"。
         String postfix = (table.entry() instanceof EntryType.EEnum
-                && !GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(table)) ? "_Detail" : "";
+                && GenJavaUtil.needsTableData(table)) ? "_Detail" : "";
         return new NameableName(cfg, table, postfix).fullName;
     }
 
@@ -89,6 +89,11 @@ public class Name {
     }
 
     public static String refType(GenCfg cfg, ForeignKeySchema fk) {
+        if (fk.pathReference() != null) {
+            Nameable target = fk.referenceResultType();
+            return target instanceof TableSchema table && GenJavaUtil.needsTableData(table)
+                    ? tableDataFullName(cfg, table) : fullName(cfg, target);
+        }
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
                 return "java.util.List<" + refType(cfg, fk.refTableSchema()) + ">";

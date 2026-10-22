@@ -1,8 +1,8 @@
 local cfg = require "cfg._cfgs"
-local Beans = cfg._beans
+local Beans = require "cfg._beans"
 
 ---@class cfg.ai.ai
----@field iD number 
+---@field iD number
 ---@field desc string , 描述----这里测试下多行效果--再来一行
 ---@field condID string , 触发公式
 ---@field trigTick Beans.ai.triggertick , 触发间隔(帧)
@@ -14,7 +14,7 @@ local Beans = cfg._beans
 
 local this = cfg.ai.ai
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil, 
+local mk = cfg[0].table('ai.ai', this, {{'all','get',{'iD'}}}, {fields={
     'iD', -- int
     'desc', -- str, 描述----这里测试下多行效果--再来一行
     'condID', -- str, 触发公式
@@ -22,68 +22,64 @@ local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil,
     'trigOdds', -- int, 触发几率
     'actionID', -- list<int>, 触发行为
     'deathRemove' -- bool, 死亡移除
-    )
+    }, uniqkeys={ { 'all', 'get', 1 }, }, enumidx=nil, refs=nil}, nil)
 
 local bylevel = Beans.ai.triggertick.bylevel
 local byserverupday = Beans.ai.triggertick.byserverupday
 local constvalue = Beans.ai.triggertick.constvalue
 
-local A = {}
-A[1] = constvalue(-1)
-A[2] = constvalue(30000)
-A[3] = constvalue(3000)
+mk(1, "", "1;2", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(150)), 10000, {1, 2}, true)
+mk(10012, "召唤猴子", "10012", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {10012}, true)
+mk(10013, "召唤猩猩", "10013", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {10013}, true)
+mk(10015, "召唤沙元素", "10013", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {10015}, true)
+mk(10017, "召唤木乃伊", "10012", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {10017}, true)
+mk(10018, "基地不消失用", "10012", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {10018}, true)
+mk(10019, "新手关塔减伤", "10012", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(30000)), 10000, {10019}, true)
+mk(10020, "新手关召唤猩猩", "10013", cfg[0].node("ai.TriggerTick.ByLevel", bylevel(100, 0.1)), 10000, {10020}, true)
+mk(10021, "召唤哥布林", "10012", cfg[0].node("ai.TriggerTick.ByServerUpDay", byserverupday(10, 0.1, 0.2)), 10000, {10021}, true)
+mk(1017001, "1级蘑菇兵自爆", "1017001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1017001}, true)
+mk(1017002, "2级蘑菇兵自爆", "1017001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1017002}, true)
+mk(1017003, "3级蘑菇兵自爆", "1017001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1017003}, true)
+mk(1017004, "4级蘑菇兵自爆", "1017001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1017004}, true)
+mk(1017005, "5级蘑菇兵自爆", "1017001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1017005}, true)
+mk(1017006, "6级蘑菇兵自爆", "1017001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1017006}, true)
+mk(1017007, "蘑菇兵免伤", "1017007", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(30000)), 10000, {1017007}, true)
+mk(1018001, "1级阿努比斯自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1018001}, true)
+mk(1018002, "2级阿努比斯自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1018002}, true)
+mk(1018003, "3级阿努比斯自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1018003}, true)
+mk(1018004, "4级阿努比斯自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1018004}, true)
+mk(1018005, "5级阿努比斯自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1018005}, true)
+mk(1018006, "6级阿努比斯自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1018006}, true)
+mk(1030101, "1级野猪自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1030001}, true)
+mk(1030102, "2级野猪自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1030002}, true)
+mk(1030103, "3级野猪自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1030003}, true)
+mk(1030104, "4级野猪自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1030004}, true)
+mk(1030105, "5级野猪自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1030005}, true)
+mk(1030106, "6级野猪自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1030006}, true)
+mk(1071001, "1级鲨鱼自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1071001}, true)
+mk(1071002, "2级鲨鱼自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1071002}, true)
+mk(1071003, "3级鲨鱼自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1071003}, true)
+mk(1071004, "4级鲨鱼自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1071004}, true)
+mk(1071005, "5级鲨鱼自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1071005}, true)
+mk(1071006, "6级鲨鱼自爆", "1018001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1071006}, true)
+mk(5003001, "召唤猴子", "10012", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {5003001}, true)
+mk(5003002, "召唤猩猩", "10013", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {5003002}, true)
+mk(5003, "召唤囚徒", "10012", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {5003}, true)
+mk(1030001, "召唤哥布林", "10012", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1003002}, true)
+mk(1030002, "召唤雪怪", "10013", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1003001}, true)
+mk(5004001, "", "5004001", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 20, {5004001}, true)
+mk(1068012, "召唤猴子", "10012", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1068001}, true)
+mk(2005001, "地雷开局自毁", "200501", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {200601}, true)
+mk(1020, "召唤猴子", "10012", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1020}, true)
+mk(1071013, "召唤炮塔怪物（目前是猩猩）", "10013", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1071013}, true)
+mk(1071014, "召唤箭塔怪物（目前是猴子）", "10013", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {1071014}, true)
+mk(103011, "抵消减速buff", "103011", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(30000)), 10000, {103011}, true)
+mk(2080, "召唤哥布林", "20801", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {20801}, true)
+mk(20017, "女巫师召唤的自爆虫3秒自杀", "20017", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {20017}, true)
+mk(20020, "女忍者分身血量低于40%自杀", "20020", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(3000)), 10000, {20020}, true)
+mk(20021, "虫茧死亡召唤蜘蛛", "20021", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(300)), 10000, {20021}, false)
+mk(20002, "", "103011", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(-1)), 10000, {20002}, true)
+mk(200201, "女忍者分身10秒钟消失", "200201", cfg[0].node("ai.TriggerTick.ConstValue", constvalue(3000)), 10000, {200201}, true)
 
-mk(1, "", "1;2", constvalue(150), 10000, {1, 2}, true)
-mk(10012, "召唤猴子", "10012", A[1], 10000, {10012}, true)
-mk(10013, "召唤猩猩", "10013", A[1], 10000, {10013}, true)
-mk(10015, "召唤沙元素", "10013", A[1], 10000, {10015}, true)
-mk(10017, "召唤木乃伊", "10012", A[1], 10000, {10017}, true)
-mk(10018, "基地不消失用", "10012", A[1], 10000, {10018}, true)
-mk(10019, "新手关塔减伤", "10012", A[2], 10000, {10019}, true)
-mk(10020, "新手关召唤猩猩", "10013", bylevel(100, 0.1), 10000, {10020}, true)
-mk(10021, "召唤哥布林", "10012", byserverupday(10, 0.1, 0.2), 10000, {10021}, true)
-mk(1017001, "1级蘑菇兵自爆", "1017001", A[1], 10000, {1017001}, true)
-mk(1017002, "2级蘑菇兵自爆", "1017001", A[1], 10000, {1017002}, true)
-mk(1017003, "3级蘑菇兵自爆", "1017001", A[1], 10000, {1017003}, true)
-mk(1017004, "4级蘑菇兵自爆", "1017001", A[1], 10000, {1017004}, true)
-mk(1017005, "5级蘑菇兵自爆", "1017001", A[1], 10000, {1017005}, true)
-mk(1017006, "6级蘑菇兵自爆", "1017001", A[1], 10000, {1017006}, true)
-mk(1017007, "蘑菇兵免伤", "1017007", A[2], 10000, {1017007}, true)
-mk(1018001, "1级阿努比斯自爆", "1018001", A[1], 10000, {1018001}, true)
-mk(1018002, "2级阿努比斯自爆", "1018001", A[1], 10000, {1018002}, true)
-mk(1018003, "3级阿努比斯自爆", "1018001", A[1], 10000, {1018003}, true)
-mk(1018004, "4级阿努比斯自爆", "1018001", A[1], 10000, {1018004}, true)
-mk(1018005, "5级阿努比斯自爆", "1018001", A[1], 10000, {1018005}, true)
-mk(1018006, "6级阿努比斯自爆", "1018001", A[1], 10000, {1018006}, true)
-mk(1030101, "1级野猪自爆", "1018001", A[1], 10000, {1030001}, true)
-mk(1030102, "2级野猪自爆", "1018001", A[1], 10000, {1030002}, true)
-mk(1030103, "3级野猪自爆", "1018001", A[1], 10000, {1030003}, true)
-mk(1030104, "4级野猪自爆", "1018001", A[1], 10000, {1030004}, true)
-mk(1030105, "5级野猪自爆", "1018001", A[1], 10000, {1030005}, true)
-mk(1030106, "6级野猪自爆", "1018001", A[1], 10000, {1030006}, true)
-mk(1071001, "1级鲨鱼自爆", "1018001", A[1], 10000, {1071001}, true)
-mk(1071002, "2级鲨鱼自爆", "1018001", A[1], 10000, {1071002}, true)
-mk(1071003, "3级鲨鱼自爆", "1018001", A[1], 10000, {1071003}, true)
-mk(1071004, "4级鲨鱼自爆", "1018001", A[1], 10000, {1071004}, true)
-mk(1071005, "5级鲨鱼自爆", "1018001", A[1], 10000, {1071005}, true)
-mk(1071006, "6级鲨鱼自爆", "1018001", A[1], 10000, {1071006}, true)
-mk(5003001, "召唤猴子", "10012", A[1], 10000, {5003001}, true)
-mk(5003002, "召唤猩猩", "10013", A[1], 10000, {5003002}, true)
-mk(5003, "召唤囚徒", "10012", A[1], 10000, {5003}, true)
-mk(1030001, "召唤哥布林", "10012", A[1], 10000, {1003002}, true)
-mk(1030002, "召唤雪怪", "10013", A[1], 10000, {1003001}, true)
-mk(5004001, "", "5004001", A[1], 20, {5004001}, true)
-mk(1068012, "召唤猴子", "10012", A[1], 10000, {1068001}, true)
-mk(2005001, "地雷开局自毁", "200501", A[1], 10000, {200601}, true)
-mk(1020, "召唤猴子", "10012", A[1], 10000, {1020}, true)
-mk(1071013, "召唤炮塔怪物（目前是猩猩）", "10013", A[1], 10000, {1071013}, true)
-mk(1071014, "召唤箭塔怪物（目前是猴子）", "10013", A[1], 10000, {1071014}, true)
-mk(103011, "抵消减速buff", "103011", A[2], 10000, {103011}, true)
-mk(2080, "召唤哥布林", "20801", A[1], 10000, {20801}, true)
-mk(20017, "女巫师召唤的自爆虫3秒自杀", "20017", A[1], 10000, {20017}, true)
-mk(20020, "女忍者分身血量低于40%自杀", "20020", A[3], 10000, {20020}, true)
-mk(20021, "虫茧死亡召唤蜘蛛", "20021", constvalue(300), 10000, {20021}, false)
-mk(20002, "", "103011", A[1], 10000, {20002}, true)
-mk(200201, "女忍者分身10秒钟消失", "200201", A[3], 10000, {200201}, true)
-
+cfg[0].complete('ai.ai')
 return this

@@ -16,7 +16,7 @@ final class GenConfigCodeSchema {
         SchemaInterface schemaInterface = SchemaParser.parsePackage(cfgValue, ls);
         Set<String> packageOnly = new HashSet<>();
         for (var table : cfgValue.tables()) {
-            if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(table.schema())) {
+            if (!GenJavaUtil.needsTableData(table.schema())) {
                 packageOnly.add(table.name() + "_Detail");
             }
         }

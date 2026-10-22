@@ -18,12 +18,14 @@ func createOtherSign_in(stream *Stream) *OtherSign_in {
     v.item2countMap = make(map[int32]int32, item2countMapSize)
     for i := 0; i < item2countMapSize; i++ {
         var k = stream.ReadInt32()
+        if _, exists := v.item2countMap[k]; exists { panic("duplicate map key: other.sign_in.item2countMap") }
         v.item2countMap[k] = stream.ReadInt32()
     }
     vipitem2vipcountMapSize := stream.ReadCount(0)
     v.vipitem2vipcountMap = make(map[int32]int32, vipitem2vipcountMapSize)
     for i := 0; i < vipitem2vipcountMapSize; i++ {
         var k = stream.ReadInt32()
+        if _, exists := v.vipitem2vipcountMap[k]; exists { panic("duplicate map key: other.sign_in.vipitem2vipcountMap") }
         v.vipitem2vipcountMap[k] = stream.ReadInt32()
     }
     v.viplevel = stream.ReadInt32()
@@ -32,7 +34,7 @@ func createOtherSign_in(stream *Stream) *OtherSign_in {
 }
 
 func (t *OtherSign_in) String() string {
-    return fmt.Sprintf("OtherSign_in{id=%v, item2countMap=%v, vipitem2vipcountMap=%v, viplevel=%v, iconFile=%v}", t.id, fmt.Sprintf("%v", t.item2countMap), fmt.Sprintf("%v", t.vipitem2vipcountMap), t.viplevel, t.iconFile)
+    return fmt.Sprintf("OtherSign_in{id=%v, item2countMap=%v, vipitem2vipcountMap=%v, viplevel=%v, iconFile=%v}", t.id, t.item2countMap, t.vipitem2vipcountMap, t.viplevel, t.iconFile)
 }
 
 //getters
@@ -56,16 +58,16 @@ func (t *OtherSign_in) IconFile() string {
     return t.iconFile
 }
 
-//map ref
-func (t *OtherSign_in) RefVipitem2vipcountMap() map[int32]*OtherLoot {
-    if t.refVipitem2vipcountMap == nil {
-        t.refVipitem2vipcountMap = make(map[int32]*OtherLoot, len(t.vipitem2vipcountMap))
-        for k, v := range t.vipitem2vipcountMap {
-            t.refVipitem2vipcountMap[k] = GetOtherLootMgr().Get(v)
+    func (t *OtherSign_in) RefVipitem2vipcountMap() map[int32]*OtherLoot {
+        if t.refVipitem2vipcountMap == nil {
+            t.refVipitem2vipcountMap = make(map[int32]*OtherLoot, len(t.vipitem2vipcountMap))
+            for key, value := range t.vipitem2vipcountMap {
+                t.refVipitem2vipcountMap[key] = GetOtherLootMgr().Get(value)
+            }
         }
+        return t.refVipitem2vipcountMap
     }
-    return t.refVipitem2vipcountMap
-}
+
 type OtherSign_inMgr struct {
     all []*OtherSign_in
     idMap map[int32]*OtherSign_in

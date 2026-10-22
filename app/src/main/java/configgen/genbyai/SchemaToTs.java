@@ -1,6 +1,7 @@
 package configgen.genbyai;
 
 import configgen.schema.*;
+import configgen.schema.cfg.CfgWriter;
 import configgen.value.CfgValue;
 import configgen.value.ValueUtil;
 
@@ -39,6 +40,7 @@ public class SchemaToTs {
 
             if (struct instanceof Structural structural) {
                 for (ForeignKeySchema fk : structural.foreignKeys()) {
+                    if (fk.pathReference() != null) continue;
                     // 简单一点: 1.只处理单字段，2.只考虑枚举table或在extraRefTables中的table
                     if (fk.key().fields().size() == 1
                             && (fk.refTableSchema().entry() instanceof EntryType.EEnum
@@ -128,6 +130,12 @@ public class SchemaToTs {
                 }
                 for (FieldSchema field : structural.fields()) {
                     println("\t%s: %s;%s", field.name(), fieldType(field, structural), comment(field.comment()));
+                }
+                for (ForeignKeySchema fk : structural.foreignKeys()) {
+                    if (fk.pathReference() != null) {
+                        println("\t// ->%s:%s%s%s", fk.name(), CfgWriter.sourceStr(fk), CfgWriter.foreignStr(fk),
+                                ((RefKey.RefSimple) fk.refKey()).nullable() ? " (nullable)" : "");
+                    }
                 }
                 println("}");
             }

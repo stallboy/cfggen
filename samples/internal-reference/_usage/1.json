@@ -1,0 +1,23 @@
+{
+  "id": 1,
+  "uses": [
+    {
+      "abilityId": 1001,
+      "machines": [
+        {
+          "machineKey": "Combat",
+          "targets": [
+            { "phaseKey": "Idle" },
+            { "phaseKey": "Hit" }
+          ]
+        },
+        {
+          "machineKey": "Movement",
+          "targets": [
+            { "phaseKey": "Idle" }
+          ]
+        }
+      ]
+    }
+  ]
+}

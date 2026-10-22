@@ -12,6 +12,29 @@ public class ConfigCodeSchema {
         schema.addImp("Position", Position());
         schema.addImp("Range", Range());
         schema.addImp("ai.TriggerTick", ai_TriggerTick());
+        schema.addImp("combat.AbilityUse", combat_AbilityUse());
+        schema.addImp("combat.Anchor", combat_Anchor());
+        schema.addImp("combat.AnchorUse", combat_AnchorUse());
+        schema.addImp("combat.Binding", combat_Binding());
+        schema.addImp("combat.BookEntry", combat_BookEntry());
+        schema.addImp("combat.Combo", combat_Combo());
+        schema.addImp("combat.Command", combat_Command());
+        schema.addImp("combat.Effect", combat_Effect());
+        schema.addImp("combat.Exit", combat_Exit());
+        schema.addImp("combat.Frame", combat_Frame());
+        schema.addImp("combat.Impact", combat_Impact());
+        schema.addImp("combat.Machine", combat_Machine());
+        schema.addImp("combat.MachineUse", combat_MachineUse());
+        schema.addImp("combat.Marker", combat_Marker());
+        schema.addImp("combat.NestedPhase", combat_NestedPhase());
+        schema.addImp("combat.OptionalAim", combat_OptionalAim());
+        schema.addImp("combat.Origin", combat_Origin());
+        schema.addImp("combat.Phase", combat_Phase());
+        schema.addImp("combat.PhaseKey", combat_PhaseKey());
+        schema.addImp("combat.PhaseUse", combat_PhaseUse());
+        schema.addImp("combat.PhaseVariant", combat_PhaseVariant());
+        schema.addImp("combat.Reward", combat_Reward());
+        schema.addImp("combat.Stance", combat_Stance());
         schema.addImp("equip.TestPackBean", equip_TestPackBean());
         schema.addImp("other.DropItem", other_DropItem());
         schema.addImp("task.TestDefaultBean", task_TestDefaultBean());
@@ -19,6 +42,12 @@ public class ConfigCodeSchema {
         schema.addImp("ai.ai", ai_ai());
         schema.addImp("ai.ai_action", ai_ai_action());
         schema.addImp("ai.ai_condition", ai_ai_condition());
+        schema.addImp("combat.ability", combat_ability());
+        schema.addImp("combat.branchreward", combat_branchreward());
+        schema.addImp("combat.cast", combat_cast());
+        schema.addImp("combat.encounter", combat_encounter());
+        schema.addImp("combat.phasebook", combat_phasebook());
+        schema.addImp("combat.timeline", combat_timeline());
         schema.addImp("equip.ability", equip_ability());
         if (packageLayout) {
             schema.addImp("equip.ability_Detail", equip_ability_Detail());
@@ -95,6 +124,201 @@ public class ConfigCodeSchema {
             s3.addColumn("coefficient2", SchemaPrimitive.SFloat);
             s2.addImp("ByServerUpDay", s3);
         }
+        return s2;
+    }
+
+    static Schema combat_AbilityUse() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("binding", new SchemaRef("combat.Binding"));
+        s2.addColumn("machines", new SchemaList(new SchemaRef("combat.MachineUse")));
+        return s2;
+    }
+
+    static Schema combat_Anchor() {
+        SchemaBean s2 = new SchemaBean(false);
+        return s2;
+    }
+
+    static Schema combat_AnchorUse() {
+        SchemaBean s2 = new SchemaBean(false);
+        return s2;
+    }
+
+    static Schema combat_Binding() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("abilityId", SchemaPrimitive.SInt);
+        return s2;
+    }
+
+    static Schema combat_BookEntry() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("name", SchemaPrimitive.SStr);
+        return s2;
+    }
+
+    static Schema combat_Combo() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("weapon", SchemaPrimitive.SStr);
+        s2.addColumn("tier", SchemaPrimitive.SInt);
+        s2.addColumn("airborne", SchemaPrimitive.SBool);
+        s2.addColumn("effect", new SchemaRef("combat.Effect"));
+        return s2;
+    }
+
+    static Schema combat_Command() {
+        SchemaInterface s2 = new SchemaInterface();
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s3.addColumn("phases", new SchemaList(new SchemaRef("combat.NestedPhase")));
+            s2.addImp("StateMachine", s3);
+        }
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s3.addColumn("key", SchemaPrimitive.SStr);
+            s2.addImp("Jump", s3);
+        }
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s2.addImp("Noop", s3);
+        }
+        return s2;
+    }
+
+    static Schema combat_Effect() {
+        SchemaInterface s2 = new SchemaInterface();
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s3.addColumn("amount", SchemaPrimitive.SInt);
+            s2.addImp("Damage", s3);
+        }
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s3.addColumn("amount", SchemaPrimitive.SInt);
+            s2.addImp("Heal", s3);
+        }
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s2.addImp("None", s3);
+        }
+        return s2;
+    }
+
+    static Schema combat_Exit() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("effect", new SchemaRef("combat.Effect"));
+        return s2;
+    }
+
+    static Schema combat_Frame() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("tick", SchemaPrimitive.SLong);
+        s2.addColumn("effect", new SchemaRef("combat.Effect"));
+        return s2;
+    }
+
+    static Schema combat_Impact() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("ordinal", SchemaPrimitive.SInt);
+        s2.addColumn("damage", SchemaPrimitive.SInt);
+        return s2;
+    }
+
+    static Schema combat_Machine() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("code", SchemaPrimitive.SStr);
+        s2.addColumn("phases", new SchemaList(new SchemaRef("combat.Phase")));
+        s2.addColumn("impacts", new SchemaList(new SchemaRef("combat.Impact")));
+        s2.addColumn("frames", new SchemaList(new SchemaRef("combat.Frame")));
+        s2.addColumn("stances", new SchemaList(new SchemaRef("combat.Stance")));
+        s2.addColumn("variants", new SchemaList(new SchemaRef("combat.PhaseVariant")));
+        s2.addColumn("combos", new SchemaList(new SchemaRef("combat.Combo")));
+        s2.addColumn("markers", new SchemaList(new SchemaRef("combat.Marker")));
+        s2.addColumn("anchor", new SchemaRef("combat.Anchor"));
+        s2.addColumn("anchors", new SchemaList(new SchemaRef("combat.AnchorUse")));
+        s2.addColumn("onExit", new SchemaRef("combat.Exit"));
+        s2.addColumn("initial", SchemaPrimitive.SStr);
+        s2.addColumn("impact", SchemaPrimitive.SInt);
+        s2.addColumn("frame", SchemaPrimitive.SLong);
+        s2.addColumn("stance", SchemaPrimitive.SBool);
+        s2.addColumn("variant", new SchemaRef("combat.PhaseKey"));
+        s2.addColumn("weapon", SchemaPrimitive.SStr);
+        s2.addColumn("tier", SchemaPrimitive.SInt);
+        s2.addColumn("airborne", SchemaPrimitive.SBool);
+        return s2;
+    }
+
+    static Schema combat_MachineUse() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("machineKey", SchemaPrimitive.SStr);
+        s2.addColumn("targets", new SchemaList(new SchemaRef("combat.PhaseUse")));
+        return s2;
+    }
+
+    static Schema combat_Marker() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("key", SchemaPrimitive.SStr);
+        return s2;
+    }
+
+    static Schema combat_NestedPhase() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("key", SchemaPrimitive.SStr);
+        s2.addColumn("action", new SchemaRef("combat.Command"));
+        return s2;
+    }
+
+    static Schema combat_OptionalAim() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("abilityId", SchemaPrimitive.SInt);
+        s2.addColumn("machineKey", SchemaPrimitive.SStr);
+        s2.addColumn("phaseKey", SchemaPrimitive.SStr);
+        return s2;
+    }
+
+    static Schema combat_Origin() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("x", SchemaPrimitive.SInt);
+        s2.addColumn("y", SchemaPrimitive.SInt);
+        return s2;
+    }
+
+    static Schema combat_Phase() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("key", SchemaPrimitive.SStr);
+        s2.addColumn("next", SchemaPrimitive.SStr);
+        return s2;
+    }
+
+    static Schema combat_PhaseKey() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("name", SchemaPrimitive.SStr);
+        s2.addColumn("variant", SchemaPrimitive.SInt);
+        return s2;
+    }
+
+    static Schema combat_PhaseUse() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("phaseKey", SchemaPrimitive.SStr);
+        return s2;
+    }
+
+    static Schema combat_PhaseVariant() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("key", new SchemaRef("combat.PhaseKey"));
+        s2.addColumn("effect", new SchemaRef("combat.Effect"));
+        return s2;
+    }
+
+    static Schema combat_Reward() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("count", SchemaPrimitive.SInt);
+        return s2;
+    }
+
+    static Schema combat_Stance() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("airborne", SchemaPrimitive.SBool);
+        s2.addColumn("effect", new SchemaRef("combat.Effect"));
         return s2;
     }
 
@@ -196,6 +420,75 @@ public class ConfigCodeSchema {
         s2.addColumn("FormulaID", SchemaPrimitive.SInt);
         s2.addColumn("ArgIList", new SchemaList(SchemaPrimitive.SInt));
         s2.addColumn("ArgSList", new SchemaList(SchemaPrimitive.SInt));
+        return s2;
+    }
+
+    static Schema combat_ability() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("id", SchemaPrimitive.SInt);
+        s2.addColumn("code", SchemaPrimitive.SStr);
+        s2.addColumn("origin", new SchemaRef("combat.Origin"));
+        s2.addColumn("machines", new SchemaList(new SchemaRef("combat.Machine")));
+        s2.addColumn("startMachine", SchemaPrimitive.SStr);
+        s2.addColumn("startPhase", SchemaPrimitive.SStr);
+        return s2;
+    }
+
+    static Schema combat_branchreward() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("key", new SchemaRef("combat.PhaseKey"));
+        s2.addColumn("reward", new SchemaRef("combat.Reward"));
+        return s2;
+    }
+
+    static Schema combat_cast() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("id", SchemaPrimitive.SInt);
+        s2.addColumn("abilityCode", SchemaPrimitive.SStr);
+        s2.addColumn("origin", new SchemaRef("combat.Origin"));
+        s2.addColumn("uses", new SchemaList(new SchemaRef("combat.AbilityUse")));
+        s2.addColumn("optional", new SchemaList(new SchemaRef("combat.OptionalAim")));
+        s2.addColumn("school", SchemaPrimitive.SStr);
+        s2.addColumn("tier", SchemaPrimitive.SInt);
+        s2.addColumn("airborne", SchemaPrimitive.SBool);
+        s2.addColumn("bookCode", SchemaPrimitive.SStr);
+        s2.addColumn("edition", SchemaPrimitive.SInt);
+        s2.addColumn("rewardKey", new SchemaRef("combat.PhaseKey"));
+        return s2;
+    }
+
+    static Schema combat_encounter() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("id", SchemaPrimitive.SInt);
+        s2.addColumn("command", new SchemaRef("combat.Command"));
+        return s2;
+    }
+
+    static Schema combat_phasebook() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("school", SchemaPrimitive.SStr);
+        s2.addColumn("tier", SchemaPrimitive.SInt);
+        s2.addColumn("airborne", SchemaPrimitive.SBool);
+        s2.addColumn("code", SchemaPrimitive.SStr);
+        s2.addColumn("edition", SchemaPrimitive.SInt);
+        s2.addColumn("entry", new SchemaRef("combat.BookEntry"));
+        return s2;
+    }
+
+    static Schema combat_timeline() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("id", SchemaPrimitive.SInt);
+        s2.addColumn("events", new SchemaMap(new SchemaRef("combat.PhaseKey"), new SchemaRef("combat.Effect")));
+        s2.addColumn("channels", new SchemaMap(SchemaPrimitive.SStr, new SchemaRef("combat.Effect")));
+        s2.addColumn("slots", new SchemaMap(SchemaPrimitive.SInt, new SchemaRef("combat.Effect")));
+        s2.addColumn("clock", new SchemaMap(SchemaPrimitive.SLong, new SchemaRef("combat.Effect")));
+        s2.addColumn("modes", new SchemaMap(SchemaPrimitive.SBool, new SchemaRef("combat.Effect")));
+        s2.addColumn("eventKey", new SchemaRef("combat.PhaseKey"));
+        s2.addColumn("channel", SchemaPrimitive.SStr);
+        s2.addColumn("slot", SchemaPrimitive.SInt);
+        s2.addColumn("frame", SchemaPrimitive.SLong);
+        s2.addColumn("airborne", SchemaPrimitive.SBool);
+        s2.addColumn("fallback", new SchemaRef("combat.Effect"));
         return s2;
     }
 

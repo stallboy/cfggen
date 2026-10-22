@@ -27,6 +27,9 @@ static func _create(stream: ConfigStream) -> DataTask_TestDefaultBean:
 	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_string_in_pool()
+		if instance.testMap.has(k):
+			stream.fail("Duplicate map key: task.TestDefaultBean.testMap")
+			return instance
 		instance.testMap[k] = v
 	return instance
 

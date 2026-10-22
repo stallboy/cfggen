@@ -1,0 +1,10 @@
+{
+  "id": 1,
+  "command": { "$type": "StateMachine", "phases": [
+    { "key": "Done", "action": { "$type": "Noop" } },
+    { "key": "Nested", "action": { "$type": "StateMachine", "phases": [
+      { "key": "Else", "action": { "$type": "Jump", "key": "Done" } },
+      { "key": "Local", "action": { "$type": "Jump", "key": "Else" } }
+    ] } }
+  ] }
+}

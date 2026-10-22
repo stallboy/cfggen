@@ -89,6 +89,7 @@ public class UnreferencedRecordCollector {
 
     public static Unreferenced collectUnreferenced(CfgValue cfgValue) {
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
+        ValueReferences references = ValueReferences.forQuery(cfgValue);
 
         // 为每个 table 创建并发任务（跳过root表）
         List<Callable<UnreferencedInTable>> tasks = new ArrayList<>();
@@ -97,7 +98,7 @@ public class UnreferencedRecordCollector {
             if (vTable.schema().meta().isRoot()) {
                 continue;
             }
-            tasks.add(() -> collectUnreferencedInTable(cfgValue, vTable, graph));
+            tasks.add(() -> collectUnreferencedInTable(cfgValue, vTable, graph, references));
         }
         List<Future<UnreferencedInTable>> futures;
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
@@ -135,8 +136,15 @@ public class UnreferencedRecordCollector {
     public static UnreferencedInTable collectUnreferencedInTable(CfgValue cfgValue,
                                                                  CfgValue.VTable vTable,
                                                                  TableSchemaRefGraph graph) {
+        return collectUnreferencedInTable(cfgValue, vTable, graph, ValueReferences.forQuery(cfgValue));
+    }
+
+    public static UnreferencedInTable collectUnreferencedInTable(CfgValue cfgValue,
+                                                                 CfgValue.VTable vTable,
+                                                                 TableSchemaRefGraph graph,
+                                                                 ValueReferences references) {
         List<UnreferencedRecord> unreferencedRecords = new ArrayList<>();
-        ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
+        ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue, references);
         TableSchema tableSchema = vTable.schema();
 
         String entryFieldName = null;

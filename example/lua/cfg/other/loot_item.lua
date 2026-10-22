@@ -11,13 +11,13 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.other.loot_item
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1, 2 }, }, nil, nil, 
+local mk = cfg[0].table('other.loot_item', this, {{'all','get',{'lootid','itemid'}}}, {fields={
     'lootid', -- int, 掉落id
     'itemid', -- int, 掉落物品
     'chance', -- int, 掉落概率
     'countmin', -- int, 数量下限
     'countmax' -- int, 数量上限
-    )
+    }, uniqkeys={ { 'all', 'get', 1, 2 }, }, enumidx=nil, refs=nil}, nil)
 
 mk(1, 1001, 20, 1, 1)
 mk(2, 22, 20, 20, 80)
@@ -95,4 +95,5 @@ mk(10, 20955, 7, 1, 1)
 mk(10, 20956, 7, 1, 1)
 mk(10, 20957, 7, 1, 1)
 
+cfg[0].complete('other.loot_item')
 return this

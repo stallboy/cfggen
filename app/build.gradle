@@ -21,7 +21,28 @@ def versions = [
         antlr    : '4.13.2'
 ]
 
+configurations { antlrTool }
+
+tasks.register('generateCfgParser', JavaExec) {
+    description = 'Regenerate the checked-in CFG lexer and parser'
+    classpath = configurations.antlrTool
+    mainClass = 'org.antlr.v4.Tool'
+    workingDir = file('src/main/java/configgen/schema/cfg')
+    inputs.file 'src/main/java/configgen/schema/cfg/Cfg.g4'
+    outputs.files 'src/main/java/configgen/schema/cfg/CfgLexer.java',
+            'src/main/java/configgen/schema/cfg/CfgParser.java'
+    args '-no-listener', '-no-visitor', '-package', 'configgen.schema.cfg', 'Cfg.g4'
+    doLast {
+        outputs.files.each { source ->
+            source.write(source.getText('UTF-8').replaceAll('(?m)[ \\t]+$', ''), 'UTF-8')
+        }
+    }
+}
+
+tasks.named('compileJava') { dependsOn 'generateCfgParser' }
+
 dependencies {
+    antlrTool 'org.antlr:antlr4:4.13.2'
     // 核心业务依赖
     implementation "org.antlr:antlr4-runtime:${versions.antlr}"
     implementation "gg.jte:jte:3.2.1"
@@ -155,6 +176,7 @@ tasks.register('copyGenJavaSources', Copy) {
                 'ConfigInput.java',
                 'ConfigLoader.java',
                 'ConfigPackage.java',
+                'RelationResolver.java',
                 'LoadValueErrs.java',
                 'BytesInspector.java',
                 'JsonValue.java',
@@ -177,7 +199,7 @@ tasks.named('fatJar') {
 
 // 测试与覆盖率配置
 tasks.named('test') {
-    useJUnitPlatform { excludeTags 'dotnet', 'otherRuntimes', 'godot' }
+    useJUnitPlatform { excludeTags 'dotnet', 'otherRuntimes', 'godot', 'lua' }
     // 抑制 fastjson2 的 sun.misc.Unsafe 弃用警告（同 applicationDefaultJvmArgs）
     jvmArgs '--sun-misc-unsafe-memory-access=allow'
     finalizedBy jacocoTestReport
@@ -208,6 +230,18 @@ tasks.register('godotTest', Test) {
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform { includeTags 'godot' }
     if (System.getProperty('cfggen.godot')) systemProperty 'cfggen.godot', System.getProperty('cfggen.godot')
+    jvmArgs '--sun-misc-unsafe-memory-access=allow'
+}
+
+tasks.register('luaTest', Test) {
+    description = 'Run generated Lua references (Lua 5.3+, or cfggen.luaPython with Lupa in cfggen.luaModules)'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'lua' }
+    ['cfggen.lua', 'cfggen.luaPython', 'cfggen.luaModules'].each { name ->
+        if (System.getProperty(name)) systemProperty name, System.getProperty(name)
+    }
     jvmArgs '--sun-misc-unsafe-memory-access=allow'
 }
 

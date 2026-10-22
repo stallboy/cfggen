@@ -189,11 +189,11 @@ public class CfgWriter {
             String typeStr = typeStr(f);
 
             String fkStr = "";
-            if (fk != null && !fk.meta().isFromEnumType()) {
+            if (fk != null && isInline(fk, f) && !fk.meta().isFromEnumType()) {
                 fkStr = foreignStr(fk);
             }
 
-            if (fk != null) {
+            if (fk != null && isInline(fk, f)) {
                 foreignToMeta(fk, meta);
             }
 
@@ -210,7 +210,7 @@ public class CfgWriter {
             if (fk.meta().isFromEnumType()) {
                 continue;
             }
-            if (structural.findField(fk.name()) == null) {
+            if (!isInline(fk, structural.findField(fk.name()))) {
                 Metadata meta = fk.meta().copy();
                 foreignToMeta(fk, meta);
 
@@ -218,10 +218,22 @@ public class CfgWriter {
                 if (comment == null) comment = new CommentData("", "", "");
                 writeLeadingComment(comment, prefix + "\t");
                 println("%s\t->%s:%s%s%s;%s",
-                        prefix, fk.name(), keyStr(fk.key()), foreignStr(fk),
+                        prefix, fk.name(), sourceStr(fk), foreignStr(fk),
                         metadataStr(meta), comment.formatTrailing());
             }
         }
+    }
+
+    private static boolean isInline(ForeignKeySchema fk, FieldSchema field) {
+        if (field == null) return false;
+        if (fk.pathReference() == null) return true;
+        return fk.pathReference().inline();
+    }
+
+    public static String sourceStr(ForeignKeySchema fk) {
+        if (fk.pathReference() == null) return keyStr(fk.key());
+        return "[" + fk.pathReference().sources().stream().map(ReferencePath::expression)
+                .collect(Collectors.joining(",")) + "]";
     }
 
     private void println(String fmt, Object... args) {
@@ -324,7 +336,16 @@ public class CfgWriter {
         }
     }
 
-    static String foreignStr(ForeignKeySchema fk) {
+    public static String foreignStr(ForeignKeySchema fk) {
+        if (fk.pathReference() != null) {
+            ReferencePath target = fk.pathReference().target();
+            if (target.start() == ReferencePath.Start.TABLE) {
+                String key = fk.refKey() instanceof RefKey.RefUniq u ? keyStr(u.key()) : "";
+                return " ->" + target.owner() + key
+                        + (target.fields().isEmpty() ? "" : "::" + String.join(".", target.fields()));
+            }
+            return " ->" + target.expression();
+        }
         return switch (fk.refKey()) {
             case RefKey.RefPrimary ignored -> String.format(" ->%s", fk.refTable());
             case RefKey.RefUniq refUniq -> String.format(" ->%s%s", fk.refTable(), keyStr(refUniq.key()));

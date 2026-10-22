@@ -14,8 +14,8 @@ var RefEnumMap2: Dictionary[int, DataOther_ArgCaptureMode]
 # 内部存储
 static var _data: Dictionary[int, DataOther_Monster] = {}
 # 主键查询
-static func find(id: int) -> DataOther_Monster:
-	return _data.get(id)
+static func find(key_0: int) -> DataOther_Monster:
+	return _data.get(key_0)
 # 获取所有数据
 static func all() -> Array[DataOther_Monster]:
 	return _data.values()
@@ -43,16 +43,23 @@ static func _create(stream: ConfigStream) -> DataOther_Monster:
 	for c in range(stream.read_count(0)):
 		var k = stream.read_string_in_pool()
 		var v = stream.read_int32()
+		if instance.enumMap1.has(k):
+			stream.fail("Duplicate map key: other.monster.enumMap1")
+			return instance
 		instance.enumMap1[k] = v
 	for c in range(stream.read_count(0)):
 		var k = stream.read_int32()
 		var v = stream.read_string_in_pool()
+		if instance.enumMap2.has(k):
+			stream.fail("Duplicate map key: other.monster.enumMap2")
+			return instance
 		instance.enumMap2[k] = v
 	return instance
 
 
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
+	pass
 	RefAllLoot = DataOther_Loot.find(lootId)
 	if RefAllLoot == null:
 		errors.ref_null("other.monster", "AllLoot")

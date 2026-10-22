@@ -11,6 +11,9 @@
 package ${pkg}
 
 import "io"
+@if(model.hasRelations())
+import "encoding/json"
+@endif
 
 @for (VTable vTable : cfgValue.sortedTables())
 !{
@@ -69,5 +72,12 @@ func initTables(stream *Stream) *Stream {
         }
     }
 
+    @if(model.hasRelations())
+    stream.bindObjectReferences()
+    @endif
     return stream
 }
+
+@if(model.hasRelations())
+@template.go.Relations(model = model)
+@endif

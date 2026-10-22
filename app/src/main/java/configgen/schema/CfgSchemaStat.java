@@ -40,6 +40,7 @@ public class CfgSchemaStat implements Stat {
     private int refByStructCount;
     private int refByListItemCount;
     private int refByMapValueCount;
+    private int refByPathCount;
 
     private int uniqKeyCount;
     private int multi2KeyCount;
@@ -152,6 +153,10 @@ public class CfgSchemaStat implements Stat {
                 case RefKey.RefList ignored -> refListCount++;
             }
 
+            if (fk.pathReference() != null) {
+                refByPathCount++;
+                continue;
+            }
             List<FieldSchema> fs = fk.key().fieldSchemas();
             if (fs.size() == 1) {
                 FieldSchema f = fs.getFirst();

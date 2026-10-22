@@ -101,7 +101,8 @@ public class RecordRefIdsService {
 
         // 优先算 refIn的链接
         var refInFrontier = Map.of(thisObjId, new ForeachVStruct.Context(vTable, pkValue, vRecord));
-        ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
+        ValueReferences references = ValueReferences.forQuery(cfgValue);
+        ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue, references);
         int curInDepth = 1;
         while (curInDepth <= inDepth) {
             Map<RefId, ForeachVStruct.Context> newRefInFrontier = new LinkedHashMap<>();
@@ -140,7 +141,7 @@ public class RecordRefIdsService {
 
             for (Map.Entry<RefId, VStruct> e : refOutFrontier.entrySet()) {
                 List<FieldRef> fieldRefs = new ArrayList<>();
-                ValueRefCollector collector = new ValueRefCollector(cfgValue, newRefOutFrontier, fieldRefs);
+                ValueRefCollector collector = new ValueRefCollector(cfgValue, newRefOutFrontier, fieldRefs, references);
                 collector.collect(e.getValue(), List.of());
             }
 

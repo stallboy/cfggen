@@ -10,3 +10,5 @@ func _to_string() -> String:
 static func _create(stream: ConfigStream) -> DataTaskCompletecondition_TestNoColumn:
 	var instance = DataTaskCompletecondition_TestNoColumn.new()
 	return instance
+
+

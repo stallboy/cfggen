@@ -7,6 +7,8 @@ var result_text: TextEdit
 
 # 配置是否已加载
 var _config_loaded: bool = false
+# 保留快照，使内部对象引用的 WeakRef 目标随当前配置一起存活。
+var _config_snapshot: ConfigStream
 
 # 数据表映射
 var _tables: Dictionary = {
@@ -95,7 +97,7 @@ func _load_config():
 	var processor = ConfigProcessor.new()
 
 	# 加载配置数据
-	processor.load_from_package(ConfigPackage.read(bytes), errors)
+	_config_snapshot = processor.load_from_package(ConfigPackage.read(bytes), errors)
 
 	print("配置加载完成！")
 
@@ -111,7 +113,7 @@ func _load_config():
 		for msg in errors._warns:
 			print("WARN: ", msg)
 
-	_config_loaded = true
+	_config_loaded = _config_snapshot != null and errors.get_error_count() == 0
 
 func _populate_tables():
 	"""填充表下拉选项"""

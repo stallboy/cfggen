@@ -21,7 +21,8 @@ public class SchemaService {
 
     public record SField(@NotNull String name,
                          @NotNull String type,
-                         @NotNull String comment) {
+                         @NotNull String comment,
+                         List<String> index) {
     }
 
     public enum SRefType {
@@ -29,14 +30,18 @@ public class SchemaService {
         rUniq,
         rList,
         rNullablePrimary,
-        rNullableUniq
+        rNullableUniq,
+        rObject,
+        rNullableObject
     }
 
     public record SForeignKey(String name,
                               List<String> keys,
                               String refTable,
                               SRefType refType,
-                              List<String> refKeys) {
+                              List<String> refKeys,
+                              PathReference pathReference,
+                              String resultType) {
     }
 
     public record SStruct(@NotNull String name,
@@ -95,6 +100,10 @@ public class SchemaService {
     public record Schema(boolean isEditable,
                          List<SNameable> items,
                          Map<String, Map<String, Long>> lastModifiedMap) {
+        @JSONField
+        public String editorValueEncoding() {
+            return EditorValueJson.ENCODING;
+        }
     }
 
 
@@ -182,12 +191,22 @@ public class SchemaService {
     }
 
     private static List<SField> fromFields(List<FieldSchema> fields) {
-        return fields.stream().map(f -> new SField(f.name(), CfgWriter.typeStrWithFullName(f.type()), f.comment())).toList();
+        return fields.stream().map(f -> new SField(f.name(), CfgWriter.typeStrWithFullName(f.type()), f.comment(),
+                f.meta().get("index") instanceof Metadata.MetaStr text
+                        ? java.util.Arrays.stream(text.value().split(",")).map(String::trim).toList() : null)).toList();
     }
 
     private static List<SForeignKey> fromFks(List<ForeignKeySchema> fks) {
         List<SForeignKey> res = new ArrayList<>(fks.size());
         for (ForeignKeySchema f : fks) {
+            if (f.pathReference() != null) {
+                res.add(new SForeignKey(f.name(),
+                        f.pathReference().sources().stream().map(ReferencePath::expression).toList(),
+                        f.refTableSchema() == null ? "" : f.refTableSchema().fullName(),
+                        ((RefKey.RefSimple) f.refKey()).nullable() ? SRefType.rNullableObject : SRefType.rObject,
+                        f.refKey().keyNames(), f.pathReference(), f.referenceResultType().fullName()));
+                continue;
+            }
             SRefType ref;
             List<String> refKeys = null;
             switch (f.refKey()) {
@@ -207,7 +226,7 @@ public class SchemaService {
                     f.key().fields(),
                     f.refTableSchema().fullName(),  //用full name，避免让client去先local后global的去解析名字空间。
                     ref,
-                    refKeys));
+                    refKeys, null, null));
         }
         return res;
     }

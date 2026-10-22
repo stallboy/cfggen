@@ -162,7 +162,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
 
         List<ForeignKeySchema> fks = new ArrayList<>(table.foreignKeys().size());
         for (ForeignKeySchema fk : table.foreignKeys()) {
-            if (isKeyInSchemaList(fk.key(), fieldSchemas)) {
+            if (fk.pathReference() != null || isKeyInSchemaList(fk.key(), fieldSchemas)) {
                 fks.add(fk.copy());
             }
         }

@@ -8,6 +8,7 @@ import configgen.util.CachedFiles;
 import configgen.util.CachedIndentPrinter;
 import configgen.util.CachedIndentPrinter.CacheConfig;
 import configgen.util.FileUtil;
+import configgen.util.JteEngine;
 import configgen.value.CfgValue;
 
 import java.io.IOException;
@@ -80,15 +81,16 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx) throws IOException {
-        aCtx = new AContext(pkg, ctx.nullableLangSwitch(), useSharedEmptyTable, useShared,
-                packBool, noStr, rForOldShared);
+        cfgValue = ctx.makeValue(tag);
+        cfgSchema = cfgValue.schema();
+        boolean relations = cfgSchema.references().hasRelations();
+        if (relations && noStr) throw new configgen.gen.CliException("noStr cannot preserve object reference keys");
+        aCtx = new AContext(pkg, ctx.nullableLangSwitch(), useSharedEmptyTable, useShared && !relations,
+                packBool, noStr, rForOldShared && !relations, relations);
         isLangSwitch = aCtx.nullableLangSwitchSupport() != null;
 
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
         outputFiles = ctx.outputFiles();
-
-        cfgValue = ctx.makeValue(tag);
-        cfgSchema = cfgValue.schema();
 
         try (var ps = createCode("_cfgs.lua")) {
             generate_cfgs(ps);
@@ -188,8 +190,11 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             mkcfgFrom = pkg;
         }
         ps.println("%s._mk = require \"%s.mkcfg\"", pkg, mkcfgFrom);
+        if (aCtx.hasRelations()) {
+            JteEngine.render("lua/Relations.jte", new LuaRelationsModel(pkg, cfgSchema), ps);
+        }
         if (!preload) {
-            ps.println("local pre = %s._mk.pretable", pkg);
+            ps.println("local pre = %s", aCtx.hasRelations() ? aCtx.relations() + ".pretable" : pkg + "._mk.pretable");
         }
         ps.println();
 
@@ -316,11 +321,13 @@ public class LuaCodeGenerator extends GeneratorWithTag {
                             ps.println("---@type %s", fulln);
                         }
 
-                        if (impl.fields().isEmpty()) {
+                        if (impl.fields().isEmpty() && !aCtx.hasRelations()) {
                             //这里来个优化，加上()直接生成实例，而不是类，注意生成数据时对应不加()
                             ps.println("%s = %s(\"%s\")()", fulln, func, impl.name());
+                        } else if (impl.fields().isEmpty()) {
+                            ps.println("%s = %s(\"%s\", %s)", fulln, func, impl.name(), TypeStr.getLuaRefsString(aCtx, impl));
                         } else {
-                            ps.println("%s = %s(\"%s\", %s, %s%s\n    )", fulln, func, impl.name(),
+                            ps.println("%s = %s(\"%s\", %s,%s%s\n    )", fulln, func, impl.name(),
                                     TypeStr.getLuaRefsString(aCtx, impl),
                                     textFieldsStr,
                                     TypeStr.getLuaFieldsString(aCtx, impl));
@@ -347,15 +354,18 @@ public class LuaCodeGenerator extends GeneratorWithTag {
                         ps.println("---@type %s", full);
                     }
 
-                    if (struct.fields().isEmpty()) {
+                    if (struct.fields().isEmpty() && !aCtx.hasRelations()) {
                         //这里来个优化，加上()直接生成实例，而不是类，注意生成数据时对应不加()
                         ps.println("%s = %s()()", full, func);
+                    } else if (struct.fields().isEmpty()) {
+                        ps.println("%s = %s(%s)", full, func, TypeStr.getLuaRefsString(aCtx, struct));
                     } else {
-                        ps.println("%s = %s(%s, %s%s\n    )", full, func,
+                        ps.println("%s = %s(%s,%s%s\n    )", full, func,
                                 TypeStr.getLuaRefsString(aCtx, struct),
                                 textFieldsStr,
                                 TypeStr.getLuaFieldsString(aCtx, struct));
                     }
+                    if (aCtx.hasRelations()) ps.println("%s = %s.bean('%s', %s)", full, aCtx.relations(), struct.fullName(), full);
                     ps.println();
                 }
             }
@@ -373,7 +383,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
         ps.println("local %s = require \"%s._cfgs\"", pkg, pkg);
         if (HasSubFieldable.hasSubFieldable(table)) {
-            ps.println("local Beans = %s._beans", pkg);
+            ps.println(aCtx.hasRelations() ? "local Beans = require \"%s._beans\"" : "local Beans = %s._beans", pkg);
         }
         ps.println();
 
@@ -398,7 +408,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             extraSplit = value;
         }
 
-        boolean tryUseShared = useShared && extraSplit == 0;
+        boolean tryUseShared = aCtx.isShared() && extraSplit == 0;
 
         Ctx ctx = new Ctx(aCtx, vTable);
         if (tryUseShared) {
@@ -415,7 +425,12 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         }
 
         // function mkcfg.table(self, uniqkeys, enumidx, refs, ...)
-        ps.println("local mk = %s._mk.%s(this, %s, %s, %s, %s%s\n    )", pkg, func,
+        if (aCtx.hasRelations()) {
+            String texts = textFieldsStr.isEmpty() ? "nil" : textFieldsStr.strip().replaceFirst(",$", "");
+            ps.println("local mk = %s.table('%s', this, %s, {fields={%s\n    }, uniqkeys=%s, enumidx=%s, refs=%s}, %s)",
+                    aCtx.relations(), table.name(), LuaRelationsModel.keys(table), TypeStr.getLuaFieldsString(aCtx, table),
+                    TypeStr.getLuaUniqKeysString(ctx), TypeStr.getLuaEnumString(ctx), TypeStr.getLuaRefsString(aCtx, table), texts);
+        } else ps.println("local mk = %s._mk.%s(this, %s, %s, %s,%s%s\n    )", pkg, func,
                 TypeStr.getLuaUniqKeysString(ctx),
                 TypeStr.getLuaEnumString(ctx),
                 TypeStr.getLuaRefsString(aCtx, table),
@@ -502,6 +517,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         }
 
         ps.println();
+        if (aCtx.hasRelations()) ps.println("%s.complete('%s')", aCtx.relations(), table.name());
         ps.println("return this");
     }
 
@@ -514,11 +530,16 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         }
 
         boolean hasER = false;
-        if (useSharedEmptyTable && ctx.ctxShared().getEmptyTableUseCount() > 0) { // 共享空表
-            ps.println("local E = %s._mk.E", pkg);
+        if (useSharedEmptyTable && ctx.ctxShared().getEmptyTableUseCount() > 0) {
+            if (aCtx.hasRelations()) {
+                // Each occurrence needs its own identity while keeping the application's empty-table behavior.
+                ps.println("local function E() return setmetatable({}, getmetatable(%s._mk.E)) end", pkg);
+            } else {
+                ps.println("local E = %s._mk.E", pkg);
+            }
             hasER = true;
         }
-        if (rForOldShared && ctx.ctxShared().hasListTableOrMapTable()) {
+        if (rForOldShared && !aCtx.hasRelations() && ctx.ctxShared().hasListTableOrMapTable()) {
             ps.println("local R = %s._mk.R", pkg);
             hasER = true;
         }
