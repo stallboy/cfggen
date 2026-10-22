@@ -1,6 +1,7 @@
 import type {CSSProperties} from "react";
 import {EntityEditField, EntityEditFieldOptions, PrimitiveValue} from "@/domain/entityModel";
-import {isNumberType} from "@/api/schemaModel";
+import {isNumberType, isPrimitiveType} from "@/api/schemaModel";
+import {defaultValueOfPrimitive} from "@/domain/schema";
 import {FILTER_EMPTY, FILTER_SEARCH, FilterOption} from "./constants.ts";
 
 // 类型守卫：primitive / arrayOfPrimitive / interface 三类字段可携带 autoCompleteOptions。
@@ -32,17 +33,7 @@ export function getDefaultPrimitiveValue(field: EntityEditField): PrimitiveValue
         return autoCompleteOptions.options[0].value as PrimitiveValue;
     }
 
-    // 根据类型返回默认值
-    switch (eleType) {
-        case "bool":
-            return false;
-        case "int":
-        case "long":
-        case "float":
-            return 0;
-        default:
-            return "";
-    }
+    return isPrimitiveType(eleType) ? defaultValueOfPrimitive(eleType) : "";
 }
 
 export function isArrayPrimitiveBoolOrNumber(field: EntityEditField): boolean {

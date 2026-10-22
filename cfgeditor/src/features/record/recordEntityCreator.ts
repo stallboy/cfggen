@@ -129,7 +129,7 @@ export class RecordEntityCreator {
         };
 
         this.entityMap.set(id, entity);
-        createRefs(entity, obj, this.refs);
+        createRefs(entity, obj, this.refs, undefined, false, this.refId);
         return entity;
     }
 

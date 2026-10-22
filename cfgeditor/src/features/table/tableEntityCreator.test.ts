@@ -25,6 +25,73 @@ function buildSchema() {
 }
 
 describe('TableEntityCreator.includeSubStructs', () => {
+    it('显示局部索引、混合来源、目标唯一键与结果类型，不为ROOT引用猜根表', () => {
+        const {schema, hero} = buildSchema()
+        hero.fields[1].index = ['gold']
+        hero.foreignKeys = [fk('target', ['::teamId'], 'Team', {
+            refType: 'rObject', refKeys: ['code'], resultType: 'Cost',
+            pathReference: {
+                sources: [{start: 'ANCESTOR', owner: 'Hero', fields: ['teamId']}, {start: 'CURRENT', owner: '', fields: ['teamId']}],
+                target: {start: 'TABLE', owner: 'Team', fields: ['children']}, inline: false,
+            },
+        }), fk('fixed', [], '', {
+            refType: 'rObject', resultType: 'Cost',
+            pathReference: {sources: [], target: {start: 'ROOT', owner: '', fields: ['cost']}, inline: false},
+        })]
+        const entities = new Map()
+        const creator = new TableEntityCreator(entities, schema, hero, 10)
+        creator.includeSubStructs()
+        creator.includeRefTables()
+        const fields = entities.get('t-Hero').fields
+        expect(fields.find((field: {name: string}) => field.name === 'cost').value).toBe('Cost [index: gold]')
+        expect(fields.find((field: {name: string}) => field.name === '→target').value).toBe('[@Hero::teamId, teamId] → Team[code]::children : Cost')
+        expect(fields.find((field: {name: string}) => field.name === '→fixed').value).toBe('[] → ::cost : Cost')
+        expect(entities.get('t-Hero').sourceEdges.filter((edge: {type: EntityEdgeType}) => edge.type === EntityEdgeType.Ref)).toHaveLength(1)
+    })
+
+    it('祖先目标只连接图中已有的类型入口', () => {
+        const {schema, hero} = buildSchema()
+        hero.foreignKeys = ['Cost', 'Missing'].map(owner => fk(owner, [], '', {
+            refType: 'rObject', resultType: 'Cost',
+            pathReference: {sources: [], target: {start: 'ANCESTOR', owner, fields: ['gold']}, inline: false},
+        }))
+        const entities = new Map()
+        const creator = new TableEntityCreator(entities, schema, hero, 10)
+        creator.includeSubStructs()
+        creator.includeRefTables()
+        const references = entities.get('t-Hero').sourceEdges.filter((edge: {type: EntityEdgeType}) => edge.type === EntityEdgeType.Ref)
+        expect(references).toHaveLength(1)
+        expect(references[0]).toMatchObject({sourceHandle: '@out', target: 't-Cost', targetHandle: '@in'})
+        expect(entities.has('t-Missing')).toBe(false)
+    })
+
+    it('内部引用只投影外部表，并为跨层来源使用节点级端口', () => {
+        const {schema, hero} = buildSchema()
+        hero.foreignKeys = [
+            fk('child', ['::teamId'], 'Team', {
+                refType: 'rObject',
+                pathReference: {
+                    sources: [{start: 'ROOT', owner: '', fields: ['teamId']}],
+                    target: {start: 'TABLE', owner: 'Team', fields: ['children']},
+                    inline: false,
+                },
+            }),
+            fk('local', [], '', {
+                refType: 'rObject',
+                pathReference: {
+                    sources: [], target: {start: 'ROOT', owner: '', fields: ['cost']}, inline: false,
+                },
+            }),
+        ]
+        const entities = new Map()
+        const creator = new TableEntityCreator(entities, schema, hero, 10)
+        creator.includeSubStructs()
+        creator.includeRefTables()
+        const edges = entities.get('t-Hero').sourceEdges.filter((e: {type: EntityEdgeType}) => e.type === EntityEdgeType.Ref)
+        expect(edges).toHaveLength(1)
+        expect(edges[0]).toMatchObject({sourceHandle: '@out', target: 't-Team'})
+    })
+
     it('从 curTable 出发展开依赖闭包，生成各结构体/接口/实现节点', () => {
         const {schema, hero} = buildSchema()
         const entityMap = new Map()

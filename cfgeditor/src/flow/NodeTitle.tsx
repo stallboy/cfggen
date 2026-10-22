@@ -1,6 +1,7 @@
 import {memo, useMemo} from "react";
 import type {ReactNode} from "react";
-import {Flex, Typography} from "antd";
+import {Flex, Tooltip, Typography} from "antd";
+import {useTranslation} from 'react-i18next';
 import type {NodeProps} from "@xyflow/react";
 import {EntityEdit} from "@/domain/entityModel";
 import type {EntityNode} from "./FlowGraph.tsx";
@@ -31,6 +32,7 @@ export const NodeTitle = memo(function NodeTitle({
                                                      editNoteButton, resBriefButton, edit, nodeProps,
                                                      nodeBgColor,
                                                  }: NodeTitleProps) {
+    const {t} = useTranslation();
     const titleTextStyle = useMemo(() => ({
         fontSize: 14,
         color: getReadableTextColor(nodeBgColor),
@@ -41,6 +43,7 @@ export const NodeTitle = memo(function NodeTitle({
         <Text strong style={titleTextStyle} ellipsis={false} copyable={copyable}>
             {query ? <Highlight text={label} keyword={query} /> : label}
         </Text>
+        {nodeProps.data.entity.referencesPending && <Tooltip title={t('referencesPending')}><span aria-label={t('referencesPending')}>⚠</span></Tooltip>}
         {editNoteButton}
         {resBriefButton}
         <NodeToolbar edit={edit} nodeProps={nodeProps} />

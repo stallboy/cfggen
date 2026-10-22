@@ -27,7 +27,7 @@ flowchart LR
 
 ### 1.1 entityMap 构建
 
-`entityMap` 由 Record.tsx 的 `useMemo` 在 `structureVersion` 变化时重算（编辑态走 `RecordEditEntityCreator` 读 `session.getEditingObject()` 共享引用，详见 06），结束后 `fillHandles` 回填 `handleIn` / `handleOut`（domain 层标记，不渲染 handle）。
+`entityMap` 由 Record.tsx 的 `useMemo` 构建：结构版本、服务端响应、schema 或相关显示设置变化时重算，编辑态的 dirty/引用待校验切换也会撤除或恢复关系投影。编辑数据仍来自 `RecordEditEntityCreator` 读取的 `session.getEditingObject()` 共享引用（详见 06）；结束前定位引用目标，再由 `fillHandles` 回填 `handleIn` / `handleOut`（domain 层标记，不渲染 handle）。进入 dirty 后继续键入不重建图。
 
 ### 1.2 nodes/edges（convertNodeAndEdges）
 
@@ -104,7 +104,7 @@ spreadFallbackNodes(nodes):
 
 ## 五、缓存白名单 + 失效
 
-layout `queryKey` 由 `pathname` + 两段内容构成，编辑路由态用 `'e'` 段分桶（`staleTime` 另跟脏标记，见下）：
+layout `queryKey` 包含 `pathname`、两组布局设置，编辑路由还用 `'e'` 段和 `structureVersion` 分桶（`staleTime` 另取布局快照中的脏标记，见下）：
 
 | 段 | 来源 | 作用 |
 |---|---|---|
@@ -116,7 +116,7 @@ layout `queryKey` 由 `pathname` + 两段内容构成，编辑路由态用 `'e'`
 ```
 isEditRoute = type === 'edit'                           // 分桶：按 entityMap 构建方式（缓存身份）
 isEdited    = !!editingObjectRes?.isEdited             // 复用策略：脏标记（新鲜度）
-queryKey    = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEditRoute)
+queryKey    = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEditRoute, editingObjectRes?.structureVersion)
 staleTime   = isEdited ? 0 : 1000*60*5    // 脏=trigger 时重取 / 干净=5min 复用
 ```
 
@@ -124,7 +124,9 @@ staleTime   = isEdited ? 0 : 1000*60*5    // 脏=trigger 时重取 / 干净=5min
 
 `'e'` 段按**路由态**分桶（`type==='edit'`），而非脏标记：编辑路由（`RecordEditEntityCreator`，按 `$fold`/`$embed` 收起子结构）与浏览路由（`RecordEntityCreator`，全展开 + 外部 ref）产出**不同节点集合**，混用同一 key 会让 `nodes` 与 `rectMap` 错配（`applyRectToNodes` not found + 节点跳位）。用路由态而非 `isEdited`：提交后 `isEdited` 翻 false 但 entityMap 仍是编辑态构建，按脏标记切浏览态 key 会命中陈旧浏览态缓存；`isEdited` 改去驱动 `staleTime`（脏 0 / 干净 5min）。结构变更 `removeQueries(['layout', pathname, 'e'])`（03 的 `onStructureChange`）只清编辑路由态，浏览态缓存不受影响。
 
-> **quirk**：纯值类编辑期间 `isEdited` 不刷新（entityMap 不重算、editingObjectRes 不重建，值类编辑就地改、不 bump structureVersion）→ `staleTime` 不刷新，但 `queryKey` 分桶由路由态决定（编辑路由恒定）故缓存身份不变。安全——值类不改拓扑、布局不变。勿当 bug 修。
+`structureVersion` 只进入编辑路由缓存：结构变更使 key 变化，用新节点集合重跑 ELK，也避免 reload 的 effect 时序命中旧编辑布局。
+
+> **布局快照的取值时机**：`editingObjectRes` 使用独立 memo，依赖编辑路由态、session、结构版本和服务端 record 响应。值类 dirty 切换虽然会重算引用图，但不会重读 `isEdited`，`staleTime` 也随之保持之前的采样值。值类编辑不改变独立对象节点集合，待校验引用边沿用当前节点位置；不要再用「entityMap 未重算」解释这个行为。实时待校验状态与布局快照各管自己的职责。
 
 ---
 
@@ -157,13 +159,15 @@ computeStableViewport(anchorOld, anchorNew, vp):
 
 **另一条视口稳定机制：`setFitViewForPathname`（RecordRef 固定面板）**——`useEntityToGraph` 的可选回调，仅在 FitFull 分支调。RecordRef 固定面板用它回写「已适配 pathname」；再次进入同 pathname 时把 `editingObjectRes.fitView` 替换成 `NoChange`，实现「首次 FitFull 后保持视口不跳」。与四态 `EFitView` 是独立的策略。
 
+引用定位通过可选 `focusTarget` 请求适配一个现有节点或回退父节点，每个请求只处理一次。同一布局结果、`editingObjectRes` 和 pathname 已执行过视口动作时，不因引用边或呈现节点更新再次执行；这也避免 StrictMode 重跑 effect 后用 FitFull 覆盖刚完成的定位。后续结构编辑产生新布局或指令，仍使用上面的锚点规则。
+
 ---
 
 ## 七、三个 Effect 拆分
 
 ```
 Effect 1: 节点 / 边 / 菜单回调下发
-  newNodes 有              → setNodeMenuFunc/setPaneMenu/setNodeDoubleClickFunc + setNodes/setEdges
+  newNodes 有              → 登记节点/边/菜单回调 + setNodes/setEdges
   newNodes 无 + layoutError → spreadFallbackNodes 网格铺开 + console.error（失败兜底）
   deps: newNodes, edges, 菜单回调, flowGraph, setNodes/setEdges, layoutError, nodes
 
@@ -174,15 +178,17 @@ Effect 3: 错误反馈（拆独立，只随 layoutError 变，不沾菜单依赖
 
 Effect 2: 视口动作（刻意与 Effect 1 拆开）
   viewportReady && id2RectMap && newNodes 时：
+    新 focusTarget 请求命中节点 → 适配该节点并记录已处理，结束本次视口动作
+    布局、指令、pathname 与上次相同 → 不重复执行
     action = pickViewportAction(editingObjectRes, id2RectMap, getViewport(), {prevId2RectMap})
     fitFull → fitView({padding:0.2, minZoom:0.3, maxZoom:1}) + setFitViewForPathname(pathname)
     fitId   → setViewport(action.viewport)
     noop    → 不动
     末尾 prevRectMapRef.current = id2RectMap   // 记录本帧布局，供下次 KeepStable
-  deps: editingObjectRes, id2RectMap, viewportReady, newNodes, fitView/setViewport/getViewport, setFitViewForPathname, pathname
+  deps: editingObjectRes, id2RectMap, viewportReady, newNodes, fitView/setViewport/getViewport, setFitViewForPathname, pathname, focusTarget
 ```
 
-**为什么视口拆独立 Effect**：历史背景——值类编辑 coalescing flush 曾让 Record 订阅的 canUndo 翻转 → `paneMenu` 新引用 → 视口被连带重置（输入 primitive 后过一会偶发 fitFull）。现 Record 不再订阅 canUndo + `paneMenu` 引用稳定，诱因消除；拆分仍作「视口语义独立边界」保留。
+**为什么视口拆独立 Effect**：历史背景——值类编辑 coalescing flush 曾让 Record 订阅的 canUndo 翻转 → `paneMenu` 新引用 → 视口被连带重置（输入 primitive 后过一会偶发 fitFull）。现 Record 不订阅 canUndo，布局指令也与引用图独立 memo；即使 dirty 切换需要更新图，视口仍按布局/指令去重。这些边界共同保证键入不会连带重置视口。
 
 ---
 

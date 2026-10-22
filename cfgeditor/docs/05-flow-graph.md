@@ -2,6 +2,8 @@
 
 Flow 图层把 04 算出的 `nodes` / `edges` 画到屏幕，提供节点 UI 与交互。核心是 `FlowGraph` 集成 `@xyflow/react`，`FlowNode` 按实体类型分派渲染。
 
+Schema 图沿用字段列表与关系线：集合类型旁标注服务端 `index`，内部引用增添只读的来源表达式、目标路径和 `resultType`。外部表保留原有关系线并注明唯一键；祖先目标只连接已显示的类型入口；`::` 从根出发的说明不为复用 struct 猜测某张根表。展示仅格式化 DTO，不在前端解析 `.cfg` 或重新绑定引用。
+
 > **不讲**：布局怎么算（→ [04](04-layout-viewport.md)）、EntityForm 字段渲染（→ [06](06-edit-form.md)）。本文只讲「坐标进来 → 画出来 + 交互」。
 >
 > 【承前】04 的 `nodes` / `edges` 坐标。　【启后】点节点（editable 态）改字段 → [06](06-edit-form.md)）。
@@ -102,9 +104,14 @@ FlowGraph 注册交互回调到 `<ReactFlow>`：
 
 - `onNodeContextMenu` / `onPaneContextMenu`：右键菜单（绝对定位 `menuStyle` + `menuItems`）。
 - `onNodeDoubleClick`：双击节点（如 RecordRef 双击跳转 record）。
+- `onEdgeDoubleClick`：内部引用边定位到当前图的可见目标；brief 目标沿现有 record 导航打开详情。节点菜单也提供「打开引用目标」；brief 只有一个内部目标时，原有打开 record 动作直接携带该目标，多个目标则在菜单中逐项列出。
 - `onPaneClick` / `onNodeClick` / `onMoveStart` / `onNodeDragStart`：任何交互都 `closeMenu` 关右键菜单。
 
 回调本体（`nodeMenuFunc` / `paneMenu` / `nodeDoubleClickFunc`）由路由组件经 `FlowGraphContext` 登记上来（§3 反向下发）。
+
+内部定位只投影服务端 `FieldRef`，`referenceTarget.ts` 根据现有字段链构造节点 ID，不在前端解析引用键。目标 revision 与 `toRevision` 相同才使用数组位置；否则回退 record 根、提示并刷新关系。fold/embed 隐藏目标时落到最近可见父节点，继续使用原展开按钮，不修改折叠数据。跨 record 目标通过 router 临时 state 传递，未写入配置、书签或偏好。
+
+编辑图从最后一次服务端 `recordResult` 读取关系元数据，不将 `$refs` 放入 `editingObject`。进入 dirty 的第一次变化撤除派生边、在根标题显示待校验提示；后续键入仍不重建图。保存成功仍保持待校验，直到新的 GET 响应到达且其数据对应当前编辑对象，才重新投影位置；refetch 失败不恢复旧数组下标。使用 query 响应时间标记兼容没有 revision 的旧服务。undo 回到原数据后也可重新投影合法位置。值类 dirty 变化不重复执行视口指令，定位请求也不会因 StrictMode 重跑而被全图适配覆盖。循环关系只连接已有节点，不递归复制目标对象。
 
 ---
 

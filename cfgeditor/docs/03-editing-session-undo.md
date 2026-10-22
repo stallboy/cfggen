@@ -29,7 +29,7 @@ setCurrentEditingSession(s)     → 注册 / 注销
 
 所有编辑方法分两类，**这是整套编辑性能设计的主轴**：
 
-### 2.1 值类（不重渲）
+### 2.1 值类（不逐键重建图）
 
 `updateFormValues` / `updateNote`：
 
@@ -37,11 +37,12 @@ setCurrentEditingSession(s)     → 注册 / 注销
 值类编辑通用流程：
   就地改 editingObject 对应字段
   → markDirty（乐观置脏 + 递增 mutationSeq）
-  → notifyEditingState（刷新 HeaderBar 脏点）
-  // 不 bump structureVersion、不 emit → Record 不重渲
+  → notifyEditingState（刷新 store 脏标记）
+  // 不 bump structureVersion、不触发结构订阅
+  // dirty 状态切换时，Record 经 store 更新引用投影；后续键入不重建图
 ```
 
-改字段值 → 就地改 `editingObject` + `markDirty` + `notifyEditingState`，**不 bump `structureVersion`、不 emit** → Record 不重渲、entityMap 不重建。一张记录常含几十个表单输入，逐键一次就重建布局会卡。
+改字段值 → 就地改 `editingObject` + `markDirty` + `notifyEditingState`，**不 bump `structureVersion`、不触发结构订阅**。Record 同时读取 store 的脏标记：dirty 状态切换时重算 entityMap，撤除或恢复已校验引用；进入 dirty 后继续键入不重建图。`editingObjectRes` 使用独立 memo，值类 dirty 切换不重新发出布局或视口指令。一张记录常含几十个表单输入，避免逐键重建图仍是性能主轴。
 
 ### 2.2 结构类（重算）
 
@@ -72,7 +73,7 @@ setCurrentEditingSession(s)     → 注册 / 注销
 | 结构类 | `updateInterfaceValue`（换 impl）| `FitId` + undo `KeepStable` |
 | 结构类 | `pasteStruct`（粘贴）| `FitId` + undo `KeepStable` |
 | 结构类 | `replaceEditingObject`（Chat / AddJson / funcClear）| `FitFull` + undo `FitFull` |
-| 特殊 | Form.List 长度变化（在 `updateFormValues` 内）| capture 但**不 bump**（不重算 entityMap / 不重渲），undo `NoChange`（primitive list 非节点、布局不变）|
+| 特殊 | Form.List 长度变化（在 `updateFormValues` 内）| capture 但**不 bump**；dirty 切换时可更新引用投影，undo `NoChange`（primitive list 非独立节点）|
 
 > **funcClear 是什么**：STable 记录编辑表单上「设为默认值」按钮（`FuncSubmitFormItem`，i18n key `setDefaultValue`），把对象整体重置为 schema 算出的默认值；仅 STable（含 `$submit`）记录有此按钮，走 `replaceEditingObject` 路径。
 
@@ -80,9 +81,9 @@ setCurrentEditingSession(s)     → 注册 / 注销
 
 ## 三、就地变异 + 共享引用
 
-`editingObject` 是各 `onUpdateXxx` **就地改的同一对象**（不靠不可变更新）。`RecordEditEntityCreator.createThis` 把它的子对象引用塞进 `entity.edit.editObj`——值类改后闭包直接见最新值，提交时 `submit()` 读到全量最新（只发请求，不做别的）。
+`editingObject` 是各 `onUpdateXxx` **就地改的同一对象**（不靠不可变更新）。`RecordEditEntityCreator.createThis` 把它的子对象引用塞进 `entity.edit.editObj`——值类改后闭包直接见最新值。`submit()` 再深拷当前完整对象作为提交快照，后续就地编辑不会改变请求内容。
 
-> 这与「不可变状态 + 浅比较」的 React 常规相反，是有意为之：编辑会话是短期、实例级、可撤销的可变态，就地变异 + 共享引用让值类编辑零重渲成为可能。勿改成不可变 reducer。
+> 这与「不可变状态 + 浅比较」的 React 常规相反，是有意为之：编辑会话是短期、实例级、可撤销的可变态，就地变异 + 共享引用避免逐键重建图。dirty 状态切换带来的引用投影更新是独立渠道。勿改成不可变 reducer。
 
 ---
 
@@ -94,7 +95,7 @@ setCurrentEditingSession(s)     → 注册 / 注销
 - `getStructureVersion()` → 返回 number（`structureVersion`）
 - `getEditingObject()` → 直接读 `editingObject`（不建立订阅）
 
-- 值类编辑：不 bump → 订阅者不重渲
+- 值类编辑：不 bump → 不经结构订阅触发重渲；dirty 切换可经 store 触发引用投影更新
 - 结构类编辑：bump → 订阅者（Record）重渲
 
 **关键**：`getSnapshot` 永远返回基本类型。**绝不返回 `editingObject` 引用**——就地变异下顶层引用不变，返回引用会让 React 永远跳过更新（`Object.is` 判相等）。这是「就地变异 + useSyncExternalStore」组合下必须守的一点。
@@ -103,22 +104,23 @@ setCurrentEditingSession(s)     → 注册 / 注销
 
 ## 五、canUndo / canRedo 的惰性反馈路径
 
-`EditingSession` 对外有几条渠道，**只有 `subscribe + getStructureVersion` 能驱动 React 重渲**；其余都是直接读或惰性实时读，不建立订阅：
+`EditingSession` 的直接读取器不建立订阅，结构更新走 `subscribe + getStructureVersion`。此外，创建方把 `onEditingStateChange` 接到 store，HeaderBar 和 Record 读取该镜像处理脏点与引用待校验状态：
 
 | 渠道 | 类型 | 是否驱动 React |
 |---|---|---|
 | `subscribe` + `getStructureVersion` | number 快照 | 是（结构编辑 bump 触发重渲）|
-| `getEditingObject` / `getEditingObjectRes` | 直接读 | 否（在 useMemo 里读，依赖 structureVersion 才重算）|
+| `getEditingObject` / `getEditingObjectRes` | 直接读 | 否（由调用方各自的 memo 决定何时重读）|
 | `canUndo` / `canRedo` | 惰性实时读 | 否（每次调用现读栈长度）|
+| `onEditingStateChange` → store 镜像 | 脏标记回调 | dirty 切换时更新 HeaderBar 与 Record 的引用投影 |
 
-值类编辑（`flushValueCoalesce → capture → emit`）期间 canUndo 会从 false 翻到 true，但 `structureVersion` 没变 → Record 不重渲。这是**刻意的性能取舍**：值类每 500ms 合并一组就让 canUndo 翻转一次，若订阅它，Record 会跟着重渲、视口连带重置（输入 primitive 后偶发 fitFull）。故 canUndo 改走惰性路径：
+值类编辑（`flushValueCoalesce → capture → emit`）期间 canUndo 会从 false 翻到 true，但 `structureVersion` 没变，不因此让 Record 重渲。这与 dirty 状态切换的引用投影更新不同。值类每 500ms 合并一组，若额外订阅 canUndo，会带来不必要的图更新；历史上还曾连带重置视口。故 canUndo 改走惰性路径：
 
 - 右键菜单的 `disabled` 用箭头函数 `() => !session.canUndo()`——每次菜单打开才判一次；
 - `ctrl+z` / `ctrl+y` 热键回调里实时判（栈空或非编辑态直接放行，input 原生 undo 不被误杀）。
 
 > 历史：曾订阅 canUndo → paneMenu 引用变 → 视口连带重置，故改为不订阅。
 
-**连带 quirk**：`getEditingObjectRes` 返回的 `isEdited` 在值类编辑期间也不刷新（同源：值类不重算 entityMap，`getEditingObjectRes` 不重建），`staleTime` 随之不刷新（`queryKey` 分桶由路由态决定，不受影响）——安全，值类不改拓扑。勿当 bug 修（04 §五也提了）。
+**布局快照的取值时机**：`editingObjectRes` 已从 entityMap 的 memo 分离，只随编辑路由态、session、`structureVersion` 和 `recordResult` 重读。因此 dirty 切换即使重算引用图，也不刷新其 `isEdited` 或 layout 的 `staleTime`。值类编辑不增加、删除独立对象节点，待校验边变化沿用已有节点位置；缓存身份仍由路由态和结构版本决定。这是独立布局快照的设计，不应再解释成「entityMap 没重算」（04 §五）。
 
 ---
 
@@ -228,20 +230,25 @@ flushValueCoalesce():
 
 **fieldKey 来源**：`touchValueCoalesce` 收的 `fieldKey` 实为 `coalesceKey(fieldChains, fieldKey) = [...fieldChains, fieldKey].join('/')`——含完整嵌套路径，保证不同位置的同名字段不误合并。
 
-**per-key O(1) 不变量**：只做「字段标识比较 + clearTimeout/setTimeout」，**严禁每键 clone/遍历**——否则几十表单输入零重渲的收益就被每键 clone 磨掉。
+**per-key O(1) 不变量**：coalescing 只做「字段标识比较 + clearTimeout/setTimeout」，**严禁每键 clone/遍历**——否则避免逐键重建图的收益就被快照复制磨掉。
 
 `beforeStructuralChange` 调 `flushValueCoalesce`：结构操作前先固化未 capture 的键入，避免与结构操作混在一个快照。
 
 ---
 
-## 十、submit / onCommitSuccess / resetBaselines（重基准挂 onSuccess）
+## 十、提交快照、单个在途请求与成功基准
 
-- `submit()` → 只调 `mutate(editingObject)`，发请求。
-- `onCommitSuccess()` → 调 `resetBaselines()`，仅在 mutation `onSuccess` 才被调。
+- `submit()` → 若已有 `submittedSnapshot` 则忽略重复提交；否则 `structuredClone(editingObject)` 固定本次内容，再传给 `mutate`。按钮与快捷键共用这一会话级限制。
+- `onCommitFailure()` → 请求异常、编码失败或服务端校验未通过时释放在途快照，允许重试；不改变当前编辑、脏基准或 undo 历史。
+- `onCommitSuccess()` → 仅在服务端返回 `updateOk` / `addOk` 时确认已保存内容，再释放在途快照并重设基准。
 
-**为什么重基准挂在 `onSuccess` 而非 `submit`**：提交是异步网络调用，可能失败。若 `submit()` 发请求时就清栈重基准，一旦失败——undo 历史没了（没法退回重改）、脏标记还误报「已保存」——数据危险。挂 `onSuccess` 才保证「只有真落盘了，才算这次编辑结束」。
+**为什么等待成功结果才重设基准**：发请求时清栈会让失败重试丢失 undo 历史，也会误报「已保存」。请求使用独立且不随编辑变化的快照，成功后才能确定服务器保存的是哪份内容。
 
-`resetBaselines`：清 coalesce timer → `captureUndoPoint` 深拷 → 同时重置 `originalEditingObject`（脏比较归零）和 `undoStack.setBaseline`（清栈 + 新基准）→ `dirty=false`。
+请求期间仍可编辑。成功时若当前对象等于提交快照，`resetBaselines` 清 coalesce timer，重设 `originalEditingObject` 和 undo baseline，置 clean；若已有后续修改，则以**提交快照**作为已保存基准，保留当前编辑为 dirty，避免随后 refetch 覆盖它。两条成功路径都会清旧 undo 历史并建立新基准；失败路径保留历史。
+
+成功回调完成重基准后立即调用既有 `notifyEditingState()`，保证页头的未保存提示与新基准一致，不依赖随后 GET 的成功或到达时机。
+
+保存成功后的引用位置仍待对应编辑数据的新 GET 响应校验，不能把旧响应中的数组位置立即投射到当前对象（见 05 的引用定位）。
 
 ---
 
@@ -264,7 +271,7 @@ bumpStructure({fitView, position?}):
 |---|---|---|
 | `onStructureChange` | 结构变更时清 layout 缓存（钩给 04）| [Record.tsx](../src/features/record/Record.tsx) 注入：`removeEditLayoutCache(pathname)`（`queryKeys.ts` 动词，内部 `removeQueries(['layout', pathname, 'e'])`）|
 | `mutate` | 提交写回后端（`submit()` 调）| [Record.tsx](../src/features/record/Record.tsx) 的 addOrUpdateRecord mutation |
-| `onEditingStateChange` | `(table, id, isEdited)` → 写 store 镜像（HeaderBar 脏点）| [Record.tsx](../src/features/record/Record.tsx) 注入：`setEditingState` |
+| `onEditingStateChange` | `(table, id, isEdited)` → 写 store 镜像（HeaderBar 脏点、Record 引用待校验）| [Record.tsx](../src/features/record/Record.tsx) 注入：`setEditingState` |
 
 **为什么走回调而非直接 import store**：让 EditingSession 不依赖 store 层（守住 services 不反向依赖 store 的方向）。Record 注入 `onStructureChange` 成：
 
@@ -285,9 +292,9 @@ getEditingObjectRes():
   → {fitView, fitViewToIdPosition, isEdited: getIsEdited()}
 ```
 
-Record 的 `useMemo` 调 `session.getEditingObjectRes()` 拿 `editingObjectRes`，喂给 `useEntityToGraph`——04 的 `pickViewportAction` 吃它的 `fitView` / `fitViewToIdPosition` 决定视口动作，`isEdited` 决定 layout 的 `staleTime`（queryKey 的 `'e'` 分桶改由路由态 `type==='edit'` 决定，见 04）。
+Record 用独立 `useMemo` 调 `session.getEditingObjectRes()` 拿 `editingObjectRes`，依赖编辑路由态、session、`structureVersion` 和 `recordResult`；引用图的 dirty/待校验切换不在其依赖中。它喂给 `useEntityToGraph`——04 的 `pickViewportAction` 吃 `fitView` / `fitViewToIdPosition` 决定视口动作，采样到的 `isEdited` 决定 layout 的 `staleTime`（queryKey 的 `'e'` 分桶由路由态 `type==='edit'` 决定，见 04）。
 
-> **quirk**：值类编辑不重算 entityMap → `editingObjectRes` 不重建 → `isEdited` 不刷新（`staleTime` 随之不刷新；`queryKey` 由路由态决定本就不受影响）。安全——值类不改拓扑、布局不变。勿当 bug 修（04 §五也提了）。
+> **独立指令快照**：值类 dirty 切换可以重建 entityMap，但不会重建 `editingObjectRes`。`useEntityToGraph` 对同一布局、指令和 pathname 去重，避免更新引用边时重复执行 FitFull；对象定位另按请求处理一次，并保留后续结构编辑的锚点语义。`isEdited/staleTime` 的采样时机见上文 §五。
 
 ---
 
@@ -302,12 +309,12 @@ sequenceDiagram
     participant Q as React Query
     participant B as cfggen 后端
 
-    Note over F,S: ① 值类（键入）—— 就地改，不重渲
+    Note over F,S: ① 值类（键入）—— 就地改，不逐键重建图
     U->>F: 键入
     F->>S: onValuesChange → updateFormValues
     S->>S: 就地改 editingObject + markDirty + notifyEditingState
     S->>S: touchValueCoalesce（500ms 窗口）
-    Note right of S: 不 bump structureVersion<br/>Record 不重渲（值类编辑不重布局）
+    Note right of S: 不 bump structureVersion<br/>dirty 切换时更新引用图；后续键入不重建<br/>独立布局指令保持不变
 
     Note over S,UN: ② 500ms 到 / 换字段 / 结构操作前
     S->>UN: flushValueCoalesce → capture(NoChange)
@@ -328,10 +335,19 @@ sequenceDiagram
 
     Note over U,B: ⑤ 保存
     U->>S: alt+s → submit()
-    S->>Q: mutate(editingObject)
+    S->>S: 深拷 submittedSnapshot（已有在途请求则忽略）
+    S->>Q: mutate(submittedSnapshot)
     Q->>B: POST /recordAddOrUpdate
-    B-->>Q: onSuccess
-    Q->>S: onCommitSuccess → resetBaselines（重基准 + 清栈）
+    alt 写入成功（updateOk / addOk）
+        B-->>Q: 成功结果
+        Q->>S: onCommitSuccess（以提交快照为新基准）
+        Note right of S: 请求期间的后续编辑保留为 dirty
+        Note right of Q: 引用仍待对应的新 GET 响应校验
+    else 请求或服务端校验失败
+        B-->>Q: 失败结果或异常
+        Q->>S: onCommitFailure（释放在途状态）
+        Note right of S: 保留编辑、脏基准和 undo，允许重试
+    end
 ```
 
 ---
@@ -344,18 +360,18 @@ sequenceDiagram
 
 **整体替换（Chat / AddJson / funcClear）**：用 `replaceEditingObject`（自动 `deleteRefsInPlace` + FitFull + capture）。
 
-**新增会话**：Record 构造 `new EditingSession(recordResult, callbacks)` + `setCurrentEditingSession` + mount effect 调 `initUndoBaseline`；提交成功调 `onCommitSuccess`；unmount 调 `dispose`。
+**新增会话**：Record 构造 `new EditingSession(recordResult, callbacks)` + `setCurrentEditingSession` + mount effect 调 `initUndoBaseline`；写入成功调 `onCommitSuccess`，异常或校验失败调 `onCommitFailure`；unmount 调 `dispose`。
 
 ---
 
 ## 一句话速记
 
-- **值类 / 结构类二分**：值类就地改不 bump（零重渲）；结构类 bump + 重算。整套编辑性能设计的主轴。
+- **值类 / 结构类二分**：值类就地改不 bump；dirty 切换时更新引用投影，后续键入不重建图。结构类 bump + 重算。
 - **就地变异 + 共享引用**：`editingObject` 就地改，引用塞进 `entity.edit.editObj`，闭包见最新值；`getSnapshot` 返回基本类型，绝不返回引用。
 - **脏标记三态**：`dirty=false` 采信 / `dirty=true`+seq 同 采信 / seq 异 重算。
 - **UndoStack 纯数据栈**：baseline / done / undone 三段，不依赖 session/React，可独立单测。
 - **快照带视口语义**：结构 → KeepStable+锚点；整体替换 → FitFull；值类 → NoChange。
 - **值类 coalescing**：500ms 窗口 + per-key O(1)（只比较标识 + timer，不 clone）。
-- **重基准挂 `onSuccess`**：提交是异步网络调用，只有真落盘才算编辑结束。
+- **提交快照 + 单个在途请求**：重复提交被忽略；失败释放在途状态且保留编辑和 undo，成功以提交快照重设基准；引用位置仍等待对应的新 GET 校验结果。
 - **canUndo 惰性反馈**：不订阅，走菜单 `disabled` 箭头 + 热键实时判，避免值类编辑连累 Record 重渲。
 - **③→④ 钩子**：`bumpStructure` 的 `onStructureChange` 同步 `removeQueries` 清编辑态 layout 缓存。

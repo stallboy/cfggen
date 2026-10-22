@@ -1,4 +1,4 @@
-import {SInterface, SItem, SStruct, STable} from "@/api/schemaModel.ts";
+import {ReferencePath, SForeignKey, SInterface, SItem, SStruct, STable} from "@/api/schemaModel.ts";
 import {ReadOnlyEntity, DisplayField, EntityEdgeType, EntityType} from "@/domain/entityModel.ts";
 import {Schema} from "@/domain/schema.ts";
 import {HANDLE_IN, HANDLE_OUT} from "@/domain/handleIds.ts";
@@ -26,10 +26,23 @@ function createEntity(
         key: field.name,
         name: field.name,
         comment: field.comment,
-        value: field.type,
+        value: field.type + (field.index?.length ? ` [index: ${field.index.join(', ')}]` : ''),
         handleIn: false,
         handleOut: false,
     }));
+    if (item.type !== 'interface') {
+        for (const fk of item.foreignKeys ?? []) {
+            if (!fk.pathReference) continue;
+            fields.push({
+                key: `$reference_${fk.name}`,
+                name: `→${fk.name}`,
+                comment: '',
+                value: referenceDescription(fk),
+                handleIn: false,
+                handleOut: false,
+            });
+        }
+    }
 
     return {
         id: eid(id),
@@ -40,6 +53,21 @@ function createEntity(
         entityType,
         userData: new UserData(table, item),
     };
+}
+
+function referencePath(path: ReferencePath): string {
+    const prefix = path.start === 'ROOT' ? '::' : path.start === 'ANCESTOR' ? `@${path.owner}::`
+        : path.start === 'TABLE' ? `${path.owner}${path.fields.length ? '::' : ''}` : '';
+    return prefix + path.fields.join('.');
+}
+
+function referenceDescription(fk: SForeignKey): string {
+    const reference = fk.pathReference!;
+    let target = referencePath(reference.target);
+    if (reference.target.start === 'TABLE' && fk.refKeys?.length) {
+        target = target.replace(reference.target.owner, `${reference.target.owner}[${fk.refKeys.join(',')}]`);
+    }
+    return `[${reference.sources.map(referencePath).join(', ')}] → ${target}${fk.resultType ? ` : ${fk.resultType}` : ''}`;
 }
 
 export class TableEntityCreator {
@@ -154,11 +182,17 @@ export class TableEntityCreator {
     private handleStructOrTableRef(si: SStruct | STable, entity: ReadOnlyEntity<UserData>): void {
         if (si.foreignKeys) {
             si.foreignKeys.forEach(fk => {
-                this.addRefToEntityMapIf(fk.refTable);
+                const ancestor = fk.pathReference?.target.start === 'ANCESTOR' ? fk.pathReference.target.owner : undefined;
+                const target = fk.refTable || (ancestor && this.entityMap.has(eid(ancestor)) ? ancestor : undefined);
+                if (!target) return;
+                if (fk.refTable) this.addRefToEntityMapIf(fk.refTable);
+                const sourceField = fk.pathReference
+                    ? fk.pathReference.sources.find(path => path.start === 'CURRENT')?.fields[0] ?? HANDLE_OUT
+                    : fk.keys[0];
                 entity.sourceEdges.push({
-                    sourceHandle: fk.keys[0],
-                    target: eid(fk.refTable),
-                    targetHandle: this.schema.getFkTargetHandle(fk),
+                    sourceHandle: sourceField,
+                    target: eid(target),
+                    targetHandle: fk.refTable ? this.schema.getFkTargetHandle(fk) : HANDLE_IN,
                     type: EntityEdgeType.Ref,
                 });
             });

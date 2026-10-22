@@ -425,13 +425,23 @@ export class EditingSession {
 
     // ============ submit / notify ============
 
-    /** 提交发起时的 editingObject 快照：onCommitSuccess 据此判断"飞行期用户又改了内容"。 */
+    /** 在途提交快照，同时阻止按钮/快捷键重复提交；成功或失败后释放。 */
     private submittedSnapshot?: JSONObject;
 
     submit(): void {
-        // mutate 是异步网络请求；存快照供 onCommitSuccess 与响应返回时的 editingObject 对比
+        if (this.submittedSnapshot !== undefined) return;
         this.submittedSnapshot = structuredClone(this.editingObject);
-        this.mutate?.(this.editingObject);
+        try {
+            this.mutate?.(this.submittedSnapshot);
+        } catch (error) {
+            this.onCommitFailure();
+            throw error;
+        }
+    }
+
+    /** 请求或服务端校验失败：允许重试，不改变编辑、脏基准或 undo。 */
+    onCommitFailure(): void {
+        this.submittedSnapshot = undefined;
     }
 
     /** 提交成功后重置基准（submit 异步、成败要等网络，故重基准挂在 onSuccess 而非 submit 调用时——
@@ -461,6 +471,7 @@ export class EditingSession {
         } else {
             this.resetBaselines();
         }
+        this.notifyEditingState();
     }
 
     /** 把 table/id/isEdited 通知订阅者（HeaderBar 显示 unsaved）。实现由创建方注入，本类不依赖 store。 */

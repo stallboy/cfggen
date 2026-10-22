@@ -1,4 +1,4 @@
-import {BriefDescription, JSONObject, JSONValue} from "@/api/recordModel";
+import {BriefDescription, FieldRef, JSONObject, JSONValue} from "@/api/recordModel";
 import {PrimitiveType} from "@/api/schemaModel";
 import {ResInfo} from "@/domain/resInfo";
 import {HANDLE_IN} from "@/domain/handleIds";
@@ -266,6 +266,7 @@ export interface EntitySourceEdge {
     targetHandle: string;
     type: EntityEdgeType;
     label?: string;
+    reference?: FieldRef;
 }
 
 /**
@@ -332,6 +333,7 @@ export function makeChildEdge(fieldKey: string, childId: string): EntitySourceEd
 export interface EntityBase<TUserData = unknown> {
     id: string;
     label: string;
+    referencesPending?: boolean;
     sourceEdges: EntitySourceEdge[];
     entityType?: EntityType;
     note?: string;

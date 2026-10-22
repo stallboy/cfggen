@@ -13,7 +13,7 @@
 [`EntityForm.tsx`](../src/flow/edit/EntityForm.tsx) 是 memo 的 antd `<Form>` 容器，把 `edit.fields` 拆成多个 `<FieldRenderer>`。**自身不维护任何状态**——所有状态在 EditingSession（03）。容器只做两件事：遍历 `edit.fields` 渲染 `<FieldRenderer>`，以及在 antd `onValuesChange(changed, allValues)` 回调里把值回写给 EditingSession。
 
 - **值回写走 `onValuesChange(changed, allValues)`** → `edit.editOnUpdateValues` → `session.updateFormValues`（03）。表单自己不存值。
-- **提交（funcSubmit）不走组件级路由**：`alt+s` 由 CfgEditorApp 全局单点注册，直达 `getCurrentEditingSession().submit()`。提交是「当前编辑会话」的全局语义，不是某字段的局部命令——全局单点的动机与历史 bug 详见 [09](09-cross-cutting.md)。
+- **提交（funcSubmit）不走组件级路由**：`alt+s` 由 CfgEditorApp 全局单点注册，直达 `getCurrentEditingSession().submit()`。会话复制独立提交快照，在途忽略重复提交；失败释放后可重试，编辑和 undo 保留（[03 §十](03-editing-session-undo.md)）。全局单点的动机与历史 bug 详见 [09](09-cross-cutting.md)。
 - **`initialValue` 放在每个 `Form.Item` 里**：因 `Form.Item.initialValue` 仅首次注册生效，父级 `key={field.name}` 复用实例时新值被忽略（antd issue #56102），需命令式同步（§5）。
 
 ---
@@ -97,7 +97,17 @@ useSyncFieldValue(form, field):
 
 textarea **去掉 `autoSize`**：rc-textarea 的 ResizeObserver 随节点数放大成 rAF 风暴，是 `/edit/record/` 大图加载卡顿根因；改固定 `rows`（str rows=1 滚动、text rows=4）→ 无 ResizeObserver。
 
+`long` 使用 `InputNumber.stringMode`，值与 undo 快照保留十进制字符串，list、map 的 key/value 和 struct 键采用同一约定。提交时 `encodeEditorRecord` 按 schema 检查 64 位范围；`/schemas.editorValueEncoding == 'long-decimal-string'` 表示服务支持精确协议。旧服务的安全 number 仍可读取/提交；旧服务无法提交超出 JavaScript 安全整数范围的 long，已不安全的 number 一律拒绝，避免未改值保存时静默舍入。服务与前端应共同升级；旧前端不能保证编辑新协议的字符串 long。
+
+精确 `long` 校验和下一个主键计算需要支持 `BigInt` 的 WebView/浏览器。构建语法目标为 Windows `chrome105`、其他平台 `safari14`，不提供 BigInt polyfill；这些目标与构建通过不代表已验证 macOS/Linux 的实际 WebView 运行。
+
 `StructRefItem` 的 handle 颜色用 antd `colorPrimary` 而非硬编码（[useRefItemStyles.ts](../src/flow/edit/shared/useRefItemStyles.ts)，`theme.useToken()` 取色）——原硬编码 `#0000ff` 过饱和，换品牌主色给字段级 handle 统一的「可连接点」高亮。
+
+### 原始 JSON 导入与载入表单
+
+[`AddJson.tsx`](../src/features/add/AddJson.tsx) 的直接提交与「载入表单」都先将**原文**发给 `/checkJson`，成功后才由 `parseCheckedEditorRecord` 解析服务端规范化结果并按 schema 检查。浏览器不能先 `JSON.parse` 原文：不安全整数和高精度小数可能已被舍入，之后再检查或转字符串无法恢复。服务端保留十进制精度，拒绝 long 的 `1e-400`、`4.200000000000000000001e1` 等非整数，合法 `1e3` 则规范化为字符串 `"1000"`。
+
+`/checkJson` 支持裸 JSON 对象与原有 AI JSON 围栏；裸对象内字符串的反引号保持原样。此导入流程要求前后端一起升级，校验失败或旧服务不支持裸对象时直接报错，不回退到本地解析。载入表单等待校验期间若切换会话或修改了当前数据，也会拒绝替换，避免覆盖新编辑。
 
 ---
 

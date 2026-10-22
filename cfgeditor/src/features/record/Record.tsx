@@ -1,49 +1,65 @@
 import {Entity, isEditableEntity, EditingObjectRes, EFitView} from "@/domain/entityModel.ts";
-import {JSONObject, RecordEditResult, RecordResult, RefId} from "@/api/recordModel.ts";
+import {FieldRef, JSONObject, RecordEditResult, RecordResult, RefId} from "@/api/recordModel.ts";
 import {App} from "antd";
-import {createRefEntities, getId, getLabel} from "./recordRefUtils.ts";
+import {createEditingRefs, createRefEntities, getId, getLabel, incomingObjectReferences, locateRecordRefs} from "./recordRefUtils.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {EditingSession, getCurrentEditingSession, setCurrentEditingSession} from "@/services/editingSession.ts";
 import {isCopiedFitAllowedType, structCopy} from "@/services/clipboard.ts";
 import {useTranslation} from "react-i18next";
 import {navTo, setIsEditMode, setEditingState, useMyStore, useLocationData} from "@/store/store.ts";
-import {useNavigate, useOutletContext} from "react-router";
+import {useLocation, useNavigate, useOutletContext} from "react-router";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "@/api/apiClient.ts";
 import {MenuItem} from "@/flow/FlowContextMenu.tsx";
 import {fillHandles} from "@/flow/layout/entityToNodeAndEdge.ts";
-import {memo, useCallback, useEffect, useMemo, useRef, useSyncExternalStore} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore} from "react";
 import {useHotkeys} from "react-hotkeys-hook";
 
 
 import {useEntityToGraph} from "@/flow/useEntityToGraph.ts";
 import {invalidateAllExceptLayout} from "@/services/queryClient.ts";
 import {queryKeys, removeEditLayoutCache} from "@/services/queryKeys.ts";
-import {EntityNode} from "@/flow/FlowGraph.tsx";
+import {EntityEdge, EntityNode} from "@/flow/FlowGraph.tsx";
 import {NEW_RECORD_ID, SchemaTableType} from "@/domain/schema.ts";
 import {QueryGate} from "@/app/QueryGate.tsx";
+import {encodeEditorRecord} from '@/domain/editorValueEncoding';
+import {referencePathLabel, resolveReferenceTarget} from '@/domain/referenceTarget';
+import {prepareEditingObject, RecordResponseMarker, referencesNeedValidation} from '@/services/editingObjectUtils';
 
 
-function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
+function RecordWithResult({recordResult, responseVersion}: { recordResult: RecordResult; responseVersion: number }) {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
-    const {server, tauriConf, resourceDir, resMap} = useMyStore();
+    const {server, tauriConf, resourceDir, resMap, editingIsEdited} = useMyStore();
     const {notification} = App.useApp();
     const {curTableId, curId, edit, pathname} = useLocationData();
     const navigate = useNavigate();
+    const location = useLocation();
     const {t} = useTranslation();
+    const navigationReference = (location.state as {referenceTarget?: FieldRef} | null)?.referenceTarget;
+    const [focusReference, setFocusReference] = useState<FieldRef | undefined>(navigationReference);
+    const [savedFromResponse, setSavedFromResponse] = useState<RecordResponseMarker | undefined>(undefined);
+    const referencesPendingRef = useRef(false);
+    const validatedObject = useMemo(() => prepareEditingObject(recordResult.object), [recordResult.object]);
+    useEffect(() => {
+        if (navigationReference) setFocusReference(navigationReference);
+    }, [navigationReference]);
 
-    const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, JSONObject>({
-        mutationFn: (jsonObject: JSONObject) => addOrUpdateRecord(server, curTableId, jsonObject),
+    const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, JSONObject, RecordResponseMarker>({
+        mutationFn: async (jsonObject: JSONObject) => addOrUpdateRecord(server, curTableId, encodeEditorRecord(schema, curTable, jsonObject)),
+        onMutate: () => ({updatedAt: responseVersion, revision: recordResult.revision}),
 
         onError: (error) => {
+            session.onCommitFailure();
             notification.error({
                 title: `addOrUpdateRecord  ${curTableId}  err: ${error.toString()}`,
                 placement: 'topRight', duration: 4
             });
         },
-        onSuccess: (editResult) => {
+        onSuccess: (editResult, _variables, submittedFrom) => {
             if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
+                referencesPendingRef.current = true;
+                setSavedFromResponse(submittedFrom);
                 notification.info({
                     title: `addOrUpdateRecord  ${curTableId} ${editResult.resultCode}`,
                     placement: 'topRight',
@@ -57,6 +73,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                     navigate(navTo('record', curTableId, editResult.id, true));
                 }
             } else {
+                session.onCommitFailure();
                 notification.warning({
                     title: `addOrUpdateRecord ${curTableId} ${editResult.resultCode}`,
                     placement: 'topRight',
@@ -90,6 +107,11 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const session = sessionRef.current;
     // 只订阅结构版本号（number）：值类编辑不 bump → 不重渲（性能契约1）；结构类编辑 bump → 重渲重算 entityMap。
     const structureVersion = useSyncExternalStore(session.subscribe, session.getStructureVersion);
+    // A dirty transition must remove validated paths immediately; later keystrokes keep the existing no-render contract.
+    void editingIsEdited;
+    const referencesPending = isEditing && referencesNeedValidation(session.getEditingObject(), validatedObject,
+        session.getIsEdited(), {updatedAt: responseVersion, revision: recordResult.revision}, savedFromResponse);
+    referencesPendingRef.current = referencesPending;
     // ctrl+z/y per-session。回调实时判 canUndo/canRedo：栈空/非编辑态直接放行（不 preventDefault）→
     // input 原生 undo 不被误杀；不订阅 canUndo → 其翻转不触发重渲（性能契约1）。
     // react-hotkeys-hook 内部用 ref 存最新回调，本组件因他因重渲（edit 切换/结构编辑）时刷新 isEditing 闭包。
@@ -104,42 +126,74 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         session.redo();
     }, {enableOnFormTags: true});
 
-    const {entityMap, editingObjectRes} = useMemo(() => {
+    // Value edits may hide validated edges, but they must not reissue a viewport instruction.
+    const editingObjectRes = useMemo<EditingObjectRes>(() => {
+        void structureVersion;
+        void recordResult;
+        return isEditing ? session.getEditingObjectRes() : {fitView: EFitView.FitFull, isEdited: false};
+    }, [isEditing, session, structureVersion, recordResult]);
+    const entityMap = useMemo(() => {
         const entityMap = new Map<string, Entity>();
-        let editingObjectRes: EditingObjectRes;
+        const refId = {table: curTable.name, id: curId};
 
         if (!isEditing) {
-            const refId = {table: curTable.name, id: curId};
             const creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs, tauriConf, resourceDir, resMap);
             creator.createRecordEntity(getId(curTable.name, curId), recordResult.object, getId(getLabel(curTable.name), curId));
-            createRefEntities({
-                entityMap,
-                schema,
-                briefRecordRefs: recordResult.refs,
-                isCreateRefs: false,
-                tauriConf,
-                resourceDir,
-                resMap
-            });
-            editingObjectRes = {
-                fitView: EFitView.FitFull,
-                isEdited: false
-            }
-
         } else {
-            // editingObject 是 session 的就地变异对象（共享引用）。structureVersion 是 entityMap 重算的显式触发器：
-            // in-place 变异下 editingObject 顶层引用不变，无法靠引用变化驱动重算；值类编辑不 bump structureVersion
-            // （性能契约1：几十表单输入零重渲），结构类编辑 bump → 此处重算 → 闭包拿到最新子对象引用（契约2）。
+            // 结构版本更新节点；dirty 翻转时重投影引用，后续键入复用同一编辑对象。
             void structureVersion;
             const editingObject = session.getEditingObject();
             const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, session, editingObject);
             creator.createThis();
-            editingObjectRes = session.getEditingObjectRes();
         }
+        createRefEntities({entityMap, schema, briefRecordRefs: recordResult.refs, isCreateRefs: false,
+            tauriConf, resourceDir, resMap});
+        if (isEditing) {
+            createEditingRefs(entityMap, recordResult.object, refId, recordResult.refs, referencesPending);
+        }
+        locateRecordRefs(entityMap, recordResult.revision, t('referencesPending'));
         fillHandles(entityMap);
-        return {entityMap, editingObjectRes}
+        return entityMap;
     }, [isEditing, curId, schema, recordResult, tauriConf, resourceDir, resMap, curTable,
-        session, structureVersion]);
+        session, structureVersion, referencesPending, t]);
+
+    const focusRequest = useMemo(() => ({reference: focusReference, revision: recordResult.revision}), [focusReference, recordResult.revision]);
+    const focusTarget = useMemo(() => {
+        if (!focusReference) return undefined;
+        const target = resolveReferenceTarget(focusReference, entityMap, recordResult.revision, referencesPending);
+        return target && {nodeId: target.nodeId, request: focusRequest};
+    }, [focusReference, entityMap, recordResult.revision, referencesPending, focusRequest]);
+    const refreshedReference = useRef<FieldRef | undefined>(undefined);
+    useEffect(() => {
+        if (!focusReference || refreshedReference.current === focusReference) return;
+        const target = resolveReferenceTarget(focusReference, entityMap, recordResult.revision, referencesPending);
+        if (target?.stale && !referencesPending) {
+            refreshedReference.current = focusReference;
+            notification.info({title: t('referenceSnapshotChanged'), placement: 'topRight', duration: 4});
+            invalidateAllExceptLayout();
+        }
+    }, [focusReference, entityMap, recordResult.revision, referencesPending, notification, t]);
+
+    const openReferenceTarget = useCallback((reference: FieldRef) => {
+        if (isEditing && (session.getIsEdited() || referencesPendingRef.current)) return;
+        if (reference.toTable === curTable.name && reference.toId === curId) {
+            setFocusReference({...reference});
+        } else {
+            navigate(navTo('record', reference.toTable, reference.toId, isEditing), {state: {referenceTarget: reference}});
+        }
+    }, [isEditing, session, curTable.name, curId, navigate]);
+    const edgeDoubleClickFunc = useCallback((edge: EntityEdge) => {
+        if (edge.data?.reference) openReferenceTarget(edge.data.reference);
+    }, [openReferenceTarget]);
+    const nodeDoubleClickFunc = useCallback((node: EntityNode) => {
+        if (node.data.entity.type !== 'card') return;
+        const references = incomingObjectReferences(entityMap, node.id);
+        if (references.length === 1) openReferenceTarget(references[0]);
+        else {
+            const record = node.data.entity.userData as RefId;
+            navigate(navTo('record', record.table, record.id, isEditing));
+        }
+    }, [entityMap, openReferenceTarget, navigate, isEditing]);
 
     useEffect(() => {
         setIsEditMode(edit);
@@ -172,26 +226,17 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     }, [session]);
 
 
-    const getEditMenu = useCallback(function (table: string, id: string, edit: boolean) {
-        if (edit) {
-            return {
-                label: t('edit') + id,
-                key: 'edit',
-                handler() {
-                    navigate(navTo('record', table, id, true));
-                }
-            };
-        } else {
-            return {
-                label: t('view') + id,
-                key: 'view',
-                handler() {
-                    navigate(navTo('record', table, id));
-                }
-            };
-
-        }
-    }, [t, navigate]);
+    const getEditMenu = useCallback(function (table: string, id: string, edit: boolean, reference?: FieldRef) {
+        const state = () => reference && !(isEditing && (session.getIsEdited() || referencesPendingRef.current)) ? {referenceTarget: reference} : null;
+        const action = edit ? 'edit' : 'view';
+        return {
+            label: t(action) + id,
+            key: action,
+            handler() {
+                navigate(navTo('record', table, id, edit), {state: state()});
+            }
+        };
+    }, [t, navigate, isEditing, session]);
 
     const paneMenu = useMemo(() => {
         const menu: MenuItem[] = [];
@@ -216,6 +261,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const nodeMenuFunc = useCallback(function (entityNode: EntityNode): MenuItem[] {
         const entity = entityNode.data.entity;
         const refId = entity.userData as RefId;
+        const incoming = entity.type === 'card' ? incomingObjectReferences(entityMap, entity.id) : [];
+        const preferredReference = incoming.length === 1 ? incoming[0] : undefined;
 
         const mm = [];
 
@@ -227,14 +274,14 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         } else {
             const isEntityEditable = schema.isEditable;
             if (isEntityEditable) {
-                mm.push(getEditMenu(refId.table, refId.id, false));
-                mm.push(getEditMenu(refId.table, refId.id, true));
+                mm.push(getEditMenu(refId.table, refId.id, false, preferredReference));
+                mm.push(getEditMenu(refId.table, refId.id, true, preferredReference));
             } else {
                 mm.push({
                     label: t('record') + refId.id,
                     key: 'entityRecord',
                     handler() {
-                        navigate(navTo('record', refId.table, refId.id));
+                        navigate(navTo('record', refId.table, refId.id), {state: preferredReference ? {referenceTarget: preferredReference} : null});
                     }
                 });
             }
@@ -246,6 +293,22 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                 navigate(navTo('recordRef', refId.table, refId.id));
             }
         })
+        for (const edge of entity.sourceEdges) {
+            const reference = edge.reference;
+            if (!reference) continue;
+            mm.push({
+                label: `${t('openReferenceTarget')} · ${reference.label ?? ''} · ${reference.toTable}/${reference.toId} · ${referencePathLabel(reference.toPath ?? [])}`,
+                key: `reference-${mm.length}`,
+                handler: () => openReferenceTarget(reference),
+            });
+        }
+        if (entity.type === 'card') {
+            for (const reference of incoming) mm.push({
+                label: `${t('openReferenceTarget')} · ${referencePathLabel(reference.toPath ?? [])}`,
+                key: `reference-${mm.length}`,
+                handler: () => openReferenceTarget(reference),
+            });
+        }
         if (isEditing && isEditableEntity(entity)) {
             const {editObj, editFieldChain, editAllowObjType} = entity.edit;
             if (editObj) {
@@ -292,9 +355,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             }
         }
         return mm;
-    }, [curTable.name, curId, t, isEditing, isEditable, getEditMenu, edit, schema, navigate, session]);
+    }, [curTable.name, curId, t, isEditing, isEditable, getEditMenu, edit, schema, navigate, session, entityMap, openReferenceTarget]);
 
-    // const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
     useEntityToGraph({
         type: isEditing ? 'edit' : 'record',
         pathname,
@@ -302,7 +364,10 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         notes,
         nodeMenuFunc,
         paneMenu,
-        editingObjectRes
+        editingObjectRes,
+        edgeDoubleClickFunc,
+        nodeDoubleClickFunc,
+        focusTarget,
     });
 
     return null;
@@ -335,12 +400,12 @@ export const Record = memo(function () {
             object: defaultData,
             refs: []
         };
-        return <RecordWithResult key={`${curTableId}-${NEW_RECORD_ID}`} recordResult={mockRecordResult}/>;
+        return <RecordWithResult key={`${curTableId}-${NEW_RECORD_ID}`} recordResult={mockRecordResult} responseVersion={0}/>;
     }
 
     return <QueryGate query={recordQuery} loading={null} emptyTitle={'record result empty'}>
         {/* key 让切 record 时 unmount 旧 RecordWithResult（session 随之销毁），编辑态/undo 栈 per-record 隔离 */}
-        {(recordResult) => <RecordWithResult key={`${curTableId}-${curId}`} recordResult={recordResult}/>}
+        {(recordResult) => <RecordWithResult key={`${curTableId}-${curId}`} recordResult={recordResult} responseVersion={recordQuery.dataUpdatedAt}/>}
     </QueryGate>;
 });
 

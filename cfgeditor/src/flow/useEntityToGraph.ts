@@ -5,7 +5,7 @@ import {convertNodeAndEdges} from "./layout/entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
 import {invalidateLayoutCache, queryKeys} from "@/services/queryKeys.ts";
 import {layoutAsync} from "./layout/layoutAsync.ts";
-import {EntityNode, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
+import {EdgeDoubleClickFunc, EntityNode, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
 import {Entity, EditingObjectRes} from "@/domain/entityModel";
 import {MenuItem} from "./FlowContextMenu.tsx";
 import {NodePlacementStrategyType, NodeShowType} from "@/domain/storageJson";
@@ -26,6 +26,8 @@ interface FlowGraphInput {
     nodeMenuFunc: NodeMenuFunc;
     paneMenu: MenuItem[];
     nodeDoubleClickFunc?: NodeDoubleClickFunc;
+    edgeDoubleClickFunc?: EdgeDoubleClickFunc;
+    focusTarget?: {nodeId: string; request: object};
     editingObjectRes?: EditingObjectRes;
 
     setFitViewForPathname?: (pathname: string) => void;
@@ -66,7 +68,7 @@ function applyRectToNodes(nodes: EntityNode[], rectMap?: Map<string, Rect>) {
 
 export function useEntityToGraph({
                                      type, pathname, entityMap, notes,
-                                     nodeMenuFunc, paneMenu, nodeDoubleClickFunc,
+                                     nodeMenuFunc, paneMenu, nodeDoubleClickFunc, edgeDoubleClickFunc, focusTarget,
                                      editingObjectRes,
                                      setFitViewForPathname, nodeShow,
                                  }: FlowGraphInput) {
@@ -93,6 +95,8 @@ export function useEntityToGraph({
     // 上一帧布局结果：供 KeepStable（undo/redo）算 anchorOld（undo 发起时锚点坐标）。
     // 只在 Effect 2 主体内更新；loading 期（id2RectMap=undefined）guard 不满足、不更新 → undo 前布局留存到补偿那帧。
     const prevRectMapRef = useRef<Map<string, Rect> | undefined>(undefined);
+    const focusedRequest = useRef<object | undefined>(undefined);
+    const previousViewportInput = useRef<{layout: Map<string, Rect>; instruction: EditingObjectRes | undefined; pathname: string} | undefined>(undefined);
 
     // nodeShow/notes 下发到 node.data；query 不在此下发——它无 per-graph override，
     // 渲染组件（FlowNode/EntityProperties/EntityCard）各自 useMyStore() 订阅（resso per-key），
@@ -147,6 +151,7 @@ export function useEntityToGraph({
         if (newNodes) {
             flowGraph.setNodeMenuFunc(nodeMenuFunc);
             flowGraph.setPaneMenu(paneMenu);
+            flowGraph.setEdgeDoubleClickFunc(edgeDoubleClickFunc);
             if (nodeDoubleClickFunc) {
                 flowGraph.setNodeDoubleClickFunc(nodeDoubleClickFunc)
             }
@@ -161,7 +166,7 @@ export function useEntityToGraph({
             setNodes(spreadFallbackNodes(nodes));
             setEdges(edges);
         }
-    }, [newNodes, edges, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, flowGraph,
+    }, [newNodes, edges, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, edgeDoubleClickFunc, flowGraph,
         setNodes, setEdges, layoutError, nodes]);
 
     // Effect 3：布局失败反馈。把 error 透传给 FlowGraph（渲染 Result 覆盖层 + retry 按钮），
@@ -179,6 +184,16 @@ export function useEntityToGraph({
     // 实时判）+ paneMenu disabled 惰性化，paneMenu 引用稳定，此诱因消除；拆分仍作视口语义独立边界保留。
     useEffect(() => {
         if (viewportReady && id2RectMap && newNodes) {
+            if (focusTarget && focusedRequest.current !== focusTarget.request && id2RectMap.has(focusTarget.nodeId)) {
+                focusedRequest.current = focusTarget.request;
+                void fitView({nodes: [{id: focusTarget.nodeId}], padding: 0.3, minZoom: 0.3, maxZoom: 1});
+                prevRectMapRef.current = id2RectMap;
+                previousViewportInput.current = {layout: id2RectMap, instruction: editingObjectRes, pathname};
+                return;
+            }
+            const previous = previousViewportInput.current;
+            if (previous?.layout === id2RectMap && previous.instruction === editingObjectRes && previous.pathname === pathname) return;
+            previousViewportInput.current = {layout: id2RectMap, instruction: editingObjectRes, pathname};
             const action = pickViewportAction(editingObjectRes, id2RectMap, getViewport(), {
                 prevId2RectMap: prevRectMapRef.current,
             });
@@ -198,6 +213,6 @@ export function useEntityToGraph({
             prevRectMapRef.current = id2RectMap;   // 记录本帧布局，供下次 KeepStable 作 anchorOld
         }
     }, [editingObjectRes, id2RectMap, viewportReady, newNodes, fitView, setViewport, getViewport,
-        setFitViewForPathname, pathname]);
+        setFitViewForPathname, pathname, focusTarget]);
 
 }

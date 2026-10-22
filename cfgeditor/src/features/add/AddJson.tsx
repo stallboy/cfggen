@@ -3,14 +3,16 @@ import {invalidateAllExceptLayout} from "@/services/queryClient.ts";
 
 import {memo, useCallback, useState} from "react";
 import {useMutation,} from "@tanstack/react-query";
-import {addOrUpdateRecord} from "@/api/apiClient.ts";
+import {addOrUpdateRecord, checkJson} from "@/api/apiClient.ts";
 import {Button, Typography, Form, Input, List, Result, Space} from "antd";
 import type {ResultProps} from "antd";
 
 import {RecordEditResult} from "@/api/recordModel.ts";
 import {useNavigate} from "react-router";
 import {useTranslation} from "react-i18next";
-import {getCurrentEditingSession} from "@/services/editingSession.ts";
+import {getCurrentEditingSession, isDeeplyEqual} from "@/services/editingSession.ts";
+import {Schema} from "@/domain/schema.ts";
+import {parseCheckedEditorRecord} from "@/domain/editorValueEncoding.ts";
 
 const {Title} = Typography;
 // antd 最佳实践：用根导出的 ResultProps 派生类型，避免深路径 antd/es/*
@@ -20,17 +22,21 @@ interface AddJsonProps {
     json: string;
 }
 
-export const AddJson = memo(function AddJson() {
+export const AddJson = memo(function AddJson({schema}: {schema: Schema}) {
     const {t} = useTranslation();
     const {server} = useMyStore();
     const navigate = useNavigate();
     const {curTableId} = useLocationData();
 
     const [result, setResult] = useState<RecordEditResult | Error | undefined>();
+    const validateJson = useCallback(async (raw: string) => {
+        const checked = await checkJson(server, curTableId, raw);
+        return parseCheckedEditorRecord(schema, curTableId, checked);
+    }, [server, curTableId, schema]);
 
     const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, string>({
-        mutationFn: (json: string) =>
-            addOrUpdateRecord(server, curTableId, JSON.parse(json)),
+        mutationFn: async (json: string) =>
+            addOrUpdateRecord(server, curTableId, await validateJson(json)),
 
         onMutate: () => {
             // 发起新请求前清掉上次的陈旧结果，避免飞行中/下次打开面板时还展示旧结果
@@ -50,15 +56,23 @@ export const AddJson = memo(function AddJson() {
 
     const [form] = Form.useForm();
 
-    const onShow = useCallback(() => {
+    const onShow = useCallback(async () => {
+        const session = getCurrentEditingSession();
+        if (!session) return;
+        setResult(undefined);
+        const before = structuredClone(session.getEditingObject());
         const json = form.getFieldValue('json')
         try {
-            getCurrentEditingSession()?.replaceEditingObject(JSON.parse(json));
+            const checked = await validateJson(json);
+            if (getCurrentEditingSession() !== session || !isDeeplyEqual(before, session.getEditingObject())) {
+                throw new Error('Record changed while validating JSON; load it again to replace the current data');
+            }
+            session.replaceEditingObject(checked);
         } catch (e) {
             // 文本为空或 JSON 非法时给用户可见反馈，而不是让异常在事件处理器里静默抛出
             setResult(e as Error);
         }
-    }, [form]);
+    }, [form, validateJson]);
 
 
     const onAddJson = useCallback((addJsonProps: AddJsonProps) => {

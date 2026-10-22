@@ -22,9 +22,10 @@ export function primitiveControl(field: EntityEditField, style: CSSProperties) {
         case "bool":
             return <Switch className="nodrag"/>;
         case "int":
-        case "long":
         case "float":
             return <InputNumber className="nodrag" style={style}/>;
+        case "long":
+            return <InputNumber stringMode className="nodrag" style={style}/>;
         default:
             // 去 autoSize：rc-textarea 的 ResizeObserver 随节点数放大成 rAF 风暴，是 /edit/record/ 大图
             // 加载卡顿的根因（memory: cfgeditor-load-jank-textarea-autosize）。str 可能含换行用 rows={1}（滚动），

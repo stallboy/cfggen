@@ -72,6 +72,13 @@ describe('fillHandles', () => {
 })
 
 describe('convertNodeAndEdges', () => {
+    it('keeps the current reference protocol on the rendered edge for target navigation', () => {
+        const reference = {firstField: 'phase', toTable: 'T', toId: '1', toPath: ['phases', 1], toRevision: 'a'}
+        const source = makeReadOnly({id: 'S_1', label: 's', sourceEdges: [{sourceHandle: 'phase', target: 'T_1', targetHandle: '@in',
+            type: EntityEdgeType.Ref, label: 'target → phases[1]', reference}]})
+        const {edges} = convertNodeAndEdges({entityMap: new Map([[source.id, source]])})
+        expect(edges[0]).toMatchObject({label: 'target → phases[1]', data: {reference}, animated: true})
+    })
     it('每个实体生成一个 node，位置固定 (100,100)，type=node', () => {
         const a = makeReadOnly({id: 'A', label: 'a', fields: []})
         const b = makeReadOnly({id: 'B', label: 'b', fields: []})

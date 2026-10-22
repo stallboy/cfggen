@@ -1,7 +1,7 @@
 import { STable } from "@/api/schemaModel.ts";
 import { Entity, EditingObjectRes, EFitView } from "@/domain/entityModel.ts";
-import { RecordRefsResult, RefId, UnreferencedRecordsResult } from "@/api/recordModel.ts";
-import { createRefEntities } from "./recordRefUtils.ts";
+import { FieldRef, RecordRefsResult, RefId, UnreferencedRecordsResult } from "@/api/recordModel.ts";
+import { createRefEntities, incomingObjectReferences, locateRecordRefs } from "./recordRefUtils.ts";
 import { useTranslation } from "react-i18next";
 import {Schema, SchemaTableType} from "@/domain/schema.ts";
 import { NodeShowType } from "@/domain/storageJson.ts";
@@ -17,6 +17,8 @@ import { useCallback, useMemo, useState } from "react";
 import { useEntityToGraph } from "@/flow/useEntityToGraph.ts";
 import { EntityNode } from "@/flow/FlowGraph.tsx";
 import { QueryGate } from "@/app/QueryGate.tsx";
+import {referencePathLabel} from '@/domain/referenceTarget';
+import {EntityEdge} from '@/flow/FlowGraph';
 
 
 export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix, isUnrefMode }: {
@@ -60,9 +62,17 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
             resourceDir,
             resMap
         });
+        locateRecordRefs(map, recordRefResult.revision, t('referencesPending'));
         fillHandles(map);
         return map;
-    }, [schema, recordRefResult.refs, checkTable, recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap, isUnrefMode]);
+    }, [schema, recordRefResult, checkTable, recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap, isUnrefMode, t]);
+
+    const openReferenceTarget = useCallback((reference: FieldRef) => {
+        navigate(navTo('record', reference.toTable, reference.toId, isEditMode), {state: {referenceTarget: reference}});
+    }, [navigate, isEditMode]);
+    const edgeDoubleClickFunc = useCallback((edge: EntityEdge) => {
+        if (edge.data?.reference) openReferenceTarget(edge.data.reference);
+    }, [openReferenceTarget]);
 
     // Extract menu creation functions
     const createPaneMenu = useCallback((): MenuItem[] => {
@@ -84,20 +94,30 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
     const createNodeMenu = useCallback((entityNode: EntityNode): MenuItem[] => {
         const refId = entityNode.data.entity.userData as RefId;
         const isEntityEditable = schema.isEditable;
+        const incoming = incomingObjectReferences(entityMap, entityNode.id);
+        const preferredReference = incoming.length === 1 ? incoming[0] : undefined;
 
         const menuItems: MenuItem[] = [{
             label: t('record') + refId.id,
             key: 'entityRecord',
-            handler: () => navigate(navTo('record', refId.table, refId.id))
+            handler: () => navigate(navTo('record', refId.table, refId.id), {state: preferredReference ? {referenceTarget: preferredReference} : null})
         }];
 
         if (isEntityEditable) {
             menuItems.push({
                 label: t('edit') + refId.id,
                 key: 'entityEdit',
-                handler: () => navigate(navTo('record', refId.table, refId.id, true))
+                handler: () => navigate(navTo('record', refId.table, refId.id, true), {state: preferredReference ? {referenceTarget: preferredReference} : null})
             });
         }
+        for (const edge of entityNode.data.entity.sourceEdges) {
+            if (!edge.reference) continue;
+            const reference = edge.reference;
+            menuItems.push({label: `${t('openReferenceTarget')} · ${reference.toTable}/${reference.toId} · ${referencePathLabel(reference.toPath ?? [])}`,
+                key: `reference-${menuItems.length}`, handler: () => openReferenceTarget(reference)});
+        }
+        for (const reference of incoming) menuItems.push({label: `${t('openReferenceTarget')} · ${referencePathLabel(reference.toPath ?? [])}`,
+            key: `reference-${menuItems.length}`, handler: () => openReferenceTarget(reference)});
 
         // 对于未引用模式，或者在单个record模式下的其他record，显示recordRef选项
         if (isUnrefMode || (refId.table !== recordRefResult.table || refId.id !== (recordRefResult as RecordRefsResult).id)) {
@@ -109,12 +129,13 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
         }
 
         return menuItems;
-    }, [t, schema, navigate, recordRefResult, isUnrefMode]);
+    }, [t, schema, navigate, recordRefResult, isUnrefMode, openReferenceTarget, entityMap]);
 
     const nodeDoubleClickFunc = useCallback((entityNode: EntityNode): void => {
         const refId = entityNode.data.entity.userData as RefId;
-        navigate(navTo('record', refId.table, refId.id, isEditMode));
-    }, [navigate, isEditMode]);
+        const references = incomingObjectReferences(entityMap, entityNode.id);
+        navigate(navTo('record', refId.table, refId.id, isEditMode), {state: references.length === 1 ? {referenceTarget: references[0]} : null});
+    }, [navigate, isEditMode, entityMap]);
 
     // 固定面板「首次 FitFull 后保持视口」：fittedPathname 记录已适配过的 pathname。
     // useEntityToGraph 在 FitFull 分支回调 setFitViewForPathname 写入；再次进入同 pathname → fitNone 不跳。
@@ -138,6 +159,7 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
     useEntityToGraph({
         type: 'ref',
         pathname, entityMap, notes, nodeMenuFunc: createNodeMenu, paneMenu, nodeDoubleClickFunc, editingObjectRes,
+        edgeDoubleClickFunc,
         setFitViewForPathname: (inDragPanelAndFix ? setFitViewForPathname : undefined),
         nodeShow,
     });

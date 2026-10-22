@@ -39,6 +39,8 @@ export interface FieldRef {
     label?: string;
     toTable: string;
     toId: string;
+    toPath?: (string | number)[];
+    toRevision?: string;
 }
 
 export interface RefId {
@@ -70,6 +72,7 @@ export interface RecordResult {
     maxObjs: number;
     object: JSONObject & Refs;  //自身详细信息
     refs: BriefRecord[];
+    revision?: string;
 }
 
 export interface RecordRefsResult {
@@ -80,6 +83,7 @@ export interface RecordRefsResult {
     in: boolean;
     maxObjs: number;
     refs: BriefRecord[];
+    revision?: string;
 }
 
 // 未被引用记录的查询结果
@@ -88,6 +92,7 @@ export interface UnreferencedRecordsResult {
     table: string;
     maxObjs: number;
     refs: BriefRecord[];  // 复用BriefRecord，表示所有未引用的记录
+    revision?: string;
 }
 
 export interface RecordRefIdsResult {

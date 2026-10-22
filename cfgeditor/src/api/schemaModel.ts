@@ -9,6 +9,7 @@ export interface SField {
     name: string;
     type: string;
     comment: string;
+    index?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -65,8 +66,21 @@ export interface SForeignKey {
     name: string;
     keys: string[];
     refTable: string;
-    refType: 'rPrimary' | 'rUniq' | 'rList' | 'rNullablePrimary' | 'rNullableUniq';
+    refType: 'rPrimary' | 'rUniq' | 'rList' | 'rNullablePrimary' | 'rNullableUniq'
+        | 'rObject' | 'rNullableObject';
     refKeys?: string[];
+    pathReference?: {
+        sources: ReferencePath[];
+        target: ReferencePath;
+        inline: boolean;
+    };
+    resultType?: string;
+}
+
+export interface ReferencePath {
+    start: 'CURRENT' | 'ROOT' | 'ANCESTOR' | 'TABLE';
+    owner: string;
+    fields: string[];
 }
 
 export interface SStruct extends Nameable {
@@ -106,6 +120,7 @@ export type SItem = SStruct | SInterface | STable;
 
 export interface RawSchema {
     isEditable: boolean;
+    editorValueEncoding?: 'long-decimal-string';
     items: SItem[];
     lastModifiedMap: Map<string, Map<string, number>>;
 }

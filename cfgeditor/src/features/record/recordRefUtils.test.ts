@@ -1,10 +1,12 @@
 import {describe, it, expect} from 'vitest'
-import {getLabel, getId, createRefs, createRefEntities} from './recordRefUtils.ts'
+import {getLabel, getId, createRefs, createRefEntities, createEditingRefs, incomingObjectReferences, locateRecordRefs} from './recordRefUtils.ts'
 import {getLastSegment} from '@/domain/strUtils.ts'
 import {Entity, EntityEdgeType, EntitySourceEdge, EntityType} from '@/domain/entityModel.ts'
-import {BriefRecord, Refs} from '@/api/recordModel.ts'
+import {BriefRecord, JSONObject, Refs} from '@/api/recordModel.ts'
 import {Schema} from '@/domain/schema.ts'
-import {field, makeRawSchema, makeTable} from '@/test/fixtures.ts'
+import {field, makeRawSchema, makeTable, makeEditable, makeReadOnly, makeCard} from '@/test/fixtures.ts'
+import {EditingSession} from '@/services/editingSession'
+import {prepareEditingObject, referencesNeedValidation} from '@/services/editingObjectUtils'
 
 describe('getLastSegment / getLabel / getId', () => {
     it('getLastSegment 取最后一个 . 段', () => {
@@ -29,6 +31,14 @@ describe('getLastSegment / getLabel / getId', () => {
 })
 
 describe('createRefs', () => {
+    it('allows a same-record internal reference without adding a brief copy of the record', () => {
+        const entity = makeReadOnly({id: 'Hero_1', label: 'Hero'})
+        const refs = {$refs: [{firstField: 'phase', toTable: 'Hero', toId: '1', toPath: ['phases', 1], toRevision: 'a'}]}
+        createRefs(entity, refs, [], undefined, false, {table: 'Hero', id: '1'})
+        const target = makeReadOnly({id: 'Hero_1-phases[1]', label: 'phase'})
+        locateRecordRefs(new Map([['Hero_1', entity], [target.id, target]]), 'a')
+        expect(entity.sourceEdges[0].target).toBe(target.id)
+    })
     function makeEntity() {
         return {
             id: 'Hero_1', label: 'Hero', type: 'card' as const,
@@ -79,6 +89,117 @@ describe('createRefs', () => {
         const entity = makeEntity()
         createRefs(entity as Entity, {} as Refs, [])
         expect(entity.sourceEdges).toHaveLength(0)
+    })
+})
+
+describe('validated editing references', () => {
+    const record = {table: 'Hero', id: '1'}
+    const reference = {firstField: 'next', toTable: 'Hero', toId: '1', toPath: ['phases', 1], toRevision: 'a', label: 'next'}
+    const object = () => ({$type: 'Hero', phases: [{$type: 'Phase', $refs: [reference]}, {$type: 'Phase'}]}) as unknown as JSONObject
+
+    it('projects metadata onto existing nodes and leaves the record payload unchanged', () => {
+        const root = makeEditable({id: 'Hero_1', label: 'Hero'})
+        const phase = makeEditable({id: 'Hero_1-phases[0]', label: 'phase'})
+        const target = makeEditable({id: 'Hero_1-phases[1]', label: 'phase'})
+        const entities = new Map<string, Entity>([[root.id, root], [phase.id, phase], [target.id, target]])
+        const input = object()
+        const before = structuredClone(input)
+        createEditingRefs(entities, input, record, [], false)
+        locateRecordRefs(entities, 'a')
+        expect(phase.sourceEdges[0]).toMatchObject({sourceHandle: '@out', target: target.id, reference})
+        expect(input).toEqual(before)
+    })
+
+    it('uses the visible parent for a hidden source and hidden target', () => {
+        const root = makeEditable({id: 'Hero_1', label: 'folded'})
+        const entities = new Map<string, Entity>([[root.id, root]])
+        createEditingRefs(entities, object(), record, [], false)
+        locateRecordRefs(entities, 'a')
+        expect(root.sourceEdges[0]).toMatchObject({sourceHandle: '@out', target: root.id, label: 'next → phases[1]'})
+    })
+
+    it('removes derived positions while dirty and marks the record pending validation', () => {
+        const root = makeEditable({id: 'Hero_1', label: 'Hero'})
+        const entities = new Map<string, Entity>([[root.id, root]])
+        createEditingRefs(entities, object(), record, [], true)
+        expect(root.sourceEdges).toEqual([])
+        expect(root.referencesPending).toBe(true)
+    })
+
+    it('shows an internal path on a brief target, and never uses mismatched array positions', () => {
+        const root = makeReadOnly({id: 'Hero_1', label: 'Hero'})
+        const target = makeCard({id: 'Other_2', label: 'brief'})
+        const ref = {...reference, toTable: 'Other', toId: '2'}
+        createRefs(root, {$refs: [ref]}, [{table: 'Other', id: '2', depth: 1, value: ''}])
+        const entities = new Map<string, Entity>([[root.id, root], [target.id, target]])
+        locateRecordRefs(entities, 'a')
+        expect(root.sourceEdges[0]).toMatchObject({target: 'Other_2', label: 'next → phases[1]'})
+        root.sourceEdges[0].label = 'next'
+        entities.set('Other_2-phases[1]', makeReadOnly({id: 'Other_2-phases[1]', label: 'new position'}))
+        locateRecordRefs(entities, 'b', 'pending')
+        expect(root.sourceEdges[0]).toMatchObject({target: 'Other_2', label: 'next · pending'})
+    })
+
+    it('cycles produce edges between existing nodes without recursive copies', () => {
+        const first = makeReadOnly({id: 'Hero_1-phases[0]', label: 'first'})
+        const second = makeReadOnly({id: 'Hero_1-phases[1]', label: 'second'})
+        const root = makeReadOnly({id: 'Hero_1', label: 'Hero'})
+        const entities = new Map([[root.id, root], [first.id, first], [second.id, second]])
+        createRefs(first, {$refs: [reference]}, [], undefined, false, record)
+        createRefs(second, {$refs: [{...reference, toPath: ['phases', 0]}]}, [], undefined, false, record)
+        locateRecordRefs(entities, 'a')
+        expect(entities.size).toBe(3)
+        expect(first.sourceEdges[0].target).toBe(second.id)
+        expect(second.sourceEdges[0].target).toBe(first.id)
+    })
+
+    it('deduplicates incoming object paths so the existing brief open action is unambiguous', () => {
+        const source = makeReadOnly({id: 'Hero_1', label: 'Hero'})
+        const card = makeCard({id: 'Other_2', label: 'brief'})
+        const entities = new Map<string, Entity>([[source.id, source], [card.id, card]])
+        const ref = {...reference, toTable: 'Other', toId: '2'}
+        createRefs(source, {$refs: [ref, {...ref, label: 'byCode'}]}, [{table: 'Other', id: '2', depth: 1, value: ''}])
+        expect(incomingObjectReferences(entities, card.id)).toEqual([expect.objectContaining({toPath: ['phases', 1]})])
+        createRefs(source, {$refs: [{...ref, toPath: ['phases', 0]}]}, [{table: 'Other', id: '2', depth: 1, value: ''}])
+        expect(incomingObjectReferences(entities, card.id)).toHaveLength(2)
+    })
+
+    it('keeps old array positions hidden after commit until the corresponding new GET is available', () => {
+        const original = {$type: 'Hero', phases: [{$type: 'Phase', key: 'A'}, {$type: 'Phase', key: 'B'}],
+            $refs: [{...reference, toPath: ['phases', 0]}]} as unknown as JSONObject
+        const session = new EditingSession({resultCode: 'ok', table: 'Hero', id: '1', object: original, refs: [], maxObjs: 0})
+        session.initUndoBaseline()
+        session.swapArrayItem(0, 1, ['phases'], {id: 'Hero_1', x: 0, y: 0})
+        session.submit()
+        session.onCommitSuccess()
+        expect(session.getIsEdited()).toBe(false)
+        const marker = {updatedAt: 1, revision: 'a'}
+        const pending = referencesNeedValidation(session.getEditingObject(), prepareEditingObject(original), session.getIsEdited(), marker, marker)
+        expect(pending).toBe(true)
+        const root = makeEditable({id: 'Hero_1', label: 'Hero'})
+        const entities = new Map<string, Entity>([[root.id, root], ['Hero_1-phases[0]', makeEditable({id: 'Hero_1-phases[0]', label: 'B'})],
+            ['Hero_1-phases[1]', makeEditable({id: 'Hero_1-phases[1]', label: 'A'})]])
+        createEditingRefs(entities, original, record, [], pending)
+        expect(root.sourceEdges).toEqual([])
+        expect(root.referencesPending).toBe(true)
+        // A failed refetch leaves this same marker/data pending. A response carrying stale content is also insufficient.
+        expect(referencesNeedValidation(session.getEditingObject(), prepareEditingObject(original), false, marker, marker)).toBe(true)
+        expect(referencesNeedValidation(session.getEditingObject(), prepareEditingObject(original), false, {updatedAt: 2, revision: 'b'}, marker)).toBe(true)
+        const refreshed = {...session.getEditingObject(), $refs: [{...reference, toRevision: 'b'}]} as unknown as JSONObject
+        expect(referencesNeedValidation(session.getEditingObject(), prepareEditingObject(refreshed), false, {updatedAt: 2, revision: 'b'}, marker)).toBe(false)
+        root.referencesPending = undefined
+        createEditingRefs(entities, refreshed, record, [], false)
+        locateRecordRefs(entities, 'b')
+        expect(root.sourceEdges[0].target).toBe('Hero_1-phases[1]')
+        session.dispose()
+    })
+
+    it('an unchanged save still waits for a response, while old services can validate without revision', () => {
+        const object = {$type: 'Hero', id: 1}
+        expect(referencesNeedValidation(object, object, false, {updatedAt: 1}, {updatedAt: 1})).toBe(true)
+        expect(referencesNeedValidation(object, object, false, {updatedAt: 2}, {updatedAt: 1})).toBe(false)
+        expect(referencesNeedValidation(object, object, false, {updatedAt: 2, revision: 'a'}, {updatedAt: 1, revision: 'a'})).toBe(true)
+        expect(referencesNeedValidation(object, object, false, {updatedAt: 1, revision: 'b'}, {updatedAt: 1, revision: 'a'})).toBe(false)
     })
 })
 

@@ -7,6 +7,7 @@ import {Dispatch, memo, MouseEvent as ReactMouseEvent, ReactNode, SetStateAction
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
 import {FlowGraphContext} from "./FlowGraphContext.ts";
+import {FieldRef} from '@/api/recordModel';
 
 // EntityNode.data 是「呈现层下发袋」：entity 是纯 domain（不可变、memo-safe），
 // nodeShow/notes 是呈现层数据，由 useEntityToGraph 经 convertNodeAndEdges 写入 node.data，
@@ -22,9 +23,10 @@ export type EntityNodeData = {
 };
 
 export type EntityNode = Node<EntityNodeData, "node">;
-export type EntityEdge = Edge;
+export type EntityEdge = Edge<{reference?: FieldRef}>;
 export type NodeMenuFunc = (entityNode: EntityNode) => MenuItem[];
 export type NodeDoubleClickFunc = (entityNode: EntityNode) => void;
+export type EdgeDoubleClickFunc = (edge: EntityEdge) => void;
 
 const nodeTypes: NodeTypes = {
     node: FlowNode,
@@ -50,8 +52,8 @@ const FORM_THEME = {
 
 // 「把回调函数存进 state」的同构样板收敛：必须套 () => fn，否则 React 会把 fn 当 functional updater 调用执行。
 // （nodeMenuFunc/nodeDoubleClickFunc/retryLayout 三处共用。）
-function useFnSetter<F>(setState: Dispatch<SetStateAction<F | undefined>>): (fn: F) => void {
-    return useCallback((fn: F) => setState(() => fn), [setState]);
+function useFnSetter<F>(setState: Dispatch<SetStateAction<F | undefined>>): (fn: F | undefined) => void {
+    return useCallback((fn: F | undefined) => setState(() => fn), [setState]);
 }
 
 export const FlowGraph = memo(function FlowGraph({children}: {
@@ -64,6 +66,7 @@ export const FlowGraph = memo(function FlowGraph({children}: {
     const [paneMenu, setPaneMenu] = useState<MenuItem[]>([]);
     const [nodeMenuFunc, setNodeMenuFunc] = useState<NodeMenuFunc>();
     const [nodeDoubleClickFunc, setNodeDoubleClickFunc] = useState<NodeDoubleClickFunc>();
+    const [edgeDoubleClickFunc, setEdgeDoubleClickFunc] = useState<EdgeDoubleClickFunc>();
 
     // 布局失败覆盖层：layoutError 由 useEntityToGraph 透传，retryLayout 为 invalidate 该图 layout 缓存的回调。
     const [layoutError, setLayoutError] = useState<Error | undefined>(undefined);
@@ -90,6 +93,9 @@ export const FlowGraph = memo(function FlowGraph({children}: {
         },
         [nodeDoubleClickFunc],
     );
+    const onEdgeDoubleClick = useCallback((_event: ReactMouseEvent, edge: EntityEdge) => {
+        edgeDoubleClickFunc?.(edge);
+    }, [edgeDoubleClickFunc]);
 
     const closeMenu = useCallback(() => {
         setMenuStyle(undefined)
@@ -97,6 +103,7 @@ export const FlowGraph = memo(function FlowGraph({children}: {
 
     const thisSetNodeMenuFunc = useFnSetter(setNodeMenuFunc);
     const thisSetNodeDoubleClickFunc = useFnSetter(setNodeDoubleClickFunc);
+    const thisSetEdgeDoubleClickFunc = useFnSetter(setEdgeDoubleClickFunc);
     const thisSetRetryLayout = useFnSetter(setRetryLayout);
 
     const ctx = useMemo(() => {
@@ -104,17 +111,18 @@ export const FlowGraph = memo(function FlowGraph({children}: {
             setPaneMenu,
             setNodeMenuFunc: thisSetNodeMenuFunc,
             setNodeDoubleClickFunc: thisSetNodeDoubleClickFunc,
+            setEdgeDoubleClickFunc: thisSetEdgeDoubleClickFunc,
             setLayoutError,
             setRetryLayout: thisSetRetryLayout,
         }
-    }, [setPaneMenu, thisSetNodeMenuFunc, thisSetNodeDoubleClickFunc, setLayoutError, thisSetRetryLayout]);
+    }, [setPaneMenu, thisSetNodeMenuFunc, thisSetNodeDoubleClickFunc, thisSetEdgeDoubleClickFunc, setLayoutError, thisSetRetryLayout]);
 
 
     return <ReactFlowProvider>
         <ConfigProvider theme={FORM_THEME}>
             {/* 定位容器：为布局失败覆盖层提供 relative 锚定，不影响 ReactFlow 撑满父级（100%/100%） */}
             <div className='flowGraphCanvas'>
-                <ReactFlow
+                <ReactFlow<EntityNode, EntityEdge>
                     defaultNodes={defaultNodes}
                     defaultEdges={defaultEdges}
                     nodeTypes={nodeTypes}
@@ -122,6 +130,7 @@ export const FlowGraph = memo(function FlowGraph({children}: {
                     maxZoom={2}
                     deleteKeyCode={null}
                     onNodeDoubleClick={onNodeDoubleClick}
+                    onEdgeDoubleClick={onEdgeDoubleClick}
                     onNodeContextMenu={onNodeContextMenu}
                     onPaneClick={closeMenu}
                     onNodeClick={closeMenu}

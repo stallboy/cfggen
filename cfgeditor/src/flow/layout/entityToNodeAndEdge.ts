@@ -96,6 +96,7 @@ export function convertNodeAndEdges({entityMap, nodeShow, notes}: {
                 sourceHandle: edge.sourceHandle,
                 target: edge.target,
                 targetHandle: edge.targetHandle,
+                ...(edge.reference ? {label: edge.label, data: {reference: edge.reference}, ariaLabel: edge.label} : {}),
 
                 type: 'simplebezier',
                 style: {

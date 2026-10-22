@@ -26,7 +26,7 @@ export function getIdOptions(sTable: STable, valueToInteger: boolean = false): E
                 <span style={suffixStyle}>{title}</span>
             </Flex> : id,
             labelstr: isShowTitle ? `${id} ${title}` : id,
-            value: valueToInteger ? parseInt(id) : id,
+            value: valueToInteger && sTable.fields.find(field => field.name === sTable.pk[0])?.type !== 'long' ? parseInt(id) : id,
             title: title ?? ''
         });
     }

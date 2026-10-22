@@ -19,7 +19,7 @@ export const AddPanel = memo(function AddPanel({schema}: { schema: Schema | unde
     const {curTableId} = useLocationData();
     const [mode, setMode] = useState<'ai' | 'json'>('ai');
 
-    if (!editable) return <Result title={t('notEditable')}/>;
+    if (!schema || !editable) return <Result title={t('notEditable')}/>;
 
     return (
         <Flex vertical gap="small" style={{height: '100%'}}>
@@ -34,7 +34,7 @@ export const AddPanel = memo(function AddPanel({schema}: { schema: Schema | unde
                     <Chat key={curTableId} schema={schema}/>
                 </div>
                 <div style={{height: '100%', display: mode === 'json' ? 'block' : 'none', overflow: 'auto'}}>
-                    <AddJson/>
+                    <AddJson schema={schema}/>
                 </div>
             </div>
         </Flex>

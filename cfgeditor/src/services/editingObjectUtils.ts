@@ -35,6 +35,20 @@ export function prepareEditingObject(rawObj: JSONObject): JSONObject {
     return cloned;
 }
 
+export interface RecordResponseMarker {
+    updatedAt: number;
+    revision?: string;
+}
+
+/** A successful save is still awaiting validation until a corresponding new GET has arrived. */
+export function referencesNeedValidation(editingObject: JSONObject, validatedObject: JSONObject, dirty: boolean,
+                                         response: RecordResponseMarker, savedFrom?: RecordResponseMarker): boolean {
+    if (dirty || !isDeeplyEqual(editingObject, validatedObject)) return true;
+    return savedFrom !== undefined && (savedFrom.revision !== undefined
+        ? response.revision === savedFrom.revision
+        : response.updatedAt === savedFrom.updatedAt);
+}
+
 export function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]): JSONObject | JSONArray {
     let obj: JSONObject | JSONArray = editingObject;
     for (const field of fieldChains) {
@@ -51,17 +65,22 @@ export function getFieldPrimitiveTypeConverter(fieldName: string, sItem: SItem) 
     if (field == null) {
         return null;
     }
-    // 原始类型或 list<原始> 的元素类型：int→toInt、long|float→toFloat，其余→same
+    // long remains decimal text throughout editing and undo; conversion belongs at the HTTP boundary.
     const parsed = parseFieldTypeId(field.type);
     const elemType = parsed.kind === 'list' ? parsed.item
         : parsed.kind === 'primitive' ? parsed.name : null;
     if (elemType === 'int') return toInt;
-    if (elemType === 'long' || elemType === 'float') return toFloat;
+    if (elemType === 'long') return toLong;
+    if (elemType === 'float') return toFloat;
     return same;
 }
 
 function same(value: unknown): JSONValue {
     return value as JSONValue;
+}
+
+function toLong(value: unknown): JSONValue {
+    return value == null || value === '' ? '0' : value as JSONValue;
 }
 
 function toInt(value: unknown): JSONValue {

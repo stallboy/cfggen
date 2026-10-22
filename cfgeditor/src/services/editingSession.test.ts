@@ -167,7 +167,7 @@ describe('EditingSession.onStructureChange（03→04 接缝：事件期同步清
 });
 
 describe('EditingSession submit / replaceEditingObject', () => {
-    it('submit 读到 in-place 编辑后的最新 editingObject', () => {
+    it('submit 捕获最新内容，后续就地编辑不改变提交参数', () => {
         let captured: JSONObject | null = null;
         const s = new EditingSession(
             makeRecord('t', '1', {'$type': 'Foo', items: []}),
@@ -175,8 +175,68 @@ describe('EditingSession submit / replaceEditingObject', () => {
         );
         s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         s.submit();
-        expect(captured).toBe(s.getEditingObject());
+        expect(captured).not.toBe(s.getEditingObject());
+        expect(captured).toEqual(s.getEditingObject());
+        s.updateNote('after-submit', []);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
+        expect(captured).toEqual({'$type': 'Foo', items: [ITEM()]});
+        expect((s.getEditingObject().items as JSONArray).length).toBe(2);
+    });
+
+    it('同步拒绝重复 submit，成功后允许再次提交', () => {
+        const mutate = vi.fn();
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}), {mutate});
+        s.submit();
+        s.submit();
+        expect(mutate).toHaveBeenCalledTimes(1);
+        s.onCommitSuccess();
+        s.submit();
+        expect(mutate).toHaveBeenCalledTimes(2);
+    });
+
+    it('飞行期编辑后重复 submit 不覆盖快照，成功刷新仍保留后续编辑', () => {
+        const requests: JSONObject[] = [];
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}), {
+            mutate: object => requests.push(structuredClone(object)),
+        });
+        s.updateNote('A', []);
+        s.submit();
+        s.updateNote('B', []);
+        s.submit();
+        expect(requests).toHaveLength(1);
+        s.onCommitSuccess();
+        expect(s.getIsEdited()).toBe(true);
+        s.maybeReset(makeRecord('t', '1', requests[0]));
+        expect(s.getEditingObject()['$note']).toBe('B');
+        expect(s.getIsEdited()).toBe(true);
+        s.dispose();
+    });
+
+    it('失败释放提交守卫，保留编辑和 undo，并允许重试最新内容', () => {
+        const requests: JSONObject[] = [];
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}), {
+            mutate: object => requests.push(structuredClone(object)),
+        });
+        s.initUndoBaseline();
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
+        s.submit();
+        s.updateNote('retry', []);
+        s.onCommitFailure();
+        expect(s.getIsEdited()).toBe(true);
+        expect(s.canUndo()).toBe(true);
+        s.submit();
+        expect(requests).toHaveLength(2);
+        expect(requests[1]).toEqual(s.getEditingObject());
         expect((s.getEditingObject().items as JSONArray).length).toBe(1);
+        s.dispose();
+    });
+
+    it('提交回调同步抛错也会释放守卫', () => {
+        const mutate = vi.fn().mockImplementationOnce(() => { throw new Error('submit failed'); });
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}), {mutate});
+        expect(() => s.submit()).toThrow('submit failed');
+        s.submit();
+        expect(mutate).toHaveBeenCalledTimes(2);
     });
 
     it('replaceEditingObject：getEditingObject 返回新引用，且判定为已编辑', () => {
@@ -201,6 +261,35 @@ describe('EditingSession submit / replaceEditingObject', () => {
 });
 
 describe('EditingSession.onCommitSuccess（提交边界：重置脏基准）', () => {
+    it('普通成功保存立即通知 clean，不等待 GET 刷新', () => {
+        const notifications: boolean[] = [];
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo'}), {
+            mutate: () => {},
+            onEditingStateChange: (_table, _id, dirty) => notifications.push(dirty),
+        });
+        s.updateNote('A', []);
+        s.submit();
+        s.onCommitSuccess();
+        expect(s.getIsEdited()).toBe(false);
+        expect(notifications).toEqual([true, false]);
+    });
+
+    it('飞行期回到旧基准后，保存成功立即通知相对新基准仍 dirty', () => {
+        const notifications: boolean[] = [];
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo'}), {
+            mutate: () => {},
+            onEditingStateChange: (_table, _id, dirty) => notifications.push(dirty),
+        });
+        s.updateNote('A', []);
+        s.submit();
+        s.updateNote('', []);
+        expect(notifications).toEqual([true, false]);
+        s.onCommitSuccess();
+        expect(s.getEditingObject()).toEqual({'$type': 'Foo'});
+        expect(s.getIsEdited()).toBe(true);
+        expect(notifications).toEqual([true, false, true]);
+    });
+
     it('重基准后 getIsEdited 归 false（提交成功 → 脏标记清除）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);

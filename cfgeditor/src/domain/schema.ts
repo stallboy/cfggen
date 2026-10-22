@@ -262,7 +262,7 @@ export class Schema {
             } else {
                 if (si.foreignKeys) {
                     for (const fk of si.foreignKeys) {
-                        res.add(fk.refTable);
+                        if (fk.refTable) res.add(fk.refTable);
                     }
                 }
             }
@@ -407,9 +407,10 @@ export function defaultValueOfPrimitive(type: PrimitiveType): PrimitiveValue {
         case 'bool':
             return false;
         case 'int':
-        case 'long':
         case 'float':
             return 0;
+        case 'long':
+            return '0';
         case 'str':
         case 'text':
             return '';
@@ -434,9 +435,15 @@ export function getImpl(sInterface: SInterface, implName: string): SStruct | nul
     return null;
 }
 
-export function getNextId(sTable: STable, curId: string): number | null {
+export function getNextId(sTable: STable, curId: string): number | string | null {
     if (!isPkInteger(sTable)) {
         return null;
+    }
+    if (getField(sTable, sTable.pk[0])?.type === 'long') {
+        let next = /^-?[0-9]+$/.test(curId) ? BigInt(curId) + 1n : 1n;
+        const ids = new Set(sTable.recordIds.map(record => record.id));
+        while (ids.has(next.toString())) next++;
+        return next <= 9223372036854775807n ? next.toString() : null;
     }
     let id = parseInt(curId);
     if (isNaN(id)) {

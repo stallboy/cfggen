@@ -102,6 +102,8 @@ URL 形态：
 
 > 另有 `/search` 端点（GET `?q=&max=`，[`SearchValue.tsx`](../src/features/finder/SearchValue.tsx) 原生 `fetch` **绕过 apiClient**，不走上表 axios 管线）。
 
+`RecordResult`、`RecordRefsResult`、`UnreferencedRecordsResult` 的可选 `revision` 标识服务端当前快照；内部引用的 `FieldRef.toPath` 是目标 record JSON 的字段链，必须同时检查 `toRevision`。list 使用数字下标，map 的 `$entry` 数组增加 `key/value`，interface 沿同一个对象；空链指根。路径只用于本次快照的定位，不进入配置或偏好。旧服务无版本或两次响应版本不一致时应回退 record 根并刷新关系，不能把旧下标用于新数组。
+
 ### 3.3 三个易踩细节
 
 1. **AbortSignal 全链路透传（GET 查询）**：每个 GET 查询函数都收 `signal: AbortSignal`，传给 axios `{ signal }`。来源是 React Query 的 `queryFn: ({signal}) => fetchX(...)`。组件卸载或 query 失效时 RQ 自动 abort，axios 取消在途请求。**链断了 = 取消不了 = 切记录时旧请求继续跑、回来还可能覆盖新数据。**（POST mutation 的 `signal` 可选、调用方一般不传——mutation 不参与 RQ 自动取消。）

@@ -73,11 +73,11 @@ sequenceDiagram
     Q->>L: entityMap → convertNodeAndEdges → ELK worker
     L-->>Q: nodes/edges + 视口 → FlowGraph 画图
 
-    Note over F,S: ① 改值（就地改，不重渲）
+    Note over F,S: ① 改值（就地改，不逐键重建图）
     U->>F: 键入新值
     F->>S: onValuesChange → updateFormValues
     S->>S: 就地改 editingObject + markDirty
-    Note right of S: 不 bump structureVersion、不 emit<br/>→ Record 不重渲（值类编辑不重布局）
+    Note right of S: 不 bump structureVersion、不触发结构订阅<br/>dirty 状态切换时更新引用图；后续键入不重建<br/>复用既有布局和视口指令
 
     Note over S,UN: ② 500ms 合并：连续键入 = 一步 undo
     S->>UN: capture(NoChange)
@@ -92,7 +92,8 @@ sequenceDiagram
     U->>S: alt+s → submit()
     S->>Q: mutate(editingObject)
     Q->>B: POST /recordAddOrUpdate
-    B-->>Q: onSuccess → resetBaselines + invalidateAllQueries
+    B-->>Q: onSuccess → resetBaselines + invalidateAllExceptLayout
+    Note right of Q: 保存成功仍保持引用待校验<br/>收到对应编辑数据的新 GET 响应后恢复
 ```
 
 每个站点的深挖见对应专题（03 编辑会话 / 04 布局 / 01 数据流）。
