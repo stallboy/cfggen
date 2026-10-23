@@ -8,23 +8,6 @@ import { ErrorHandler } from './errorHandler';
 export class ModuleResolver {
 
     /**
-     * 解析引用名称，分离模块名和表名
-     */
-    static parseReference(refName: string): { modulePath?: string; typeOrTableName: string } {
-        const parts = refName.split('.');
-
-        if (parts.length === 1) {
-            // 只有表名，没有模块名
-            return { typeOrTableName: parts[0] };
-        } else {
-            // 有模块名和表名
-            const tableName = parts[parts.length - 1];
-            const moduleName = parts.slice(0, -1).join('.');
-            return { modulePath: moduleName, typeOrTableName: tableName };
-        }
-    }
-
-    /**
      * 查找根目录（包含config.cfg的目录）并设置模块名
      */
     static async findRootDirectory(currentFile: string): Promise<string | null> {
@@ -120,13 +103,14 @@ export class ModuleResolver {
      * 规则：截取第一个"."之前的内容，再截取"_汉字"或"汉字"之前的部分
      */
     static resolvePathToModule(filePath: string): string {
+        if (!/^[a-zA-Z]/.test(filePath)) return '';
         // 步骤1：截取第一个"."之前的内容
         const firstDotIndex = filePath.indexOf('.');
         const moduleName = firstDotIndex >= 0 ? filePath.substring(0, firstDotIndex) : filePath;
 
         // 步骤2：截取"_汉字"或"汉字"之前的部分
-        // 匹配中文字符（包括带下划线和不带下划线的情况）
-        const chinesePattern = /[\u4e00-\u9fff]/;
+        // 与后端 UnicodeScript.HAN 一致，包含补充平面的汉字。
+        const chinesePattern = /\p{Script=Han}/u;
         const chineseIndex = moduleName.search(chinesePattern);
 
         if (chineseIndex >= 0) {
@@ -142,39 +126,12 @@ export class ModuleResolver {
     }
 
 
-    /**
-     * 设置文件完整模块名
-     */
-    static resolvePathToFullModuleName(filePath: string, rootDir: string): string {
-        // 计算相对于根目录的路径
-        const relativePath = PathUtils.getRelativePath(rootDir, filePath);
-        const parts = relativePath.split('/').filter(part => part !== '.' && part !== '..');
-
-        if (parts.length === 0) {
-            return "";
-        }
-
-        // 构建模块名，处理目录结构
-        const moduleParts: string[] = [];
-
-        for (let i = 0; i < parts.length - 1; i++) {
-            const part = parts[i];
-            // 目录名：应用模块名解析规则
-            const modulePart = ModuleResolver.resolvePathToModule(part);
-            if (modulePart?.length) {
-                moduleParts.push(modulePart);
-            }
-
-        }
-        return moduleParts.join('.').toLowerCase();
-    }
-
 
 
     /**
      * 在根目录中查找.cfg文件
      */
-    static async findCfgFilesInRoot(rootDir: string, maxDepth: number): Promise<string[]> {
+    static async findCfgFilesInRoot(rootDir: string): Promise<string[]> {
         const cfgFiles: string[] = [];
 
         // 添加根目录的config.cfg
@@ -183,19 +140,14 @@ export class ModuleResolver {
 
 
         // 递归查找子目录
-        await this.findCfgFilesRecursive(rootDir, cfgFiles, maxDepth, 0);
+        await this.findCfgFilesRecursive(rootDir, cfgFiles);
         return cfgFiles;
     }
 
     /**
      * 递归查找.cfg文件
      */
-    private static async findCfgFilesRecursive(dir: string, cfgFiles: string[], maxDepth: number, currentDepth: number): Promise<void> {
-        if (currentDepth >= maxDepth) {
-            return;
-        }
-
-
+    private static async findCfgFilesRecursive(dir: string, cfgFiles: string[]): Promise<void> {
         const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(dir));
 
         for (const [name, type] of entries) {
@@ -212,7 +164,7 @@ export class ModuleResolver {
                     }
 
                     // 递归查找子目录
-                    await this.findCfgFilesRecursive(fullPath, cfgFiles, maxDepth, currentDepth + 1);
+                    await this.findCfgFilesRecursive(fullPath, cfgFiles);
                 }
             }
         }

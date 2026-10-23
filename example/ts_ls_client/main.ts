@@ -5,11 +5,7 @@ import { readFileSync } from 'fs';
 
 
 function readFileToArrayBufferSync(filePath: string): ArrayBuffer {
-    const buffer: Buffer = readFileSync(filePath);
-    return buffer.buffer.slice(
-        buffer.byteOffset,
-        buffer.byteOffset + buffer.byteLength
-    );
+    return new Uint8Array(readFileSync(filePath)).buffer;
 }
 
 
@@ -31,7 +27,7 @@ function main(): void {
         TextPoolManager.SetGlobalTexts(stream.GetLangTextPools()[i]);
         console.log(Config.Task_Task.Get(1)?.toString());
     }
-   
+
 
 }
 

@@ -12,8 +12,8 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.other.sign_in
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, { 
-    { 'RefVipitem2vipcountMap', 3, cfg.other.loot, 'get', 3 }, }, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, {
+    { 'RefVipitem2vipcountMap', 3, cfg.other.loot, 'get', 3 }, },
     'id', -- int, 礼包ID
     'item2countMap', -- map<int,int>, 普通奖励
     'vipitem2vipcountMap', -- map<int,int>, vip奖励

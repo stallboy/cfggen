@@ -131,7 +131,7 @@ class TypeStr {
      */
     static String getLuaRefsString(AContext aCtx, Structural structural) {
         StringBuilder sb = new StringBuilder();
-        sb.append("{ ");
+        sb.append("{");
 
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             String refName = Name.refName(fk);
@@ -144,7 +144,7 @@ class TypeStr {
                     String thisColumnIdx = getColumnStrOrIndex(aCtx, fk.key().fieldSchemas().getFirst(), structural);
                     String dstColumnIdx = getColumnStrOrIndex(aCtx, refList.key().fieldSchemas().getFirst(), fk.refTableSchema());
 
-                    sb.append(String.format("\n    { '%s', 2, %s, '%s', %s, %s }, ",
+                    sb.append(String.format("\n    { '%s', 2, %s, '%s', %s, %s },",
                             refName, dstTable, dstAllName, thisColumnIdx, dstColumnIdx));
 
                 }
@@ -162,27 +162,27 @@ class TypeStr {
                             // {refName, 0, dstTable, dstGetName, thisColumnIdx}  --最常见类型
                             if (fk.key().fieldSchemas().size() > 1) {
                                 String thisColumnIdx2 = getColumnStrOrIndex(aCtx, fk.key().fieldSchemas().get(1), structural);
-                                sb.append(String.format("\n    { '%s', 0, %s, '%s', %s, %s }, ",
+                                sb.append(String.format("\n    { '%s', 0, %s, '%s', %s, %s },",
                                         refName, dstTable, dstGetName, thisColumnIdx, thisColumnIdx2));
                             } else {
-                                sb.append(String.format("\n    { '%s', 0, %s, '%s', %s }, ",
+                                sb.append(String.format("\n    { '%s', 0, %s, '%s', %s },",
                                         refName, dstTable, dstGetName, thisColumnIdx));
                             }
 
                         }
                         case FList ignored -> {
                             // {refName, 1, dstTable, dstGetName, thisColumnIdx}, --本身是list
-                            sb.append(String.format("\n    { '%s', 1, %s, '%s', %s }, ", refName, dstTable, dstGetName, thisColumnIdx));
+                            sb.append(String.format("\n    { '%s', 1, %s, '%s', %s },", refName, dstTable, dstGetName, thisColumnIdx));
                         }
                         case FMap ignored -> {
                             // {refName, 3, dstTable, dstGetName, thisColumnIdx}, --本身是map
-                            sb.append(String.format("\n    { '%s', 3, %s, '%s', %s }, ", refName, dstTable, dstGetName, thisColumnIdx));
+                            sb.append(String.format("\n    { '%s', 3, %s, '%s', %s },", refName, dstTable, dstGetName, thisColumnIdx));
                         }
                     }
                 }
             }
         }
-        sb.append("}");
+        sb.append(" }");
 
         if (!structural.foreignKeys().isEmpty()) {
             return sb.toString();
@@ -244,7 +244,9 @@ class TypeStr {
         for (FieldSchema field : structural.fields()) {
 
             String c = getCommaDescStr(field.comment());
-            sb.append("---@field ").append(lower1(field.name())).append(" ").append(typeToLuaType(aCtx, field.type())).append(" ").append(c).append("\n");
+            sb.append("---@field ").append(lower1(field.name())).append(" ").append(typeToLuaType(aCtx, field.type()));
+            if (!c.isEmpty()) sb.append(" ").append(c);
+            sb.append("\n");
             has = true;
         }
         if (has) {

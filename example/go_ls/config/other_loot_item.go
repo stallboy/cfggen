@@ -65,24 +65,26 @@ func(t *OtherLoot_itemMgr) Get(lootid int32, itemid int32) *OtherLoot_item {
     return t.lootidItemidMap[KeyLootidItemid{lootid, itemid}]
 }
 
-func (t *OtherLoot_itemMgr) GetAllByLootid(lootid int32) []*OtherLoot_item {
-    if t.lootidMapList == nil {
-        t.lootidMapList = make(map[int32][]*OtherLoot_item)
-        for _, item := range t.all {
-            t.lootidMapList[item.lootid] = append(t.lootidMapList[item.lootid], item)
+    func (t *OtherLoot_itemMgr) GetAllByLootid(lootid int32) []*OtherLoot_item {
+        if t.lootidMapList == nil {
+            t.lootidMapList = make(map[int32][]*OtherLoot_item)
+            for _, item := range t.all {
+                key := item.lootid
+                t.lootidMapList[key] = append(t.lootidMapList[key], item)
+            }
         }
+        return t.lootidMapList[lootid]
     }
-    return t.lootidMapList[lootid]
-}
-func (t *OtherLoot_itemMgr) GetAllByItemid(itemid int32) []*OtherLoot_item {
-    if t.itemidMapList == nil {
-        t.itemidMapList = make(map[int32][]*OtherLoot_item)
-        for _, item := range t.all {
-            t.itemidMapList[item.itemid] = append(t.itemidMapList[item.itemid], item)
+    func (t *OtherLoot_itemMgr) GetAllByItemid(itemid int32) []*OtherLoot_item {
+        if t.itemidMapList == nil {
+            t.itemidMapList = make(map[int32][]*OtherLoot_item)
+            for _, item := range t.all {
+                key := item.itemid
+                t.itemidMapList[key] = append(t.itemidMapList[key], item)
+            }
         }
+        return t.itemidMapList[itemid]
     }
-    return t.itemidMapList[itemid]
-}
 func (t *OtherLoot_itemMgr) Init(stream *Stream) {
     cnt := int32(stream.ReadCount(1))
     t.all = make([]*OtherLoot_item, 0, cnt)

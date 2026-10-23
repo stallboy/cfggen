@@ -13,19 +13,17 @@ public class ProcessorModel {
     private final CfgValue cfgValue;
     public final boolean unity;
     public final boolean implicitUsings;
-    public final String schemaBase64;
     public final String languageLiterals;
     public final List<Structural> readyStructs = new ArrayList<>();
     public final List<InterfaceSchema> readyInterfaces = new ArrayList<>();
 
-    public ProcessorModel(CsCodeGenerator gen, CfgValue cfgValue, String schemaBase64, List<String> languages) {
+    public ProcessorModel(CsCodeGenerator gen, CfgValue cfgValue, List<String> languages) {
         this.gen = gen;
         this.cfgValue = cfgValue;
         this.topPkg = gen.pkg;
         cfgValue.schema().sortedTables().forEach(tableSchemas::add);
         this.unity = gen.unity;
         this.implicitUsings = gen.implicitUsings;
-        this.schemaBase64 = schemaBase64;
         this.languageLiterals = languages.stream().map(s -> "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"")
                 .collect(java.util.stream.Collectors.joining(", "));
         ForeachSchema.foreachNameable(item -> {
@@ -38,7 +36,7 @@ public class ProcessorModel {
     }
 
     public String fullName(Nameable schema) {
-        return new Name(gen.pkg, gen.prefix, schema).fullName
+        return "global::" + topPkg + "." + new Name(gen.pkg, gen.prefix, schema).fullName
                 + (schema instanceof TableSchema table && table.entry() instanceof EntryType.EEnum ? "Info" : "");
     }
 
@@ -49,4 +47,5 @@ public class ProcessorModel {
     public StructModel tableModel(TableSchema table) {
         return new StructModel(gen, table, cfgValue.vTableMap().get(table.name()));
     }
+
 }

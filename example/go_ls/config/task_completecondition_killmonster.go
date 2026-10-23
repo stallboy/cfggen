@@ -28,10 +28,10 @@ func (t *TaskCompleteconditionKillMonster) Count() int32 {
     return t.count
 }
 
-func (t *TaskCompleteconditionKillMonster) RefMonsterid() *OtherMonster {
-    if t.refMonsterid == nil {
-        t.refMonsterid = GetOtherMonsterMgr().Get(t.monsterid)
+    func (t *TaskCompleteconditionKillMonster) RefMonsterid() *OtherMonster {
+        if t.refMonsterid == nil {
+            t.refMonsterid = GetOtherMonsterMgr().Get(t.monsterid)
+        }
+        return t.refMonsterid
     }
-    return t.refMonsterid
-}
 

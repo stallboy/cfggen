@@ -52,6 +52,14 @@ public final class RecordEditService {
                     null);
         }
 
+        CfgValue.VTable vTable = cfgValue.getTable(table);
+        if (vTable != null && !cfgValue.schema().isPartial()) {
+            try {
+                jsonStr = EditorValueJson.decode(vTable.schema(), jsonStr);
+            } catch (IllegalArgumentException e) {
+                return new ResultWithNewCfgValue(new RecordEditResult(jsonParseErr, table, "", List.of(e.getMessage())), null);
+            }
+        }
         AddOrUpdateRecordResult ar = AddOrUpdateService.addOrUpdateRecord(context, cfgValue, table, jsonStr);
         ResultCode resultCode = switch (ar.errorCode()) {
             case AddOK -> addOk;

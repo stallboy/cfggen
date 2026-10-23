@@ -1,4 +1,4 @@
-// Generated from D:/work/mygit/cfggen/app/src/main/java/configgen/schema/cfg/Cfg.g4 by ANTLR 4.13.2
+// Generated from Cfg.g4 by ANTLR 4.13.2
 package configgen.schema.cfg;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -17,10 +17,10 @@ public class CfgLexer extends Lexer {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, STRUCT=3, INTERFACE=4, TABLE=5, ENUM=6, TLIST=7, TMAP=8, 
-		TBASE=9, REF=10, LISTREF=11, EQ=12, LP=13, RP=14, LB=15, RB=16, RC=17, 
-		DOT=18, COMMA=19, COLON=20, PLUS=21, MINUS=22, LC_COMMENT=23, SEMI_COMMENT=24, 
-		BOOL_CONSTANT=25, FLOAT_CONSTANT=26, HEX_INTEGER_CONSTANT=27, INTEGER_CONSTANT=28, 
+		T__0=1, T__1=2, STRUCT=3, INTERFACE=4, TABLE=5, ENUM=6, TLIST=7, TMAP=8,
+		TBASE=9, REF=10, LISTREF=11, EQ=12, LP=13, RP=14, LB=15, RB=16, RC=17,
+		DOT=18, COMMA=19, COLON=20, PLUS=21, MINUS=22, LC_COMMENT=23, SEMI_COMMENT=24,
+		BOOL_CONSTANT=25, FLOAT_CONSTANT=26, HEX_INTEGER_CONSTANT=27, INTEGER_CONSTANT=28,
 		STRING_CONSTANT=29, IDENT=30, COMMENT=31, WS=32;
 	public static String[] channelNames = {
 		"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
@@ -32,12 +32,12 @@ public class CfgLexer extends Lexer {
 
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"T__0", "T__1", "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST", "TMAP", 
-			"TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", "RC", "DOT", 
-			"COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", "BOOL_CONSTANT", 
-			"FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", "STRING_CONSTANT", 
-			"IDENT", "COMMENT", "WS", "FLOATLIT", "DECIMALS", "EXPONENT", "DECIMAL_DIGIT", 
-			"HEXADECIMAL_DIGIT", "SCHAR_SEQUENCE", "SCHAR", "ESCAPE_SEQUENCE", "SIMPLE_ESCAPE_SEQUENCE", 
+			"T__0", "T__1", "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST", "TMAP",
+			"TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", "RC", "DOT",
+			"COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", "BOOL_CONSTANT",
+			"FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", "STRING_CONSTANT",
+			"IDENT", "COMMENT", "WS", "FLOATLIT", "DECIMALS", "EXPONENT", "DECIMAL_DIGIT",
+			"HEXADECIMAL_DIGIT", "SCHAR_SEQUENCE", "SCHAR", "ESCAPE_SEQUENCE", "SIMPLE_ESCAPE_SEQUENCE",
 			"HEXADECIMAL_ESCAPE_SEQUENCE", "UNICODE_ESCAPE_SEQUENCE"
 		};
 	}
@@ -45,18 +45,18 @@ public class CfgLexer extends Lexer {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'<'", "'>'", "'struct'", "'interface'", "'table'", "'enum'", "'list'", 
-			"'map'", null, "'->'", "'=>'", "'='", "'('", "')'", "'['", "']'", "'}'", 
+			null, "'<'", "'>'", "'struct'", "'interface'", "'table'", "'enum'", "'list'",
+			"'map'", null, "'->'", "'=>'", "'='", "'('", "')'", "'['", "']'", "'}'",
 			"'.'", "','", "':'", "'+'", "'-'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, null, "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST", "TMAP", 
-			"TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", "RC", "DOT", 
-			"COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", "BOOL_CONSTANT", 
-			"FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", "STRING_CONSTANT", 
+			null, null, null, "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST", "TMAP",
+			"TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", "RC", "DOT",
+			"COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", "BOOL_CONSTANT",
+			"FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", "STRING_CONSTANT",
 			"IDENT", "COMMENT", "WS"
 		};
 	}

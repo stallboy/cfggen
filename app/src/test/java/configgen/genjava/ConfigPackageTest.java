@@ -61,7 +61,7 @@ class ConfigPackageTest {
             var err = assertThrows(ConfigErr.class,
                     () -> ConfigPackage.read(new ConfigInput(bytes(out -> out.writeInt(version)))));
             assertTrue(err.getMessage().contains(Integer.toString(version)));
-            assertTrue(err.getMessage().contains("1"));
+            assertTrue(err.getMessage().contains(Integer.toString(ConfigPackage.FORMAT_VERSION)));
         }
     }
 
@@ -142,6 +142,28 @@ class ConfigPackageTest {
             out.writeInt(1); out.writeInt(1); out.writeString("pack"); out.writeString(name);
             out.writeInt(1); out.writeString("schema"); out.writeInt(schema.length); out.writeRawBytes(schema);
         })));
+    }
+
+    @Test
+    void rejectsIntegerWidthChangesInBothDirections() {
+        for (var expectedType : List.of(SchemaPrimitive.SInt, SchemaPrimitive.SLong)) {
+            var actualType = expectedType == SchemaPrimitive.SInt ? SchemaPrimitive.SLong : SchemaPrimitive.SInt;
+            var expected = new SchemaInterface();
+            var expectedTable = new SchemaBean(true);
+            expectedTable.addColumn("value", expectedType);
+            expected.addImp("unit", expectedTable);
+            var actual = new SchemaInterface();
+            var actualTable = new SchemaBean(true);
+            actualTable.addColumn("value", actualType);
+            actual.addImp("unit", actualTable);
+
+            var pack = schemaPackage("base", bytes(out -> new SchemaSerializer(out).serializeInterface(actual)));
+            var errors = new LoadValueErrs();
+            assertFalse(pack.validateSchema(expected, errors));
+            assertEquals(1, errors.getErrors().size());
+            assertInstanceOf(LoadValueErrs.SchemaMismatch.class, errors.getErrors().getFirst());
+            assertThrows(ConfigErr.class, errors::checkErrors);
+        }
     }
 
     private ConfigPackage named(String name, String requires) {

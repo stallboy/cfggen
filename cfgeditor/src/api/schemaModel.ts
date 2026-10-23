@@ -106,6 +106,7 @@ export type SItem = SStruct | SInterface | STable;
 
 export interface RawSchema {
     isEditable: boolean;
+    editorValueEncoding?: 'long-decimal-string';
     items: SItem[];
     lastModifiedMap: Map<string, Map<string, number>>;
 }

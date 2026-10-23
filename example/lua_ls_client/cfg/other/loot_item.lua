@@ -11,7 +11,7 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.other.loot_item
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1, 2 }, }, nil, nil, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1, 2 }, }, nil, nil,
     'lootid', -- int, 掉落id
     'itemid', -- int, 掉落物品
     'chance', -- int, 掉落概率

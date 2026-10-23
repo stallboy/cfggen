@@ -22,7 +22,7 @@
 ### 外键跳转解析规则
 
 
-#### 1. 优先查找本模块内引用 
+#### 1. 优先查找本模块内引用
 - 若是`->table1`, 在当前.cfg文件中查找名为`table1`的表定义
 - 若是`->pkg1.pkg2.table1`, 则从当前.cfg文件所在目录开始查找`pkg1.pkg2`对应的.cfg文件，在那里找`table1`的表定义
 - 如果找到，跳转到该表的定义位置
@@ -48,7 +48,7 @@ interface InterfaceB {
   struct IX {
     x:int;
   }
-  
+
   struct IY {
     x:IX;
     y:StructC;
@@ -66,7 +66,7 @@ table t[id] {
 }
 ```
 
-#### 1. 若在interface内，优先查找本interface内Struct类型 
+#### 1. 若在interface内，优先查找本interface内Struct类型
 - `y:IX`的`IX`: 先在`IY`其所属的`InterfaceB`中查找
 - 如果找到，跳转到该表的定义位置
 
@@ -113,8 +113,8 @@ class FileDefinitionAndRef {
   lineToRefs: Map<int, Ref> ;  //line ->  ref, 一行只能配置一个类型+一个外键，所以以line为key
 
  // 用于判断cache是否失效
-  lastModified:long; 
-  fileSize:long; 
+  lastModified:long;
+  fileSize:long;
 }
 
 
@@ -170,7 +170,7 @@ provideReferences的逻辑：
     1. 找到<本配置所属根目录>，同时找到文件所在的模块全称，
        比如`pkg1_中文1/pkg2中文2/pkg2.cfg`的模块全称为pkg1.pkg2，
        如此这个definition的全称就是pkg1.pkg2.[tname.name]
-       
+
     2. 遍历<本配置所属根目录>，depth最多2层，目录名要符合能提取模块名的规则，目录下也有[模块名].cfg文件，
        根目录下读config.cfg。对这些.cfg文件做getOrParseDefinitionAndRef得到def:FileDefinitionAndRef
        对每个def，遍历lineToRefs，
@@ -179,7 +179,7 @@ provideReferences的逻辑：
         - 如果 curDef.module.length > 0 且 curDef.module.startWith(def.module + ".") 则找到relativeModuleName
           - 如果 refType == tname.name 放到refs里
           - 如果 refTable == tname.name也放到refs
-    
+
 
 3. 从lineToDefinitionInInterfaces得到implName，如果ok，
   遍历lineToRefs，如果inInterfaceName == implName.inInterfaceName，且refType == implName.name则加到refs里

@@ -2,7 +2,7 @@ local cfg = require "cfg._cfgs"
 local Beans = cfg._beans
 
 ---@class cfg.ai.ai
----@field iD number 
+---@field iD number
 ---@field desc string , 描述----这里测试下多行效果--再来一行
 ---@field condID string , 触发公式
 ---@field trigTick Beans.ai.triggertick , 触发间隔(帧)
@@ -14,7 +14,7 @@ local Beans = cfg._beans
 
 local this = cfg.ai.ai
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil,
     'iD', -- int
     'desc', -- str, 描述----这里测试下多行效果--再来一行
     'condID', -- str, 触发公式

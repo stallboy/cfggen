@@ -38,7 +38,7 @@ func createTaskTestDefaultBean(stream *Stream) *TaskTestDefaultBean {
 }
 
 func (t *TaskTestDefaultBean) String() string {
-    return fmt.Sprintf("TaskTestDefaultBean{testInt=%v, testBool=%v, testString=%v, testSubBean=%v, testList=%v, testList2=%v, testMap=%v}", t.testInt, t.testBool, t.testString, fmt.Sprintf("%v", t.testSubBean), fmt.Sprintf("%v", t.testList), fmt.Sprintf("%v", t.testList2), fmt.Sprintf("%v", t.testMap))
+    return fmt.Sprintf("TaskTestDefaultBean{testInt=%v, testBool=%v, testString=%v, testSubBean=%v, testList=%v, testList2=%v, testMap=%v}", t.testInt, t.testBool, t.testString, t.testSubBean, t.testList, t.testList2, t.testMap)
 }
 
 //getters

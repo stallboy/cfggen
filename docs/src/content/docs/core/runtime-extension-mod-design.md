@@ -75,7 +75,7 @@ Mod 构建新增固定 schema 路径，与现有根据表格自动调整 schema 
 
 ### 2.4 兼容性边界
 
-复用已有内嵌 schema 的布局描述，在新包路径上由 Java/C# 加载器执行布局检查。新包应带有这部分信息，不再依赖调用者记得额外检查。现有描述没有完整记录主键、唯一键、外键和 `seq` 规则，因此不能把它宣称为生产者和消费者 schema 完全相等的证明。
+复用已有内嵌 schema 的布局描述，Java 加载器用它检查字段布局，C# 加载器校验表块名称并按生成的字段布局读取数据。现有描述没有完整记录主键、唯一键、外键和 `seq` 规则，因此不能把它宣称为生产者和消费者 schema 完全相等的证明。
 
 首版以生成运行时所对应的共享 schema 为约束权威：构建采用这份 schema，运行时验证最终数据及固定符号。包之间有效字段布局、语言列表及顺序、默认语言等必须满足生成代码的读取契约。不同语言输出若使用不同的字段过滤结果，不能混为一个组合；有效 schema 与语言布局相同时，Java 和 C# 可消费相同 payload。
 
@@ -417,9 +417,9 @@ C# 的 `Processor.ReadTable<K, T>` 直接解码并合并每条记录，主键及
 
 C# 的名字到 enum 转换按符号数量生成：零个直接使用无效序号，一个使用条件表达式，多个使用 switch 表达式。不使用 `Enum.Parse`，也不在初始化时再次匹配 enum 字符串。未知名字暂记为无效序号，在最终记录索引阶段统一报告。固定主键或显式 ID 按符号序号查生成的常量数组；空符号集不生成这些数组，主键本身就是符号名字时不重复比较相同值。entry 不生成临时引用变量、符号字典或重复符号判断：合并后主键唯一，固定名字与主键映射校验已保证符号唯一。enum/entry 缓存按固定键从最终索引一次建立，缺失检查继续保留。缓存字段标注为可空以反映构建阶段的状态，公开访问入口依赖加载成功后的完整性保证。
 
-C# 错误使用 `LoadError` record 层级，具体 record 只保存各自需要的参数；每次加载创建一个 `LoadErrors`，分类方法只收集错误，通用 `Add/Fail` 为 private。无 `SimpleIssueHandler`、`IIssueHandler`、`SetRowContext`、每行诊断字符串或包装异常的 `try/catch`。缺失引用直接记录 source、field、target、实际 key，复合引用键为值元组；重复主键记录 table、pack、key，索引和固定符号错误只在失败分支取得来源链。包结构/版本、schema、字符串池和 union 错误也有独立 record。可恢复错误在加载阶段统一检查；无法继续解码的错误立即抛出。`ConfigException.Errors` 是不可变快照；异常消息只在抛出时格式化，并包含实际来源包名。
+C# 错误使用 `LoadError` record 层级，具体 record 只保存各自需要的参数；每次加载创建一个 `LoadErrors`，分类方法只收集错误，通用 `Add/Fail` 为 private。无 `SimpleIssueHandler`、`IIssueHandler`、`SetRowContext`、每行诊断字符串或包装异常的 `try/catch`。缺失引用直接记录 source、field、target、实际 key，复合引用键为值元组；重复主键记录 table、pack、key，索引和固定符号错误只在失败分支取得来源链。包结构、版本、表块名称、字符串池和 union 错误也有独立 record。可恢复错误在加载阶段统一检查；无法继续解码的错误立即抛出。`ConfigException.Errors` 是不可变快照；异常消息只在抛出时格式化，并包含实际来源包名。
 
-普通 C# 和 Unity 共用 C# 9 兼容的 `Loader.cs`。`ConfigReader` 直接读取有边界的字节视图，`ConfigPackage.Block(".monster", "en", "zh_cn")` 内部绑定字符串和文本池；不再使用 `BinaryReader`、`MemoryStream`、重复的 Cursor 或公开的 Data 包装。各块游标和错误收集器独立，语言池按顺序延迟解析并缓存，支持同包并行加载。包名和依赖在读取时解析，`Attach(resources...)` 复用身份信息；代码 schema 的规范签名只计算一次。复合键生成 sealed record；空集合复用空实例，非空 List 包装只读视图，Map 使用维护序列化顺序的 `ConfigMap`，交接时不再复制。服务端文本直接读取池中的各语言值，无每文本临时数组；客户端 Text 始终绑定所属包的池。
+普通 C# 和 Unity 共用 C# 9 兼容的 `Loader.cs`。`ConfigReader` 直接读取有边界的字节视图，`ConfigPackage.Block(".monster", "en", "zh_cn")` 内部绑定字符串和文本池；不再使用 `BinaryReader`、`MemoryStream`、重复的 Cursor 或公开的 Data 包装。各块游标和错误收集器独立，语言池按顺序延迟解析并缓存，支持同包并行加载。包名和依赖在读取时解析，`Attach(resources...)` 复用身份信息。复合键生成 sealed record；空集合复用空实例，非空 List 包装只读视图，Map 使用维护序列化顺序的 `ConfigMap`，交接时不再复制。服务端文本直接读取池中的各语言值，无每文本临时数组；客户端 Text 始终绑定所属包的池。
 
 不引入 `ConfigNode` / `IConfigNode`。Java 仅为自身或内嵌类型具有 `javaBase` 的类型生成 `_collectExtensions`，按对象身份去重，不跟随外键；无扩展的 schema 不生成收集阶段。Java 先绑定全部扩展，再直接调用受保护的 `onConfigReady()`，不再添加 `_initialize()` 转发。C# 全量引用校验通过后，由 `Processor` 的泛型入口和必要的嵌套遍历重载直接调用 `OnConfigReady(config)`；`_resolve` 只处理引用，不生成扩展登记状态。手工构造且未参与加载的对象不会自动回调。
 

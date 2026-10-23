@@ -68,23 +68,23 @@ export class CfgParser extends antlr.Parser {
     public static readonly RULE_suffix_comment = 23;
 
     public static readonly literalNames = [
-        null, "'<'", "'>'", "'struct'", "'interface'", "'table'", "'enum'", 
-        "'list'", "'map'", null, "'->'", "'=>'", "'='", "'('", "')'", "'['", 
+        null, "'<'", "'>'", "'struct'", "'interface'", "'table'", "'enum'",
+        "'list'", "'map'", null, "'->'", "'=>'", "'='", "'('", "')'", "'['",
         "']'", "'}'", "'.'", "','", "':'", "'+'", "'-'"
     ];
 
     public static readonly symbolicNames = [
-        null, null, null, "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST", 
-        "TMAP", "TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", 
-        "RC", "DOT", "COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", 
-        "BOOL_CONSTANT", "FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", 
+        null, null, null, "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST",
+        "TMAP", "TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB",
+        "RC", "DOT", "COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT",
+        "BOOL_CONSTANT", "FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT",
         "STRING_CONSTANT", "IDENT", "COMMENT", "WS"
     ];
     public static readonly ruleNames = [
-        "schema", "schema_ele", "struct_decl", "interface_decl", "table_decl", 
-        "enum_decl", "field_decl", "foreign_decl", "key_decl", "enum_value_empty", 
-        "enum_value_assigned", "type_", "type_ele", "ref", "key", "metadata", 
-        "ident_with_opt_single_value", "minus_ident", "single_value", "enum_number", 
+        "schema", "schema_ele", "struct_decl", "interface_decl", "table_decl",
+        "enum_decl", "field_decl", "foreign_decl", "key_decl", "enum_value_empty",
+        "enum_value_assigned", "type_", "type_ele", "ref", "key", "metadata",
+        "ident_with_opt_single_value", "minus_ident", "single_value", "enum_number",
         "ns_ident", "identifier", "leading_comment", "suffix_comment",
     ];
 
@@ -2136,11 +2136,11 @@ export class KeyContext extends antlr.ParserRuleContext {
     public COMMA(): antlr.TerminalNode[];
     public COMMA(i: number): antlr.TerminalNode | null;
     public COMMA(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
-    	if (i === undefined) {
-    		return this.getTokens(CfgParser.COMMA);
-    	} else {
-    		return this.getToken(CfgParser.COMMA, i);
-    	}
+        if (i === undefined) {
+            return this.getTokens(CfgParser.COMMA);
+        } else {
+            return this.getToken(CfgParser.COMMA, i);
+        }
     }
     public override get ruleIndex(): number {
         return CfgParser.RULE_key;
@@ -2177,11 +2177,11 @@ export class MetadataContext extends antlr.ParserRuleContext {
     public COMMA(): antlr.TerminalNode[];
     public COMMA(i: number): antlr.TerminalNode | null;
     public COMMA(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
-    	if (i === undefined) {
-    		return this.getTokens(CfgParser.COMMA);
-    	} else {
-    		return this.getToken(CfgParser.COMMA, i);
-    	}
+        if (i === undefined) {
+            return this.getTokens(CfgParser.COMMA);
+        } else {
+            return this.getToken(CfgParser.COMMA, i);
+        }
     }
     public override get ruleIndex(): number {
         return CfgParser.RULE_metadata;
@@ -2319,11 +2319,11 @@ export class Ns_identContext extends antlr.ParserRuleContext {
     public DOT(): antlr.TerminalNode[];
     public DOT(i: number): antlr.TerminalNode | null;
     public DOT(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
-    	if (i === undefined) {
-    		return this.getTokens(CfgParser.DOT);
-    	} else {
-    		return this.getToken(CfgParser.DOT, i);
-    	}
+        if (i === undefined) {
+            return this.getTokens(CfgParser.DOT);
+        } else {
+            return this.getToken(CfgParser.DOT, i);
+        }
     }
     public override get ruleIndex(): number {
         return CfgParser.RULE_ns_ident;

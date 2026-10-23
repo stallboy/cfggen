@@ -3,16 +3,16 @@ local Beans = cfg._beans
 
 ---@class cfg.task.task2
 ---@field taskid number , 任务完成条件类型（id的范围为1-100）
----@field name table<number,text> 
----@field nexttask number 
----@field completecondition Beans.task.completecondition 
----@field exp number 
----@field testBool boolean 
----@field testString string 
----@field testStruct Beans.position 
----@field testList table<number,number> 
----@field testListStruct table<number,Beans.position> 
----@field testListInterface table<number,Beans.ai.triggertick> 
+---@field name table<number,text>
+---@field nexttask number
+---@field completecondition Beans.task.completecondition
+---@field exp number
+---@field testBool boolean
+---@field testString string
+---@field testStruct Beans.position
+---@field testList table<number,number>
+---@field testListStruct table<number,Beans.position>
+---@field testListInterface table<number,Beans.ai.triggertick>
 ---@field get fun(taskid:number):cfg.task.task2
 ---@field all table<any,cfg.task.task2>
 ---@field NullableRefTaskid cfg.task.task_extra_exp
@@ -20,9 +20,9 @@ local Beans = cfg._beans
 
 local this = cfg.task.task2
 
-local mk = cfg._mk.i18n_table(this, { { 'all', 'get', 1 }, }, nil, { 
-    { 'NullableRefTaskid', 0, cfg.task.task_extra_exp, 'get', 1 }, 
-    { 'NullableRefNexttask', 0, cfg.task.task, 'get', 3 }, }, 
+local mk = cfg._mk.i18n_table(this, { { 'all', 'get', 1 }, }, nil, {
+    { 'NullableRefTaskid', 0, cfg.task.task_extra_exp, 'get', 1 },
+    { 'NullableRefNexttask', 0, cfg.task.task, 'get', 3 }, },
     { name = 2 },
     'taskid', -- int, 任务完成条件类型（id的范围为1-100）
     'name', -- list<text>

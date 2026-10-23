@@ -25,7 +25,7 @@ func createOtherLoot(stream *Stream) *OtherLoot {
 }
 
 func (t *OtherLoot) String() string {
-    return fmt.Sprintf("OtherLoot{lootid=%v, ename=%v, name=%v, chanceList=%v}", t.lootid, t.ename, t.name, fmt.Sprintf("%v", t.chanceList))
+    return fmt.Sprintf("OtherLoot{lootid=%v, ename=%v, name=%v, chanceList=%v}", t.lootid, t.ename, t.name, t.chanceList)
 }
 
 //getters
@@ -45,19 +45,19 @@ func (t *OtherLoot) ChanceList() []int32 {
     return t.chanceList
 }
 
-func (t *OtherLoot) ListRefLootid() []*OtherLoot_item {
-    if t.listRefLootid == nil {
-        t.listRefLootid = GetOtherLoot_itemMgr().GetAllByLootid(t.lootid)
+    func (t *OtherLoot) ListRefLootid() []*OtherLoot_item {
+        if t.listRefLootid == nil {
+            t.listRefLootid = GetOtherLoot_itemMgr().GetAllByLootid(t.lootid)
+        }
+        return t.listRefLootid
     }
-    return t.listRefLootid
-}
 
-func (t *OtherLoot) ListRefAnotherWay() []*OtherLoot_item {
-    if t.listRefAnotherWay == nil {
-        t.listRefAnotherWay = GetOtherLoot_itemMgr().GetAllByLootid(t.lootid)
+    func (t *OtherLoot) ListRefAnotherWay() []*OtherLoot_item {
+        if t.listRefAnotherWay == nil {
+            t.listRefAnotherWay = GetOtherLoot_itemMgr().GetAllByLootid(t.lootid)
+        }
+        return t.listRefAnotherWay
     }
-    return t.listRefAnotherWay
-}
 
 type OtherLootMgr struct {
     all []*OtherLoot

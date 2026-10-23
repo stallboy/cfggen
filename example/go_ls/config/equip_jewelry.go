@@ -35,7 +35,7 @@ func createEquipJewelry(stream *Stream) *EquipJewelry {
 }
 
 func (t *EquipJewelry) String() string {
-    return fmt.Sprintf("EquipJewelry{iD=%v, name=%v, iconFile=%v, lvlRank=%v, jType=%v, suitID=%v, keyAbility=%v, keyAbilityValue=%v, salePrice=%v, description=%v}", t.iD, t.name, t.iconFile, fmt.Sprintf("%v", t.lvlRank), t.jType, t.suitID, t.keyAbility, t.keyAbilityValue, t.salePrice, t.description)
+    return fmt.Sprintf("EquipJewelry{iD=%v, name=%v, iconFile=%v, lvlRank=%v, jType=%v, suitID=%v, keyAbility=%v, keyAbilityValue=%v, salePrice=%v, description=%v}", t.iD, t.name, t.iconFile, t.lvlRank, t.jType, t.suitID, t.keyAbility, t.keyAbilityValue, t.salePrice, t.description)
 }
 
 //getters
@@ -79,33 +79,33 @@ func (t *EquipJewelry) Description() string {
     return t.description
 }
 
-func (t *EquipJewelry) RefLvlRank() *EquipJewelry_random {
-    if t.refLvlRank == nil {
-        t.refLvlRank = GetEquipJewelry_randomMgr().Get(t.lvlRank)
+    func (t *EquipJewelry) RefLvlRank() *EquipJewelry_random {
+        if t.refLvlRank == nil {
+            t.refLvlRank = GetEquipJewelry_randomMgr().Get(t.lvlRank)
+        }
+        return t.refLvlRank
     }
-    return t.refLvlRank
-}
 
-func (t *EquipJewelry) RefJType() *EquipJewelry_type {
-    if t.refJType == nil {
-        t.refJType = GetEquipJewelry_typeMgr().Get(t.jType)
+    func (t *EquipJewelry) RefJType() *EquipJewelry_type {
+        if t.refJType == nil {
+            t.refJType = GetEquipJewelry_typeMgr().Get(t.jType)
+        }
+        return t.refJType
     }
-    return t.refJType
-}
 
-func (t *EquipJewelry) NullableRefSuitID() *EquipJewelry_suit {
-    if t.nullableRefSuitID == nil {
-        t.nullableRefSuitID = GetEquipJewelry_suitMgr().Get(t.suitID)
+    func (t *EquipJewelry) NullableRefSuitID() *EquipJewelry_suit {
+        if t.nullableRefSuitID == nil {
+            t.nullableRefSuitID = GetEquipJewelry_suitMgr().Get(t.suitID)
+        }
+        return t.nullableRefSuitID
     }
-    return t.nullableRefSuitID
-}
 
-func (t *EquipJewelry) RefKeyAbility() *EquipAbility {
-    if t.refKeyAbility == nil {
-        t.refKeyAbility = GetEquipAbilityMgr().Get(t.keyAbility)
+    func (t *EquipJewelry) RefKeyAbility() *EquipAbility {
+        if t.refKeyAbility == nil {
+            t.refKeyAbility = GetEquipAbilityMgr().Get(t.keyAbility)
+        }
+        return t.refKeyAbility
     }
-    return t.refKeyAbility
-}
 
 type EquipJewelryMgr struct {
     all []*EquipJewelry

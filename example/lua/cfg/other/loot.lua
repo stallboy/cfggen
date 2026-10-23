@@ -2,7 +2,7 @@ local cfg = require "cfg._cfgs"
 
 ---@class cfg.other.loot
 ---@field lootid number , 序号
----@field ename string 
+---@field ename string
 ---@field name text , 名字
 ---@field chanceList table<number,number> , 掉落0件物品的概率
 ---@field get fun(lootid:number):cfg.other.loot
@@ -12,9 +12,9 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.other.loot
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, { 
-    { 'ListRefLootid', 2, cfg.other.loot_item, 'all', 1, 1 }, 
-    { 'ListRefAnotherWay', 2, cfg.other.loot_item, 'all', 1, 1 }, }, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, {
+    { 'ListRefLootid', 2, cfg.other.loot_item, 'all', 1, 1 },
+    { 'ListRefAnotherWay', 2, cfg.other.loot_item, 'all', 1, 1 }, },
     'lootid', -- int, 序号
     'ename', -- str
     'name', -- text, 名字

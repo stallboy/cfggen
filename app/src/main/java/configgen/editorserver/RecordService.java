@@ -168,7 +168,7 @@ public class RecordService {
         int startDepth;
         switch (requestType) {
             case requestRecord -> {
-                object = new ValueToJson(cfgValue, frontier).toJson(vRecord);
+                object = ValueToJson.forEditor(cfgValue, frontier).toJson(vRecord);
                 frontier.remove(thisObjId);
                 startDepth = 1;
             }

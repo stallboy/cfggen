@@ -27,7 +27,7 @@ export class CfgDocumentSymbolProvider implements vscode.DocumentSymbolProvider 
                 const kind = this.getSymbolKindFromType(tRange.type);
                 const symbol = new vscode.DocumentSymbol(
                     name,
-                    this.getSymbolDetailFromType(tRange.type),
+                    tRange.type,
                     kind,
                     tRange.range,
                     tRange.range
@@ -78,10 +78,4 @@ export class CfgDocumentSymbolProvider implements vscode.DocumentSymbolProvider 
         }
     }
 
-    /**
-     * 根据类型获取符号详细描述
-     */
-    private getSymbolDetailFromType(type: DefinitionType): string {
-        return type;
-    }
 }

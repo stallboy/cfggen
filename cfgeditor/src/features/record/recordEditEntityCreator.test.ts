@@ -5,6 +5,7 @@ import {Schema} from '@/domain/schema.ts'
 import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '@/test/fixtures.ts'
 import {EditingSession} from '@/services/editingSession.ts'
 import {JSONObject} from '@/api/recordModel.ts'
+import {getDefaultPrimitiveValue} from '@/flow/edit/shared/fieldUtils.ts'
 
 function buildSchema() {
     const small = makeStruct('Small', [field('dmg', 'int')])              // 可内嵌：1 个 primitive
@@ -36,6 +37,20 @@ function newCreator(schema: Schema, curTable: ReturnType<typeof makeTable>) {
 }
 
 describe('RecordEditEntityCreator.makeEditFields 原始字段', () => {
+    it('新增 long 列表项与标量使用相同精确零值，引用选项仍优先', () => {
+        const table = makeTable('T', [field('id', 'long'), field('ids', 'list<long>')])
+        const schema = new Schema(makeRawSchema([table]))
+        const fields = newCreator(schema, table).makeEditFields(table, {$type: 'T', ids: []}, [])
+        const scalar = fields.find(field => field.type === 'primitive')!
+        const list = fields.find(field => field.type === 'arrayOfPrimitive')!
+        expect(getDefaultPrimitiveValue(list)).toBe(scalar.value)
+        expect(getDefaultPrimitiveValue(list)).toBe('0')
+        expect(getDefaultPrimitiveValue({...list, autoCompleteOptions: {
+            isEnum: false, isValueInteger: true,
+            options: [{value: '9007199254740993', label: 'target', labelstr: 'target', title: ''}],
+        }})).toBe('9007199254740993')
+    })
+
     it('struct 生成 primitive 字段，保留 eleType 与值', () => {
         const {schema} = buildSchema()
         const c = newCreator(schema, makeTable('Placeholder', []))

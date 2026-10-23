@@ -11,7 +11,7 @@ local Beans = cfg._beans
 
 local this = cfg.other.drop
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil,
     'dropid', -- int, 序号
     'name', -- text, 名字
     'items', -- list<DropItem>, 掉落概率

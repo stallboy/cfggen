@@ -5,11 +5,7 @@ import { readFileSync } from 'fs';
 
 
 function readFileToArrayBufferSync(filePath: string): ArrayBuffer {
-    const buffer: Buffer = readFileSync(filePath);
-    return buffer.buffer.slice(
-        buffer.byteOffset,
-        buffer.byteOffset + buffer.byteLength
-    );
+    return new Uint8Array(readFileSync(filePath)).buffer;
 }
 
 

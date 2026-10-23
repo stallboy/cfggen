@@ -193,9 +193,9 @@ describe('extractEmbeddingFields', () => {
         expect(extractEmbeddingFields(empty, obj())).toEqual({embeddedFields: []})
     })
 
-    it('字段缺失 / 为 null 时回退类型默认值：bool→false, int/long/float→0, str/text→空串', () => {
+    it('字段缺失 / 为 null 时回退类型默认值，long 使用十进制字符串', () => {
         const cases: [string, unknown][] = [
-            ['bool', false], ['int', 0], ['long', 0], ['float', 0], ['str', ''], ['text', ''],
+            ['bool', false], ['int', 0], ['long', '0'], ['float', 0], ['str', ''], ['text', ''],
         ]
         for (const [type, dft] of cases) {
             const s = makeStruct('S', [field('v', type)])  // 单 primitive 可内嵌

@@ -24,7 +24,7 @@ class CtxShared {
 
 
     /**
-     * 会生成 [name] = [valueStr] lua代码，供各record内部引用
+     * 会生成 [name] = [valueStr] lua代码，供各 record 复用
      */
     static class CompositeValueStr {
         private String valueStr = null;

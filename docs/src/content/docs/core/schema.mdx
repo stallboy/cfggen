@@ -276,10 +276,10 @@ table taskexptype[id] (enum='name') {
 // 存储所有任务数据和完成条件
 table task[taskid] (entry='entry') {
 	[nexttask];                           // 定义唯一键
-	taskid:int ->task.task_extra_exp (nullable); // 任务ID，外键（可空）
+	taskid:int ->task.task_extra_exp (nullable); // 任务ID，外键可以不存在
 	entry:str;                           // 入口标识，程序代码直接访问
 	text:text;                           // 国际化文本
-	nexttask:int ->task (nullable);      // 下一个任务ID，外键（可空）
+	nexttask:int ->task (nullable);      // 下一个任务ID，外键可以不存在
 	completecondition:task.completecondition; // 任务完成条件（多态接口）
 	exp:taskexp (mustFill);              // 经验奖励公式（多态接口，必须填写）
 	rewardItems:list<RewardItem> (block=1); // 物品奖励列表
@@ -302,7 +302,7 @@ table task[taskid] (entry='entry') {
 
 | 属性 | 用途 | 适用类型 | 示例 |
 |------|------|----------|------|
-| `nullable` | 允许字段为空 | 所有类型 | `field:int (nullable)` |
+| `nullable` | 表明外键可以不存在 | 单向外键（`->`） | `field:int ->target (nullable)` |
 | `mustFill` | 必须填写，不能为空 | 所有类型 | `field:str (mustFill)` |
 | `seq` | 声明字段值为连续序列（从0开始） | int | `tagId:int (seq)` |
 | `fix=N` | 固定长度，占用N倍元素类型的列数 | list, map | `items:list<int> (fix=3)` |
@@ -335,7 +335,7 @@ table task[taskid] (entry='entry') {
 | `enum='字段名'` | table | 指定枚举字段 |
 | `entry='字段名'` | table | 指定入口字段 |
 | `commentText` | enum 声明 | comment 字段用 text 类型（默认 str） |
-| `nullable` | 字段 | 允许为空 |
+| `nullable` | 带外键的字段、独立外键声明 | 表明外键可以不存在 |
 | `mustFill` | 字段 | 必须填写 |
 | `seq` | 字段 (int) | 声明值为连续序列（0,1,2,...） |
 | `fix=N` | 映射... | ... |

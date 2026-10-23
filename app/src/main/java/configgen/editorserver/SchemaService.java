@@ -95,6 +95,10 @@ public class SchemaService {
     public record Schema(boolean isEditable,
                          List<SNameable> items,
                          Map<String, Map<String, Long>> lastModifiedMap) {
+        @JSONField
+        public String editorValueEncoding() {
+            return EditorValueJson.ENCODING;
+        }
     }
 
 

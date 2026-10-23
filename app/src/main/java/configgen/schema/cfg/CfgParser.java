@@ -1,4 +1,4 @@
-// Generated from D:/work/mygit/cfggen/app/src/main/java/configgen/schema/cfg/Cfg.g4 by ANTLR 4.13.2
+// Generated from Cfg.g4 by ANTLR 4.13.2
 package configgen.schema.cfg;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -17,25 +17,25 @@ public class CfgParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, STRUCT=3, INTERFACE=4, TABLE=5, ENUM=6, TLIST=7, TMAP=8, 
-		TBASE=9, REF=10, LISTREF=11, EQ=12, LP=13, RP=14, LB=15, RB=16, RC=17, 
-		DOT=18, COMMA=19, COLON=20, PLUS=21, MINUS=22, LC_COMMENT=23, SEMI_COMMENT=24, 
-		BOOL_CONSTANT=25, FLOAT_CONSTANT=26, HEX_INTEGER_CONSTANT=27, INTEGER_CONSTANT=28, 
+		T__0=1, T__1=2, STRUCT=3, INTERFACE=4, TABLE=5, ENUM=6, TLIST=7, TMAP=8,
+		TBASE=9, REF=10, LISTREF=11, EQ=12, LP=13, RP=14, LB=15, RB=16, RC=17,
+		DOT=18, COMMA=19, COLON=20, PLUS=21, MINUS=22, LC_COMMENT=23, SEMI_COMMENT=24,
+		BOOL_CONSTANT=25, FLOAT_CONSTANT=26, HEX_INTEGER_CONSTANT=27, INTEGER_CONSTANT=28,
 		STRING_CONSTANT=29, IDENT=30, COMMENT=31, WS=32;
 	public static final int
-		RULE_schema = 0, RULE_schema_ele = 1, RULE_struct_decl = 2, RULE_interface_decl = 3, 
-		RULE_table_decl = 4, RULE_enum_decl = 5, RULE_field_decl = 6, RULE_foreign_decl = 7, 
-		RULE_key_decl = 8, RULE_enum_value_empty = 9, RULE_enum_value_assigned = 10, 
-		RULE_type_ = 11, RULE_type_ele = 12, RULE_ref = 13, RULE_key = 14, RULE_metadata = 15, 
-		RULE_ident_with_opt_single_value = 16, RULE_minus_ident = 17, RULE_single_value = 18, 
-		RULE_enum_number = 19, RULE_ns_ident = 20, RULE_identifier = 21, RULE_leading_comment = 22, 
+		RULE_schema = 0, RULE_schema_ele = 1, RULE_struct_decl = 2, RULE_interface_decl = 3,
+		RULE_table_decl = 4, RULE_enum_decl = 5, RULE_field_decl = 6, RULE_foreign_decl = 7,
+		RULE_key_decl = 8, RULE_enum_value_empty = 9, RULE_enum_value_assigned = 10,
+		RULE_type_ = 11, RULE_type_ele = 12, RULE_ref = 13, RULE_key = 14, RULE_metadata = 15,
+		RULE_ident_with_opt_single_value = 16, RULE_minus_ident = 17, RULE_single_value = 18,
+		RULE_enum_number = 19, RULE_ns_ident = 20, RULE_identifier = 21, RULE_leading_comment = 22,
 		RULE_suffix_comment = 23;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"schema", "schema_ele", "struct_decl", "interface_decl", "table_decl", 
-			"enum_decl", "field_decl", "foreign_decl", "key_decl", "enum_value_empty", 
-			"enum_value_assigned", "type_", "type_ele", "ref", "key", "metadata", 
-			"ident_with_opt_single_value", "minus_ident", "single_value", "enum_number", 
+			"schema", "schema_ele", "struct_decl", "interface_decl", "table_decl",
+			"enum_decl", "field_decl", "foreign_decl", "key_decl", "enum_value_empty",
+			"enum_value_assigned", "type_", "type_ele", "ref", "key", "metadata",
+			"ident_with_opt_single_value", "minus_ident", "single_value", "enum_number",
 			"ns_ident", "identifier", "leading_comment", "suffix_comment"
 		};
 	}
@@ -43,18 +43,18 @@ public class CfgParser extends Parser {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'<'", "'>'", "'struct'", "'interface'", "'table'", "'enum'", "'list'", 
-			"'map'", null, "'->'", "'=>'", "'='", "'('", "')'", "'['", "']'", "'}'", 
+			null, "'<'", "'>'", "'struct'", "'interface'", "'table'", "'enum'", "'list'",
+			"'map'", null, "'->'", "'=>'", "'='", "'('", "')'", "'['", "']'", "'}'",
 			"'.'", "','", "':'", "'+'", "'-'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, null, "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST", "TMAP", 
-			"TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", "RC", "DOT", 
-			"COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", "BOOL_CONSTANT", 
-			"FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", "STRING_CONSTANT", 
+			null, null, null, "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST", "TMAP",
+			"TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", "RC", "DOT",
+			"COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", "BOOL_CONSTANT",
+			"FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", "STRING_CONSTANT",
 			"IDENT", "COMMENT", "WS"
 		};
 	}
@@ -141,14 +141,14 @@ public class CfgParser extends Parser {
 			setState(51);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,0,_ctx);
-			while ( _alt!=2 && _alt!= ATN.INVALID_ALT_NUMBER ) {
+			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
 					setState(48);
 					schema_ele();
 					}
-					} 
+					}
 				}
 				setState(53);
 				_errHandler.sync(this);
@@ -325,7 +325,7 @@ public class CfgParser extends Parser {
 			setState(82);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,5,_ctx);
-			while ( _alt!=2 && _alt!= ATN.INVALID_ALT_NUMBER ) {
+			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					setState(80);
@@ -344,7 +344,7 @@ public class CfgParser extends Parser {
 						}
 						break;
 					}
-					} 
+					}
 				}
 				setState(84);
 				_errHandler.sync(this);
@@ -444,7 +444,7 @@ public class CfgParser extends Parser {
 			metadata();
 			setState(102);
 			match(LC_COMMENT);
-			setState(104); 
+			setState(104);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -460,10 +460,10 @@ public class CfgParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(106); 
+				setState(106);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
-			} while ( _alt!=2 && _alt!= ATN.INVALID_ALT_NUMBER );
+			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 			setState(111);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -575,7 +575,7 @@ public class CfgParser extends Parser {
 			metadata();
 			setState(126);
 			match(LC_COMMENT);
-			setState(130); 
+			setState(130);
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -609,10 +609,10 @@ public class CfgParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(132); 
+				setState(132);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,12,_ctx);
-			} while ( _alt!=2 && _alt!= ATN.INVALID_ALT_NUMBER );
+			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 			setState(137);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -718,7 +718,7 @@ public class CfgParser extends Parser {
 			switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
 			case 1:
 				{
-				setState(153); 
+				setState(153);
 				_errHandler.sync(this);
 				_alt = 1;
 				do {
@@ -734,15 +734,15 @@ public class CfgParser extends Parser {
 					default:
 						throw new NoViableAltException(this);
 					}
-					setState(155); 
+					setState(155);
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,15,_ctx);
-				} while ( _alt!=2 && _alt!= ATN.INVALID_ALT_NUMBER );
+				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 				}
 				break;
 			case 2:
 				{
-				setState(158); 
+				setState(158);
 				_errHandler.sync(this);
 				_alt = 1;
 				do {
@@ -758,10 +758,10 @@ public class CfgParser extends Parser {
 					default:
 						throw new NoViableAltException(this);
 					}
-					setState(160); 
+					setState(160);
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,16,_ctx);
-				} while ( _alt!=2 && _alt!= ATN.INVALID_ALT_NUMBER );
+				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 				}
 				break;
 			}
@@ -1135,7 +1135,7 @@ public class CfgParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_type_; }
-	 
+
 		public Type_Context() { }
 		public void copyFrom(Type_Context ctx) {
 			super.copyFrom(ctx);

@@ -1,7 +1,7 @@
 {
   "name": "cfg-support",
   "displayName": "cfg-support",
-  "description": "VSCode extension for .cfg files with syntax highlighting, go-to-definition, go-to-references, outline",
+  "description": "CFG syntax highlighting, navigation, references and outline",
   "version": "1.3.0",
   "publisher": "thyai",
   "engines": {
@@ -127,11 +127,12 @@
     "webpack": "webpack --mode production",
     "webpack-dev": "webpack --mode development",
     "watch": "webpack --mode development --watch",
-    "pretest": "npm run webpack-dev && npm run lint",
+    "pretest": "npm run generate-parser && npm run check-grammar && npm run webpack-dev && npm run lint && tsc -p test/tsconfig.json",
     "lint": "eslint src --ext ts",
-    "test": "node ./dist/test/runTest.js",
+    "test": "node test/run.cjs",
     "package": "npm run webpack && vsce package",
-    "generate-parser": "npx antlr-ng src/grammar/Cfg.g4 -o src/grammar -v true -l false -D language=TypeScript",
+    "generate-parser": "node scripts/sync-grammar.cjs && antlr-ng src/grammar/Cfg.g4 -o src/grammar -v true -l false -D language=TypeScript && node scripts/sync-grammar.cjs --normalize",
+    "check-grammar": "node scripts/sync-grammar.cjs --check",
     "postinstall": "npm run generate-parser"
   },
   "devDependencies": {

@@ -2,7 +2,7 @@ local cfg = require "cfg._cfgs"
 
 ---@class cfg.equip.jewelry_suit
 ---@field suitID number , 饰品套装ID
----@field ename string 
+---@field ename string
 ---@field name text , 策划用名字
 ---@field ability1 number , 套装属性类型1（装备套装中的两件时增加的属性）
 ---@field ability1Value number , 套装属性1
@@ -17,7 +17,7 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.equip.jewelry_suit
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil,
     'suitID', -- int, 饰品套装ID
     'ename', -- str
     'name', -- text, 策划用名字

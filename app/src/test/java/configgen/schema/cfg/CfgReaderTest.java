@@ -32,6 +32,16 @@ class CfgReaderTest {
     }
 
     @Test
+    void rejectsRemovedObjectReferenceSyntax() {
+        for (String target : List.of("::items", "@Owner::items", "other[id]::items")) {
+            String schema = "struct Use { id:int ->" + target + "; }";
+            assertThrows(CfgSyntaxException.class, () -> CfgReader.parse(schema), target);
+        }
+        String schema = "struct Use { key:Key; ->item:[key.id] ->other; }";
+        assertThrows(CfgSyntaxException.class, () -> CfgReader.parse(schema));
+    }
+
+    @Test
     void parseEnumTable() {
         String str = """
                 table ability[id] (enum='name') {

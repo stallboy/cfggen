@@ -1,8 +1,8 @@
-
+using System;
 using System.Collections;
-
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-
+using System.Linq;
 using System.Text;
 
 namespace Config
@@ -39,14 +39,12 @@ namespace Config
         }
         public sealed record MissingSymbol(string Table, string Symbol, object Key) : LoadError;
         public sealed record UnknownVariant(string Union, string Tag) : LoadError;
-        public sealed record SchemaMismatch(string Pack) : LoadError;
         public sealed record UnsupportedVersion(int Version, int Supported) : LoadError;
         public sealed record OutOfBounds(int Length, int Remaining) : LoadError;
         public sealed record UnconsumedBytes(int Remaining) : LoadError;
         public sealed record InvalidCount(int Count, int MinimumBytes, int Remaining) : LoadError;
         public sealed record InvalidPoolIndex(string Pool, int Index, int Size) : LoadError;
         public sealed record LanguageCountMismatch(string Language, int Expected, int Actual) : LoadError;
-        public sealed record UnsupportedSchemaTag(int Tag) : LoadError;
         public sealed record MissingBlock(string Block) : LoadError;
         public sealed record MissingPackageName() : LoadError;
         public sealed record InvalidPackageName(string Name) : LoadError;
@@ -57,6 +55,7 @@ namespace Config
         public sealed record ForeignLanguageResource(string Pack, string ResourcePack) : LoadError;
         public sealed record EmptyLanguageResource(string Pack) : LoadError;
         public sealed record UnexpectedLanguageBlock(string Block) : LoadError;
+        public sealed record UnknownTableBlock(string Pack, string Block) : LoadError;
     }
 
     public sealed class ConfigException : Exception
@@ -87,14 +86,13 @@ namespace Config
         public void ChangedSymbolId(string table, string symbol, object expected, object actual, IReadOnlyList<string> packs) => Add(new LoadError.ChangedSymbolId(table, symbol, expected, actual, packs));
         public void MissingSymbol(string table, string symbol, object key) => Add(new LoadError.MissingSymbol(table, symbol, key));
         public ConfigException UnknownVariant(string union, string tag) => Fail(new LoadError.UnknownVariant(union, tag));
-        public void SchemaMismatch(string pack) => Add(new LoadError.SchemaMismatch(pack));
+        public void UnknownTableBlock(string pack, string block) => Add(new LoadError.UnknownTableBlock(pack, block));
         internal ConfigException UnsupportedVersion(int version, int supported) => Fail(new LoadError.UnsupportedVersion(version, supported));
         internal ConfigException OutOfBounds(int length, int remaining) => Fail(new LoadError.OutOfBounds(length, remaining));
         internal ConfigException UnconsumedBytes(int remaining) => Fail(new LoadError.UnconsumedBytes(remaining));
         internal ConfigException InvalidCount(int count, int minimumBytes, int remaining) => Fail(new LoadError.InvalidCount(count, minimumBytes, remaining));
         internal ConfigException InvalidPoolIndex(string pool, int index, int size) => Fail(new LoadError.InvalidPoolIndex(pool, index, size));
         internal ConfigException LanguageCountMismatch(string language, int expected, int actual) => Fail(new LoadError.LanguageCountMismatch(language, expected, actual));
-        internal ConfigException UnsupportedSchemaTag(int tag) => Fail(new LoadError.UnsupportedSchemaTag(tag));
         internal ConfigException MissingBlock(string block) => Fail(new LoadError.MissingBlock(block));
         internal ConfigException MissingPackageName() => Fail(new LoadError.MissingPackageName());
         internal void InvalidPackageName(string name) => Add(new LoadError.InvalidPackageName(name));

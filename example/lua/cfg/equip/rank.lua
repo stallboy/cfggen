@@ -15,7 +15,7 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.equip.rank
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil,
     'rankID', -- int, 稀有度
     'rankName', -- str, 程序用名字
     'rankShowName' -- str, 显示名称

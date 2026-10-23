@@ -15,7 +15,7 @@ func createTaskCompleteconditionConditionAnd(stream *Stream) *TaskCompletecondit
 }
 
 func (t *TaskCompleteconditionConditionAnd) String() string {
-    return fmt.Sprintf("TaskCompleteconditionConditionAnd{cond1=%v, cond2=%v}", fmt.Sprintf("%v", t.cond1), fmt.Sprintf("%v", t.cond2))
+    return fmt.Sprintf("TaskCompleteconditionConditionAnd{cond1=%v, cond2=%v}", t.cond1, t.cond2)
 }
 
 //getters

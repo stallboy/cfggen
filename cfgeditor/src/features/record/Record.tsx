@@ -22,6 +22,7 @@ import {invalidateAllExceptLayout} from "@/services/queryClient.ts";
 import {queryKeys, removeEditLayoutCache} from "@/services/queryKeys.ts";
 import {EntityNode} from "@/flow/FlowGraph.tsx";
 import {NEW_RECORD_ID, SchemaTableType} from "@/domain/schema.ts";
+import {encodeEditorRecord} from '@/domain/editorValueEncoding';
 import {QueryGate} from "@/app/QueryGate.tsx";
 
 
@@ -34,9 +35,10 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {t} = useTranslation();
 
     const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, JSONObject>({
-        mutationFn: (jsonObject: JSONObject) => addOrUpdateRecord(server, curTableId, jsonObject),
+        mutationFn: async (jsonObject: JSONObject) => addOrUpdateRecord(server, curTableId, encodeEditorRecord(schema, curTable, jsonObject)),
 
         onError: (error) => {
+            session.onCommitFailure();
             notification.error({
                 title: `addOrUpdateRecord  ${curTableId}  err: ${error.toString()}`,
                 placement: 'topRight', duration: 4
@@ -57,6 +59,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                     navigate(navTo('record', curTableId, editResult.id, true));
                 }
             } else {
+                session.onCommitFailure();
                 notification.warning({
                     title: `addOrUpdateRecord ${curTableId} ${editResult.resultCode}`,
                     placement: 'topRight',

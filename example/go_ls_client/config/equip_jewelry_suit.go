@@ -35,7 +35,7 @@ func createEquipJewelry_suit(stream *Stream) *EquipJewelry_suit {
 }
 
 func (t *EquipJewelry_suit) String() string {
-    return fmt.Sprintf("EquipJewelry_suit{suitID=%v, ename=%v, name=%v, ability1=%v, ability1Value=%v, ability2=%v, ability2Value=%v, ability3=%v, ability3Value=%v, suitList=%v}", t.suitID, t.ename, t.name, t.ability1, t.ability1Value, t.ability2, t.ability2Value, t.ability3, t.ability3Value, fmt.Sprintf("%v", t.suitList))
+    return fmt.Sprintf("EquipJewelry_suit{suitID=%v, ename=%v, name=%v, ability1=%v, ability1Value=%v, ability2=%v, ability2Value=%v, ability3=%v, ability3Value=%v, suitList=%v}", t.suitID, t.ename, t.name, t.ability1, t.ability1Value, t.ability2, t.ability2Value, t.ability3, t.ability3Value, t.suitList)
 }
 
 //entries

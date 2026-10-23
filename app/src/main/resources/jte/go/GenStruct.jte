@@ -70,7 +70,7 @@ func (t *${className}) String() string {
     @if (fields.isEmpty())
     return "${className}{}"
     @else
-    return fmt.Sprintf("${className}{${fields.stream().map(f -> lower1(f.name()) + "=%v").collect(java.util.stream.Collectors.joining(", "))}}", ${fields.stream().map(f -> StructModel.toStringField(f)).collect(java.util.stream.Collectors.joining(", "))})
+    return fmt.Sprintf("${className}{${fields.stream().map(f -> lower1(f.name()) + "=%v").collect(java.util.stream.Collectors.joining(", "))}}", ${fields.stream().map(f -> "t." + lower1(f.name())).collect(java.util.stream.Collectors.joining(", "))})
     @endif
 }
 
@@ -95,56 +95,35 @@ var (
     @endfor
 @endif
 @if (!structural.foreignKeys().isEmpty())
-    <%--list ref 和 map ref--%>
-    @for(ForeignKeySchema fk : structural.foreignKeys())
-        !{FieldSchema keyShema = fk.key().fieldSchemas().getFirst();}
-        @if(keyShema.type() instanceof FieldType.FMap)
-            @template.go.GenMapRef(name = name, foreignKeySchema = fk)
-        @endif
-        @if (keyShema.type() instanceof FieldType.FList)
-            @template.go.GenListRef(name = name, foreignKeySchema = fk)
-        @endif
-    @endfor
     @for(ForeignKeySchema fk : structural.foreignKeys())
         !{
             var RefName = model.refName(fk);
             var refName = lower1(RefName);
             var refType = model.refType(fk);
-            GoName refTbName = new GoName(fk.refTableSchema());
-            var refTableClassName = refTbName.className;
+            var refTableClassName = new GoName(fk.refTableSchema()).className;
             var fieldType = fk.key().fieldSchemas().getFirst().type();
-            var refKey = fk.refKey();
-            var keyFields = fk.key().fieldSchemas();
-            var keyFieldCount = keyFields.size();
-
-            String getFuncName = null;
-            if (refKey instanceof RefKey.RefPrimary) {
-                if (!(fieldType instanceof FMap || fieldType instanceof FList)) {
-                    getFuncName = model.GetFuncName(fk.key(), true);
-                }
-            } else if (refKey instanceof RefKey.RefList) {
-                getFuncName = "GetAllBy" + upper1(fk.key().fieldSchemas().getFirst().name());
-            }
+            var varName = lower1(fk.key().fields().getFirst());
+            var getFuncName = model.refGetter(fk);
         }
-        @if (getFuncName != null)
             func (t *${className}) ${RefName}() ${refType} {
                 if t.${refName} == nil {
-                    @if (keyFieldCount > 1)
-                    !{
-                        var paramVarsInT = keyFields.stream()
-                            .map(f -> "t." + lower1(f.name()))
-                            .collect(java.util.stream.Collectors.joining(", "));
+                    @if (fieldType instanceof FList)
+                    t.${refName} = make(${refType}, len(t.${varName}))
+                    for i, value := range t.${varName} {
+                        t.${refName}[i] = Get${refTableClassName}Mgr().${getFuncName}(value)
                     }
-                    t.${refName} = Get${refTableClassName}Mgr().${getFuncName}(${paramVarsInT})
+                    @elseif (fieldType instanceof FMap)
+                    t.${refName} = make(${refType}, len(t.${varName}))
+                    for key, value := range t.${varName} {
+                        t.${refName}[key] = Get${refTableClassName}Mgr().${getFuncName}(value)
+                    }
                     @else
-                    !{var varName = lower1(fk.key().fieldSchemas().getFirst().name());}
-                    t.${refName} = Get${refTableClassName}Mgr().${getFuncName}(t.${varName})
+                    t.${refName} = Get${refTableClassName}Mgr().${getFuncName}(${model.GetParamVarsInV(fk.key(), "t")})
                     @endif
                 }
                 return t.${refName}
             }
 
-        @endif
     @endfor
 @endif
 @if(table!=null)
@@ -164,9 +143,9 @@ var (
         keySchemas.addAll(table.uniqueKeys());
     }
     @for (KeySchema keySchema : keySchemas)
-        @if (keySchema.fieldSchemas().size() > 1)
+        @if (keySchema.fieldSchemas().size() > 1 || StructModel.structKey(keySchema) != null)
             type ${model.keyClassName(keySchema)} struct {
-                @for (FieldSchema field : keySchema.fieldSchemas())
+                @for (FieldSchema field : StructModel.structKey(keySchema) != null ? StructModel.structKey(keySchema).fields() : keySchema.fieldSchemas())
                     ${lower1(field.name())} ${model.type(field.type())}
                 @endfor
             }
@@ -182,11 +161,9 @@ var (
                 ${model.mapName(keySchema)}Map map[${model.keyClassName(keySchema)}]*${name.className}
             @endif
         @endfor
-        @if(table.primaryKey().fieldSchemas().size() > 1)
-            @for (FieldSchema fieldSchema : table.primaryKey().fieldSchemas())
-                ${fieldSchema.name()}MapList map[${model.type(fieldSchema.type())}][]*${className}
-            @endfor
-        @endif
+        @for (FieldSchema fieldSchema : model.reverseFields)
+            ${lower1(fieldSchema.name())}MapList map[${model.reverseKeyType(fieldSchema)}][]*${className}
+        @endfor
     }
 
     func(t *${className}Mgr) GetAll() []*${className} {
@@ -201,7 +178,6 @@ var (
         var paramVars = model.GetParamVars(keySchema);
         var varDefines = model.GetVarDefines(keySchema);
         var getFuncName = model.GetFuncName(keySchema,isPrimaryKey);
-        var IdType = model.keyClassName(keySchema);
         var mapName = model.mapName(keySchema);
         var isSeq = fieldCnt == 1 && fieldSchemas.getFirst().isSeq();
     }
@@ -213,37 +189,38 @@ var (
             return t.${mapName}Arr[${paramVars}]
         }
 
-    @elseif (fieldCnt > 1)
-        func(t *${className}Mgr) ${getFuncName}(${varDefines}) *${className} {
-            return t.${mapName}Map[${IdType}{${paramVars}}]
-        }
-
     @else
         func(t *${className}Mgr) ${getFuncName}(${varDefines}) *${className} {
-            return t.${mapName}Map[${paramVars}]
+            @if (StructModel.structKey(keySchema) != null)
+            if ${paramVars} == nil { return nil }
+            @endif
+            return t.${mapName}Map[${model.keyExpression(keySchema, "")}]
         }
 
     @endif
 
     @endfor
-    @if(table.primaryKey().fieldSchemas().size() > 1)
-        @for(FieldSchema fieldSchema : table.primaryKey().fieldSchemas())
+        @for(FieldSchema fieldSchema : model.reverseFields)
             !{
-                var mapName =fieldSchema.name();
+                var mapName = lower1(fieldSchema.name());
                 var codeGetByFuncName = "GetAllBy" + upper1(fieldSchema.name());
-                var IdType= model.type(fieldSchema.type());
+                var IdType = model.type(fieldSchema.type());
+                var keyType = model.reverseKeyType(fieldSchema);
             }
             func (t *${className}Mgr) ${codeGetByFuncName}(${mapName} ${IdType}) []*${className} {
+                @if (fieldSchema.type() instanceof StructRef && KeySchema.isKeyType(fieldSchema.type()))
+                if ${mapName} == nil { return nil }
+                @endif
                 if t.${mapName}MapList == nil {
-                    t.${mapName}MapList = make(map[${IdType}][]*${className})
+                    t.${mapName}MapList = make(map[${keyType}][]*${className})
                     for _, item := range t.all {
-                        t.${mapName}MapList[item.${mapName}] = append(t.${mapName}MapList[item.${mapName}], item)
+                        key := ${model.reverseKeyExpression(fieldSchema, "item." + mapName)}
+                        t.${mapName}MapList[key] = append(t.${mapName}MapList[key], item)
                     }
                 }
-                return t.${mapName}MapList[${mapName}]
+                return t.${mapName}MapList[${model.reverseKeyExpression(fieldSchema, mapName)}]
             }
         @endfor
-    @endif
     <%--gen Init--%>
     func (t *${className}Mgr) Init(stream *Stream) {
         cnt := int32(stream.ReadCount(1))
@@ -268,16 +245,13 @@ var (
                 var fieldSchemas = keySchema.fieldSchemas();
                 var fieldCnt = fieldSchemas.size();
                 var mapName = model.mapName(keySchema);
-                var IdType = model.keyClassName(keySchema);
                 var paramVarsInV = model.GetParamVarsInV(keySchema, "v");
                 var loopIsSeq = fieldCnt == 1 && fieldSchemas.getFirst().isSeq();
             }
             @if (loopIsSeq)
                 t.${mapName}Arr[${paramVarsInV}] = v
-            @elseif (fieldCnt > 1)
-                t.${mapName}Map[${IdType}{${paramVarsInV}}] = v
             @else
-                t.${mapName}Map[${paramVarsInV}] = v
+                t.${mapName}Map[${model.keyExpression(keySchema, "v.")}] = v
             @endif
             @endfor
             @if (vTable.enumNames() != null)

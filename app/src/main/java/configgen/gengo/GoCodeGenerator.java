@@ -30,6 +30,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
 
     public boolean isLangSwitch;
     private List<String> languageNames;
+    private final Map<TableSchema, Set<String>> reverseFields = new IdentityHashMap<>();
 
     private static final List<String> COPY_FILES = List.of(
             "stream.go",
@@ -50,6 +51,15 @@ public class GoCodeGenerator extends GeneratorWithTag {
         outputFiles = ctx.outputFiles();
         CfgValue cfgValue = ctx.makeValue(tag);
         CfgSchema cfgSchema = cfgValue.schema();
+        reverseFields.clear();
+        ForeachSchema.foreachStructural(owner -> {
+            for (ForeignKeySchema fk : owner.foreignKeys()) {
+                if (fk.refKey() instanceof RefKey.RefList list) {
+                    reverseFields.computeIfAbsent(fk.refTableSchema(), ignored -> new HashSet<>())
+                            .add(list.key().fields().getFirst());
+                }
+            }
+        }, cfgSchema);
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
         languageNames = isLangSwitch ? ctx.nullableLangSwitch().languages() : List.of();
@@ -106,6 +116,14 @@ public class GoCodeGenerator extends GeneratorWithTag {
 
     private CachedIndentPrinter createCode(String fn) {
         return mainCc.get().printer(dstDir.resolve(fn), ENCODING, outputFiles);
+    }
+
+    List<FieldSchema> reverseFields(TableSchema table) {
+        Set<String> names = new LinkedHashSet<>();
+        if (table.primaryKey().fieldSchemas().size() > 1) names.addAll(table.primaryKey().fields());
+        Set<String> requested = reverseFields.getOrDefault(table, Set.of());
+        for (FieldSchema field : table.fields()) if (requested.contains(field.name())) names.add(field.name());
+        return names.stream().map(table::findField).toList();
     }
 
     private void generateInterface(InterfaceSchema sInterface) {

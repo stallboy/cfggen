@@ -28,7 +28,7 @@ func createOtherDrop(stream *Stream) *OtherDrop {
 }
 
 func (t *OtherDrop) String() string {
-    return fmt.Sprintf("OtherDrop{dropid=%v, name=%v, items=%v, testmap=%v}", t.dropid, t.name, fmt.Sprintf("%v", t.items), fmt.Sprintf("%v", t.testmap))
+    return fmt.Sprintf("OtherDrop{dropid=%v, name=%v, items=%v, testmap=%v}", t.dropid, t.name, t.items, t.testmap)
 }
 
 //getters

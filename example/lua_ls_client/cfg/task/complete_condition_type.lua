@@ -15,7 +15,7 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.task.complete_condition_type
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil,
     'id', -- int, 任务完成条件类型（id的范围为1-100）
     'name' -- str, 程序用名字
     )

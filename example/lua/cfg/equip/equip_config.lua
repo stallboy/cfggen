@@ -14,7 +14,7 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.equip.equip_config
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 1, nil, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 1, nil,
     'entry', -- str, 入口，程序填
     'stone_count_for_set', -- int, 形成套装的音石数量
     'draw_protect_name', -- str, 保底策略名称

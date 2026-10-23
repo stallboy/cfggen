@@ -102,8 +102,8 @@ class CsCodeGeneratorTest {
         String module = Files.readString(output.resolve("Config/_loaders/_rootLoader.cs"));
         assertEquals(2, module.lines().filter(line -> line.contains("void _resolve(")).count());
         String processor = Files.readString(output.resolve("Config/Processor.cs"));
-        assertFalse(processor.contains("Ready(DPlain "));
-        assertTrue(processor.contains("Ready(DBundle "));
+        assertFalse(processor.contains("Ready(global::Config.DPlain "));
+        assertTrue(processor.contains("Ready(global::Config.DBundle "));
     }
 
     @Test
@@ -129,7 +129,7 @@ class CsCodeGeneratorTest {
             }
             String pack = Files.readString(config.resolve("ConfigPackage.cs"));
             org.junit.jupiter.api.Assertions.assertEquals(!implicit, pack.contains("using System.IO;"));
-            assertTrue(pack.contains("using System.Text;"));
+            assertFalse(pack.contains("using System.Text;"));
         }
     }
 
@@ -173,6 +173,12 @@ class CsCodeGeneratorTest {
         assertFalse(processor.contains("\"default\""));
         assertFalse(processor.contains("params string[] languages"));
         assertTrue(processor.contains("pack.Block(block)"));
+        assertFalse(processor.contains("FromBase64String"));
+        assertFalse(processor.contains("ValidateSchema"));
+        assertFalse(processor.contains("TableBlocks"));
+        String pack = Files.readString(configDir.resolve("ConfigPackage.cs"));
+        assertFalse(pack.contains("SchemaKey"));
+        assertFalse(pack.contains("ValidateSchema"));
         assertFalse(Files.readString(configDir.resolve("ConfigMgr.cs")).contains("switch"));
     }
 

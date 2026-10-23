@@ -7,6 +7,7 @@ import { CfgReferenceProvider } from './definition/referenceProvider';
 import { FileCache } from './definition/fileCache';
 
 export function activate(context: vscode.ExtensionContext) {
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(document => FileCache.getInstance().remove(document)));
     // 1. 注册语义标记提供者（两层高亮中的第二层）
     const semanticTokensProvider = new SemanticTokensProvider();
     const legend = semanticTokensProvider.getLegend();

@@ -1,1 +1,2 @@
-npx tsx main.ts
+@echo off
+call npm test

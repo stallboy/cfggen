@@ -29,7 +29,7 @@ func createTaskTask(stream *Stream) *TaskTask {
 }
 
 func (t *TaskTask) String() string {
-    return fmt.Sprintf("TaskTask{taskid=%v, name=%v, nexttask=%v, completecondition=%v, exp=%v, testDefaultBean=%v}", t.taskid, fmt.Sprintf("%v", t.name), t.nexttask, fmt.Sprintf("%v", t.completecondition), t.exp, fmt.Sprintf("%v", t.testDefaultBean))
+    return fmt.Sprintf("TaskTask{taskid=%v, name=%v, nexttask=%v, completecondition=%v, exp=%v, testDefaultBean=%v}", t.taskid, t.name, t.nexttask, t.completecondition, t.exp, t.testDefaultBean)
 }
 
 //getters
@@ -57,19 +57,19 @@ func (t *TaskTask) TestDefaultBean() *TaskTestDefaultBean {
     return t.testDefaultBean
 }
 
-func (t *TaskTask) NullableRefTaskid() *TaskTask_extra_exp {
-    if t.nullableRefTaskid == nil {
-        t.nullableRefTaskid = GetTaskTask_extra_expMgr().Get(t.taskid)
+    func (t *TaskTask) NullableRefTaskid() *TaskTask_extra_exp {
+        if t.nullableRefTaskid == nil {
+            t.nullableRefTaskid = GetTaskTask_extra_expMgr().Get(t.taskid)
+        }
+        return t.nullableRefTaskid
     }
-    return t.nullableRefTaskid
-}
 
-func (t *TaskTask) NullableRefNexttask() *TaskTask {
-    if t.nullableRefNexttask == nil {
-        t.nullableRefNexttask = GetTaskTaskMgr().Get(t.nexttask)
+    func (t *TaskTask) NullableRefNexttask() *TaskTask {
+        if t.nullableRefNexttask == nil {
+            t.nullableRefNexttask = GetTaskTaskMgr().Get(t.nexttask)
+        }
+        return t.nullableRefNexttask
     }
-    return t.nullableRefNexttask
-}
 
 type TaskTaskMgr struct {
     all []*TaskTask

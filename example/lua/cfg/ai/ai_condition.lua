@@ -1,7 +1,7 @@
 local cfg = require "cfg._cfgs"
 
 ---@class cfg.ai.ai_condition
----@field iD number 
+---@field iD number
 ---@field desc string , 描述
 ---@field formulaID number , 公式
 ---@field argIList table<number,number> , 参数(int)1
@@ -11,7 +11,7 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.ai.ai_condition
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil,
     'iD', -- int
     'desc', -- str, 描述
     'formulaID', -- int, 公式

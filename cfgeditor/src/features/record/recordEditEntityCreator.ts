@@ -419,6 +419,7 @@ export class RecordEditEntityCreator {
      * 获取原始类型的值（带默认值处理）
      */
     private getPrimitiveValue(fieldValue: unknown, fieldType: string): PrimitiveValue {
+        if (fieldType === 'long' && typeof fieldValue === 'number' && Number.isSafeInteger(fieldValue)) return String(fieldValue);
         if (fieldValue) {
             return fieldValue as PrimitiveValue;
         }
@@ -439,7 +440,8 @@ export class RecordEditEntityCreator {
     ): EntityEditField {
         if (isPrimitiveType(itemTypeId)) {
             // list<primitive> or map<primitive>
-            const v: PrimitiveValue[] = fieldValue ? fieldValue as PrimitiveValue[] : [];
+              const values: PrimitiveValue[] = fieldValue ? fieldValue as PrimitiveValue[] : [];
+              const v = itemTypeId === 'long' ? values.map(value => this.getPrimitiveValue(value, 'long')) : values;
             return {
                 name: sField.name,
                 comment: sField.comment,

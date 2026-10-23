@@ -19,6 +19,14 @@ public class ValueToJson {
     private final CfgValue cfgValue;
     private final Map<RefId, VStruct> refIdToRecordMap;
     private boolean isSaveDefault;
+    private boolean editorLongStrings;
+
+    /** Use decimal strings for long values in the editor protocol. */
+    public static ValueToJson forEditor(CfgValue cfgValue, Map<RefId, VStruct> records) {
+        ValueToJson result = new ValueToJson(cfgValue, records);
+        result.editorLongStrings = true;
+        return result;
+    }
 
     public static String toJsonStr(VStruct record) {
         ValueToJson toJson = new ValueToJson();
@@ -45,7 +53,7 @@ public class ValueToJson {
         return switch (value) {
             case VBool vBool -> vBool.value();
             case VInt vInt -> vInt.value();
-            case VLong vLong -> vLong.value();
+            case VLong vLong -> editorLongStrings ? Long.toString(vLong.value()) : vLong.value();
             case VFloat vFloat -> vFloat.value();
             case VString vStr -> vStr.value();
             case VText vText -> vText.original(); // 用original，因为我们用这个类ValueToJson主要是为了编辑，当保存时需要用原始文本

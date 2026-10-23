@@ -257,7 +257,6 @@ public class CfgSchemaFilterByTag {
     }
 
     private RefErr isForeignKeyIn(ForeignKeySchema fk, Map<String, TableSchema> phase1TableMap) {
-        // 复用已解析的目标表，避免接口实现丢失模块上下文或回退到同名表。
         TableSchema refTable = phase1TableMap.get(fk.refTableNormalized());
 
         if (refTable == null) {

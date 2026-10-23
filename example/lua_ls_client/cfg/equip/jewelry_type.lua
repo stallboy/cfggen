@@ -11,7 +11,7 @@ local cfg = require "cfg._cfgs"
 
 local this = cfg.equip.jewelry_type
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 1, nil, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 1, nil,
     'typeName' -- str, 程序用名字
     )
 

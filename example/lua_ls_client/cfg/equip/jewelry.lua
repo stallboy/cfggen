@@ -21,11 +21,11 @@ local Beans = cfg._beans
 
 local this = cfg.equip.jewelry
 
-local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, { 
-    { 'RefLvlRank', 0, cfg.equip.jewelry_random, 'get', 4 }, 
-    { 'RefJType', 0, cfg.equip.jewelry_type, 'get', 5 }, 
-    { 'NullableRefSuitID', 0, cfg.equip.jewelry_suit, 'get', 6 }, 
-    { 'RefKeyAbility', 0, cfg.equip.ability, 'get', 7 }, }, 
+local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, {
+    { 'RefLvlRank', 0, cfg.equip.jewelry_random, 'get', 4 },
+    { 'RefJType', 0, cfg.equip.jewelry_type, 'get', 5 },
+    { 'NullableRefSuitID', 0, cfg.equip.jewelry_suit, 'get', 6 },
+    { 'RefKeyAbility', 0, cfg.equip.ability, 'get', 7 }, },
     'iD', -- int, 首饰ID
     'name', -- str, 首饰名称
     'iconFile', -- str, 图标ID

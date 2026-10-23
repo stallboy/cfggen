@@ -320,7 +320,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
                             //这里来个优化，加上()直接生成实例，而不是类，注意生成数据时对应不加()
                             ps.println("%s = %s(\"%s\")()", fulln, func, impl.name());
                         } else {
-                            ps.println("%s = %s(\"%s\", %s, %s%s\n    )", fulln, func, impl.name(),
+                            ps.println("%s = %s(\"%s\", %s,%s%s\n    )", fulln, func, impl.name(),
                                     TypeStr.getLuaRefsString(aCtx, impl),
                                     textFieldsStr,
                                     TypeStr.getLuaFieldsString(aCtx, impl));
@@ -351,7 +351,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
                         //这里来个优化，加上()直接生成实例，而不是类，注意生成数据时对应不加()
                         ps.println("%s = %s()()", full, func);
                     } else {
-                        ps.println("%s = %s(%s, %s%s\n    )", full, func,
+                        ps.println("%s = %s(%s,%s%s\n    )", full, func,
                                 TypeStr.getLuaRefsString(aCtx, struct),
                                 textFieldsStr,
                                 TypeStr.getLuaFieldsString(aCtx, struct));
@@ -415,7 +415,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         }
 
         // function mkcfg.table(self, uniqkeys, enumidx, refs, ...)
-        ps.println("local mk = %s._mk.%s(this, %s, %s, %s, %s%s\n    )", pkg, func,
+        ps.println("local mk = %s._mk.%s(this, %s, %s, %s,%s%s\n    )", pkg, func,
                 TypeStr.getLuaUniqKeysString(ctx),
                 TypeStr.getLuaEnumString(ctx),
                 TypeStr.getLuaRefsString(aCtx, table),

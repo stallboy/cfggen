@@ -29,7 +29,7 @@ func createAiAi_action(stream *Stream) *AiAi_action {
 }
 
 func (t *AiAi_action) String() string {
-    return fmt.Sprintf("AiAi_action{iD=%v, desc=%v, formulaID=%v, argIList=%v, argSList=%v}", t.iD, t.desc, t.formulaID, fmt.Sprintf("%v", t.argIList), fmt.Sprintf("%v", t.argSList))
+    return fmt.Sprintf("AiAi_action{iD=%v, desc=%v, formulaID=%v, argIList=%v, argSList=%v}", t.iD, t.desc, t.formulaID, t.argIList, t.argSList)
 }
 
 //getters

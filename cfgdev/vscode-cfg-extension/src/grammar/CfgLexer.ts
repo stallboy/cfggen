@@ -42,16 +42,16 @@ export class CfgLexer extends antlr.Lexer {
     ];
 
     public static readonly literalNames = [
-        null, "'<'", "'>'", "'struct'", "'interface'", "'table'", "'enum'", 
-        "'list'", "'map'", null, "'->'", "'=>'", "'='", "'('", "')'", "'['", 
+        null, "'<'", "'>'", "'struct'", "'interface'", "'table'", "'enum'",
+        "'list'", "'map'", null, "'->'", "'=>'", "'='", "'('", "')'", "'['",
         "']'", "'}'", "'.'", "','", "':'", "'+'", "'-'"
     ];
 
     public static readonly symbolicNames = [
-        null, null, null, "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST", 
-        "TMAP", "TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", 
-        "RC", "DOT", "COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", 
-        "BOOL_CONSTANT", "FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", 
+        null, null, null, "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST",
+        "TMAP", "TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB",
+        "RC", "DOT", "COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT",
+        "BOOL_CONSTANT", "FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT",
         "STRING_CONSTANT", "IDENT", "COMMENT", "WS"
     ];
 
@@ -60,13 +60,13 @@ export class CfgLexer extends antlr.Lexer {
     ];
 
     public static readonly ruleNames = [
-        "T__0", "T__1", "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST", 
-        "TMAP", "TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", 
-        "RC", "DOT", "COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", 
-        "BOOL_CONSTANT", "FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", 
-        "STRING_CONSTANT", "IDENT", "COMMENT", "WS", "FLOATLIT", "DECIMALS", 
-        "EXPONENT", "DECIMAL_DIGIT", "HEXADECIMAL_DIGIT", "SCHAR_SEQUENCE", 
-        "SCHAR", "ESCAPE_SEQUENCE", "SIMPLE_ESCAPE_SEQUENCE", "HEXADECIMAL_ESCAPE_SEQUENCE", 
+        "T__0", "T__1", "STRUCT", "INTERFACE", "TABLE", "ENUM", "TLIST",
+        "TMAP", "TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB",
+        "RC", "DOT", "COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT",
+        "BOOL_CONSTANT", "FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT",
+        "STRING_CONSTANT", "IDENT", "COMMENT", "WS", "FLOATLIT", "DECIMALS",
+        "EXPONENT", "DECIMAL_DIGIT", "HEXADECIMAL_DIGIT", "SCHAR_SEQUENCE",
+        "SCHAR", "ESCAPE_SEQUENCE", "SIMPLE_ESCAPE_SEQUENCE", "HEXADECIMAL_ESCAPE_SEQUENCE",
         "UNICODE_ESCAPE_SEQUENCE",
     ];
 
