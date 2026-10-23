@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,6 +30,51 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 class CsCodeGeneratorTest {
 
     private @TempDir Path tempDir;
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void minusEditorPreservesInterfaceReferencesAndExcludesTaggedFields(boolean editorFields) throws IOException {
+        Files.createDirectory(tempDir.resolve("td"));
+        String editorTag = editorFields ? "(editor)" : "";
+        Context ctx = TestCtx.newContext(tempDir, """
+                table td.buff[id] { id:int; }
+                table td.damagetype[id] { id:int; }
+                table td.hero[id] { id:int; }
+                interface td.Action {
+                    struct ApplyBuff {
+                        buff:int ->buff;
+                        damageType:int ->damagetype;
+                        hero:int ->hero;
+                        editorBuff:int ->buff %s;
+                        note:str %s;
+                    }
+                }
+                """.formatted(editorTag, editorTag), Map.of(
+                "td/buff", "id\nid\n1\n",
+                "td/damagetype", "id\nid\n1\n",
+                "td/hero", "id\nid\n1\n"));
+        Path fullOutput = tempDir.resolve("full");
+        new CsCodeGenerator(new ParameterParser("cs,dir:" + fullOutput)).generate(ctx);
+        String fullCode = Files.readString(fullOutput.resolve("Config/Td/Action/DApplyBuff.cs"));
+        assertTrue(fullCode.contains("int EditorBuff {"));
+        assertTrue(fullCode.contains("RefEditorBuff {"));
+        assertTrue(fullCode.contains("string Note {"));
+
+        Path filteredOutput = tempDir.resolve("filtered");
+        new CsCodeGenerator(new ParameterParser("cs,own:-editor,dir:" + filteredOutput)).generate(ctx);
+        String filteredCode = Files.readString(filteredOutput.resolve("Config/Td/Action/DApplyBuff.cs"));
+
+        for (String field : java.util.List.of("Buff", "DamageType", "Hero")) {
+            assertTrue(filteredCode.contains("int " + field + " {"), field);
+            assertTrue(filteredCode.contains("Ref" + field + " {"), "Ref" + field);
+        }
+        assertEquals(!editorFields, filteredCode.contains("int EditorBuff {"));
+        assertEquals(!editorFields, filteredCode.contains("RefEditorBuff {"));
+        assertEquals(!editorFields, filteredCode.contains("string Note {"));
+        if (!editorFields) {
+            assertEquals(fullCode, filteredCode);
+        }
+    }
 
     @Test
     void extensionsDoNotAddResolveMethodsOrRegistrationState() throws Exception {
