@@ -195,7 +195,9 @@ class CsRuntimeTest {
         rewritePackage(aDir, "bad-pool", blocks -> buffer(blocks.get(".monster")).putInt(20, Integer.MAX_VALUE));
         rewritePackage(aDir, "bad-variant", blocks -> buffer(blocks.get(".holder")).putInt(32, buffer(blocks.get(".other.preset")).getInt(8)));
         rewritePackage(aDir, "bad-single-variant", blocks -> buffer(blocks.get(".only")).putInt(8, buffer(blocks.get(".other.preset")).getInt(8)));
-        rewritePackage(aDir, "bad-schema", blocks -> blocks.put("schema", buffer(new byte[8]).putInt(11).putInt(0).array()));
+        rewritePackage(aDir, "ignored-schema", blocks -> blocks.put("schema", buffer(new byte[8]).putInt(11).putInt(0).array()));
+        rewritePackage(aDir, "no-schema", blocks -> blocks.remove("schema"));
+        rewritePackage(aDir, "malformed-schema", blocks -> blocks.put("schema", new byte[]{1}));
         rewritePackage(aDir, "bad-extra", blocks -> blocks.put(".monster", java.util.Arrays.copyOf(blocks.get(".monster"), blocks.get(".monster").length + 1)));
         rewritePackage(aDir, "bad-unknown-table", blocks -> {
             blocks.put(".unexpected", new byte[]{1});
@@ -314,6 +316,10 @@ class CsRuntimeTest {
                     static void Check(bool condition, [System.Runtime.CompilerServices.CallerLineNumber] int line = 0) { if (!condition) throw new Exception("runtime assertion failed at line " + line); }
                     static void Main(string[] args) {
                         var a = Load(args[0]); var b = Load(args[1]);
+                        foreach (string name in new[] { "ignored-schema", "no-schema", "malformed-schema" }) {
+                            var withoutValidation = Load(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(args[0])!, name + ".bytes"));
+                            Check(DMonster.Get(withoutValidation, 1)!.Power == 20);
+                        }
                         var optional = Load(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(args[0])!, "optional-tools.bytes"));
                         Check(DMonster.Get(optional, 1)!.Power == 20);
                         Check(DHollow.Get(a, 1)!.Values.Count == 2 && DHollow.Get(a, 1)!.Values[0].Calls == 1 && DHollow.Get(a, 1)!.Values[1].Calls == 1);
@@ -359,7 +365,6 @@ class CsRuntimeTest {
                             ("bad-pool", new[] { typeof(LoadError.InvalidPoolIndex) }),
                             ("bad-variant", new[] { typeof(LoadError.UnknownVariant) }),
                             ("bad-single-variant", new[] { typeof(LoadError.UnknownVariant) }),
-                            ("bad-schema", new[] { typeof(LoadError.SchemaMismatch) }),
                             ("bad-extra", new[] { typeof(LoadError.UnconsumedBytes) }),
                             ("bad-unknown-table", new[] { typeof(LoadError.UnknownTableBlock) }),
                             ("bad-indices", new[] { typeof(LoadError.DuplicateUniqueKey), typeof(LoadError.InvalidSeq) }),

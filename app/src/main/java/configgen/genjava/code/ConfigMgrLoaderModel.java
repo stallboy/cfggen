@@ -16,7 +16,6 @@ public class ConfigMgrLoaderModel {
     public final List<TableInfo> tables;
     public final List<String> setAllRefs_FullClassNames;
     public final String languageLiterals;
-    public final String tableLiterals;
     public final List<String> extensionRows = new ArrayList<>();
     public final String relationBinding;
 
@@ -32,8 +31,6 @@ public class ConfigMgrLoaderModel {
         this.relationBinding = cfgValue.schema().references().hasRelations() ? GenRelations.generate(cfg, cfgValue.schema()) : "";
         this.setAllRefs_FullClassNames = setAllRefsInMgrLoader;
         this.languageLiterals = languages.stream().map(s -> "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"")
-                .collect(java.util.stream.Collectors.joining(", "));
-        this.tableLiterals = cfgValue.schema().tableMap().keySet().stream().sorted().map(name -> "\"" + name + "\"")
                 .collect(java.util.stream.Collectors.joining(", "));
 
         tables = new ArrayList<>(cfgValue.vTableMap().size());

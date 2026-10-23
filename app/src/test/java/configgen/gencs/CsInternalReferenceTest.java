@@ -34,6 +34,10 @@ class CsInternalReferenceTest {
         Context context = new Context(data);
         Path project = Files.createDirectories(root.resolve("project"));
         new CsCodeGenerator(new ParameterParser("cs,dir:" + project + (unity ? ",unity" : ""))).generate(context);
+        String processor = Files.readString(project.resolve("Config/Processor.cs"));
+        String relations = processor.substring(processor.indexOf("private static void ResolveRelations"), processor.indexOf("private sealed class RelationResolver"));
+        assertFalse(relations.contains("global::Config.RelationResolver.DPhase"), "Unrelated tables need no relation adapters");
+        assertFalse(relations.contains("resolver.Table(\"named\""));
         new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("base"))).generate(context);
         InternalReferenceFixture.writeInvalidPackages(root.resolve("base/base.bytes"));
         Path mod = Files.createDirectories(root.resolve("mod"));

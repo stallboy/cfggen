@@ -13,12 +13,6 @@ ${model.nsLine()}
 
 public static class Processor
 {
-    private static readonly string Schema = ConfigPackage.SchemaKey(new ConfigReader(Convert.FromBase64String("${model.schemaBase64}")));
-    private static readonly HashSet<string> TableBlocks = new HashSet<string>(StringComparer.Ordinal) {
-        @for(TableSchema table : model.tableSchemas)
-        ".${table.name()}",
-        @endfor
-    };
     @if(!model.languageLiterals.isEmpty())
         private static readonly string[] Languages = { ${model.languageLiterals} };
     @endif
@@ -34,24 +28,19 @@ public static class Processor
     {
         ConfigPackage.ValidateOrder(packages);
         var errors = new LoadErrors();
+        var config = new ConfigMgr();
+        var loaders = NewLoaders(packages, config, errors);
         foreach (var pack in packages) {
-            pack.ValidateSchema(Schema, errors);
             foreach (string block in pack.BlockNames) {
-                if (block.StartsWith(".", StringComparison.Ordinal) && !TableBlocks.Contains(block)) {
+                if (block.StartsWith(".", StringComparison.Ordinal) && !loaders.ContainsKey(block.Substring(1))) {
                     errors.UnknownTableBlock(pack.Name, block);
                 }
             }
         }
         errors.CheckErrors();
-        var config = new ConfigMgr();
-        @for(TableSchema table : model.tableSchemas)
-            !{var sm = model.tableModel(table);}
-            {
-                var rows = ReadTable(packages, "${table.name()}", ${model.fullName(table)}._create,
-                    ${model.fullName(table)}.PrimaryKey, config.${sm.tableField("Origins")}, errors);
-                ${model.fullName(table)}.InitializeAll(rows, errors, config);
-            }
-        @endfor
+        foreach (var load in loaders.Values) {
+            load();
+        }
         errors.CheckErrors();
         @for(TableSchema table : model.tableSchemas)
             @if(HasRef.hasRef(table))
@@ -81,9 +70,21 @@ public static class Processor
         }
     }
 
+    private static Dictionary<string, Action> NewLoaders(ConfigPackage[] packages, ConfigMgr config, LoadErrors errors)
+    {
+        return new Dictionary<string, Action>(StringComparer.Ordinal) {
+            @for(TableSchema table : model.tableSchemas)
+                !{var sm = model.tableModel(table);}
+                ["${table.name()}"] = () => ${model.fullName(table)}.InitializeAll(
+                    ReadTable(packages, "${table.name()}", ${model.fullName(table)}._create,
+                        ${model.fullName(table)}.PrimaryKey, config.${sm.tableField("Origins")}, errors), errors, config),
+            @endfor
+        };
+    }
+
     @if(!model.relations.isEmpty())
-    @template.cs.Relations(model = model)
-    @template.cs.RelationResolver()
+@template.cs.Relations(model = model)
+@template.cs.RelationResolver()
     @endif
 
     @for(Structural structural : model.readyStructs)

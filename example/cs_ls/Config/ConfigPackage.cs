@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Text;
 
 namespace Config
 {
@@ -186,74 +185,5 @@ namespace Config
             return result;
         }
 
-        internal void ValidateSchema(string expected, LoadErrors errors)
-        {
-            var input = Block("schema"); input.SetErrors(errors);
-            string actual = SchemaKey(input); input.RequireEnd();
-            if (expected != actual) {
-                errors.SchemaMismatch(Name);
-            }
-        }
-
-        internal static string SchemaKey(ConfigReader input)
-        {
-            int kind = input.ReadInt32();
-            var result = new StringBuilder(); result.Append(kind).Append(':');
-            if (kind >= 1 && kind <= 6) {
-                return result.ToString();
-            }
-            if (kind == 7) {
-                Part(result, input.ReadString());
-                return result.ToString();
-            }
-            if (kind == 8) {
-                Part(result, SchemaKey(input));
-                return result.ToString();
-            }
-            if (kind == 9) {
-                Part(result, SchemaKey(input));
-                Part(result, SchemaKey(input));
-                return result.ToString();
-            }
-            if (kind == 10) {
-                result.Append(input.ReadBool()).Append(':'); int count = input.ReadCount(); result.Append(count).Append(':');
-                var names = new HashSet<string>();
-                for (int i = 0; i < count; i++) {
-                    string name = input.ReadString();
-                    if (!names.Add(name)) {
-                        input.Errors.DuplicateKey("schema field", name);
-                    }
-                    Part(result, name); Part(result, SchemaKey(input));
-                }
-                return result.ToString();
-            }
-            var entries = new SortedDictionary<string, string>(StringComparer.Ordinal);
-            if (kind == 11 || kind == 12) {
-                bool integer = false;
-                if (kind == 12) {
-                    result.Append(input.ReadBool());
-                    integer = input.ReadBool();
-                    result.Append(integer).Append(':');
-                }
-                int count = input.ReadCount();
-                for (int i = 0; i < count; i++) {
-                    string name = input.ReadString();
-                    string value = kind == 11 ? SchemaKey(input) : integer ? input.ReadInt32().ToString(System.Globalization.CultureInfo.InvariantCulture) : "";
-                    if (!entries.TryAdd(name, value)) {
-                        input.Errors.DuplicateKey("schema symbol", name);
-                    }
-                }
-            } else {
-                throw input.Errors.UnsupportedSchemaTag(kind);
-            }
-            result.Append(entries.Count).Append(':');
-            foreach (var pair in entries) {
-                Part(result, pair.Key);
-                Part(result, pair.Value);
-            }
-            return result.ToString();
-        }
-
-        private static void Part(StringBuilder target, string value) { target.Append(value.Length).Append(':').Append(value); }
     }
 }

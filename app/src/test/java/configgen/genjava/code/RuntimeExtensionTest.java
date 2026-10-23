@@ -154,12 +154,14 @@ class RuntimeExtensionTest {
             ConfigPackage basePack = ConfigPackage.read(root.resolve("base/base.bytes"));
             ConfigPackage modPack = ConfigPackage.read(root.resolve("mod/map.bytes"));
             assertTrue(basePack.blockNames().contains(".flag"), "Known pure enum blocks remain accepted without a loader");
-            var unknownTable = rewritePackage(modPack, blocks -> {
-                blocks.put(".unexpected", new byte[]{1});
-                blocks.put(".monster", new byte[]{1}); // The unknown block must fail before any table is decoded.
-            });
-            assertEquals(List.of(new LoadValueErrs.UnknownTableBlock("map", ".unexpected")),
-                    loadFailure(loading, basePack, unknownTable));
+            for (String block : List.of(".unexpected", ".marker_Entry", ".rank_Detail")) {
+                var unknownTable = rewritePackage(modPack, blocks -> {
+                    blocks.put(block, new byte[]{1});
+                    blocks.put(".monster", new byte[]{1}); // The unknown block must fail before any table is decoded.
+                });
+                assertEquals(List.of(new LoadValueErrs.UnknownTableBlock("map", block)),
+                        loadFailure(loading, basePack, unknownTable));
+            }
             assertSame(b, mgr.getMethod("getMgr").invoke(null));
             var sparseWithTools = rewritePackage(modPack, blocks -> {
                 blocks.keySet().removeIf(name -> name.startsWith("."));

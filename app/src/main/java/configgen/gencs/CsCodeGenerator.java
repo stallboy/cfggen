@@ -77,11 +77,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
                     return line.replace("namespace Config", "namespace " + pkg);
                 });
 
-        var schemaBuffer = new ByteArrayOutputStream();
-        try (var schemaOut = new configgen.genjava.ConfigOutput(schemaBuffer)) {
-            new configgen.genjava.SchemaSerializer(schemaOut).serializeInterface(configgen.genjava.SchemaParser.parsePackage(cfgValue, ctx.nullableLangSwitch()));
-        }
-        generateProcessor(cfgValue, java.util.Base64.getEncoder().encodeToString(schemaBuffer.toByteArray()),
+        generateProcessor(cfgValue,
                 ctx.nullableLangSwitch() == null ? List.of() : ctx.nullableLangSwitch().languages());
         try (var ps = createCode("ConfigPackage.cs")) {
             JteEngine.render("cs/ConfigPackage.jte", Map.of("pkg", pkg, "implicitUsings", implicitUsings), ps);
@@ -153,8 +149,8 @@ public class CsCodeGenerator extends GeneratorWithTag {
         }
     }
 
-    private void generateProcessor(CfgValue cfgValue, String schemaBase64, List<String> languages) {
-        ProcessorModel model = new ProcessorModel(this, cfgValue, schemaBase64, languages);
+    private void generateProcessor(CfgValue cfgValue, List<String> languages) {
+        ProcessorModel model = new ProcessorModel(this, cfgValue, languages);
         try (var ps = createCode("Processor.cs")) {
             JteEngine.render("cs/Processor.jte", model, ps);
         }

@@ -129,7 +129,7 @@ class CsCodeGeneratorTest {
             }
             String pack = Files.readString(config.resolve("ConfigPackage.cs"));
             org.junit.jupiter.api.Assertions.assertEquals(!implicit, pack.contains("using System.IO;"));
-            assertTrue(pack.contains("using System.Text;"));
+            assertFalse(pack.contains("using System.Text;"));
         }
     }
 
@@ -173,6 +173,12 @@ class CsCodeGeneratorTest {
         assertFalse(processor.contains("\"default\""));
         assertFalse(processor.contains("params string[] languages"));
         assertTrue(processor.contains("pack.Block(block)"));
+        assertFalse(processor.contains("FromBase64String"));
+        assertFalse(processor.contains("ValidateSchema"));
+        assertFalse(processor.contains("TableBlocks"));
+        String pack = Files.readString(configDir.resolve("ConfigPackage.cs"));
+        assertFalse(pack.contains("SchemaKey"));
+        assertFalse(pack.contains("ValidateSchema"));
         assertFalse(Files.readString(configDir.resolve("ConfigMgr.cs")).contains("switch"));
     }
 

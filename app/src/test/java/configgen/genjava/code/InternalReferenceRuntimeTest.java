@@ -26,11 +26,16 @@ class InternalReferenceRuntimeTest {
                 struct ConfigRelations { x:int; }
                 table pair[a,b] (json) { a:int (seq); b:int; fixed:ConfigRelations; ->point:[] ->::fixed; }
                 table extended[id] (json,enum='name',javaBase='hand.SymbolBase') { id:int; name:str; }
-                table palette[id] (json) { id:int; ->symbol:[::id] ->extended; }
+                table symbol[id] (json,enum='name') { id:int; name:str; }
+                table palette[id] (json) { id:int; ->symbol:[::id] ->extended; ->pure:[::id] ->symbol; }
+                struct UnrelatedValue { text:str; }
+                table unrelated[id] (json) { id:int; value:UnrelatedValue; }
                 """, StandardOpenOption.APPEND);
         InternalReferenceFixture.write(data, "pair", "{\"a\":0,\"b\":1,\"fixed\":{\"x\":7}}");
         InternalReferenceFixture.write(data, "extended", "{\"id\":1,\"name\":\"On\"}");
+        InternalReferenceFixture.write(data, "symbol", "{\"id\":1,\"name\":\"On\"}");
         InternalReferenceFixture.write(data, "palette", "{\"id\":1}");
+        InternalReferenceFixture.write(data, "unrelated", "{\"id\":1,\"value\":{\"text\":\"plain\"}}");
         Context context = new Context(data);
         Path generated = root.resolve("generated");
         Files.createDirectories(generated.resolve("config"));
@@ -39,6 +44,10 @@ class InternalReferenceRuntimeTest {
         context.outputFiles().finalizeRun();
         assertFalse(Files.exists(generated.resolve("config/$ConfigRelations$.java")),
                 "Relationship binding belongs in the existing loader, without an extra generated class");
+        String loadingCode = Files.readString(generated.resolve("config/ConfigMgrLoader.java"));
+        String relationsCode = loadingCode.substring(loadingCode.indexOf("private static void resolveRelations"));
+        assertFalse(relationsCode.contains("config.Unrelated"), "Unrelated tables and structs need no relation adapters");
+        assertFalse(relationsCode.contains("resolver.table(\"unrelated\""));
         Files.createDirectories(generated.resolve("hand"));
         Files.writeString(generated.resolve("hand/SymbolBase.java"),
                 "package hand; public class SymbolBase extends config.ConfigExtension {}\n");
@@ -90,6 +99,8 @@ class InternalReferenceRuntimeTest {
         assertNull(property(missing, "nullableRefKey"));
         assertSame(innerPhases.getFirst(), property(local, "nullableRefKey"));
         assertSame(property(config, "getExtended", 1), property(property(config, "getPalette", 1), "refSymbol"));
+        assertEquals("On", property(property(property(config, "getPalette", 1), "refPure"), "getName"));
+        assertEquals("plain", property(property(property(config, "getUnrelated", 1), "getValue"), "getText"));
         Object addressed = property(config, "getAddressed", 1);
         Object dispatched = property(config, "getDispatched", 1);
         Object group = ((List<?>) property(dispatched, "getGroups")).getFirst();

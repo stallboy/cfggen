@@ -13,14 +13,17 @@ final class GenRelations {
     private GenRelations() {}
 
     static String generate(GenCfg cfg, CfgSchema schema) {
+        Relations.Model relations = Relations.forLoader(schema);
+        if (relations.types().isEmpty()) return "";
         StringBuilder code = new StringBuilder(
                 "    private static void resolveRelations(ConfigMgr mgr, LoadValueErrs errors) {\n"
-                + "        var resolver = new RelationResolver(errors");
-        for (Relations.Type type : Relations.of(schema)) code.append(",\n").append(adapter(cfg, type));
-        code.append(");\n");
-        for (TableSchema table : schema.tableMap().values()) {
+                + "        var resolver = new RelationResolver(errors);\n");
+        for (Relations.Type type : relations.types()) {
+            code.append(adapter(cfg, type));
+        }
+        for (TableSchema table : relations.tables()) {
             String rows = !GenJavaUtil.needsTableData(table)
-                    ? "java.util.Arrays.asList(" + Name.refType(cfg, table) + ".values())"
+                    ? "Arrays.asList(" + Name.refType(cfg, table) + ".values())"
                     : "mgr._get_" + new NameableName(cfg, table).containerPrefix + "All()"
                     + (table.primaryKey().fields().size() == 1 && table.primaryKey().fieldSchemas().getFirst().isSeq() ? "" : ".values()");
             code.append("        resolver.table(\"").append(table.name()).append("\", ").append(rows).append(");\n");
@@ -34,34 +37,44 @@ final class GenRelations {
                 ? Name.tableDataFullName(cfg, table) : Name.fullName(cfg, owner);
         String fields = owner.fields().stream().map(f -> "row.get" + StringUtil.upper1(f.name()) + "()")
                 .collect(Collectors.joining(", "));
-        String indexes = type.indexes().stream().map(i -> "new RelationResolver.Index(" + i.field() + ", " + ints(i.keys()) + ")")
-                .collect(Collectors.joining(", "));
-        String plans = type.plans().stream().map(GenRelations::plan).collect(Collectors.joining(",\n"));
-        StringBuilder code = new StringBuilder("            new RelationResolver.Type(\"" + owner.fullName() + "\", " + javaType + ".class,\n"
-                + "                value -> { var row = (" + javaType + ") value; return new Object[]{" + fields + "}; },\n"
-                + "                new RelationResolver.Index[]{" + indexes + "},\n"
-                + "                new RelationResolver.Plan[]{" + plans + "},\n"
-                + "                (value, refs) -> {\n");
-        if (!type.references().isEmpty()) code.append("                    var row = (").append(javaType).append(") value;\n");
-        for (int i = 0; i < type.references().size(); i++) {
-            ForeignKeySchema fk = type.references().get(i);
-            code.append("                    row._bind").append(Name.refName(fk)).append("((")
-                    .append(Name.refType(cfg, fk)).append(") refs[").append(i).append("]);\n");
+        StringBuilder code = new StringBuilder("        resolver.type(\"" + owner.fullName() + "\", " + javaType + ".class,\n"
+                + "                row -> new Object[]{" + fields + "})");
+        for (Relations.Index index : type.indexes()) {
+            code.append("\n                .index(").append(index.field()).append(arguments(index.keys())).append(")");
         }
-        return code.append("                })").toString();
+        for (Relations.Plan plan : type.plans()) {
+            ForeignKeySchema fk = plan.reference();
+            code.append("\n                .bind(").append(plan(plan)).append(",\n")
+                    .append("                        (row, ref) -> row._bind").append(Name.refName(fk)).append("((")
+                    .append(Name.refType(cfg, fk)).append(") ref))");
+        }
+        return code.append(";\n").toString();
     }
 
     private static String plan(Relations.Plan plan) {
-        String sources = plan.sources().stream().map(s -> "new RelationResolver.Source(\"" + s.scope() + "\", " + ints(s.fields()) + ")")
-                .collect(Collectors.joining(", "));
-        String steps = plan.steps().stream().map(s -> "new RelationResolver.Step(" + s.field() + ", " + s.kind() + ", " + ints(s.keys()) + ")")
-                .collect(Collectors.joining(", "));
-        return "new RelationResolver.Plan(\"" + plan.root() + "\", " + plan.slot() + ", \"" + plan.reference().name() + "\", "
-                + ((RefKey.RefSimple) plan.reference().refKey()).nullable() + ", new RelationResolver.Source[]{" + sources
-                + "}, \"" + plan.target() + "\", " + ints(plan.recordKey()) + ", new RelationResolver.Step[]{" + steps + "})";
+        StringBuilder code = new StringBuilder("new Plan(\"" + plan.root() + "\", \"" + plan.reference().name() + "\", "
+                + ((RefKey.RefSimple) plan.reference().refKey()).nullable() + ", \"" + plan.target() + "\")");
+        for (Relations.Source source : plan.sources()) {
+            code.append(".source(\"").append(source.scope()).append("\"").append(arguments(source.fields())).append(")");
+        }
+        if (!plan.recordKey().isEmpty()) code.append(".key(").append(ints(plan.recordKey())).append(")");
+        for (Relations.Step step : plan.steps()) {
+            String method = switch (step.kind()) {
+                case 0 -> "field";
+                case 1 -> "list";
+                case 2 -> "map";
+                default -> throw new AssertionError(step.kind());
+            };
+            code.append(".").append(method).append("(").append(step.field()).append(arguments(step.keys())).append(")");
+        }
+        return code.toString();
+    }
+
+    private static String arguments(List<Integer> values) {
+        return values.isEmpty() ? "" : ", " + ints(values);
     }
 
     private static String ints(List<Integer> values) {
-        return "new int[]{" + values.stream().map(String::valueOf).collect(Collectors.joining(", ")) + "}";
+        return values.stream().map(String::valueOf).collect(Collectors.joining(", "));
     }
 }

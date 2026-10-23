@@ -12,8 +12,33 @@ public final class Relations {
     public record Plan(String root, int slot, ForeignKeySchema reference, List<Source> sources,
                        String target, List<Integer> recordKey, List<Step> steps) {}
     public record Type(Structural owner, List<Index> indexes, List<ForeignKeySchema> references, List<Plan> plans) {}
+    public record Model(List<Type> types, List<TableSchema> tables) {}
 
     private Relations() {}
+
+    /** Complete field adapters for tables participating in navigation or list indexing. */
+    public static Model forLoader(CfgSchema schema) {
+        if (!schema.references().hasRelations()) return new Model(List.of(), List.of());
+        List<Type> types = of(schema);
+        Set<Nameable> owners = new HashSet<>();
+        Set<String> targets = new HashSet<>();
+        for (Type type : types) {
+            if (!type.indexes().isEmpty() || !type.plans().isEmpty()) owners.add(type.owner());
+            for (Plan plan : type.plans()) {
+                if (plan.target().startsWith("table:")) targets.add(plan.target().substring(6));
+            }
+        }
+        List<TableSchema> tables = new ArrayList<>();
+        Set<Nameable> included = new HashSet<>();
+        for (TableSchema table : schema.tableMap().values()) {
+            var members = IncludedStructs.findAllIncludedStructs(table).values();
+            if (targets.contains(table.name()) || members.stream().anyMatch(owners::contains)) {
+                tables.add(table);
+                included.addAll(members);
+            }
+        }
+        return new Model(types.stream().filter(type -> included.contains(type.owner())).toList(), List.copyOf(tables));
+    }
 
     public static List<Type> of(CfgSchema schema) {
         List<Type> types = new ArrayList<>();

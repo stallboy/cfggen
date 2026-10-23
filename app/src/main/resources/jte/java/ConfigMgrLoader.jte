@@ -5,13 +5,14 @@ package ${model.pkg};
 import configgen.genjava.ConfigLoader;
 import configgen.genjava.ConfigPackage;
 import configgen.genjava.LoadValueErrs;
+import configgen.genjava.SchemaEnum;
 @if(!model.relationBinding.isEmpty())
 import configgen.genjava.RelationResolver;
+import configgen.genjava.RelationResolver.Plan;
 @endif
 import java.util.*;
 
 public class ConfigMgrLoader {
-    private static final java.util.Set<String> TABLES = java.util.Set.of(${model.tableLiterals});
     @if(!model.languageLiterals.isEmpty())
         private static final String[] LANGUAGES = { ${model.languageLiterals} };
     @endif
@@ -25,18 +26,21 @@ public class ConfigMgrLoader {
     public static ConfigMgr loadPackages(ConfigPackage... packages) {
         ConfigPackage.validateOrder(List.of(packages));
         var errors = new LoadValueErrs();
+        ConfigMgr mgr = new ConfigMgr();
+        var loaders = newLoaders(mgr, errors);
         var expected = ConfigCodeSchema.getPackageSchema();
         for (var pack : packages) {
             pack.validateSchema(expected, errors);
             for (String block : pack.blockNames()) {
-                if (block.startsWith(".") && !TABLES.contains(block.substring(1))) {
-                    errors.unknownTableBlock(pack.name(), block);
+                if (block.startsWith(".")) {
+                    String table = block.substring(1);
+                    if (!loaders.containsKey(table) && !(expected.implementations.get(table) instanceof SchemaEnum symbol && !symbol.isEnumPart)) {
+                        errors.unknownTableBlock(pack.name(), block);
+                    }
                 }
             }
         }
         errors.checkErrors();
-        ConfigMgr mgr = new ConfigMgr();
-        var loaders = newLoaders(mgr, errors);
         for (var pack : packages) {
             String packName = pack.name();
             for (String block : pack.blockNames()) {
