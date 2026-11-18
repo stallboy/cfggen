@@ -1,6 +1,10 @@
 package configgen.data;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -153,92 +157,23 @@ class CellParserFormatTest {
     }
 
     @Test
-    void shouldParseNumericAndBooleanValues() {
-        // Given: 包含数字和布尔值的数据
-        CfgData.DRawSheet sheet = new CfgData.DRawSheet("types.csv", "types", 0,
-                new ArrayList<>(List.of(
-                    new FakeRow(new String[]{"id", "count", "price", "active", "score"}),
-                    new FakeRow(new String[]{"id", "count", "price", "active", "score"}),
-                    new FakeRow(new String[]{"1", "10", "99.99", "true", "8.5"}),
-                    new FakeRow(new String[]{"2", "0", "0.00", "false", "0.0"}),
-                    new FakeRow(new String[]{"3", "-5", "-10.50", "TRUE", "-2.3"})
-                )), new ArrayList<>());
-        CfgData.DTable dt = CfgData.DTable.of("types", new ArrayList<>(List.of(sheet)));
-        CfgDataStat ds = new CfgDataStat();
+    void shouldPreserveQuotedCsvCells(@TempDir Path root) throws Exception {
+        Path file = root.resolve("special.csv");
+        Files.writeString(file, """
+                id,description,path
+                id,description,path
+                1,"say ""hello"", then leave",C:\\Users\\test
+                2,Price < $100,/home/user/data
+                """);
+        var read = new ReadCsv("UTF-8").readCsv(file, file.getFileName(), "special", 0, ',', null);
+        var table = CfgData.DTable.of("special", new ArrayList<>(List.of(read.sheets().getFirst().sheet())));
 
-        // When: 解析单元格
-        HeadParser.parse(dt, ds);
-        CellParser.parse(dt, ds, 2);
+        HeadParser.parse(table, read.stat());
+        CellParser.parse(table, read.stat(), 2);
 
-        // Then: 验证各种数据类型正确解析
-        assertEquals(3, dt.rows().size());
-
-        // 验证第一行
-        List<CfgData.DCell> row1 = dt.rows().get(0);
-        assertEquals("1", row1.get(0).value());
-        assertEquals("10", row1.get(1).value());
-        assertEquals("99.99", row1.get(2).value());
-        assertEquals("true", row1.get(3).value());
-        assertEquals("8.5", row1.get(4).value());
-
-        // 验证第二行
-        List<CfgData.DCell> row2 = dt.rows().get(1);
-        assertEquals("2", row2.get(0).value());
-        assertEquals("0", row2.get(1).value());
-        assertEquals("0.00", row2.get(2).value());
-        assertEquals("false", row2.get(3).value());
-        assertEquals("0.0", row2.get(4).value());
-
-        // 验证第三行（包含负值和大小写布尔值）
-        List<CfgData.DCell> row3 = dt.rows().get(2);
-        assertEquals("3", row3.get(0).value());
-        assertEquals("-5", row3.get(1).value());
-        assertEquals("-10.50", row3.get(2).value());
-        assertEquals("TRUE", row3.get(3).value());
-        assertEquals("-2.3", row3.get(4).value());
-    }
-
-    @Test
-    void shouldHandleCellsWithSpecialCharacters() {
-        // Given: 包含特殊字符的单元格
-        CfgData.DRawSheet sheet = new CfgData.DRawSheet("special.csv", "special", 0,
-                new ArrayList<>(List.of(
-                    new FakeRow(new String[]{"id", "description", "formula", "path"}),
-                    new FakeRow(new String[]{"id", "description", "formula", "path"}),
-                    new FakeRow(new String[]{"1", "Test & Result", "=A1+B1", "C:\\Users\\test"}),
-                    new FakeRow(new String[]{"2", "Price < $100", "SUM(A1:A10)", "/home/user/data"}),
-                    new FakeRow(new String[]{"3", "Email: test@example.com", "", "http://example.com/path"})
-                )), new ArrayList<>());
-        CfgData.DTable dt = CfgData.DTable.of("special", new ArrayList<>(List.of(sheet)));
-        CfgDataStat ds = new CfgDataStat();
-
-        // When: 解析单元格
-        HeadParser.parse(dt, ds);
-        CellParser.parse(dt, ds, 2);
-
-        // Then: 验证特殊字符正确处理
-        assertEquals(3, dt.rows().size());
-
-        // 验证第一行特殊字符
-        List<CfgData.DCell> row1 = dt.rows().get(0);
-        assertEquals("1", row1.get(0).value());
-        assertEquals("Test & Result", row1.get(1).value());
-        assertEquals("=A1+B1", row1.get(2).value());
-        assertEquals("C:\\Users\\test", row1.get(3).value());
-
-        // 验证第二行特殊字符
-        List<CfgData.DCell> row2 = dt.rows().get(1);
-        assertEquals("2", row2.get(0).value());
-        assertEquals("Price < $100", row2.get(1).value());
-        assertEquals("SUM(A1:A10)", row2.get(2).value());
-        assertEquals("/home/user/data", row2.get(3).value());
-
-        // 验证第三行特殊字符
-        List<CfgData.DCell> row3 = dt.rows().get(2);
-        assertEquals("3", row3.get(0).value());
-        assertEquals("Email: test@example.com", row3.get(1).value());
-        assertEquals("", row3.get(2).value());
-        assertEquals("http://example.com/path", row3.get(3).value());
+        assertEquals(List.of(List.of("1", "say \"hello\", then leave", "C:\\Users\\test"),
+                        List.of("2", "Price < $100", "/home/user/data")),
+                table.rows().stream().map(row -> row.stream().map(CfgData.DCell::value).toList()).toList());
     }
 
     @Test

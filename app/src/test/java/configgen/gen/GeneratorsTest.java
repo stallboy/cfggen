@@ -69,33 +69,34 @@ class GeneratorsTest {
     }
 
     @Test
-    void shouldCallProviderCreate_whenRegisteredGeneratorNameProvided() {
-        // Given: 注册一个生成器提供者
-        Generators.addProvider("test2", parameter -> new Generator(parameter) {
+    void shouldReturnTheRegisteredProvidersResult() {
+        Generator expected = new Generator(new ParameterParser("identity")) {
             @Override
             public void generate(configgen.ctx.Context context) {}
+        };
+        var calls = new java.util.concurrent.atomic.AtomicInteger();
+        Generators.addProvider("identity", parameter -> {
+            calls.incrementAndGet();
+            return expected;
         });
 
-        // When: 创建生成器
-        Generator result = Generators.create("test2");
-
-        // Then: 验证生成器创建成功
-        assertNotNull(result);
+        assertSame(expected, Generators.create("identity"));
+        assertEquals(1, calls.get());
     }
 
     @Test
-    void shouldValidateParameters_whenGeneratorCreated() {
-        // Given: 带参数的生成器
-        String arg = "test3";
-        Generators.addProvider("test3", parameter -> new Generator(parameter) {
-            @Override
-            public void generate(configgen.ctx.Context context) {}
+    void shouldConsumeKnownParametersAndRejectUnknownOnes() {
+        var seen = new java.util.ArrayList<String>();
+        Generators.addProvider("validated", parameter -> {
+            seen.add(parameter.get("mode", "default"));
+            return new Generator(parameter) {
+                @Override
+                public void generate(configgen.ctx.Context context) {}
+            };
         });
 
-        // When: 创建生成器
-        Generator result = Generators.create(arg);
-
-        // Then: 验证参数解析和验证
-        assertNotNull(result);
+        assertNotNull(Generators.create("validated,mode:fast"));
+        assertEquals(java.util.List.of("fast"), seen);
+        assertThrows(CliException.class, () -> Generators.create("validated,mode:fast,unknown:value"));
     }
 }

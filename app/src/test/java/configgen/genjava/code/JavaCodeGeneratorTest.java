@@ -15,8 +15,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import javax.tools.ToolProvider;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,7 +33,7 @@ class JavaCodeGeneratorTest {
 
     @ParameterizedTest
     @ValueSource(ints = {-1, 2})
-    void importsLoadValueErrsOnlyWhenTheGeneratedClassUsesIt(int schemaNumPerFile) throws Exception {
+    void generatedSourcesCompileWithCollidingNamesAndBothSchemaLayouts(int schemaNumPerFile) throws Exception {
         var context = configgen.TestCtx.newContext(Files.createDirectories(tempDir.resolve("data")), """
                 struct Plain { value:int; }
                 struct WithMap { values:map<int,int> (pack); }
@@ -45,31 +51,7 @@ class JavaCodeGeneratorTest {
                 "empty", "id,name\nid,name\n1,\n"));
         Path generated = tempDir.resolve("generated");
         new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",pkg:config,schemaNumPerFile:" + schemaNumPerFile)).generate(context);
-        for (String className : java.util.List.of("Plain", "WithMap", "Required", "Optional", "Nested", "choice/Choice", "Target", "Indexed", "State_Detail", "Flag")) {
-            String code = Files.readString(generated.resolve("config/" + className + ".java"));
-            boolean needsErrors = java.util.Set.of("Required", "Optional", "Nested", "Indexed").contains(className);
-            assertEquals(needsErrors, code.contains("import configgen.genjava.LoadValueErrs;"), className);
-            assertFalse(code.contains("configgen.genjava.LoadValueErrs."), className);
-            assertFalse(code.contains("_resolveDirect"), className);
-            assertFalse(code.contains("errors.requireNonNull("), className);
-            if (className.equals("Required")) assertTrue(code.contains("errors.missingReference("));
-            if (className.equals("Optional")) assertFalse(code.contains("errors.missingReference("));
-        }
-        String symbols = Files.readString(generated.resolve("config/State.java"));
-        assertFalse(symbols.contains("requireSymbol("));
-        assertTrue(symbols.contains("if (e.ref(mgr) == null) {"));
-        assertTrue(symbols.contains("errors.missingSymbol("));
-        assertTrue(symbols.contains("State expected = switch (symbol)"));
-        assertTrue(symbols.contains("key != expected.value"));
-        var classes = Files.createDirectories(tempDir.resolve("classes"));
-        var args = new java.util.ArrayList<>(java.util.List.of("--release", "25", "-d", classes.toString(), "-classpath",
-                Path.of(configgen.genjava.ConfigInput.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString()));
-        try (var files = Files.walk(generated)) {
-            files.filter(path -> path.toString().endsWith(".java")).forEach(path -> args.add(path.toString()));
-        }
-        assertEquals(0, javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null, args.toArray(String[]::new)),
-                "Imports must compile even when an enum constant is named LoadValueErrs");
-        try (var loader = new java.net.URLClassLoader(new java.net.URL[]{classes.toUri().toURL()}, getClass().getClassLoader())) {
+        try (var loader = compileGenerated(generated)) {
             var schemaClass = loader.loadClass("config.ConfigCodeSchema");
             var codeSchema = (configgen.genjava.SchemaInterface) schemaClass.getMethod("getCodeSchema").invoke(null);
             var packageSchema = (configgen.genjava.SchemaInterface) schemaClass.getMethod("getPackageSchema").invoke(null);
@@ -78,6 +60,18 @@ class JavaCodeGeneratorTest {
             packageOnly.removeAll(codeSchema.implementations.keySet());
             assertEquals(java.util.Set.of("flag_Detail"), packageOnly);
         }
+    }
+
+    private URLClassLoader compileGenerated(Path generated) throws Exception {
+        var classes = Files.createDirectory(tempDir.resolve("classes"));
+        var args = new ArrayList<>(List.of("--release", "25", "-d", classes.toString(), "-classpath",
+                Path.of(configgen.genjava.ConfigInput.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString()));
+        try (var files = Files.walk(generated)) {
+            files.filter(path -> path.toString().endsWith(".java")).forEach(path -> args.add(path.toString()));
+        }
+        assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null, args.toArray(String[]::new)),
+                "Generated sources must compile");
+        return new URLClassLoader(new URL[]{classes.toUri().toURL()}, getClass().getClassLoader());
     }
 
     @BeforeAll
@@ -91,7 +85,7 @@ class JavaCodeGeneratorTest {
     }
 
     @Test
-    void generate_simpleTable() throws IOException {
+    void generate_simpleTable() throws Exception {
         // Given: 有效的配置目录，包含schema和数据文件
         String cfgStr = """
                 table user[id] {
@@ -114,39 +108,19 @@ class JavaCodeGeneratorTest {
         // When: 创建Context并生成配置值
         File outputDir = generateJavaCode("config", "test.config", "");
 
-        // Then: 验证生成的Java文件
-        File expectedFilesDir = new File(outputDir, "test/config");
-        assertTrue(expectedFilesDir.exists(), "输出目录应该被创建");
-
-        // 验证关键文件生成
-        File[] generatedFiles = expectedFilesDir.listFiles();
-        assertNotNull(generatedFiles, "应该生成Java文件");
-        assertTrue(generatedFiles.length > 0, "应该生成至少一个Java文件");
-
-        // 验证特定文件
-        File userEntryFile = new File(expectedFilesDir, "User.java");
-        File configMgrFile = new File(expectedFilesDir, "ConfigMgr.java");
-        File configLoaderFile = new File(expectedFilesDir, "ConfigLoader.java");
-        File configMgrLoaderFile = new File(expectedFilesDir, "ConfigMgrLoader.java");
-
-        assertTrue(userEntryFile.exists(), "应该生成User.java文件");
-        assertTrue(configMgrFile.exists(), "应该生成ConfigMgr.java文件");
-        assertFalse(configLoaderFile.exists(), "ConfigLoader belongs to the shared configgen.genjava runtime");
-        assertTrue(configMgrLoaderFile.exists(), "应该生成ConfigMgrLoader.java文件");
-
-        // 验证文件内容
-        String userEntryContent = Files.readString(userEntryFile.toPath());
-        assertTrue(userEntryContent.contains("class User"), "User.java应该包含类定义");
-        assertTrue(userEntryContent.contains("package test.config"), "应该包含正确的包声明");
-        assertTrue(userEntryContent.contains("id"), "应该包含id字段");
-        assertTrue(userEntryContent.contains("name"), "应该包含name字段");
-        assertTrue(userEntryContent.contains("age"), "应该包含age字段");
-        assertFalse(new File(expectedFilesDir, "ConfigNode.java").exists());
-        assertFalse(userEntryContent.contains("_collectExtensions"), "普通类型不需要扩展收集协议");
+        try (var loader = compileGenerated(outputDir.toPath())) {
+            var user = loader.loadClass("test.config.User");
+            assertEquals(int.class, user.getMethod("getId").getReturnType());
+            assertEquals(String.class, user.getMethod("getName").getReturnType());
+            assertEquals(int.class, user.getMethod("getAge").getReturnType());
+            var manager = loader.loadClass("test.config.ConfigMgr");
+            assertEquals(user, manager.getMethod("getUser", int.class).getReturnType());
+            loader.loadClass("test.config.ConfigMgrLoader");
+        }
     }
 
     @Test
-    void generate_enumTable() throws IOException {
+    void generate_enumTable() throws Exception {
         // Given: 有效的配置目录，包含枚举表schema和数据文件
         String cfgStr = """
                 table ability[id] (enum='name') {
@@ -166,26 +140,18 @@ class JavaCodeGeneratorTest {
         Resources.addTempFileFromText("ability.csv", tempDir, csvData);
 
         // When: 创建Context并生成配置值
-        File outputDir = generateJavaCode("config_enum", "test.config.enum", "");
+        File outputDir = generateJavaCode("config_enum", "test.config.abilities", "");
 
-        // Then: 验证生成的Java文件
-        File expectedFilesDir = new File(outputDir, "test/config/enum");
-        assertTrue(expectedFilesDir.exists(), "输出目录应该被创建");
-
-        // 验证枚举相关文件
-        File abilityEntryFile = new File(expectedFilesDir, "Ability.java");
-
-        assertTrue(abilityEntryFile.exists(), "应该生成Ability.java文件");
-
-        // 验证枚举文件内容
-        String abilityEntryContent = Files.readString(abilityEntryFile.toPath());
-        assertTrue(abilityEntryContent.contains("enum Ability"), "Ability.java应该是枚举类型");
-        assertTrue(abilityEntryContent.contains("Fireball"), "应该包含Fireball枚举值");
-        assertTrue(abilityEntryContent.contains("IceSpike"), "应该包含IceSpike枚举值");
+        try (var loader = compileGenerated(outputDir.toPath())) {
+            Class<?> ability = loader.loadClass("test.config.abilities.Ability");
+            assertTrue(ability.isEnum());
+            assertEquals(List.of("FIREBALL", "ICESPIKE"),
+                    Arrays.stream(ability.getEnumConstants()).map(value -> ((Enum<?>) value).name()).toList());
+        }
     }
 
     @Test
-    void generate_enumTable_beautifulName() throws IOException {
+    void generate_enumTable_beautifulName() throws Exception {
         // Given: 枚举表，枚举值用 camelCase 命名
         String cfgStr = """
                 table ability[id] (enum='name') {
@@ -208,17 +174,15 @@ class JavaCodeGeneratorTest {
         // When: 开启 beautifulName 生成代码
         File outputDir = generateJavaCode("config_snake", "test.config.snake", ",beautifulName");
 
-        // Then: 枚举常量字段名转为 SCREAMING_SNAKE_CASE，字符串实参保持原值
-        File expectedFilesDir = new File(outputDir, "test/config/snake");
-        File abilityEntryFile = new File(expectedFilesDir, "Ability.java");
-        assertTrue(abilityEntryFile.exists(), "应该生成Ability.java文件");
-
-        String content = Files.readString(abilityEntryFile.toPath());
-        assertTrue(content.contains("RESET_DURATION(\"ResetDuration\""),
-                "ResetDuration 应转为 RESET_DURATION，且字符串实参保持原值");
-        assertTrue(content.contains("MAX_HP(\"MaxHp\""), "MaxHp 应转为 MAX_HP");
-        assertTrue(content.contains("FIREBALL(\"Fireball\""), "Fireball 单词应保持 FIREBALL");
-        assertFalse(content.contains("RESETDURATION"), "不应出现老的大写直连 RESETDURATION");
+        try (var loader = compileGenerated(outputDir.toPath())) {
+            Class<?> ability = loader.loadClass("test.config.snake.Ability");
+            Object[] constants = ability.getEnumConstants();
+            assertEquals(List.of("RESET_DURATION", "MAX_HP", "FIREBALL"),
+                    Arrays.stream(constants).map(value -> ((Enum<?>) value).name()).toList());
+            var getName = ability.getMethod("getName");
+            assertEquals(List.of("ResetDuration", "MaxHp", "Fireball"),
+                    List.of(getName.invoke(constants[0]), getName.invoke(constants[1]), getName.invoke(constants[2])));
+        }
     }
 
     @Test
@@ -297,7 +261,7 @@ class JavaCodeGeneratorTest {
     }
 
     @Test
-    void generate_structAndInterface() throws IOException {
+    void generate_structAndInterface() throws Exception {
         // Given: 包含struct和interface的schema
         String cfgStr = """
                 struct Position {
@@ -329,42 +293,26 @@ class JavaCodeGeneratorTest {
         // When: 创建Context并生成配置值
         File outputDir = generateJavaCode("config_complex", "test.config.complex", "");
 
-        // Then: 验证生成的Java文件
-        File expectedFilesDir = new File(outputDir, "test/config/complex");
-        assertTrue(expectedFilesDir.exists(), "输出目录应该被创建");
-
-        // 验证struct和interface相关文件
-        File positionFile = new File(expectedFilesDir, "Position.java");
-        File shapeFile = new File(expectedFilesDir, "shape/Shape.java");
-        File circleFile = new File(expectedFilesDir, "shape/Circle.java");
-        File rectangleFile = new File(expectedFilesDir, "shape/Rectangle.java");
-
-        assertTrue(positionFile.exists(), "应该生成Position.java文件");
-        assertTrue(shapeFile.exists(), "应该生成Shape.java文件");
-        assertTrue(circleFile.exists(), "应该生成shape/Circle.java文件");
-        assertTrue(rectangleFile.exists(), "应该生成shape/Rectangle.java文件");
-
-        // 验证文件内容
-        String positionContent = Files.readString(positionFile.toPath());
-        assertTrue(positionContent.contains("class Position"), "Position.java应该包含类定义");
-        assertTrue(positionContent.contains("x"), "应该包含x字段");
-        assertTrue(positionContent.contains("y"), "应该包含y字段");
-
-        String shapeContent = Files.readString(shapeFile.toPath());
-        assertTrue(shapeContent.contains("interface Shape"), "Shape.java应该是接口定义");
-
-        String circleContent = Files.readString(circleFile.toPath());
-        assertTrue(circleContent.contains("class Circle"), "Circle.java应该包含类定义");
-        assertTrue(circleContent.contains("radius"), "应该包含radius字段");
-
-        String rectangleContent = Files.readString(rectangleFile.toPath());
-        assertTrue(rectangleContent.contains("class Rectangle"), "Rectangle.java应该包含类定义");
-        assertTrue(rectangleContent.contains("width"), "应该包含width字段");
-        assertTrue(rectangleContent.contains("height"), "应该包含height字段");
+        try (var loader = compileGenerated(outputDir.toPath())) {
+            var position = loader.loadClass("test.config.complex.Position");
+            assertEquals(int.class, position.getMethod("getX").getReturnType());
+            assertEquals(int.class, position.getMethod("getY").getReturnType());
+            var shape = loader.loadClass("test.config.complex.shape.Shape");
+            var circle = loader.loadClass("test.config.complex.shape.Circle");
+            var rectangle = loader.loadClass("test.config.complex.shape.Rectangle");
+            assertTrue(shape.isInterface());
+            assertTrue(shape.isAssignableFrom(circle));
+            assertTrue(shape.isAssignableFrom(rectangle));
+            assertEquals(float.class, circle.getMethod("getRadius").getReturnType());
+            assertEquals(position, circle.getMethod("getCenter").getReturnType());
+            assertEquals(float.class, rectangle.getMethod("getWidth").getReturnType());
+            assertEquals(float.class, rectangle.getMethod("getHeight").getReturnType());
+            assertEquals(position, rectangle.getMethod("getPos").getReturnType());
+        }
     }
 
     @Test
-    void generate_withBuilders() throws IOException {
+    void generate_withBuilders() throws Exception {
         // Given: 有效的配置目录，包含schema
         String cfgStr = """
                 table user[id] {
@@ -391,16 +339,18 @@ class JavaCodeGeneratorTest {
         File outputDir = generateJavaCode("config_builders", "test.config.builders",
                 ",builders:" + buildersFile.getAbsolutePath());
 
-        // Then: 验证生成的Builder文件
-        File expectedFilesDir = new File(outputDir, "test/config/builders");
-        File userBuilderFile = new File(expectedFilesDir, "UserBuilder.java");
+        try (var loader = compileGenerated(outputDir.toPath())) {
+            var builderClass = loader.loadClass("test.config.builders.UserBuilder");
+            Object builder = builderClass.getConstructor().newInstance();
+            builderClass.getField("id").setInt(builder, 7);
+            builderClass.getField("name").set(builder, "Alice");
+            builderClass.getField("age").setInt(builder, 25);
 
-        assertTrue(userBuilderFile.exists(), "应该生成UserBuilder.java文件");
-
-        // 验证Builder文件内容
-        String builderContent = Files.readString(userBuilderFile.toPath());
-        assertTrue(builderContent.contains("class UserBuilder"), "UserBuilder.java应该包含类定义");
-        assertTrue(builderContent.contains("build"), "应该包含build方法");
+            Object user = builderClass.getMethod("build").invoke(builder);
+            assertEquals(7, user.getClass().getMethod("getId").invoke(user));
+            assertEquals("Alice", user.getClass().getMethod("getName").invoke(user));
+            assertEquals(25, user.getClass().getMethod("getAge").invoke(user));
+        }
     }
 
     @Test

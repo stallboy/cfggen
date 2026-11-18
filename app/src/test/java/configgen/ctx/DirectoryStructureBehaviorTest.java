@@ -1,10 +1,12 @@
 package configgen.ctx;
 
 import configgen.Resources;
+import configgen.TestCtx;
 import configgen.data.ExcelFileInfo;
 import configgen.data.JsonFileInfo;
 import configgen.schema.CfgFileInfo;
 import configgen.util.Logger;
+import configgen.write.AddOrUpdateService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -426,7 +429,7 @@ class DirectoryStructureBehaviorTest {
     }
 
     @Test
-    void shouldReportRootLevelJsonDirEvenWhenModuleDirExists() throws IOException {
+    void shouldAddJsonRecordToExistingRootLevelDirEvenWhenModuleDirExists() throws IOException {
         // 复现 bug：表 skill.buff 的数据放在根级 _skill_buff，同时根目录存在 skill 模块目录。
         // 编辑写入若用「重新推导」会错误落到嵌套 skill/_buff，造成两目录并存、下次启动冲突。
         Path rootLevelDir = tempDir.resolve("_skill_buff");
@@ -435,16 +438,14 @@ class DirectoryStructureBehaviorTest {
 
         Files.createDirectories(tempDir.resolve("skill"));
 
-        DirectoryStructure structure = new DirectoryStructure(tempDir);
+        Context context = TestCtx.newContext(tempDir, "table skill.buff[id] (json) { id:int; }", Map.of());
+        assertEquals(Path.of("_skill_buff"), context.sourceStructure().getJsonTableDir("skill.buff"));
 
-        // 发现阶段记录的真实目录必须是 _skill_buff（不能被推导成 skill/_buff）
-        Path tableDir = structure.getJsonTableDir("skill.buff");
-        assertNotNull(tableDir, "skill.buff 应被发现");
-        assertEquals(Path.of("_skill_buff"), tableDir,
-                "发现目录应为根级 _skill_buff，而非嵌套 skill/_buff");
-
-        // 模拟编辑：按发现目录写入新记录（即修复后 AddOrUpdateService 的行为）
-        Files.writeString(tempDir.resolve(tableDir).resolve("2.json"), "{\"id\": 2}");
+        var result = AddOrUpdateService.addOrUpdateRecord(context, context.makeValue(), "skill.buff", "{\"id\":2}");
+        assertEquals(AddOrUpdateService.AddOrUpdateErrorCode.AddOK, result.errorCode());
+        assertEquals("2", result.recordId());
+        assertTrue(result.errorMessages().isEmpty(), result.errorMessages().toString());
+        assertTrue(Files.isRegularFile(rootLevelDir.resolve("2.json")));
 
         // 重新扫描不得抛冲突——skill/_buff 不应被创建
         DirectoryStructure rescanned = assertDoesNotThrow(() -> new DirectoryStructure(tempDir));

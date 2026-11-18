@@ -33,14 +33,31 @@ class StatTest {
     }
 
     @Test
-    public void merge_exception_if_has_not_integer_field() {
+    public void merge_rejects_an_unrelated_stat_type() {
         StatImpl stat1 = new StatImpl();
         stat1.field1 = 10;
         StatImpl2 stat2 = new StatImpl2();
         stat2.field2 = "aa";
 
-        assertThrows(RuntimeException.class , () -> stat1.merge(stat2));
+        assertThrows(IllegalArgumentException.class, () -> stat1.merge(stat2));
     }
 
+
+    @Test
+    void merge_sums_integer_fields_and_preserves_non_integer_fields() {
+        StatImpl2 target = new StatImpl2();
+        target.field1 = 10;
+        target.field2 = "target";
+        StatImpl2 source = new StatImpl2();
+        source.field1 = 5;
+        source.field2 = "source";
+
+        target.merge(source);
+
+        assertEquals(15, target.field1);
+        assertEquals("target", target.field2);
+        assertEquals(5, source.field1);
+        assertEquals("source", source.field2);
+    }
 
 }

@@ -12,7 +12,7 @@ public class FakeRows {
 
         @Override
         public String cell(int c) {
-            return cells[c];
+            return c < cells.length ? cells[c].trim() : "";
         }
 
         @Override

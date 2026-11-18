@@ -1,6 +1,7 @@
 package configgen.value;
 
 import configgen.Resources;
+import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.data.Source;
@@ -33,6 +34,24 @@ class ValueParserConversionTest {
         Logger.setPrinter(Logger.Printer.outPrinter);
     }
 
+
+    @Test
+    void convertsCsvIntegersFloatsAndBooleans() {
+        var context = TestCtx.newContext(tempDir, """
+                table sample[id] { id:int; count:int; price:float; active:bool; }
+                """, Map.of("sample", """
+                id,count,price,active
+                id,count,price,active
+                1,10,99.5,true
+                2,0,0.00,false
+                3,-5,-10.5,TRUE
+                """));
+
+        var rows = context.makeValue().getTable("sample").valueList();
+        assertEquals(List.of(10, 0, -5), rows.stream().map(row -> ((VInt) row.values().get(1)).value()).toList());
+        assertEquals(List.of(99.5f, 0f, -10.5f), rows.stream().map(row -> ((VFloat) row.values().get(2)).value()).toList());
+        assertEquals(List.of(true, false, true), rows.stream().map(row -> ((VBool) row.values().get(3)).value()).toList());
+    }
 
     @Test
     void shouldConvertComplexJsonStructures() {

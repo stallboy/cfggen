@@ -6,6 +6,7 @@ import configgen.gen.ParameterParser;
 import configgen.gengo.GoCodeGenerator;
 import configgen.gents.TsCodeGenerator;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -23,6 +24,40 @@ import static org.junit.jupiter.api.Assertions.*;
 class OtherBytesRuntimeTest {
     @TempDir Path root;
 
+    @Test
+    void typeScriptConsumerCanLoadTablesAndUseNamedEntries() throws Exception {
+        Context context = TestCtx.newContext(root, """
+                table user[id] { id:int; name:str; }
+                table ability[id] (enum='name') { id:int; name:str; }
+                """, Map.of("user", "id,name\nid,name\n1,Alice\n",
+                "ability", "id,name\nid,name\n1,Fireball\n2,IceSpike\n"));
+        Path project = Files.createDirectory(root.resolve("project"));
+        new TsCodeGenerator(new ParameterParser("ts,dir:" + project)).generate(context);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context);
+        Files.writeString(project.resolve("consumer.ts"), """
+                import {Config} from './Config';
+                import {ConfigPackage, LoadErrors} from './ConfigUtil';
+
+                export function check(bytes: ArrayBuffer): void {
+                    Config.Processor.ProcessPackage(ConfigPackage.Read(bytes), new LoadErrors());
+                    const user: Config.User | undefined = Config.User.Get(1);
+                    const name: string | undefined = user?.Name;
+                    if (name !== 'Alice' || Config.Ability.Fireball.Id !== 1 || Config.Ability.IceSpike.Id !== 2) {
+                        throw new Error('wrong user or ability data');
+                    }
+                }
+                """);
+        compileTypeScript(project, "consumer.ts");
+        Files.writeString(project.resolve("test.cjs"), """
+                const {readFileSync} = require('node:fs');
+                const {join} = require('node:path');
+                const {check} = require('./out/consumer.js');
+                const bytes = readFileSync(join(process.env.CFGGEN_FIXTURE, 'base.bytes'));
+                check(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+                """);
+        run(project, List.of("node", "test.cjs"));
+    }
+
     @ParameterizedTest
     @CsvSource({"ts,false", "ts,true", "go,false", "go,true"})
     void readsPackagesWithSeparatedLanguages(String language, boolean server) throws Exception {
@@ -39,9 +74,7 @@ class OtherBytesRuntimeTest {
         if (language.equals("ts")) {
             new TsCodeGenerator(new ParameterParser("ts,dir:" + project + (server ? ",serverText" : ""))).generate(context);
             if (server) assertFalse(Files.readString(project.resolve("Config.ts")).contains("ReadTextsInPool()"));
-            Path compiler = Path.of(System.getProperty("cfggen.tsc", "../cfgeditor/node_modules/typescript/bin/tsc")).toAbsolutePath();
-            assertTrue(Files.isRegularFile(compiler), "Install cfgeditor dependencies or set -Dcfggen.tsc");
-            run(project, List.of("node", compiler.toString(), "--target", "es2022", "--module", "commonjs", "--strict", "--skipLibCheck", "--outDir", "out", "Config.ts", "ConfigUtil.ts"));
+            compileTypeScript(project, "Config.ts", "ConfigUtil.ts");
             String script = """
                     const fs = require('fs'); const path = require('path');
                     const {Config} = require('./out/Config.js'); const {Loader, ConfigPackage, LoadErrors, TextPoolManager} = require('./out/ConfigUtil.js');
@@ -128,6 +161,15 @@ class OtherBytesRuntimeTest {
         try (var out = new configgen.genjava.ConfigOutput(Files.newOutputStream(root.resolve("pack/bad-text.bytes")))) {
             PackageSerializer.write(out, pack.metadata(), blocks);
         }
+    }
+
+    private void compileTypeScript(Path project, String... sources) throws Exception {
+        Path compiler = Path.of(System.getProperty("cfggen.tsc", "../cfgeditor/node_modules/typescript/bin/tsc")).toAbsolutePath();
+        assertTrue(Files.isRegularFile(compiler), "Install cfgeditor dependencies or set -Dcfggen.tsc");
+        var command = new java.util.ArrayList<>(List.of("node", compiler.toString(), "--target", "es2022",
+                "--module", "commonjs", "--strict", "--skipLibCheck", "--outDir", "out"));
+        command.addAll(List.of(sources));
+        run(project, command);
     }
 
     private void run(Path project, List<String> command) throws Exception {

@@ -6,6 +6,10 @@ import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,15 +140,13 @@ class HeadParserBoundaryTest {
     }
 
     @Test
-    void shouldHandleHeadersWithOnlyWhitespace() {
-        // Given: 只包含空格的表头
-        CfgData.DRawSheet sheet = new CfgData.DRawSheet("whitespace.csv", "whitespace", 0,
-                new ArrayList<>(List.of(
-                    new FakeRow(new String[]{"  ", "\t", "   \t   "}),
-                    new FakeRow(new String[]{"id", "name", "value"})
-                )), new ArrayList<>());
+    void shouldHandleHeadersWithOnlyWhitespace(@TempDir Path root) throws Exception {
+        Path file = root.resolve("whitespace.csv");
+        Files.writeString(file, "  ,\t,   \t   \nid,name,value\n");
+        var read = new ReadCsv("UTF-8").readCsv(file, file.getFileName(), "whitespace", 0, ',', null);
+        var sheet = read.sheets().getFirst().sheet();
         CfgData.DTable dt = CfgData.DTable.of("whitespace", new ArrayList<>(List.of(sheet)));
-        CfgDataStat ds = new CfgDataStat();
+        CfgDataStat ds = read.stat();
 
         // When: 解析表头
         HeadParser.parse(dt, ds);

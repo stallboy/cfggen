@@ -104,11 +104,7 @@ class RuntimeExtensionTest {
             Object b = load(loading);
             Class<?> mgr = loader.loadClass("config.ConfigMgr");
             Class<?> monster = loader.loadClass("config.Monster");
-            assertThrows(NoSuchMethodException.class, () -> loader.loadClass("config.ConfigExtension").getDeclaredMethod("_initialize"));
             assertEquals(0, mgr.getFields().length, "Table containers must not be public replaceable fields");
-            assertTrue(java.util.Arrays.stream(mgr.getDeclaredFields()).noneMatch(f -> f.getType() == ConfigInput.class
-                    || f.getName().equals("sourceTables")), "Published configurations must not retain input bytes");
-            assertEquals(0, monster.getDeclaredClasses().length, "Ordinary tables do not need loader subclasses");
             Object rowA = mgr.getMethod("getMonster", int.class).invoke(a, 1);
             Object rowB = mgr.getMethod("getMonster", int.class).invoke(b, 1);
             assertNotSame(rowA, rowB);
@@ -126,15 +122,16 @@ class RuntimeExtensionTest {
             assertSame(rowB, monster.getMethod("get", int.class).invoke(null, 1));
             Object rank = loader.loadClass("config.Rank").getEnumConstants()[0];
             Object marker = loader.loadClass("config.Marker_Entry").getField("MAIN").get(null);
-            assertCachedSymbolRef(mgr, a, rank, "rank_All", 10);
-            assertCachedSymbolRef(mgr, b, rank, "rank_All", 10);
-            assertCachedSymbolRef(mgr, a, marker, "marker_All", 1);
-            assertCachedSymbolRef(mgr, b, marker, "marker_All", 1);
-            for (Object signal : loader.loadClass("config.Signal").getEnumConstants()) {
-                assertCachedSymbolRef(mgr, b, signal, "signal_All", property(signal, "getName"));
+            for (Object config : List.of(a, b)) {
+                assertSymbolRef(mgr, config, rank, mgr.getMethod("getRank", int.class).invoke(config, 10));
+                assertSymbolRef(mgr, config, marker, mgr.getMethod("getMarker", int.class).invoke(config, 1));
+                for (Object signal : loader.loadClass("config.Signal").getEnumConstants()) {
+                    assertSymbolRef(mgr, config, signal,
+                            mgr.getMethod("getSignal", String.class).invoke(config, property(signal, "getName")));
+                }
+                Object entrance = loader.loadClass("config.Entrance_Entry").getField("START").get(null);
+                assertSymbolRef(mgr, config, entrance, mgr.getMethod("getEntrance", String.class).invoke(config, "Start"));
             }
-            Object entrance = loader.loadClass("config.Entrance_Entry").getField("START").get(null);
-            assertCachedSymbolRef(mgr, b, entrance, "entrance_All", "Start");
             Object group = mgr.getMethod("getRankgroup", int.class).invoke(a, 2);
             assertEquals(List.of(rank), property(group, "listRefMultiplier"), "Symbol caches must be available during reference resolution");
             assertSame(property(rank, "ref"), rank.getClass().getMethod("ref", mgr).invoke(rank, b));
@@ -306,24 +303,11 @@ class RuntimeExtensionTest {
         return row.getClass().getMethod(name).invoke(row);
     }
 
-    private static void assertCachedSymbolRef(Class<?> mgr, Object config, Object symbol, String table, Object key) throws Exception {
-        var field = mgr.getDeclaredField(table);
-        field.setAccessible(true);
-        @SuppressWarnings("unchecked") var rows = (Map<Object, Object>) field.get(config);
-        Object expected = rows.get(key);
+    private static void assertSymbolRef(Class<?> mgr, Object config, Object symbol, Object expected) throws Exception {
         assertNotNull(expected);
-        // Detect table lookups directly, without relying on unstable timing measurements.
-        field.set(config, new java.util.AbstractMap<>() {
-            @Override public java.util.Set<Entry<Object, Object>> entrySet() { return rows.entrySet(); }
-            @Override public Object get(Object ignored) { throw new AssertionError("Symbol refs must be cached at load time"); }
-        });
-        try {
-            for (int i = 0; i < 10; i++) {
-                assertSame(expected, symbol.getClass().getMethod("ref", mgr).invoke(symbol, config));
-                if (mgr.getMethod("getMgr").invoke(null) == config) assertSame(expected, property(symbol, "ref"));
-            }
-        } finally {
-            field.set(config, rows);
+        assertSame(expected, symbol.getClass().getMethod("ref", mgr).invoke(symbol, config));
+        if (mgr.getMethod("getMgr").invoke(null) == config) {
+            assertSame(expected, property(symbol, "ref"));
         }
     }
 

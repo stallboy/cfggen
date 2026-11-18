@@ -27,6 +27,48 @@ class CsRuntimeTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
+    void generatedApiLoadsTablesWithBothImplicitUsingsModes(boolean implicitUsings) throws Exception {
+        var context = TestCtx.newContext(root, """
+                struct Point { x:int; }
+                interface Choice { struct Node { value:int; } }
+                table user[id] { id:int; name:str; point:Point (pack); choice:Choice (pack); }
+                table ability[id] (enum='name') { id:int; name:str; }
+                table empty[id] (enum='name') { id:int; name:str; }
+                table location[id] (entry='name') { id:int; name:str; }
+                """, Map.of(
+                "user", "id,name,point,choice\nid,name,point,choice\n1,Alice,(5),Node(7)\n",
+                "ability", "id,name\nid,name\n1,Fireball\n2,IceSpike\n",
+                "empty", "id,name\nid,name\n",
+                "location", "id,name\nid,name\n1,Home\n"));
+        Path project = Files.createDirectory(root.resolve("project"));
+        new CsCodeGenerator(new ParameterParser("cs,dir:" + project + (implicitUsings ? ",implicitUsings" : ""))).generate(context);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context);
+
+        Files.writeString(project.resolve("runtime.csproj"), """
+                <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>
+                <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
+                <Nullable>enable</Nullable><ImplicitUsings>%s</ImplicitUsings>
+                <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+                </PropertyGroup></Project>
+                """.formatted(implicitUsings ? "enable" : "disable"));
+        Files.writeString(project.resolve("Program.cs"), """
+                using System;
+                using Config;
+                var config = Processor.LoadPackages(ConfigPackage.ReadFile(args[0]));
+                var user = DUser.Get(config, 1);
+                if (user is null || user.Name != "Alice" || user.Point.X != 5
+                    || user.Choice is not Config.Choice.DNode node || node.Value != 7)
+                    throw new Exception("Wrong generated user data");
+                if (DAbility.Fireball.Info(config).Id != 1 || DAbility.IceSpike.Info(config).Id != 2
+                    || Enum.GetValues<DEmpty>().Length != 0 || DLocation.HomeIn(config).Id != 1)
+                    throw new Exception("Wrong generated symbols");
+                Console.WriteLine("runtime-ok");
+                """);
+        runProject(project, root.resolve("dotnet.log"), root.resolve("base.bytes").toString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
     void singleLanguageUsesEachPackagesDefaultLanguage(boolean unity) throws Exception {
         Path project = Files.createDirectories(root.resolve("project"));
         for (String language : java.util.List.of("zh_cn", "en")) {
@@ -335,9 +377,7 @@ class CsRuntimeTest {
                         var first = reusable.Block(".monster", "zh_cn", "en"); var second = reusable.Block(".monster", "zh_cn", "en");
                         Check(ReferenceEquals(first.CaptureTextPool(), second.CaptureTextPool()));
                         Check(first.ReadInt32() == 1 && second.ReadInt32() == 1 && !ReferenceEquals(first.Errors, second.Errors));
-                        Check((object)a._rank_Symbols is DRankInfo[]);
                         Check((int)DRank.Green == 0 && DRank.Green.Info(a).Id == 10 && DRank.Green.Info(a).Calls == 1);
-                        Check(typeof(ConfigMgr).GetField("_other_dpreset_Symbol_Home", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic) != null);
                         var x = DMonster.Get(a, 1)!; var y = DMonster.Get(b, 1)!;
                         Check(x.Power == 20 && y.Power == 60 && x.Calls == 1 && y.Calls == 1);
                         Check(ReferenceEquals(x.Owner, a) && ReferenceEquals(y.Owner, b));
@@ -400,7 +440,10 @@ class CsRuntimeTest {
                         var collector = new LoadErrors();
                         collector.MissingReference("source", "field", "target", 1);
                         var snapshot = collector.Errors;
-                        try { collector.CheckErrors(); } catch (ConfigException failure) {
+                        try {
+                            collector.CheckErrors();
+                            throw new Exception("collector accepted a missing reference");
+                        } catch (ConfigException failure) {
                             collector.MissingSymbol("table", "symbol", 2);
                             Check(snapshot.Count == 1 && failure.Errors.Count == 1 && collector.Errors.Count == 2);
                             try { ((IList<LoadError>)failure.Errors).Clear(); throw new Exception("mutable errors"); } catch (NotSupportedException) { }

@@ -9,6 +9,8 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -93,7 +95,14 @@ class WaitWatcherBehaviorTest {
 
             // Then: 监听器应该只被调用一次（事件聚合）
             awaitListenerCalled(listenerCallCount, 1);
-            assertEquals(1, listenerCallCount.get(), "多个事件应该被聚合为一次调用");
+            // Observe subsequent polling/debounce cycles too: returning at the first
+            // callback would accept an implementation that invokes once per event.
+            long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(500);
+            while (System.nanoTime() < deadline) {
+                assertEquals(1, listenerCallCount.get(), "多个事件应该被聚合为一次调用");
+                Thread.sleep(10);
+            }
+            assertEquals(1, listenerCallCount.get(), "静默窗口内不应再触发回调");
         } finally {
             watcher.stop();
             waitWatcher.stop();
@@ -229,35 +238,45 @@ class WaitWatcherBehaviorTest {
     }
 
     @Test
-    void shouldRespectConfiguredWaitTimeForEventAggregation() throws IOException, InterruptedException {
-        // Given: 配置了较长等待时间的 WaitWatcher
+    void shouldWaitForAQuietPeriodAfterTheLatestEvent() throws Exception {
+        int quietMillis = 400;
+        int pollMillis = 10;
         Watcher watcher = new Watcher(tempDir, null);
+        var firstCallback = new CompletableFuture<Long>();
+        WaitWatcher waitWatcher = new WaitWatcher(watcher,
+                () -> firstCallback.complete(System.currentTimeMillis()), quietMillis, pollMillis);
         watcher.start();
-
-        AtomicInteger listenerCallCount = new AtomicInteger(0);
-        WaitWatcher waitWatcher = new WaitWatcher(watcher, listenerCallCount::incrementAndGet, 50, 50);
         waitWatcher.start();
 
         try {
-            // When: 在等待时间内触发事件
-            Path file1 = tempDir.resolve("file1.csv");
-            Files.writeString(file1, "content1");
+            int startVersion = watcher.getEventVersion();
+            Files.createFile(tempDir.resolve("first.csv"));
+            awaitEventAfter(watcher, startVersion);
+            long firstEventMillis = watcher.getLastEventMillis();
+            Thread.sleep(100);
+            int firstVersion = watcher.getEventVersion();
+            long secondWriteMillis = System.currentTimeMillis();
+            Files.createFile(tempDir.resolve("second.csv"));
+            awaitEventAfter(watcher, firstVersion);
+            long secondEventMillis = watcher.getLastEventMillis();
+            assertTrue(secondEventMillis >= secondWriteMillis);
+            assertTrue(secondEventMillis < firstEventMillis + quietMillis, "第二次事件必须落在第一次静默期内");
 
-            // 等待时间不足，不应该触发
-            Thread.sleep(10);
-
-            // Then: 监听器不应该被调用
-            assertEquals(0, listenerCallCount.get(), "等待时间不足时监听器不应该被调用");
-
-            // 继续等待到超过等待时间
-            awaitListenerCalled(listenerCallCount, 1);
-
-            // 监听器应该被调用
-            assertEquals(1, listenerCallCount.get(), "等待时间足够时监听器应该被调用");
+            long callbackMillis = firstCallback.get(5, TimeUnit.SECONDS);
+            assertTrue(callbackMillis >= secondEventMillis + quietMillis,
+                    () -> "第二次事件后只等待了 " + (callbackMillis - secondEventMillis) + " ms");
         } finally {
-            watcher.stop();
             waitWatcher.stop();
+            watcher.stop();
         }
+    }
+
+    private static void awaitEventAfter(Watcher watcher, int version) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (watcher.getEventVersion() == version && System.nanoTime() < deadline) {
+            Thread.sleep(5);
+        }
+        assertNotEquals(version, watcher.getEventVersion(), "文件事件应被 Watcher 观察到");
     }
 
 //    @Test

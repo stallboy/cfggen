@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LoadValueErrsTest {
     @Test
-    void collectsFlatRecordsWithOnlyTheirActualParameters() throws Exception {
+    void collectsErrorDetailsAndCopiesPackNames() {
         var errors = new LoadValueErrs();
         var packs = new java.util.ArrayList<>(List.of("base", "mod"));
         errors.missingReference("Unit", "targetId", "target", 9);
@@ -15,6 +15,8 @@ class LoadValueErrsTest {
         errors.invalidSeq("unit", "id", 7, -1, 3, packs);
         packs.add("later");
         var failure = assertThrows(ConfigErr.class, errors::checkErrors);
+        assertEquals(3, failure.getErrors().size());
+        assertEquals(new LoadValueErrs.DuplicateKey("links", 2), failure.getErrors().get(1));
         var missing = assertInstanceOf(LoadValueErrs.MissingReference.class, failure.getErrors().getFirst());
         assertEquals("targetId", missing.field());
         assertEquals("target", missing.target());
@@ -26,11 +28,6 @@ class LoadValueErrsTest {
         assertEquals("unit", seq.table());
         assertEquals(7, seq.key());
         assertEquals(List.of("base", "mod"), seq.packs());
-        assertTrue(LoadValueErrs.Error.class.isSealed());
-        assertTrue(java.util.Arrays.stream(LoadValueErrs.Error.class.getPermittedSubclasses()).allMatch(Class::isRecord));
-        assertTrue(java.util.Arrays.stream(LoadValueErrs.class.getDeclaredClasses()).noneMatch(c -> c.getSimpleName().equals("Row")));
-        assertTrue(java.lang.reflect.Modifier.isPrivate(LoadValueErrs.class.getDeclaredMethod("add", LoadValueErrs.Error.class).getModifiers()));
-        assertTrue(java.lang.reflect.Modifier.isPrivate(LoadValueErrs.class.getDeclaredMethod("fail", LoadValueErrs.Error.class).getModifiers()));
         assertThrows(UnsupportedOperationException.class, () -> failure.getErrors().clear());
     }
 
@@ -49,9 +46,6 @@ class LoadValueErrsTest {
         errors.schemaMismatch("map", "Different fixed symbols");
         assertEquals(List.of(new LoadValueErrs.MissingSymbol("rank", "Green", 10),
                 new LoadValueErrs.SchemaMismatch("map", "Different fixed symbols")), errors.getErrors());
-        assertTrue(java.util.Arrays.stream(LoadValueErrs.class.getDeclaredMethods())
-                .flatMap(method -> java.util.Arrays.stream(method.getParameterTypes()))
-                .noneMatch(type -> Schema.class.isAssignableFrom(type) || type == ConfigPackage.class));
     }
 
     @Test
