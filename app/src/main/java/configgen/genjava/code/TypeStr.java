@@ -69,7 +69,7 @@ public class TypeStr {
             case StructRef ref -> switch (ref.resolvedObj()) {
                 case StructSchema struct -> structDefault(cfg, struct, active);
                 case InterfaceSchema schema -> schema.defaultImpl().isEmpty()
-                        ? null : structDefault(cfg, schema.defaultImplStruct(), active);
+                        ? null : structDefault(cfg, schema.requireDefaultImpl(), active);
             };
         };
     }

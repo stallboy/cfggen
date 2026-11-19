@@ -96,12 +96,11 @@ public class ValueParser {
         // 内容为空的单一格子，处理方式是把这空的parsed一层层传下去
         VStruct vImpl;
         if (isEmpty) {
-            StructSchema impl = sInterface.defaultImplStruct();
-            StructSchema subImpl = subInterface.defaultImplStruct();
-            require(subImpl != null);
+            StructSchema impl = sInterface.requireDefaultImpl();
+            StructSchema subImpl = subInterface.requireDefaultImpl();
 
             // 之后按pack为true来处理，因为反正parsed里都是单个cell，并且里面value为空
-            vImpl = parseStructural(java.util.Objects.requireNonNull(subImpl), parsed, impl,
+            vImpl = parseStructural(subImpl, parsed, impl,
                     new ParseContext(parseContext.nameable, true, true, parseContext.curRowIndex));
 
         } else {
@@ -109,9 +108,8 @@ public class ValueParser {
             StructSchema subImpl;
             List<DCell> implCells;
             if (isNumberOrBool) {
-                impl = sInterface.defaultImplStruct();
-                subImpl = subInterface.defaultImplStruct();
-                require(subImpl != null);
+                impl = sInterface.requireDefaultImpl();
+                subImpl = subInterface.requireDefaultImpl();
                 implCells = parsed;
 
             } else {
@@ -123,12 +121,14 @@ public class ValueParser {
                         errs.addErr(new CfgValueErrs.InterfaceCellImplNotFound(parsed.getFirst(), sInterface.name(), implName));
                         return null;
                     }
+                    if (subImpl == null) {
+                        throw new AssertionError(currentCellStr());
+                    }
                 } else {
-                    impl = sInterface.defaultImplStruct();
-                    subImpl = subInterface.defaultImplStruct();
+                    impl = sInterface.requireDefaultImpl();
+                    subImpl = subInterface.requireDefaultImpl();
                 }
 
-                require(subImpl != null);
                 int expected = isPack ? 1 : Span.span(impl);
                 if (parsed.size() - 1 < expected) {
                     errs.addErr(new CfgValueErrs.InternalError(parsed.getFirst().toString() + " impl span not enough"));
@@ -136,7 +136,7 @@ public class ValueParser {
                 }
                 implCells = parsed.subList(1, expected + 1);
             }
-            vImpl = parseStructural(java.util.Objects.requireNonNull(subImpl), implCells, impl,
+            vImpl = parseStructural(subImpl, implCells, impl,
                     new ParseContext(parseContext.nameable, isPack, canChildBeEmpty, parseContext.curRowIndex));
         }
 

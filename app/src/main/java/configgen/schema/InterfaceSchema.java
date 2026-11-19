@@ -110,13 +110,13 @@ public final class InterfaceSchema implements Fieldable, Nameable {
     }
 
     /**
-     * 如果设置了defaultImpl，则找这个名字的实现，如果找不到则默认是第一个实现。
+     * 返回已解析的默认实现，否则要求第一个实现存在且非空。
      */
-    public StructSchema defaultImplStruct() {
+    public StructSchema requireDefaultImpl() {
         if (nullableDefaultImplStruct != null) {
             return nullableDefaultImplStruct;
         }
-        return impls.getFirst();
+        return Objects.requireNonNull(impls.getFirst(), () -> "Null implementation for interface " + name);
     }
 
     void setNullableDefaultImplStruct(StructSchema defaultImplStruct) {
