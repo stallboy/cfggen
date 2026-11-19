@@ -242,6 +242,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                 }
                 newField = new FieldSchema(fieldName, curField.type().copy(), curField.fmt(), meta);
                 FieldSchema old = alignedFields.put(newField.name(), newField);
+                //noinspection ConstantValue
                 if (old != null) {
                     errs.addErr(new CfgSchemaErrs.DataHeadNameDuplicated(table.name(), fieldName));
                 }
@@ -254,6 +255,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                     Logger.log(LocaleUtil.getFormatedLocaleString("CfgSchemaAlignToData.NewField",
                             "{0} new field: {1}", table.name(), hf.name()));
                     FieldSchema old = alignedFields.put(newField.name(), newField);
+                    //noinspection ConstantValue
                     if (old != null) {
                         errs.addErr(new CfgSchemaErrs.DataHeadNameDuplicated(table.name(), newField.name()));
                     }

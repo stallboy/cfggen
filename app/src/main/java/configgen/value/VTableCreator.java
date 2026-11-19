@@ -162,6 +162,7 @@ public class VTableCreator {
         for (VStruct value : valueList) {
             Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
             VStruct old = keyMap.put(keyValue, value);
+            //noinspection ConstantValue
             if (old != null) {
                 errs.addErr(new CfgValueErrs.PrimaryOrUniqueKeyDuplicated(keyValue, tableSchema.name(), key.fields()));
             }

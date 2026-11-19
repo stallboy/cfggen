@@ -401,6 +401,7 @@ public class ValueParser {
 
             if (key != null && value != null) {
                 SimpleValue old = valueMap.put(key, value);
+                //noinspection ConstantValue
                 if (old != null) {
                     errs.addErr(new CfgValueErrs.MapKeyDuplicated(
                             Source.of(keyCells), parseContext.nameable, field.name()));

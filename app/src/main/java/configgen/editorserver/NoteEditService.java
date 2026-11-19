@@ -75,6 +75,7 @@ public class NoteEditService {
                 code = old != null ? ResultCode.deleteOk : ResultCode.keyNotFoundOnDelete;
             } else {
                 String old = noteMap.put(key, note);
+                //noinspection ConstantValue
                 code = old != null ? ResultCode.updateOk : ResultCode.addOk;
             }
             writeNoteMap();

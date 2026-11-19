@@ -315,6 +315,7 @@ public class DirectoryStructure implements JsonTableFiles {
                 String tableName = getTableNameIfTableDirForJson(dirName);
                 if (tableName != null) {
                     Path existing = discovered.put(tableName, path);
+                    //noinspection ConstantValue
                     if (existing != null) {
                         throw new RuntimeException("JSON table directory conflict for table '%s': both '%s' and '%s' exist"
                                 .formatted(tableName, existing, path));
@@ -355,6 +356,7 @@ public class DirectoryStructure implements JsonTableFiles {
                 if (subTableName != null) {
                     String fullTableName = pkgNameDot + "." + subTableName;
                     Path existing = discovered.put(fullTableName, subPath);
+                    //noinspection ConstantValue
                     if (existing != null) {
                         throw new RuntimeException("JSON table directory conflict for table '%s': both '%s' and '%s' exist"
                                 .formatted(fullTableName, existing, subPath));

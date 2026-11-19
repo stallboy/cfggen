@@ -171,6 +171,7 @@ final class PackageBuilder {
                 for (int i = 0; i < count; i++) {
                     SimpleValue key = (SimpleValue) read(map.key(), input, source);
                     SimpleValue value = (SimpleValue) read(map.value(), input, source);
+                    //noinspection ConstantValue
                     if (values.putIfAbsent(key, value) != null) throw new ConfigErr("Duplicate map key");
                 }
                 yield new VMap(values, source);

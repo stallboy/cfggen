@@ -116,6 +116,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
             throw new IllegalArgumentException(String.format("'%s' reserved", tag));
         }
         MetaValue old = data.putLast(tag, TAG);
+        //noinspection ConstantValue
         if (old != null) {
             throw new IllegalArgumentException(String.format("'%s' duplicated", tag));
         }
