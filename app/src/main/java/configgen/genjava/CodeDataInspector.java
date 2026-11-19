@@ -114,7 +114,7 @@ public class CodeDataInspector {
     }
 
     /** 把一条记录组装成 {@code Obj(表名, 字段)}，便于渲染为 {@code 表名{...}}。 */
-    private JsonValue recordToJson(Object record, SchemaBean schema, String tableName) {
+    private JsonValue recordToJson(@Nullable Object record, SchemaBean schema, String tableName) {
         if (record == null) {
             return new Null();
         }
@@ -169,7 +169,7 @@ public class CodeDataInspector {
     }
 
     private @Nullable TableData findTable(String table) {
-        if (table == null || table.isEmpty()) {
+        if (table.isEmpty()) {
             return null;
         }
         TableData contains = null;
@@ -302,8 +302,8 @@ public class CodeDataInspector {
 
     // ==================== 记录遍历 / 匹配 ====================
 
-    private static Iterable<Object> iterRecords(TableData td) {
-        List<Object> list = new ArrayList<>();
+    private static Iterable<@Nullable Object> iterRecords(TableData td) {
+        List<@Nullable Object> list = new ArrayList<>();
         if (td.isArray) {
             int len = Array.getLength(td.data);
             for (int i = 0; i < len; i++) {
