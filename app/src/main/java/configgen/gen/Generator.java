@@ -1,14 +1,8 @@
 package configgen.gen;
 
 import configgen.ctx.Context;
-import configgen.util.CachedFileOutputStream;
-import configgen.util.CachedFiles;
-import configgen.util.CachedIndentPrinter;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;

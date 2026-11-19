@@ -19,9 +19,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * GDScript 生成器冒烟：生成成功 + 关键产物存在 + 内容含预期类型。
@@ -59,7 +57,7 @@ class GdCodeGeneratorTest {
         new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx);
 
         Path userGd = findFileContaining(outDir, "user");
-        assertTrue(userGd != null, "应生成user相关的.gd文件");
+        assertNotNull(userGd, "应生成user相关的.gd文件");
 
         String content = Files.readString(userGd);
         assertTrue(content.contains("name"), "应包含字段name");
@@ -87,7 +85,7 @@ class GdCodeGeneratorTest {
         new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx);
 
         Path abilityGd = findFileContaining(outDir, "ability");
-        assertTrue(abilityGd != null, "应生成ability相关的.gd文件");
+        assertNotNull(abilityGd, "应生成ability相关的.gd文件");
         String content = Files.readString(abilityGd);
         assertTrue(content.contains("Fireball") || Files.readString(outDir.resolve("ConfigLoader.gd")).contains("Fireball"),
                 "枚举值应出现在生成的代码中");

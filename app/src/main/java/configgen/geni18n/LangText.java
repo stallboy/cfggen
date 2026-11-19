@@ -67,7 +67,7 @@ public class LangText extends LinkedHashMap<String, LangText.ModuleText> {
                 }
 
                 int idx = 0;
-                for (OneText text : record.texts()) {
+                for (var text : record.texts()) {
                     if (text != null) {
                         stat.addOneTranslate(table, text.original(), text.translated());
                         int c = idx * 2 + offset;

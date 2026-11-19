@@ -557,23 +557,19 @@ public final class CfgSchemaResolver {
 
     private void resolveForeignKey(Structural structural, ForeignKeySchema foreignKey) {
         // 解析映射到的table
-        boolean err = false;
         String refTable = foreignKey.refTable();
         TableSchema refTableSchema = findTableInLocalThenGlobal(refTable);
         if (refTableSchema != null) {
             foreignKey.setRefTableSchema(refTableSchema);
         } else {
             errs.addErr(new RefTableNotFound(ctx(), foreignKey.name(), refTable));
-            err = true;
         }
 
         // 解析 local key
         KeySchema localKey = foreignKey.key();
-        if (!resolveKey(structural, localKey)) {
-            err = true;
-        }
+        boolean localKeyResolved = resolveKey(structural, localKey);
 
-        if (err) {
+        if (refTableSchema == null || !localKeyResolved) {
             return;
         }
 

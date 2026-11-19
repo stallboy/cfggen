@@ -20,11 +20,6 @@ import java.util.stream.Stream;
 public class TextByIdFinder implements TranslationCatalog.TextFinder {
     public record OneText(String original,
                           String translated) {
-        public OneText {
-            if (original == null || translated == null) {
-                throw new IllegalArgumentException("original和translated都不能为null");
-            }
-        }
     }
 
     /**
@@ -32,11 +27,11 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
      * @param texts       里面元素可以为null
      */
     public record OneRecord(@Nullable String description,
-                            List<OneText> texts) {
+                            List<@Nullable OneText> texts) {
 
         @Override
         public boolean equals(@Nullable Object obj) {
-            if (!(obj instanceof OneRecord(String otherDescription, List<OneText> otherTexts))) {
+            if (!(obj instanceof OneRecord(String otherDescription, var otherTexts))) {
                 return false;
             }
             if (!Objects.equals(description, otherDescription)) {
@@ -48,8 +43,8 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
                 return texts.equals(otherTexts);
             }
 
-            List<OneText> larger;
-            List<OneText> smaller;
+            List<@Nullable OneText> larger;
+            List<@Nullable OneText> smaller;
             if (texts.size() < otherTexts.size()) {
                 smaller = texts;
                 larger = otherTexts;
@@ -95,7 +90,7 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
             return null;
         }
 
-        OneText txt = line.texts.get(idx);
+        var txt = line.texts.get(idx);
         // normalize 只在查找i18n时本着尽量找到的原则,对original做normalize.
         String normalized = I18nUtils.normalize(original);
         if (txt != null && txt.original.equals(normalized)) {
@@ -108,7 +103,7 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
     @Override
     public void foreachText(TranslationCatalog.TextVisitor visitor) {
         for (OneRecord line : pkToTexts.values()) {
-            for (OneText t : line.texts) {
+            for (var t : line.texts) {
                 if (t != null) {
                     visitor.visit(t.original, t.translated);
                 }
@@ -303,7 +298,7 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
                 description = I18nUtils.getCellAsString(row, 1).orElse("");
             }
 
-            List<OneText> texts = new ArrayList<>(tColumnCnt);
+            List<@Nullable OneText> texts = new ArrayList<>(tColumnCnt);
             for (int i = 0; i < tColumnCnt; i++) {
                 int translateCol = tColumns[i];
                 int originalCol = translateCol - 1;

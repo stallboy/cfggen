@@ -1,7 +1,6 @@
 package configgen.schema;
 
 import org.jetbrains.annotations.Contract;
-
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -37,12 +36,18 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
     public sealed interface MetaEnumValues extends MetaValue {
-        record OfEmpty(List<EnumValueEmpty> values) implements MetaEnumValues {}
-        record OfAssigned(List<EnumValueAssigned> values) implements MetaEnumValues {}
+        record OfEmpty(List<EnumValueEmpty> values) implements MetaEnumValues {
+        }
+
+        record OfAssigned(List<EnumValueAssigned> values) implements MetaEnumValues {
+        }
     }
 
-    public record EnumValueEmpty(String name, String comment) {}
-    public record EnumValueAssigned(String name, String comment, int number) {}
+    public record EnumValueEmpty(String name, String comment) {
+    }
+
+    public record EnumValueAssigned(String name, String comment, int number) {
+    }
 
     public static Metadata of() {
         return new Metadata(new LinkedHashMap<>());
@@ -315,8 +320,10 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
     public @Nullable Integer assignedEnumId(String name) {
-        if (getEnumValues() instanceof MetaEnumValues.OfAssigned assigned) {
-            for (EnumValueAssigned value : assigned.values()) if (value.name().equals(name)) return value.number();
+        if (getEnumValues() instanceof MetaEnumValues.OfAssigned(List<EnumValueAssigned> values)) {
+            for (EnumValueAssigned value : values)
+                if (value.name().equals(name))
+                    return value.number();
         }
         return null;
     }

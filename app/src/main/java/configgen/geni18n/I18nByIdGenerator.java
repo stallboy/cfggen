@@ -198,7 +198,7 @@ public final class I18nByIdGenerator extends Generator {
                     String pk = r.getKey();
                     TextByIdFinder.OneRecord record = r.getValue();
                     int idx = 0;
-                    for (TextByIdFinder.OneText ot : record.texts()) {
+                    for (var ot : record.texts()) {
                         if (ot != null) {
                             TodoFile.Line line = new TodoFile.Line(table, pk, fieldChainList.get(idx), ot.original(), ot.translated());
                             if (ot.translated().isEmpty()) {

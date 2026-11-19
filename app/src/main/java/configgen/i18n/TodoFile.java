@@ -153,7 +153,7 @@ public record TodoFile(List<Line> todo,
                     continue;
                 }
 
-                List<OneText> texts = record.texts();
+                var texts = record.texts();
                 Integer fieldIndex = finder.getFieldChainToIndex().get(fieldChain);
                 if (fieldIndex == null || fieldIndex >= texts.size()) {
                     Logger.log("Field chain %s not found in table %s, skipping row %d",
@@ -161,7 +161,7 @@ public record TodoFile(List<Line> todo,
                     continue;
                 }
 
-                OneText oldText = texts.get(fieldIndex);
+                var oldText = texts.get(fieldIndex);
                 if (oldText == null || !oldText.original().equals(original)) {
                     Logger.log("Field chain %s with original %s not found in record with pk %s in table %s, skipping row %d",
                             fieldChain, original, pk, table, i + 1);

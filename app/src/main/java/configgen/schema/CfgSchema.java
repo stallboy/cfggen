@@ -171,7 +171,6 @@ public class CfgSchema {
     @Override
     public boolean equals(@Nullable Object o) {
         if (this == o) return true;
-        //noinspection ConstantValue
         if (o == null || getClass() != o.getClass()) return false;
         CfgSchema cfgSchema = (CfgSchema) o;
         return Objects.equals(items, cfgSchema.items);

@@ -14,7 +14,7 @@ public class IncludedStructs {
         CheckResult check(Nameable nameable);
     }
 
-    private final static Checker unknownChecker = nameable -> CheckResult.Unknown;
+    private final static Checker unknownChecker = _ -> CheckResult.Unknown;
 
     /**
      * @param nameable 目标
@@ -49,9 +49,7 @@ public class IncludedStructs {
                     }
                     case Fail -> {
                     }
-                    case Unknown -> {
-                        unknownFrontiers.add(frontier);
-                    }
+                    case Unknown -> unknownFrontiers.add(frontier);
                 }
             }
             checked.putAll(frontiers);
