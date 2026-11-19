@@ -1,7 +1,8 @@
 import type {BubbleListProps} from "@ant-design/x";
 import {Bubble, Sender, Welcome} from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
-import {OpenAIChatProvider, useXChat, XModelParams, XModelResponse, XRequest} from "@ant-design/x-sdk";
+import {OpenAIChatProvider, useXChat, XRequest} from "@ant-design/x-sdk";
+import type {SSEOutput, XModelMessage, XModelParams} from "@ant-design/x-sdk";
 import {App, Flex, theme} from "antd";
 import {memo, useState, useEffect, useRef, type CSSProperties} from "react";
 
@@ -144,7 +145,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     const {onRequest, messages, isRequesting, abort, setMessages} = useXChat({
         defaultMessages: [],
         provider: new OpenAIChatProvider({
-            request: XRequest<XModelParams, XModelResponse>(
+            request: XRequest<XModelParams, SSEOutput, XModelMessage>(
                 baseUrl,
                 {
                     headers: {
