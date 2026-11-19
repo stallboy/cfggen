@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Map;
 
 public class Tools {
@@ -8,7 +10,7 @@ public class Tools {
 
     private static final ProviderRegistry<ToolProvider, Tool> registry = new ProviderRegistry<>();
 
-    public static Tool create(String arg) {
+    public static @Nullable Tool create(String arg) {
         return registry.create(arg);
     }
 

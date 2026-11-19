@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.EntryType;
 import configgen.schema.FieldType;
 import configgen.schema.ForeignKeySchema;
@@ -18,7 +20,7 @@ public class EntryOrEnumModel {
     public final boolean isEnum;
     public final boolean hasNoIntValue;
     public final boolean hasFixedId;
-    public final Map<String, Integer> enumNameToIntegerValueMap;
+    public final @Nullable Map<String, Integer> enumNameToIntegerValueMap;
     public final Iterable<String> enumNames;
     public final TableSchema table;
     public final boolean isNeedReadData;
@@ -39,7 +41,7 @@ public class EntryOrEnumModel {
         this.hasFixedId = vTable.schema().meta().getEnumValues() instanceof Metadata.MetaEnumValues.OfAssigned
                 && !vTable.schema().primaryKey().fields().getFirst().equals("id");
         this.enumNameToIntegerValueMap = vTable.enumNameToIntegerValueMap();
-        this.enumNames = vTable.enumNames();
+        this.enumNames = java.util.Objects.requireNonNull(vTable.enumNames());
         this.table = vTable.schema();
         this.isNeedReadData = isNeedReadData;
         this.dataNameFullName = dataName.fullName;

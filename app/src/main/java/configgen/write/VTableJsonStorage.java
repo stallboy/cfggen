@@ -1,5 +1,7 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.DirectoryStructure;
 import configgen.data.DataUtil;
 import configgen.util.FileNameUtil;
@@ -7,7 +9,6 @@ import configgen.util.CachedFileOutputStream;
 import configgen.util.CachedFiles;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueToJson;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,10 +25,10 @@ public class VTableJsonStorage {
     /**
      * @return relative path of the record file
      */
-    public static Path addOrUpdateRecord(@NotNull VStruct record,
-                                         @NotNull String table,
-                                         @NotNull String id,
-                                         @NotNull Path dataDir,
+    public static Path addOrUpdateRecord(VStruct record,
+                                         String table,
+                                         String id,
+                                         Path dataDir,
                                          DirectoryStructure directoryStructure,
                                          CachedFiles cachedFiles) throws IOException {
         validateId(id);
@@ -49,9 +50,9 @@ public class VTableJsonStorage {
     /**
      * @return relative path of the record file
      */
-    public static Path deleteRecord(@NotNull String table,
-                                    @NotNull String id,
-                                    @NotNull Path dataDir,
+    public static Path deleteRecord(String table,
+                                    String id,
+                                    Path dataDir,
                                     DirectoryStructure directoryStructure) throws IOException {
         validateId(id);
         var existingDirRelativePath = directoryStructure.getJsonTableDir(table);
@@ -106,7 +107,7 @@ public class VTableJsonStorage {
     }
 
     /// 在目录中查找 codeName 匹配的子目录的实际目录名
-    private static String findModuleDirName(Path dir, String modulePart) {
+    private static @Nullable String findModuleDirName(Path dir, String modulePart) {
         try (Stream<Path> paths = Files.list(dir)) {
             for (Path p : paths.toList()) {
                 if (!Files.isDirectory(p)) {

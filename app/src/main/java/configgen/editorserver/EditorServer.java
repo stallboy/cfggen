@@ -1,5 +1,9 @@
 package configgen.editorserver;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
 import configgen.ctx.*;
@@ -50,7 +54,7 @@ public class EditorServer extends GeneratorWithTag {
 
     private HttpServer server;
     private NoteEditService noteEditService;
-    private final String postRun;
+    private final @Nullable String postRun;
     private final int waitSecondsAfterWatchEvt;
 
     public EditorServer(Parameter parameter) {
@@ -68,6 +72,7 @@ public class EditorServer extends GeneratorWithTag {
     }
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
         initFromCtx(ctx);
@@ -155,7 +160,7 @@ public class EditorServer extends GeneratorWithTag {
         sendResponse(exchange, result);
     }
 
-    private static int parseIntAndIgnoreErr(String str, int def) {
+    private static int parseIntAndIgnoreErr(@Nullable String str, int def) {
         int value = def;
         if (str != null) {
             try {
@@ -399,7 +404,7 @@ public class EditorServer extends GeneratorWithTag {
         out.close();
     }
 
-    private static Map<String, String> queryToMap(String query) {
+    private static Map<String, String> queryToMap(@Nullable String query) {
         Map<String, String> result = new HashMap<>();
         if (query != null) {
             for (String param : query.split("&")) {

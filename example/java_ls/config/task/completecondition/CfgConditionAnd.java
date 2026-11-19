@@ -1,28 +1,26 @@
 package config.task.completecondition;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public final class CfgConditionAnd implements config.task.completecondition.CfgCompletecondition {
-    @Override
-    public config.task.CfgComplete_condition_type type() {
-        return config.task.CfgComplete_condition_type.CONDITIONAND;
-    }
-
-    private config.task.completecondition.CfgCompletecondition cond1;
-    private config.task.completecondition.CfgCompletecondition cond2;
-    private CfgConditionAnd() {
-    }
+    private final config.task.completecondition.CfgCompletecondition cond1;
+    private final config.task.completecondition.CfgCompletecondition cond2;
 
     public CfgConditionAnd(config.task.completecondition.CfgCompletecondition cond1, config.task.completecondition.CfgCompletecondition cond2) {
         this.cond1 = cond1;
         this.cond2 = cond2;
     }
 
-    public static CfgConditionAnd _create(configgen.genjava.ConfigInput input) {
-        CfgConditionAnd self = new CfgConditionAnd();
-        self.cond1 = config.task.completecondition.CfgCompletecondition._create(input);
-        self.cond2 = config.task.completecondition.CfgCompletecondition._create(input);
-        return self;
+    private CfgConditionAnd(configgen.genjava.ConfigInput input) {
+        this.cond1 = config.task.completecondition.CfgCompletecondition._create(input);
+        this.cond2 = config.task.completecondition.CfgCompletecondition._create(input);
+    }
+
+    @Override
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.CONDITIONAND;
     }
 
     public config.task.completecondition.CfgCompletecondition getCond1() {
@@ -39,7 +37,7 @@ public final class CfgConditionAnd implements config.task.completecondition.CfgC
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CfgConditionAnd o)) {
             return false;
         }
@@ -55,6 +53,10 @@ public final class CfgConditionAnd implements config.task.completecondition.CfgC
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.cond1._resolve(mgr, errors);
         this.cond2._resolve(mgr, errors);
+    }
+
+    public static CfgConditionAnd _create(configgen.genjava.ConfigInput input) {
+        return new CfgConditionAnd(input);
     }
 
 }

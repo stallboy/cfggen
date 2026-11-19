@@ -17,6 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.genjava.SchemaPrimitive.SStr;
 import static configgen.genjava.SchemaPrimitive.SText;
 import static org.junit.jupiter.api.Assertions.*;
@@ -108,7 +109,7 @@ class BytesGeneratorTest {
         SchemaInterface si = (SchemaInterface) SchemaDeserializer.deserialize(in);
         in.requireEnd();
 
-        SchemaBean user = (SchemaBean) si.implementations.get("user");
+        SchemaBean user = requireNonNull((SchemaBean) si.implementations.get("user"));
         assertEquals(SStr, user.columns.get(1).schema(), "str字段应为SStr");
         // 回归：TEXT曾被标成SStr，按schema读数据会走StringPool读错池
         assertEquals(SText, user.columns.get(2).schema(), "text字段应为SText（读LangTextPool）");

@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.GenJavaUtil;
 import configgen.naming.GenNaming;
 import configgen.schema.*;
@@ -47,11 +49,11 @@ public class Name {
         return GenNaming.uniqueKeyMapName(keySchema);
     }
 
-    public static String keyClassName(GenCfg cfg, KeySchema keySchema){
+    public static @Nullable String keyClassName(GenCfg cfg, KeySchema keySchema){
         return keyClassName(cfg, keySchema, null);
     }
 
-    public static String keyClassName(GenCfg cfg, KeySchema keySchema, NameableName nullableName) {
+    public static @Nullable String keyClassName(GenCfg cfg, KeySchema keySchema, @Nullable NameableName nullableName) {
         if (keySchema.fields().size() > 1) {
             String klsName = GenNaming.compositeKeyClassName(keySchema);
             if (nullableName != null) {
@@ -91,22 +93,22 @@ public class Name {
     public static String refType(GenCfg cfg, ForeignKeySchema fk) {
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
-                return "java.util.List<" + refType(cfg, fk.refTableSchema()) + ">";
+                return cfg.nullable("java.util.List<" + refType(cfg, fk.refTableSchema()) + ">");
             }
             case RefKey.RefSimple ignored -> {
                 FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
                 switch (firstLocal.type()) {
 
                     case SimpleType ignored2 -> {
-                        return refType(cfg, fk.refTableSchema());
+                        return cfg.nullable(refType(cfg, fk.refTableSchema()));
                     }
                     case FList ignored2 -> {
-                        return "java.util.List<" + refType(cfg, fk.refTableSchema()) + ">";
+                        return cfg.nullable("java.util.List<" + cfg.nullable(refType(cfg, fk.refTableSchema())) + ">");
                     }
                     case FMap fMap -> {
-                        return "java.util.Map<"
-                                + (TypeStr.boxType(cfg, (fMap.key()))) + ", "
-                                + refType(cfg, fk.refTableSchema()) + ">";
+                        return cfg.nullable("java.util.Map<"
+                                + TypeStr.boxType(cfg, fMap.key()) + ", "
+                                + cfg.nullable(refType(cfg, fk.refTableSchema())) + ">");
                     }
                 }
             }

@@ -1,14 +1,15 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 
 public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
-    public ColumnModeExcelTableFile(@NotNull Path filePath,
-                                    @NotNull String sheetName,
+    public ColumnModeExcelTableFile(Path filePath,
+                                    String sheetName,
                                     int headRow) {
         super(filePath, sheetName, headRow);
     }
@@ -56,7 +57,7 @@ public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
     }
 
     @Override
-    protected void writeLine(int lineNum, String[] lineData) {
+    protected void writeLine(int lineNum, @Nullable String @Nullable [] lineData) {
         if (lineData == null) {
             return;
         }

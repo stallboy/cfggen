@@ -1,5 +1,7 @@
 package configgen.genbyai;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.genbyai.PromptModel.Example;
 import configgen.schema.*;
@@ -17,8 +19,8 @@ public class TableRelatedInfoFinder {
     public record RelatedInfo(String relatedSchema,
                               List<TableRecordList> relatedTableRecordListInCsv,
                               List<TableCount> otherTableCounts,
-                              String rule,
-                              Example example) {
+                              @Nullable String rule,
+                              @Nullable Example example) {
 
         public String asTextContent() {
             StringBuilder sb = new StringBuilder(2048);
@@ -66,14 +68,14 @@ public class TableRelatedInfoFinder {
                              int recordCount) {
     }
 
-    public record ModuleRule(String description,
-                             String rule) {
+    public record ModuleRule(@Nullable String description,
+                             @Nullable String rule) {
     }
 
-    public record TableRule(String rule,
+    public record TableRule(@Nullable String rule,
                             List<String> extraRefTables,
-                            String exampleId,
-                            String exampleDescription) {
+                            @Nullable String exampleId,
+                            @Nullable String exampleDescription) {
     }
 
 
@@ -92,7 +94,7 @@ public class TableRelatedInfoFinder {
         var refOutTables = TableSchemaRefGraph.findAllRefOuts(tableSchema);
         List<String> extraRefTables = rule != null ? rule.extraRefTables() : List.of();
         for (TableSchema schema : refOutTables.values()) {
-            VTable vt = cfgValue.getTable(schema.name());
+            VTable vt = java.util.Objects.requireNonNull(cfgValue.getTable(schema.name()));
             if (schema.entry() instanceof EntryType.EEnum || extraRefTables.contains(schema.name())) {
                 relatedInfo.relatedTableRecordListInCsv.add(getTableRecordListInCsv(vt, null, 0, 20));
             } else {
@@ -103,7 +105,7 @@ public class TableRelatedInfoFinder {
     }
 
 
-    public static ModuleRule findModuleRuleForTable(Context context, TableSchema tableSchema) {
+    public static @Nullable ModuleRule findModuleRuleForTable(Context context, TableSchema tableSchema) {
         String namespace = tableSchema.namespace();
         Path cfgFilePath = context.sourceStructure().getCfgFilePathByPkgName(namespace);
         if (cfgFilePath == null) {
@@ -111,7 +113,7 @@ public class TableRelatedInfoFinder {
         }
 
         // $mod.md
-        Path modDir = cfgFilePath.getParent();
+        Path modDir = java.util.Objects.requireNonNull(cfgFilePath.getParent());
         String moduleRule;
         Path modFile = modDir.resolve("$mod.md");
         if (!Files.exists(modFile)) {
@@ -124,13 +126,13 @@ public class TableRelatedInfoFinder {
         return new ModuleRule(description, moduleRule);
     }
 
-    public static TableRule findTableRule(Context context, TableSchema tableSchema) {
+    public static @Nullable TableRule findTableRule(Context context, TableSchema tableSchema) {
         String namespace = tableSchema.namespace();
         Path cfgFilePath = context.sourceStructure().getCfgFilePathByPkgName(namespace);
         if (cfgFilePath == null) {
             return null;
         }
-        Path modDir = cfgFilePath.getParent();
+        Path modDir = java.util.Objects.requireNonNull(cfgFilePath.getParent());
 
         // 找对应table的md
         String rule = null;
@@ -169,7 +171,7 @@ public class TableRelatedInfoFinder {
         return sb.toString();
     }
 
-    public static TableRecordList getTableRecordListInCsv(VTable vTable, String[] extraFields, int offset, int limit) {
+    public static TableRecordList getTableRecordListInCsv(VTable vTable, String @Nullable [] extraFields, int offset, int limit) {
         TableSchema schema = vTable.schema();
 
         StringBuilder sb = new StringBuilder(2048);
@@ -197,7 +199,7 @@ public class TableRelatedInfoFinder {
     }
 
 
-    public static Example getExample(TableRule rule, VTable vTable) {
+    public static @Nullable Example getExample(@Nullable TableRule rule, VTable vTable) {
         if (rule == null || vTable == null) {
             return null;
         }

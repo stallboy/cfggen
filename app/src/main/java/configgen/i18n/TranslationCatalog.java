@@ -1,5 +1,7 @@
 package configgen.i18n;
 
+import org.jspecify.annotations.Nullable;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -7,10 +9,10 @@ import java.util.*;
 /**
  * 一种语言,包含多个table的翻译信息
  */
-public class LangTextFinder extends TreeMap<String, LangTextFinder.TextFinder> {
+public class TranslationCatalog extends TreeMap<String, TranslationCatalog.TextFinder> {
 
 
-    public TextFinder getTextFinder(String table) {
+    public @Nullable TextFinder getTextFinder(String table) {
         return get(table);
     }
 
@@ -27,14 +29,14 @@ public class LangTextFinder extends TreeMap<String, LangTextFinder.TextFinder> {
          *
          * @return 返回翻译文本，如果未找到返回null
          */
-        String findText(String pk, List<String> fieldChain, String original);
+        @Nullable String findText(String pk, List<String> fieldChain, String original);
 
 
         void foreachText(TextVisitor visitor);
     }
 
 
-    public static LangTextFinder read(Path path) {
+    public static TranslationCatalog read(Path path) {
         if (isById(path)) {
             return TextByIdFinder.loadOneLang(path);
         } else {

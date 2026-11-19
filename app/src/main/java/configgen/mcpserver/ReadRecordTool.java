@@ -1,5 +1,7 @@
 package configgen.mcpserver;
 
+import org.jspecify.annotations.Nullable;
+
 import com.alibaba.fastjson2.JSONWriter;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
@@ -62,7 +64,7 @@ public class ReadRecordTool {
                                    String table,
                                    String recordId,
                                    List<String> errorMessages,
-                                   String recordJson) implements McpStructuredContent {
+                                   @Nullable String recordJson) implements McpStructuredContent {
     }
 
     @McpTool(description = "read one record")

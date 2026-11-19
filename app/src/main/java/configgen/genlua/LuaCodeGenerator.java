@@ -1,5 +1,9 @@
 package configgen.genlua;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
@@ -26,8 +30,8 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     private final String pkg;
     private final String encoding;
     private final boolean useEmmyLua;
-    private String setHandlerName;
-    private String handlerName;
+    private @Nullable String setHandlerName;
+    private @Nullable String handlerName;
     private final boolean preload;
     private final boolean useShared;
     private final boolean useSharedEmptyTable;
@@ -50,7 +54,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     private final ThreadLocal<StringBuilder> lineCacheTl = ThreadLocal.withInitial(() -> new StringBuilder(256));
     private final boolean noStr;
     private final boolean rForOldShared;
-    private final String mkCfgDir;
+    private final @Nullable String mkCfgDir;
 
     private static final List<String> COPY_FILES = List.of(
             "mkcfg.lua",
@@ -79,8 +83,9 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
-        aCtx = new AContext(pkg, ctx.nullableLangSwitch(), useSharedEmptyTable, useShared,
+        aCtx = new AContext(pkg, ctx.nullableTranslationBundle(), useSharedEmptyTable, useShared,
                 packBool, noStr, rForOldShared);
         isLangSwitch = aCtx.nullableLangSwitchSupport() != null;
 
@@ -368,7 +373,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         TableSchema table = vTable.schema();
 
         if (isLangSwitch) {
-            aCtx.nullableLangSwitchSupport().enterTable(table.name());
+            java.util.Objects.requireNonNull(aCtx.nullableLangSwitchSupport()).enterTable(table.name());
         }
 
         ps.println("local %s = require \"%s._cfgs\"", pkg, pkg);
@@ -462,12 +467,12 @@ public class LuaCodeGenerator extends GeneratorWithTag {
                 ps.println("local R = %s._mk.R", pkg); // 给lua个机会设置__newindex，做运行时检测
                 ps.println("local A = {}");
                 for (CtxShared.CompositeValueStr vstr : ctx.ctxShared().getSharedList()) {
-                    ps.println("%s = R(%s)", vstr.getName(), vstr.getValueStr());
+                    ps.println("%s = R(%s)", vstr.getName(), java.util.Objects.requireNonNull(vstr.getValueStr()));
                 }
             } else {
                 ps.println("local A = {}");
                 for (CtxShared.CompositeValueStr vstr : ctx.ctxShared().getSharedList()) {
-                    ps.println("%s = %s", vstr.getName(), vstr.getValueStr());
+                    ps.println("%s = %s", vstr.getName(), java.util.Objects.requireNonNull(vstr.getValueStr()));
                 }
             }
 

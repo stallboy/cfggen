@@ -1,5 +1,7 @@
 package configgen.gencs;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
@@ -15,12 +17,12 @@ public class StructModel {
     public final String topPkg;
     public final Name name;
     public final Structural structural;
-    public final CfgValue.VTable _vTable;
+    public final CfgValue.@Nullable VTable _vTable;
     private final CsCodeGenerator gen;
     public final boolean unity;
     public final boolean implicitUsings;
 
-    public StructModel(CsCodeGenerator gen, Structural structural, CfgValue.VTable _vTable) {
+    public StructModel(CsCodeGenerator gen, Structural structural, CfgValue.@Nullable VTable _vTable) {
         this.gen = gen;
         this.topPkg = gen.pkg;
         this.name = new Name(gen.pkg, gen.prefix, structural);
@@ -60,11 +62,12 @@ public class StructModel {
 
     public boolean hasEntry() {
         return _vTable != null && _vTable.schema().entry() instanceof EntryType.EEntry
-                && !_vTable.enumNames().isEmpty();
+                && !java.util.Objects.requireNonNull(_vTable.enumNames()).isEmpty();
     }
 
     public String symbolKey(String symbol) {
-        return _vTable.enumNameToIntegerValueMap() == null ? "\"" + symbol + "\"" : _vTable.enumNameToIntegerValueMap().get(symbol).toString();
+        var ids = java.util.Objects.requireNonNull(_vTable).enumNameToIntegerValueMap();
+        return ids == null ? "\"" + symbol + "\"" : java.util.Objects.requireNonNull(ids.get(symbol)).toString();
     }
 
     public String fullName(Nameable nameable) {
@@ -104,13 +107,13 @@ public class StructModel {
             case FLOAT -> "float";
             case STRING -> "string";
             case TEXT -> gen.isLangSwitch ? topPkg + ".Text" : "string";
-            case StructRef structRef -> fullName(structRef.obj());
+            case StructRef structRef -> fullName(structRef.resolvedObj());
             case FList fList -> "IReadOnlyList<" + type(fList.item()) + ">";
             case FMap fMap -> "IReadOnlyDictionary<" + type(fMap.key()) + ", " + type(fMap.value()) + ">";
         };
     }
 
-    public String create(FieldType t) {
+    public @Nullable String create(FieldType t) {
         return switch (t) {
             case BOOL -> "reader.ReadBool()";
             case INT -> "reader.ReadInt32()";
@@ -118,7 +121,7 @@ public class StructModel {
             case FLOAT -> "reader.ReadSingle()";
             case STRING -> "reader.ReadStringInPool()";
             case TEXT -> gen.isLangSwitch ? topPkg + ".Text._create(reader)" : "reader.ReadTextInPool()";
-            case StructRef structRef -> fullName(structRef.obj()) + "._create(reader)";
+            case StructRef structRef -> fullName(structRef.resolvedObj()) + "._create(reader)";
             case FList _, FMap _ -> null;
         };
     }

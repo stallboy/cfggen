@@ -1,26 +1,25 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：equip/jewelry.csv
 public class Jewelry {
-    private int iD;
-    private String name;
-    private String iconFile;
-    private config.LevelRank lvlRank;
-    private String jType;
-    private int suitID;
-    private int keyAbility;
-    private int keyAbilityValue;
-    private int salePrice;
-    private String description;
-    private config.equip.JewelryRandom RefLvlRank;
-    private config.equip.JewelryType RefJType;
-    private config.equip.JewelrySuit NullableRefSuitID;
-    private config.equip.Ability RefKeyAbility;
-
-    private Jewelry() {
-    }
+    private final int iD;
+    private final String name;
+    private final String iconFile;
+    private final config.LevelRank lvlRank;
+    private final String jType;
+    private final int suitID;
+    private final int keyAbility;
+    private final int keyAbilityValue;
+    private final int salePrice;
+    private final String description;
+    private config.equip.@Nullable JewelryRandom RefLvlRank;
+    private config.equip.@Nullable JewelryType RefJType;
+    private config.equip.@Nullable JewelrySuit NullableRefSuitID;
+    private config.equip.@Nullable Ability RefKeyAbility;
 
     Jewelry(JewelryBuilder b) {
         this.iD = b.iD;
@@ -35,19 +34,17 @@ public class Jewelry {
         this.description = b.description;
     }
 
-    public static Jewelry _create(configgen.genjava.ConfigInput input) {
-        Jewelry self = new Jewelry();
-        self.iD = input.readInt();
-        self.name = input.readStringInPool();
-        self.iconFile = input.readStringInPool();
-        self.lvlRank = config.LevelRank._create(input);
-        self.jType = input.readStringInPool();
-        self.suitID = input.readInt();
-        self.keyAbility = input.readInt();
-        self.keyAbilityValue = input.readInt();
-        self.salePrice = input.readInt();
-        self.description = input.readStringInPool();
-        return self;
+    private Jewelry(configgen.genjava.ConfigInput input) {
+        this.iD = input.readInt();
+        this.name = input.readStringInPool();
+        this.iconFile = input.readStringInPool();
+        this.lvlRank = config.LevelRank._create(input);
+        this.jType = input.readStringInPool();
+        this.suitID = input.readInt();
+        this.keyAbility = input.readInt();
+        this.keyAbilityValue = input.readInt();
+        this.salePrice = input.readInt();
+        this.description = input.readStringInPool();
     }
 
     /**
@@ -120,19 +117,19 @@ public class Jewelry {
         return description;
     }
 
-    public config.equip.JewelryRandom refLvlRank() {
+    public config.equip.@Nullable JewelryRandom refLvlRank() {
         return RefLvlRank;
     }
 
-    public config.equip.JewelryType refJType() {
+    public config.equip.@Nullable JewelryType refJType() {
         return RefJType;
     }
 
-    public config.equip.JewelrySuit nullableRefSuitID() {
+    public config.equip.@Nullable JewelrySuit nullableRefSuitID() {
         return NullableRefSuitID;
     }
 
-    public config.equip.Ability refKeyAbility() {
+    public config.equip.@Nullable Ability refKeyAbility() {
         return RefKeyAbility;
     }
 
@@ -159,7 +156,11 @@ public class Jewelry {
 
     }
 
-    public static Jewelry get(int iD) {
+    public static Jewelry _create(configgen.genjava.ConfigInput input) {
+        return new Jewelry(input);
+    }
+
+    public static @Nullable Jewelry get(int iD) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getEquipJewelry(iD);
     }

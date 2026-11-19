@@ -13,6 +13,7 @@ import static configgen.value.CfgValue.VTable;
 
 public class ConfigMgrLoaderModel {
     public final String pkg;
+    public final GenCfg cfg;
     public final List<TableInfo> tables;
     public final List<String> setAllRefs_FullClassNames;
     public final String languageLiterals;
@@ -26,6 +27,7 @@ public class ConfigMgrLoaderModel {
     }
 
     public ConfigMgrLoaderModel(GenCfg cfg, CfgValue cfgValue, List<String> setAllRefsInMgrLoader, List<String> languages) {
+        this.cfg = cfg;
         this.pkg = cfg.codeTopPkg();
         this.setAllRefs_FullClassNames = setAllRefsInMgrLoader;
         this.languageLiterals = languages.stream().map(s -> "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"")

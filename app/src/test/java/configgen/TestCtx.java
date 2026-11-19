@@ -1,6 +1,7 @@
 package configgen;
 
 import configgen.ctx.Context;
+import configgen.ctx.Context.I18nCfg;
 import configgen.data.HeadRows;
 
 import java.nio.file.Path;
@@ -27,6 +28,6 @@ public final class TestCtx {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         csvByName.forEach((name, csv) -> Resources.addTempFileFromText(name + ".csv", tempDir, csv));
         return new Context(new Context.ContextCfg(tempDir, null, HeadRows.A2_Default, "UTF-8",
-                null, langsDir.toString(), defaultLang, false));
+                new I18nCfg.Switchable(langsDir, defaultLang), false));
     }
 }

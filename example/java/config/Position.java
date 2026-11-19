@@ -1,11 +1,11 @@
 package config;
 
+import org.jspecify.annotations.Nullable;
+
 public class Position {
-    private int x;
-    private int y;
-    private int z;
-    private Position() {
-    }
+    private final int x;
+    private final int y;
+    private final int z;
 
     public Position(int x, int y, int z) {
         this.x = x;
@@ -13,12 +13,10 @@ public class Position {
         this.z = z;
     }
 
-    public static Position _create(configgen.genjava.ConfigInput input) {
-        Position self = new Position();
-        self.x = input.readInt();
-        self.y = input.readInt();
-        self.z = input.readInt();
-        return self;
+    private Position(configgen.genjava.ConfigInput input) {
+        this.x = input.readInt();
+        this.y = input.readInt();
+        this.z = input.readInt();
     }
 
     public int getX() {
@@ -39,7 +37,7 @@ public class Position {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof Position o)) {
             return false;
         }
@@ -49,6 +47,10 @@ public class Position {
     @Override
     public String toString() {
         return "(" + x + "," + y + "," + z + ")";
+    }
+
+    public static Position _create(configgen.genjava.ConfigInput input) {
+        return new Position(input);
     }
 
 }

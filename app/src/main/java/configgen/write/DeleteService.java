@@ -1,5 +1,7 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.data.CfgData.DRawSheet;
 import configgen.data.CfgData.DTable;
@@ -8,7 +10,6 @@ import configgen.value.CfgValue;
 import configgen.value.CfgValueErrs;
 import configgen.value.ValuePack;
 import configgen.write.ValueUpdater.NewCfgValueResult;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -25,14 +26,14 @@ public class DeleteService {
     }
 
     public record DeleteRecordResult(DeleteErrorCode errorCode,
-                                     CfgValue newCfgValue,
+                                     @Nullable CfgValue newCfgValue,
                                      List<String> errorMessages) {
     }
 
-    public static DeleteRecordResult deleteRecord(@NotNull Context context,
-                                                  @NotNull CfgValue cfgValue,
-                                                  @NotNull String tableName,
-                                                  @NotNull String recordId) {
+    public static DeleteRecordResult deleteRecord(Context context,
+                                                  CfgValue cfgValue,
+                                                  String tableName,
+                                                  String recordId) {
 
         if (cfgValue.schema().isPartial()) {
             return new DeleteRecordResult(DeleteErrorCode.PartialNotEditable, null, List.of());
@@ -61,12 +62,12 @@ public class DeleteService {
                 var directoryStructure = context.sourceStructure();
                 Path tableDir = context.sourceStructure().getJsonTableDir(tableName);
                 Path relativeJsonPath = VTableJsonStorage.deleteRecord(tableName, recordId, context.rootDir(), directoryStructure);
-                nr = ValueUpdater.updateByJsonFileDelete(context, cfgValue, vTable, pkValue, recordId);
+                nr = ValueUpdater.updateByJsonFileDelete(context, cfgValue, vTable, java.util.Objects.requireNonNull(pkValue), recordId);
                 context.sourceStructure().removeJsonFile(tableName, relativeJsonPath);
 
             } else {
                 DTable dTable = context.cfgData().getDTable(tableName);
-                DRawSheet dRawSheet = VTableStorage.deleteRecord(context, dTable, old);
+                DRawSheet dRawSheet = VTableStorage.deleteRecord(context, java.util.Objects.requireNonNull(dTable), old);
                 nr = ValueUpdater.updateByReloadTableData(context, cfgValue, vTable);
                 context.sourceStructure().updateExcelFileLastModified(Path.of(dRawSheet.relativeFilePath()));
             }

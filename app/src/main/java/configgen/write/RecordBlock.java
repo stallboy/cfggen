@@ -1,5 +1,7 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -8,7 +10,7 @@ import java.util.Objects;
  */
 public class RecordBlock {
     private final int maxColumns;
-    private String[][] cells;
+    private @Nullable String[] @Nullable [] cells;
     private int maxRow = -1;
 
     public RecordBlock(int maxColumns) {
@@ -28,10 +30,12 @@ public class RecordBlock {
             throw new IllegalArgumentException("Invalid row or column index");
         }
         expandIfNeeded(row);
-        if (cells[row] == null) {
-            cells[row] = new String[maxColumns];
+        @Nullable String[] rowCells = cells[row];
+        if (rowCells == null) {
+            rowCells = new String[maxColumns];
+            cells[row] = rowCells;
         }
-        cells[row][col] = value;
+        rowCells[col] = value;
         if (row > maxRow) {
             maxRow = row;
         }
@@ -47,7 +51,7 @@ public class RecordBlock {
         }
 
         if (needExpand) {
-            String[][] newCells = new String[len][];
+            @Nullable String[] @Nullable [] newCells = new String[len][];
             System.arraycopy(cells, 0, newCells, 0, cells.length);
             cells = newCells;
         }
@@ -76,15 +80,15 @@ public class RecordBlock {
         }
 
 
-        public String[] getRow(int row) {
+        public @Nullable String @Nullable [] getRow(int row) {
             if (row < 0 || row > block.maxRow) {
                 throw new IllegalArgumentException("Invalid row index");
             }
-            String[] rowCells = block.cells[row];
+            @Nullable String[] rowCells = block.cells[row];
             if (rowCells == null) {
                 return null;
             }
-            String[] trans = new String[dataMaxColumns];
+            @Nullable String[] trans = new String[dataMaxColumns];
             for (int i = 0; i < block.maxColumns; i++) {
                 String cell = rowCells[i];
                 if (cell != null) {

@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 public class ForeignKeySchema {
@@ -9,8 +11,8 @@ public class ForeignKeySchema {
     private final RefKey refKey;
     private final Metadata meta;
 
-    private TableSchema refTableSchema;
-    private int[] keyIndices;
+    private @Nullable TableSchema refTableSchema;
+    private int @Nullable [] keyIndices;
 
     public ForeignKeySchema(String name, KeySchema key, String refTable, RefKey refKey, Metadata meta) {
         this.name = name;
@@ -45,7 +47,7 @@ public class ForeignKeySchema {
     }
 
     public String refTableNormalized() {
-        return refTableSchema.name();
+        return refTableSchema().name();
     }
 
     public RefKey refKey() {
@@ -53,11 +55,11 @@ public class ForeignKeySchema {
     }
 
     public TableSchema refTableSchema() {
-        return refTableSchema;
+        return java.util.Objects.requireNonNull(refTableSchema);
     }
 
     public int[] keyIndices() {
-        return keyIndices;
+        return java.util.Objects.requireNonNull(keyIndices);
     }
 
     void setRefTableSchema(TableSchema refTableSchema) {
@@ -85,7 +87,7 @@ public class ForeignKeySchema {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ForeignKeySchema that = (ForeignKeySchema) o;

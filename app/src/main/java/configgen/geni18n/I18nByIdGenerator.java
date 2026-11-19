@@ -55,19 +55,19 @@ public final class I18nByIdGenerator extends Generator {
         CfgValue cfgValue = ctx.makeValue();
 
 
-        if (ctx.nullableLangSwitch() != null) {
+        if (ctx.nullableTranslationBundle() != null) {
             // -langSwitchDir 对应的outputDir是单一语言的上层目录
-            for (var e : ctx.nullableLangSwitch().langMap().entrySet()) {
+            for (var e : ctx.nullableTranslationBundle().langMap().entrySet()) {
                 String lang = e.getKey();
-                LangTextFinder langFinder = e.getValue();
-                TextValue.setTranslated(cfgValue, langFinder);
+                TranslationCatalog catalog = e.getValue();
+                TextValue.setTranslated(cfgValue, catalog);
                 generateForValueWithLog(cfgValue, lang, checkWrite, outputDir, backupDir);
             }
 
         } else {
             // -i18nfile 对应的outputDir是单一语言的目录
             String lang = outputDir.getFileName().toString();
-            Path langsDir = outputDir.getParent();
+            Path langsDir = java.util.Objects.requireNonNull(outputDir.getParent());
             generateForValueWithLog(cfgValue, lang, checkWrite, langsDir, backupDir);
         }
     }

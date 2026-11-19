@@ -12,6 +12,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BlockMigrationToolTest {
@@ -67,7 +68,7 @@ class BlockMigrationToolTest {
         assertEquals(1, report.diffTableCount());
         assertEquals(2, report.diffRecordCount());
 
-        List<BlockDiff> diffs = report.diffs().get("t");
+        List<BlockDiff> diffs = requireNonNull(report.diffs().get("t"));
         assertEquals(2, diffs.size());
 
         // wave1 的 spawns：旧 1 → 新 3，丢失 Excel 行 4、5

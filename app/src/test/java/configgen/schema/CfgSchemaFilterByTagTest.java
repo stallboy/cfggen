@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CfgSchemaFilterByTagTest {
@@ -30,16 +31,16 @@ class CfgSchemaFilterByTagTest {
         CfgSchema filtered = new CfgSchemaFilterByTag(original, tag, diagnostics).filter();
         filtered.resolve().checkErrors();
 
-        InterfaceSchema originalAction = (InterfaceSchema) original.findFieldable("td.Action");
-        InterfaceSchema filteredAction = (InterfaceSchema) filtered.findFieldable("td.Action");
+        InterfaceSchema originalAction = requireNonNull((InterfaceSchema) original.findFieldable("td.Action"));
+        InterfaceSchema filteredAction = requireNonNull((InterfaceSchema) filtered.findFieldable("td.Action"));
         assertEquals(original.items().size(), filtered.items().size());
         assertEquals(3, filteredAction.impls().size());
         for (var entry : Map.of("ApplyBuff", "buff", "Damage", "damageType", "Summon", "hero").entrySet()) {
-            StructSchema originalImpl = originalAction.findImpl(entry.getKey());
-            StructSchema filteredImpl = filteredAction.findImpl(entry.getKey());
+            StructSchema originalImpl = requireNonNull(originalAction.findImpl(entry.getKey()));
+            StructSchema filteredImpl = requireNonNull(filteredAction.findImpl(entry.getKey()));
             assertNotNull(filteredImpl.findField(entry.getValue()));
             assertEquals(1, filteredImpl.foreignKeys().size());
-            ForeignKeySchema originalRef = originalImpl.findForeignKey(entry.getValue());
+            ForeignKeySchema originalRef = requireNonNull(originalImpl.findForeignKey(entry.getValue()));
             ForeignKeySchema filteredRef = filteredImpl.findForeignKey(entry.getValue());
             assertNotNull(filteredRef);
             assertEquals(originalRef.refTableNormalized(), filteredRef.refTableNormalized());
@@ -67,7 +68,7 @@ class CfgSchemaFilterByTagTest {
         CfgSchema filtered = new CfgSchemaFilterByTag(original, "-editor", diagnostics).filter();
         filtered.resolve().checkErrors();
 
-        StructSchema impl = ((InterfaceSchema) filtered.findFieldable("td.Action")).findImpl("ApplyBuff");
+        StructSchema impl = requireNonNull(requireNonNull(((InterfaceSchema) filtered.findFieldable("td.Action"))).findImpl("ApplyBuff"));
         assertNotNull(impl.findField("buff"));
         ForeignKeySchema buffRef = impl.findForeignKey("buff");
         assertNotNull(buffRef);
@@ -76,7 +77,7 @@ class CfgSchemaFilterByTagTest {
         assertNull(impl.findForeignKey("previewBuff"));
         assertNull(impl.findField("note"));
         assertTrue(diagnostics.weakWarns().isEmpty());
-        StructSchema originalImpl = ((InterfaceSchema) original.findFieldable("td.Action")).findImpl("ApplyBuff");
+        StructSchema originalImpl = requireNonNull(requireNonNull(((InterfaceSchema) original.findFieldable("td.Action"))).findImpl("ApplyBuff"));
         assertNotNull(originalImpl.findField("previewBuff"));
         assertNotNull(originalImpl.findForeignKey("previewBuff"));
     }
@@ -89,8 +90,8 @@ class CfgSchemaFilterByTagTest {
                 interface td.Action { struct ApplyBuff { buff:int ->buff; } }
                 """);
         original.resolve().checkErrors();
-        StructSchema originalImpl = ((InterfaceSchema) original.findFieldable("td.Action")).findImpl("ApplyBuff");
-        assertEquals("td.buff", originalImpl.findForeignKey("buff").refTableNormalized());
+        StructSchema originalImpl = requireNonNull(requireNonNull(((InterfaceSchema) original.findFieldable("td.Action"))).findImpl("ApplyBuff"));
+        assertEquals("td.buff", requireNonNull(originalImpl.findForeignKey("buff")).refTableNormalized());
         CfgSchemaErrs diagnostics = CfgSchemaErrs.of();
 
         CfgSchema filtered = new CfgSchemaFilterByTag(original, "-editor", diagnostics).filter();
@@ -98,7 +99,7 @@ class CfgSchemaFilterByTagTest {
 
         assertNull(filtered.findTable("td.buff"));
         assertNotNull(filtered.findTable("buff"));
-        StructSchema impl = ((InterfaceSchema) filtered.findFieldable("td.Action")).findImpl("ApplyBuff");
+        StructSchema impl = requireNonNull(requireNonNull(((InterfaceSchema) filtered.findFieldable("td.Action"))).findImpl("ApplyBuff"));
         assertNotNull(impl.findField("buff"));
         assertNull(impl.findForeignKey("buff"));
         assertEquals(1, diagnostics.weakWarns().size());
@@ -128,12 +129,12 @@ class CfgSchemaFilterByTagTest {
         CfgSchema filtered = new CfgSchemaFilterByTag(original, "-editor", diagnostics).filter();
         filtered.resolve().checkErrors();
 
-        TableSchema target = filtered.findTable("td.buff");
+        TableSchema target = requireNonNull(filtered.findTable("td.buff"));
         assertNotNull(target.findField("id"));
         assertNull(target.findField("code"));
         assertNull(target.findField("category"));
         assertTrue(target.uniqueKeys().isEmpty());
-        StructSchema impl = ((InterfaceSchema) filtered.findFieldable("td.Action")).findImpl("ApplyBuff");
+        StructSchema impl = requireNonNull(requireNonNull(((InterfaceSchema) filtered.findFieldable("td.Action"))).findImpl("ApplyBuff"));
         ForeignKeySchema buffRef = impl.findForeignKey("buff");
         assertNotNull(buffRef);
         assertEquals("td.buff", buffRef.refTableNormalized());
@@ -182,7 +183,7 @@ class CfgSchemaFilterByTagTest {
         CfgSchema cfg = CfgReader.parse(str);
         CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, cfg.items().size());
-        TableSchema tab1 = cfg.findTable("tab1");
+        TableSchema tab1 = requireNonNull(cfg.findTable("tab1"));
         assertEquals(3, tab1.fields().size());
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
@@ -216,7 +217,7 @@ class CfgSchemaFilterByTagTest {
         errs = cfg.resolve();
 
         assertInstanceOf(CfgSchemaErrs.KeyNotFound.class, errs.errs().getFirst());
-        TableSchema tab1 = cfg.findTable("tab1");
+        TableSchema tab1 = requireNonNull(cfg.findTable("tab1"));
         assertEquals(2, tab1.fields().size());
         assertNotNull(tab1.findField("v"));
         assertNotNull(tab1.findField("v2"));
@@ -240,7 +241,7 @@ class CfgSchemaFilterByTagTest {
         cfg = clientCfgSchema.filter();
         cfg.resolve();
 
-        TableSchema tab1 = cfg.findTable("tab1");
+        TableSchema tab1 = requireNonNull(cfg.findTable("tab1"));
         assertEquals(3, tab1.fields().size());
     }
 
@@ -261,7 +262,7 @@ class CfgSchemaFilterByTagTest {
         cfg = clientCfgSchema.filter();
         cfg.resolve();
 
-        TableSchema tab1 = cfg.findTable("tab1");
+        TableSchema tab1 = requireNonNull(cfg.findTable("tab1"));
         assertEquals(2, tab1.fields().size());
         assertNotNull(tab1.findField("id"));
         assertNotNull(tab1.findField("v"));
@@ -285,7 +286,7 @@ class CfgSchemaFilterByTagTest {
         cfg = clientCfgSchema.filter();
         cfg.resolve();
 
-        TableSchema tab1 = cfg.findTable("tab1");
+        TableSchema tab1 = requireNonNull(cfg.findTable("tab1"));
         assertEquals(2, tab1.fields().size());
         assertNotNull(tab1.findField("id"));
         assertNotNull(tab1.findField("v"));
@@ -309,7 +310,7 @@ class CfgSchemaFilterByTagTest {
         cfg = clientCfgSchema.filter();
         cfg.resolve();
 
-        TableSchema tab1 = cfg.findTable("tab1");
+        TableSchema tab1 = requireNonNull(cfg.findTable("tab1"));
         assertEquals(1, tab1.fields().size());
         assertNotNull(tab1.findField("id"));
     }
@@ -332,7 +333,7 @@ class CfgSchemaFilterByTagTest {
         CfgSchemaErrs errs2 = cfg.resolve();
         assertEquals(0, errs2.errs().size());
 
-        InterfaceSchema action = (InterfaceSchema) cfg.findFieldable("action");
+        InterfaceSchema action = requireNonNull((InterfaceSchema) cfg.findFieldable("action"));
         assertEquals(1, action.impls().size());
         StructSchema first = action.impls().getFirst();
         assertEquals(1, first.fields().size());
@@ -358,7 +359,7 @@ class CfgSchemaFilterByTagTest {
         CfgSchemaErrs errs2 = cfg.resolve();
         assertEquals(0, errs2.errs().size());
 
-        InterfaceSchema action = (InterfaceSchema) cfg.findFieldable("action");
+        InterfaceSchema action = requireNonNull((InterfaceSchema) cfg.findFieldable("action"));
         assertEquals(1, action.impls().size());
         StructSchema first = action.impls().getFirst();
         assertEquals(0, first.fields().size());

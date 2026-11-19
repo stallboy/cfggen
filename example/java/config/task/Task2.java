@@ -1,83 +1,80 @@
 package config.task;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public class Task2 {
-    private int taskid;
-    private java.util.List<String> name;
-    private int nexttask;
-    private config.task.completecondition.Completecondition completecondition;
-    private int exp;
-    private boolean testBool;
-    private String testString;
-    private config.Position testStruct;
-    private java.util.List<Integer> testList;
-    private java.util.List<config.Position> testListStruct;
-    private java.util.List<config.ai.triggertick.TriggerTick> testListInterface;
-    private config.task.TaskExtraExp NullableRefTaskid;
-    private config.task.Task NullableRefNexttask;
+    private final int taskid;
+    private final java.util.List<String> name;
+    private final int nexttask;
+    private final config.task.completecondition.Completecondition completecondition;
+    private final int exp;
+    private final boolean testBool;
+    private final String testString;
+    private final config.Position testStruct;
+    private final java.util.List<Integer> testList;
+    private final java.util.List<config.Position> testListStruct;
+    private final java.util.List<config.ai.triggertick.TriggerTick> testListInterface;
+    private config.task.@Nullable TaskExtraExp NullableRefTaskid;
+    private config.task.@Nullable Task NullableRefNexttask;
 
-    private Task2() {
-    }
-
-    public static Task2 _create(configgen.genjava.ConfigInput input) {
-        Task2 self = new Task2();
-        self.taskid = input.readInt();
+    private Task2(configgen.genjava.ConfigInput input) {
+        this.taskid = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.name = java.util.Collections.emptyList();
+                this.name = java.util.Collections.emptyList();
             } else {
-                self.name = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<String>(c);
                 for (; c > 0; c--) {
-                    self.name.add(input.readTextInPool());
+                    items.add(input.readTextInPool());
                 }
-                self.name = java.util.Collections.unmodifiableList(self.name);
+                this.name = java.util.Collections.unmodifiableList(items);
             }
         }
-        self.nexttask = input.readInt();
-        self.completecondition = config.task.completecondition.Completecondition._create(input);
-        self.exp = input.readInt();
-        self.testBool = input.readBool();
-        self.testString = input.readStringInPool();
-        self.testStruct = config.Position._create(input);
+        this.nexttask = input.readInt();
+        this.completecondition = config.task.completecondition.Completecondition._create(input);
+        this.exp = input.readInt();
+        this.testBool = input.readBool();
+        this.testString = input.readStringInPool();
+        this.testStruct = config.Position._create(input);
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.testList = java.util.Collections.emptyList();
+                this.testList = java.util.Collections.emptyList();
             } else {
-                self.testList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.testList.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.testList = java.util.Collections.unmodifiableList(self.testList);
+                this.testList = java.util.Collections.unmodifiableList(items);
             }
         }
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.testListStruct = java.util.Collections.emptyList();
+                this.testListStruct = java.util.Collections.emptyList();
             } else {
-                self.testListStruct = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<config.Position>(c);
                 for (; c > 0; c--) {
-                    self.testListStruct.add(config.Position._create(input));
+                    items.add(config.Position._create(input));
                 }
-                self.testListStruct = java.util.Collections.unmodifiableList(self.testListStruct);
+                this.testListStruct = java.util.Collections.unmodifiableList(items);
             }
         }
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.testListInterface = java.util.Collections.emptyList();
+                this.testListInterface = java.util.Collections.emptyList();
             } else {
-                self.testListInterface = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<config.ai.triggertick.TriggerTick>(c);
                 for (; c > 0; c--) {
-                    self.testListInterface.add(config.ai.triggertick.TriggerTick._create(input));
+                    items.add(config.ai.triggertick.TriggerTick._create(input));
                 }
-                self.testListInterface = java.util.Collections.unmodifiableList(self.testListInterface);
+                this.testListInterface = java.util.Collections.unmodifiableList(items);
             }
         }
-        return self;
     }
 
     /**
@@ -127,11 +124,11 @@ public class Task2 {
         return testListInterface;
     }
 
-    public config.task.TaskExtraExp nullableRefTaskid() {
+    public config.task.@Nullable TaskExtraExp nullableRefTaskid() {
         return NullableRefTaskid;
     }
 
-    public config.task.Task nullableRefNexttask() {
+    public config.task.@Nullable Task nullableRefNexttask() {
         return NullableRefNexttask;
     }
 
@@ -147,7 +144,11 @@ public class Task2 {
 
     }
 
-    public static Task2 get(int taskid) {
+    public static Task2 _create(configgen.genjava.ConfigInput input) {
+        return new Task2(input);
+    }
+
+    public static @Nullable Task2 get(int taskid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getTaskTask2(taskid);
     }

@@ -4,6 +4,7 @@ import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.schema.FieldType.Primitive.INT;
 
 import java.util.List;
@@ -120,69 +121,69 @@ class SpanTest {
 
     @Test
     public void span_for_simple_table() {
-        assertEquals(2, Span.span(cfg.findTable("ability")));
+        assertEquals(2, Span.span(requireNonNull(cfg.findTable("ability"))));
     }
 
     @Test
     public void span_for_simple_struct() {
-        assertEquals(3, Span.span(cfg.findFieldable("AttrRandom")));
-        assertEquals(4, Span.span(cfg.findTable("item")));
+        assertEquals(3, Span.span(requireNonNull(cfg.findFieldable("AttrRandom"))));
+        assertEquals(4, Span.span(requireNonNull(cfg.findTable("item"))));
     }
 
     @Test
     public void span1_for_primitive() {
-        TableSchema t = cfg.findTable("test");
-        assertEquals(1, Span.fieldSpan(t.findField("id")));
-        assertEquals(1, Span.fieldSpan(t.findField("bool1")));
-        assertEquals(1, Span.fieldSpan(t.findField("long1")));
-        assertEquals(1, Span.fieldSpan(t.findField("float1")));
-        assertEquals(1, Span.fieldSpan(t.findField("str1")));
-        assertEquals(1, Span.fieldSpan(t.findField("text1")));
+        TableSchema t = requireNonNull(cfg.findTable("test"));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("id"))));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("bool1"))));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("long1"))));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("float1"))));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("str1"))));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("text1"))));
     }
 
     @Test
     public void span1_for_struct_pack() {
-        TableSchema t = cfg.findTable("test");
-        assertEquals(1, Span.fieldSpan(t.findField("attrPack1")));
+        TableSchema t = requireNonNull(cfg.findTable("test"));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("attrPack1"))));
     }
 
     @Test
     public void span1_for_struct_sep() {
-        TableSchema t = cfg.findTable("test");
-        assertEquals(1, Span.fieldSpan(t.findField("attrSep1")));
+        TableSchema t = requireNonNull(cfg.findTable("test"));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("attrSep1"))));
     }
 
     @Test
     public void span_for_list() {
-        TableSchema t = cfg.findTable("test");
-        assertEquals(3, Span.fieldSpan(t.findField("listFix1")));
-        assertEquals(3, Span.fieldSpan(t.findField("listBlock1")));
-        assertEquals(1, Span.fieldSpan(t.findField("listSep1")));
-        assertEquals(1, Span.fieldSpan(t.findField("listPack1")));
+        TableSchema t = requireNonNull(cfg.findTable("test"));
+        assertEquals(3, Span.fieldSpan(requireNonNull(t.findField("listFix1"))));
+        assertEquals(3, Span.fieldSpan(requireNonNull(t.findField("listBlock1"))));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("listSep1"))));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("listPack1"))));
 
-        assertEquals(6, Span.fieldSpan(t.findField("listFix2")));
-        assertEquals(6, Span.fieldSpan(t.findField("listBlock2")));
-        assertEquals(1, Span.fieldSpan(t.findField("listPack2")));
+        assertEquals(6, Span.fieldSpan(requireNonNull(t.findField("listFix2"))));
+        assertEquals(6, Span.fieldSpan(requireNonNull(t.findField("listBlock2"))));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("listPack2"))));
     }
 
     @Test
     public void span_for_map() {
-        TableSchema t = cfg.findTable("test");
-        assertEquals(6, Span.fieldSpan(t.findField("mapFix1")));
-        assertEquals(6, Span.fieldSpan(t.findField("mapBlock1")));
-        assertEquals(1, Span.fieldSpan(t.findField("mapPack1")));
-        assertEquals(8, Span.fieldSpan(t.findField("mapFix2")));
+        TableSchema t = requireNonNull(cfg.findTable("test"));
+        assertEquals(6, Span.fieldSpan(requireNonNull(t.findField("mapFix1"))));
+        assertEquals(6, Span.fieldSpan(requireNonNull(t.findField("mapBlock1"))));
+        assertEquals(1, Span.fieldSpan(requireNonNull(t.findField("mapPack1"))));
+        assertEquals(8, Span.fieldSpan(requireNonNull(t.findField("mapFix2"))));
     }
 
     @Test
     public void span_for_interface() {
-        Fieldable t = cfg.findFieldable("condition");
+        Fieldable t = requireNonNull(cfg.findFieldable("condition"));
         assertEquals(4, Span.span(t));
     }
 
     @Test
     public void span_no_calc_for_unused_struct() {
-        Fieldable t = cfg.findFieldable("NoNoNo");
+        Fieldable t = requireNonNull(cfg.findFieldable("NoNoNo"));
         assertThrows(IllegalStateException.class, () -> Span.span(t));
     }
 

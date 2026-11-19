@@ -7,6 +7,22 @@ package configgen.genjava.code;
  * 并发生成（多个 generator 实例、watch 触发的 postRun 线程）会互相踩踏。
  * 现改为 generate() 入口构造一份不可变实例，沿 model 链显式传递。
  */
-public record GenCfg(String codeTopPkg, boolean isSealedInterface, boolean beautifulName, boolean isLangSwitch,
-                     String prefix) {
+public record GenCfg(String codeTopPkg, boolean isSealedInterface, boolean beautifulName, int languageCount,
+                     String prefix, boolean jspecify) {
+    public boolean isLangSwitch() {
+        return languageCount > 0;
+    }
+
+    public String nullable(String type) {
+        if (!jspecify) {
+            return type;
+        }
+        int genericStart = type.indexOf('<');
+        int simpleNameStart = 1 + (genericStart < 0 ? type.lastIndexOf('.') : type.lastIndexOf('.', genericStart));
+        return type.substring(0, simpleNameStart) + "@Nullable " + type.substring(simpleNameStart);
+    }
+
+    public String requireNonNull(String expression) {
+        return jspecify ? "java.util.Objects.requireNonNull(" + expression + ")" : expression;
+    }
 }

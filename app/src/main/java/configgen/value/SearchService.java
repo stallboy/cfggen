@@ -1,6 +1,7 @@
 package configgen.value;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,7 @@ public class SearchService {
                                List<SearchResultItem> items) {
     }
 
-    public static SearchResult search(CfgValue cfgValue, String q, int maxItems) {
+    public static SearchResult search(CfgValue cfgValue, @Nullable String q, int maxItems) {
         if (q == null || q.isBlank()) {
             return new SearchResult(ResultCode.qNotSet, q == null ? "" : q, maxItems, List.of());
         }
@@ -51,7 +52,7 @@ public class SearchService {
     /**
      * @param maxItems <=0 means no limit
      */
-    public static SearchResult searchNumber(@NotNull CfgValue cfgValue, long value, int maxItems) {
+    public static SearchResult searchNumber(CfgValue cfgValue, long value, int maxItems) {
         NumberVisitor visitor = NumberVisitor.of(value);
 
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
@@ -66,7 +67,7 @@ public class SearchService {
         return new SearchResult(ResultCode.ok, String.valueOf(value), maxItems, items);
     }
 
-    public static SearchResult searchNumber(@NotNull CfgValue.VTable vTable, long value, int maxItems) {
+    public static SearchResult searchNumber(CfgValue.VTable vTable, long value, int maxItems) {
         NumberVisitor visitor = NumberVisitor.of(value);
         ForeachValue.searchVTable(visitor, vTable);
         List<SearchResultItem> items = maxItems > 0 ? visitor.result.subList(0, Math.min(maxItems, visitor.result.size()))
@@ -75,7 +76,7 @@ public class SearchService {
     }
 
 
-    public static SearchResult searchStrInTable(@NotNull CfgValue cfgValue, String keyword, int maxItems) {
+    public static SearchResult searchStrInTable(CfgValue cfgValue, String keyword, int maxItems) {
         StringVisitor visitor = StringVisitor.of(keyword);
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
             ForeachValue.searchVTable(visitor, vTable);
@@ -89,7 +90,7 @@ public class SearchService {
     }
 
 
-    public static SearchResult searchStrInTable(@NotNull CfgValue.VTable vTable, String keyword, int maxItems) {
+    public static SearchResult searchStrInTable(CfgValue.VTable vTable, String keyword, int maxItems) {
         StringVisitor visitor = StringVisitor.of(keyword);
         ForeachValue.searchVTable(visitor, vTable);
         List<SearchResultItem> items = maxItems > 0 ? visitor.result.subList(0, Math.min(maxItems, visitor.result.size()))

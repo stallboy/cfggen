@@ -1,8 +1,9 @@
 package configgen.data;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,7 @@ public record CfgData(Map<String, DTable> tables,
         Objects.requireNonNull(stat);
     }
 
-    public DTable getDTable(String table) {
+    public @Nullable DTable getDTable(String table) {
         return tables.get(table);
     }
 
@@ -39,7 +40,7 @@ public record CfgData(Map<String, DTable> tables,
                          List<DField> fields,       // by HeadParser
                          List<List<DCell>> rows,    // by CellParser
                          List<DRawSheet> rawSheets, // by CfgDataReader
-                         String nullableAddTag) {
+                         @Nullable String nullableAddTag) {
         public DTable {
             Objects.requireNonNull(tableName);
             Objects.requireNonNull(fields);
@@ -51,7 +52,7 @@ public record CfgData(Map<String, DTable> tables,
             return of(tableName, rawSheets, null);
         }
 
-        public static DTable of(String tableName, List<DRawSheet> rawSheets, String nullableAddTag) {
+        public static DTable of(String tableName, List<DRawSheet> rawSheets, @Nullable String nullableAddTag) {
             return new DTable(tableName, new ArrayList<>(), new ArrayList<>(), rawSheets, nullableAddTag);
         }
 
@@ -89,8 +90,8 @@ public record CfgData(Map<String, DTable> tables,
          * @param rowId rowId.row，col 是逻辑上的行号和列号，要得到excel文件中具体的行和列需要外界提供isColumnMode
          * @param col   列号
          */
-        public DCell(@NotNull String value,
-                     @NotNull DRowId rowId,
+        public DCell(String value,
+                     DRowId rowId,
                      int col,
                      byte mode) {
             Objects.requireNonNull(value);
@@ -102,8 +103,8 @@ public record CfgData(Map<String, DTable> tables,
         }
 
 
-        public static DCell of(@NotNull String content,
-                               @NotNull String fileName) {
+        public static DCell of(String content,
+                               String fileName) {
             return new DCell(content, new CfgData.DRowId(fileName, "", 0), 0, CELL_FAKE);
         }
 
@@ -184,8 +185,8 @@ public record CfgData(Map<String, DTable> tables,
 
     }
 
-    public record DRowId(@NotNull String fileName,
-                         @NotNull String sheetName,
+    public record DRowId(String fileName,
+                         String sheetName,
                          int row) {
     }
 
@@ -197,11 +198,11 @@ public record CfgData(Map<String, DTable> tables,
      * @param fieldIndices csv或sheet中第二行是程序用名，做为field跟schema对应，可以为空，用于策划注释。
      *                     fieldIndices用于把field给挑选出来。
      */
-    public record DRawSheet(@NotNull String relativeFilePath,
-                            @NotNull String sheetName,
+    public record DRawSheet(String relativeFilePath,
+                            String sheetName,
                             int index,
-                            @NotNull List<DRawRow> rows,  // by reader
-                            @NotNull List<Integer> fieldIndices /* by HeadParser */) {
+                            List<DRawRow> rows,  // by reader
+                            List<Integer> fieldIndices /* by HeadParser */) {
         public DRawSheet {
             Objects.requireNonNull(relativeFilePath);
             Objects.requireNonNull(sheetName);

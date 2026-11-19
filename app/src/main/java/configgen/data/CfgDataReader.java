@@ -1,5 +1,7 @@
 package configgen.data;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.data.DataUtil.TableNameIndex;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemaErrs;
@@ -30,7 +32,7 @@ public record CfgDataReader(HeadRow headRow,
         Objects.requireNonNull(excelReader);
     }
 
-    public CfgData readCfgData(Collection<ExcelFileInfo> excelFiles, CfgSchema nullableCfgSchema, CfgSchemaErrs errs) {
+    public CfgData readCfgData(Collection<ExcelFileInfo> excelFiles, @Nullable CfgSchema nullableCfgSchema, CfgSchemaErrs errs) {
         Objects.requireNonNull(excelFiles);
         Objects.requireNonNull(errs);
         try {
@@ -40,8 +42,7 @@ public record CfgDataReader(HeadRow headRow,
         }
     }
 
-    @SuppressWarnings("ExtractMethodRecommender")
-    private CfgData _readCfgData(Collection<ExcelFileInfo> excelFiles, CfgSchema nullableCfgSchema, CfgSchemaErrs errs)
+    private CfgData _readCfgData(Collection<ExcelFileInfo> excelFiles, @Nullable CfgSchema nullableCfgSchema, CfgSchemaErrs errs)
             throws Exception {
 //        try(ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
 //        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -125,7 +126,7 @@ public record CfgDataReader(HeadRow headRow,
     }
 
 
-    private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData, String nullableAddTag) {
+    private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData, @Nullable String nullableAddTag) {
         CfgData.DTable dTable = cfgData.getDTable(tableName);
         if (dTable != null) {
             dTable.rawSheets().add(sheetData);

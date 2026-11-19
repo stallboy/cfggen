@@ -1,11 +1,11 @@
 package config.ai.triggertick;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ByServerUpDay implements config.ai.triggertick.TriggerTick {
-    private int init;
-    private float coefficient1;
-    private float coefficient2;
-    private ByServerUpDay() {
-    }
+    private final int init;
+    private final float coefficient1;
+    private final float coefficient2;
 
     public ByServerUpDay(int init, float coefficient1, float coefficient2) {
         this.init = init;
@@ -13,12 +13,10 @@ public final class ByServerUpDay implements config.ai.triggertick.TriggerTick {
         this.coefficient2 = coefficient2;
     }
 
-    public static ByServerUpDay _create(configgen.genjava.ConfigInput input) {
-        ByServerUpDay self = new ByServerUpDay();
-        self.init = input.readInt();
-        self.coefficient1 = input.readFloat();
-        self.coefficient2 = input.readFloat();
-        return self;
+    private ByServerUpDay(configgen.genjava.ConfigInput input) {
+        this.init = input.readInt();
+        this.coefficient1 = input.readFloat();
+        this.coefficient2 = input.readFloat();
     }
 
     public int getInit() {
@@ -39,7 +37,7 @@ public final class ByServerUpDay implements config.ai.triggertick.TriggerTick {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof ByServerUpDay o)) {
             return false;
         }
@@ -49,6 +47,10 @@ public final class ByServerUpDay implements config.ai.triggertick.TriggerTick {
     @Override
     public String toString() {
         return "ByServerUpDay(" + init + "," + coefficient1 + "," + coefficient2 + ")";
+    }
+
+    public static ByServerUpDay _create(configgen.genjava.ConfigInput input) {
+        return new ByServerUpDay(input);
     }
 
 }

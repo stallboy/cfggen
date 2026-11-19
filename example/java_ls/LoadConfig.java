@@ -3,6 +3,8 @@ import config.ConfigMgr;
 import config.ConfigMgrLoader;
 import config.task.CfgTask;
 import configgen.genjava.ConfigPackage;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -11,6 +13,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static java.util.Objects.requireNonNull;
+
+@NullMarked
 public class LoadConfig {
 
     private static final Logger logger = Logger.getLogger("LoadConfig");
@@ -19,7 +24,7 @@ public class LoadConfig {
         ConfigMgrLoader.loadPackagesAndSetMgr(ConfigPackage.read(Path.of(fn)));
     }
 
-    public static void autoReload(ScheduledExecutorService executorService, String fn, Runnable afterReload) throws IOException {
+    public static void autoReload(ScheduledExecutorService executorService, String fn, @Nullable Runnable afterReload) throws IOException {
         listen(executorService, Paths.get(fn), () -> {
             try {
                 load(fn);
@@ -34,7 +39,7 @@ public class LoadConfig {
     public static void listen(ScheduledExecutorService executorService, Path path, Runnable callback) throws IOException {
         path = path.toAbsolutePath().normalize();
         if (!path.toFile().isDirectory()) { // 简化
-            path = path.getParent();
+            path = requireNonNull(path.getParent());
         }
         Path watchPath = path;
         logger.info("start listen " + watchPath.toFile().getCanonicalPath());

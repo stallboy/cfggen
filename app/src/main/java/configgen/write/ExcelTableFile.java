@@ -1,13 +1,14 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import org.apache.poi.ss.usermodel.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 
 public class ExcelTableFile extends AbstractExcelTableFile {
-    public ExcelTableFile(@NotNull Path filePath,
-                          @NotNull String sheetName,
+    public ExcelTableFile(Path filePath,
+                          String sheetName,
                           int headRow) {
         super(filePath, sheetName, headRow);
     }
@@ -54,7 +55,7 @@ public class ExcelTableFile extends AbstractExcelTableFile {
     }
 
     @Override
-    protected void writeLine(int lineNum, String[] lineData) {
+    protected void writeLine(int lineNum, @Nullable String @Nullable [] lineData) {
         Row row = sheet.getRow(lineNum);
         if (row == null) {
             row = sheet.createRow(lineNum);

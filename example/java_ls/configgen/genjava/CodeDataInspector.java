@@ -1,5 +1,7 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -31,11 +33,11 @@ import static configgen.genjava.JsonValue.*;
  */
 public class CodeDataInspector {
 
-    private final Object mgr;
+    private final @Nullable Object mgr;
     private final SchemaInterface rootSchema;
-    private List<TableData> cachedTables;
+    private @Nullable List<TableData> cachedTables;
 
-    public CodeDataInspector(Object mgr, SchemaInterface rootSchema) {
+    public CodeDataInspector(@Nullable Object mgr, SchemaInterface rootSchema) {
         this.mgr = mgr;
         this.rootSchema = rootSchema;
     }
@@ -47,7 +49,7 @@ public class CodeDataInspector {
      * 枚举渲染为 {@code {Red: 1, Blue: 2}}（有 int 值）或 {@code [Red, Blue]}，接口为 {@code {ImplName: {列}, ...}}。
      * schema 驱动 —— 涵盖表、结构、纯枚举表（如 equip.jewelrytype）等所有具名类型。
      */
-    public JsonValue schemaJson(String tableMatch) {
+    public JsonValue schemaJson(@Nullable String tableMatch) {
         List<Member> members = new ArrayList<>();
         HashSet<String> done = new HashSet<>();
         for (String name : rootSchema.implementations.keySet()) {
@@ -80,7 +82,7 @@ public class CodeDataInspector {
      * 直接返回记录数组，每条记录 impl 标为所属表名（渲染为 {@code 表名{...}}，跨表可区分来源）。
      * 命中上限 50/表、200 总。
      */
-    public JsonValue queryJson(String recordMatch, String tableMatch) {
+    public JsonValue queryJson(@Nullable String recordMatch, @Nullable String tableMatch) {
         final int perTableCap = 50;
         final int totalCap = 200;
         String needle = recordMatch == null ? "" : recordMatch.toLowerCase();
@@ -166,7 +168,7 @@ public class CodeDataInspector {
         return list;
     }
 
-    private TableData findTable(String table) {
+    private @Nullable TableData findTable(String table) {
         if (table == null || table.isEmpty()) {
             return null;
         }
@@ -185,7 +187,7 @@ public class CodeDataInspector {
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private static boolean nameMatches(String name, String match) {
+    private static boolean nameMatches(String name, @Nullable String match) {
         if (match == null || match.isEmpty()) {
             return true;
         }
@@ -194,7 +196,7 @@ public class CodeDataInspector {
 
     // ==================== 取记录 ====================
 
-    private Object getByKey(TableData td, String keyStr) {
+    private @Nullable Object getByKey(TableData td, String keyStr) {
         if (td.isArray || td.data instanceof List<?>) {
             int idx;
             try {
@@ -234,7 +236,7 @@ public class CodeDataInspector {
      * 复合 "3,5" 或单字段 record 走反射构造器按形参强转；枚举走 valueOf。
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private Object buildKey(Class<?> keyClass, String keyStr) throws Exception {
+    private @Nullable Object buildKey(Class<?> keyClass, String keyStr) throws Exception {
         if (keyStr.indexOf(',') < 0) {
             Object single = singlePrimitive(keyClass, keyStr.trim());
             if (single != null) {
@@ -261,7 +263,7 @@ public class CodeDataInspector {
         return ctor.newInstance(args);
     }
 
-    private static Constructor<?> pickCtor(Class<?> cls, int paramCount) {
+    private static @Nullable Constructor<?> pickCtor(Class<?> cls, int paramCount) {
         for (Constructor<?> c : cls.getDeclaredConstructors()) {
             if (c.getParameterCount() == paramCount) {
                 return c;
@@ -271,7 +273,7 @@ public class CodeDataInspector {
     }
 
     /** 单值原始/字符串 key 直转；非这些类型（枚举/record/bean）返回 null，交由构造器路径处理。 */
-    private static Object singlePrimitive(Class<?> keyClass, String s) {
+    private static @Nullable Object singlePrimitive(Class<?> keyClass, String s) {
         if (keyClass == String.class) {
             return s;
         }
@@ -349,7 +351,7 @@ public class CodeDataInspector {
 
     // ==================== 值 → JsonValue ====================
 
-    private JsonValue valueToJson(Object value, Schema sc) {
+    private JsonValue valueToJson(@Nullable Object value, Schema sc) {
         return switch (sc) {
             case SchemaBean bean -> {
                 if (value == null) {
@@ -437,7 +439,7 @@ public class CodeDataInspector {
         return members;
     }
 
-    private static Object getterValue(Object obj, String colName) throws Exception {
+    private static @Nullable Object getterValue(Object obj, String colName) throws Exception {
         String getter = "get" + Character.toUpperCase(colName.charAt(0)) + colName.substring(1);
         Method m = obj.getClass().getMethod(getter);
         return m.invoke(obj);
@@ -473,7 +475,7 @@ public class CodeDataInspector {
             return;
         }
         Schema target = rootSchema.implementations.get(name);
-        switch (target) {
+        switch (java.util.Objects.requireNonNull(target)) {
             case SchemaBean tb -> {
                 addBeanSchema(members, name, tb);
                 for (SchemaBean.Column col : tb.columns) {

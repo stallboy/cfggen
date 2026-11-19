@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Explicit dotnetTest task: compiles and runs real generated C#, including the Unity C# 9 profile. */
@@ -91,11 +92,11 @@ class CsRuntimeTest {
             if (!base) {
                 metadata.put("pack", "balance");
                 metadata.put("requires", "mod");
-                buffer(blocks.get(".message")).putInt(8, 1);
+                buffer(requireNonNull(blocks.get(".message"))).putInt(8, 1);
                 writePackage(data.resolve("balance.bytes"), metadata, blocks);
                 metadata.put("pack", "duplicate");
                 metadata.put("requires", "base");
-                byte[] rows = blocks.get(".message");
+                byte[] rows = requireNonNull(blocks.get(".message"));
                 var duplicate = buffer(new byte[rows.length + 8]);
                 duplicate.putInt(3).put(rows, 4, rows.length - 4).put(rows, 4, 8);
                 blocks.put(".message", duplicate.array());
@@ -223,24 +224,24 @@ class CsRuntimeTest {
         for (Path directory : java.util.List.of(aDir, bDir)) {
             rewritePackage(directory, "base", blocks -> blocks.put(".hollow", buffer(new byte[12]).putInt(1).putInt(1).putInt(2).array()));
         }
-        rewritePackage(aDir, "bad-symbol", blocks -> buffer(blocks.get(".rank")).putInt(8, buffer(blocks.get(".other.preset")).getInt(8)));
-        rewritePackage(aDir, "bad-rank-id", blocks -> buffer(blocks.get(".rank")).putInt(4, 11));
-        rewritePackage(aDir, "bad-entry-id", blocks -> buffer(blocks.get(".other.preset")).putInt(4, 9));
-        rewritePackage(aDir, "bad-mode-id", blocks -> buffer(blocks.get(".mode")).putInt(8, 999));
+        rewritePackage(aDir, "bad-symbol", blocks -> buffer(requireNonNull(blocks.get(".rank"))).putInt(8, buffer(requireNonNull(blocks.get(".other.preset"))).getInt(8)));
+        rewritePackage(aDir, "bad-rank-id", blocks -> buffer(requireNonNull(blocks.get(".rank"))).putInt(4, 11));
+        rewritePackage(aDir, "bad-entry-id", blocks -> buffer(requireNonNull(blocks.get(".other.preset"))).putInt(4, 9));
+        rewritePackage(aDir, "bad-mode-id", blocks -> buffer(requireNonNull(blocks.get(".mode"))).putInt(8, 999));
         rewritePackage(aDir, "bad-missing", blocks -> blocks.put(".rank", new byte[4]));
-        rewritePackage(aDir, "bad-cache", blocks -> buffer(blocks.get(".monster")).putInt(8, -1));
-        rewritePackage(aDir, "bad-reference", blocks -> buffer(blocks.get(".monster")).putInt(12, 999));
+        rewritePackage(aDir, "bad-cache", blocks -> buffer(requireNonNull(blocks.get(".monster"))).putInt(8, -1));
+        rewritePackage(aDir, "bad-reference", blocks -> buffer(requireNonNull(blocks.get(".monster"))).putInt(12, 999));
         rewritePackage(aDir, "bad-nested-reference", blocks -> {
-            buffer(blocks.get(".holder")).putInt(12, 999).putInt(24, 999);
+            buffer(requireNonNull(blocks.get(".holder"))).putInt(12, 999).putInt(24, 999);
         });
-        rewritePackage(aDir, "bad-count", blocks -> buffer(blocks.get(".holder")).putInt(20, -1));
-        rewritePackage(aDir, "bad-pool", blocks -> buffer(blocks.get(".monster")).putInt(20, Integer.MAX_VALUE));
-        rewritePackage(aDir, "bad-variant", blocks -> buffer(blocks.get(".holder")).putInt(32, buffer(blocks.get(".other.preset")).getInt(8)));
-        rewritePackage(aDir, "bad-single-variant", blocks -> buffer(blocks.get(".only")).putInt(8, buffer(blocks.get(".other.preset")).getInt(8)));
+        rewritePackage(aDir, "bad-count", blocks -> buffer(requireNonNull(blocks.get(".holder"))).putInt(20, -1));
+        rewritePackage(aDir, "bad-pool", blocks -> buffer(requireNonNull(blocks.get(".monster"))).putInt(20, Integer.MAX_VALUE));
+        rewritePackage(aDir, "bad-variant", blocks -> buffer(requireNonNull(blocks.get(".holder"))).putInt(32, buffer(requireNonNull(blocks.get(".other.preset"))).getInt(8)));
+        rewritePackage(aDir, "bad-single-variant", blocks -> buffer(requireNonNull(blocks.get(".only"))).putInt(8, buffer(requireNonNull(blocks.get(".other.preset"))).getInt(8)));
         rewritePackage(aDir, "ignored-schema", blocks -> blocks.put("schema", buffer(new byte[8]).putInt(11).putInt(0).array()));
         rewritePackage(aDir, "no-schema", blocks -> blocks.remove("schema"));
         rewritePackage(aDir, "malformed-schema", blocks -> blocks.put("schema", new byte[]{1}));
-        rewritePackage(aDir, "bad-extra", blocks -> blocks.put(".monster", java.util.Arrays.copyOf(blocks.get(".monster"), blocks.get(".monster").length + 1)));
+        rewritePackage(aDir, "bad-extra", blocks -> blocks.put(".monster", java.util.Arrays.copyOf(blocks.get(".monster"), requireNonNull(blocks.get(".monster")).length + 1)));
         rewritePackage(aDir, "bad-unknown-table", blocks -> {
             blocks.put(".unexpected", new byte[]{1});
             blocks.put(".monster", new byte[]{1}); // Validate block names before decoding even a known table.
@@ -254,10 +255,10 @@ class CsRuntimeTest {
             var duplicate = buffer(new byte[28]);
             duplicate.putInt(2).put(original, 4, 12).putInt(2).put(original, 8, 8);
             blocks.put(".other.pair", duplicate.array());
-            buffer(blocks.get(".step")).putInt(4, 9);
+            buffer(requireNonNull(blocks.get(".step"))).putInt(4, 9);
         });
         rewritePackage(aDir, "bad-map", blocks -> {
-            byte[] original = blocks.get(".holder");
+            byte[] original = requireNonNull(blocks.get(".holder"));
             var duplicate = buffer(new byte[original.length + 16]);
             duplicate.put(original, 0, 8).putInt(3);
             for (int i = 0; i < 3; i++) duplicate.put(original, 12, 8);

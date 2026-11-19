@@ -1,12 +1,17 @@
 @import configgen.genjava.code.StructuralClassModel
 @import configgen.genjava.code.StructuralClassModel.FieldInfo
 @import configgen.genjava.code.StructuralClassModel.ForeignKeyInfo
+@import configgen.genjava.code.TypeStr
 @import configgen.schema.*
 @import configgen.util.StringUtil
 @import configgen.genjava.GenJavaUtil
 @param StructuralClassModel model
 package ${model.pkg};
 
+@if(model.cfg.jspecify())
+import org.jspecify.annotations.Nullable;
+
+@endif
 !{ String errorsClass = GenJavaUtil.loadValueErrsClass(model.className); }
 @if(GenJavaUtil.needsLoadValueErrs(model.structural) && errorsClass.equals("LoadValueErrs"))
 import configgen.genjava.LoadValueErrs;
@@ -17,93 +22,84 @@ ${model.sourceComment}
 @endif
 @if(model.isImpl)
     public ${model.isSealedInterface?"final ":""}class ${model.className}${model.javaBase.isEmpty() ? "" : " extends " + model.javaBase} implements ${model.nullableInterfaceFullName} {
-        @if(model.enumRefTable != null)
-            @Override
-            public ${model.refType(model.enumRefTable)} type() {
-                return ${model.refType(model.enumRefTable)}.${model.enumFieldName(model.structural.name())};
-            }
-
-        @endif
 @else
     public class ${model.className}${model.javaBase.isEmpty() ? "" : " extends " + model.javaBase} {
 @endif
 
     @for(FieldInfo field : model.fields)
-        private ${field.type()} ${field.name()};
+        private final ${field.type()} ${field.name()};
     @endfor
 
     @if(!model.foreignKeys.isEmpty())
         @for(ForeignKeyInfo fk : model.foreignKeys)
             private ${fk.type()} ${fk.name()};
         @endfor
-
-
     @endif
 
-    @if(!model.isStructAndHasNoField)
-        private ${model.className}() {
-        }
+@if(!model.isTable)
+${"\n"}    public ${model.className}(${model.formalParams()}) {
+        @for(FieldInfo field : model.fields)
+        this.${field.name()} = ${field.name()};
+        @endfor
+    }
 
-    @endif
+@elseif(model.isTableAndNeedBuilder)
+${"\n"}    ${model.className}(${model.className}Builder b) {
+        @for(FieldInfo field : model.fields)
+        this.${field.name()} = ${field.needsBuilderValue() ? "java.util.Objects.requireNonNull(b." + field.name() + ", \"" + field.name() + "\")" : "b." + field.name()};
+        @endfor
+    }
 
-    @if(!model.isTable)
-        public ${model.className}(${model.formalParams()}) {
-            @for(FieldInfo field : model.fields)
-            this.${field.name()} = ${field.name()};
-            @endfor
-        }
+@endif
 
-    @elseif(model.isTableAndNeedBuilder)
-        ${model.className}(${model.className}Builder b) {
-            @for(FieldInfo field : model.fields)
-                this.${field.name()} = b.${field.name()};
-            @endfor
-        }
-
-    @endif
-
-    public static ${model.className} _create(configgen.genjava.ConfigInput input) {
-        ${model.className} self = new ${model.className}();
+${model.isTable && !model.isTableAndNeedBuilder ? "\n" : ""}    private ${model.className}(configgen.genjava.ConfigInput input) {
         @for(FieldSchema field : model.structural.fields())
             !{
                 String ln = StringUtil.lower1(field.name());
             }
             @if(field.type() instanceof FieldType.SimpleType simpleType)
-                self.${ln} = ${model.readValue(simpleType)};
+                this.${ln} = ${model.readValue(simpleType)};
             @elseif(field.type() instanceof FieldType.FList fList)
                 {
                     int c = input.readCount(0);
                     if (c == 0) {
-                        self.${ln} = java.util.Collections.emptyList();
+                        this.${ln} = java.util.Collections.emptyList();
                     } else {
-                        self.${ln} = new java.util.ArrayList<>(c);
+                        var items = new java.util.ArrayList<${TypeStr.boxType(model.cfg, fList.item())}>(c);
                         for (; c > 0; c--) {
-                            self.${ln}.add(${model.readValue((fList.item()))});
+                            items.add(${model.readValue(fList.item())});
                         }
-                        self.${ln} = java.util.Collections.unmodifiableList(self.${ln});
+                        this.${ln} = java.util.Collections.unmodifiableList(items);
                     }
                 }
             @elseif(field.type() instanceof FieldType.FMap fMap)
                 {
                     int c = input.readCount(0);
                     if (c == 0) {
-                        self.${ln} = java.util.Collections.emptyMap();
+                        this.${ln} = java.util.Collections.emptyMap();
                     } else {
-                        self.${ln} = new java.util.LinkedHashMap<>(c);
+                        var entries = new java.util.LinkedHashMap<${TypeStr.boxType(model.cfg, fMap.key())}, ${TypeStr.boxType(model.cfg, fMap.value())}>(c);
                         for (; c > 0; c--) {
                             var key = ${model.readValue(fMap.key())};
                             var value = ${model.readValue(fMap.value())};
-                            if (self.${ln}.putIfAbsent(key, value) != null) {
+                            if (entries.putIfAbsent(key, value) != null) {
                                 input.errors().duplicateKey("${model.structural.name()}.${field.name()}", key);
                             }
                         }
-                        self.${ln} = java.util.Collections.unmodifiableMap(self.${ln});
+                        this.${ln} = java.util.Collections.unmodifiableMap(entries);
                     }
                 }
             @endif
         @endfor
-        return self;
     }
+
+    @if(model.isImpl && model.enumRefTable != null)
+    @Override
+    public ${model.refType(model.enumRefTable)} type() {
+        return ${model.refType(model.enumRefTable)}.${model.enumFieldName(model.structural.name())};
+    }
+
+    @endif
 
     @for(FieldInfo field : model.fields)
         @if(!field.comment().isEmpty())
@@ -133,7 +129,7 @@ ${model.sourceComment}
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(${model.cfg.nullable("Object")} other) {
             return other instanceof ${model.className};
         }
 
@@ -144,7 +140,7 @@ ${model.sourceComment}
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(${model.cfg.nullable("Object")} other) {
             if (!(other instanceof ${model.className} o)) {
                 return false;
             }
@@ -172,6 +168,10 @@ ${model.sourceComment}
     @if(GenJavaUtil.hasExtension(model.structural))
         @template.java.GenCollectExtensions(model = model)
     @endif
+
+    public static ${model.className} _create(configgen.genjava.ConfigInput input) {
+        return new ${model.className}(input);
+    }
 
     @if(model.isTable)
             @template.java.GenStructuralClassTablePart(model = model)

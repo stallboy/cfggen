@@ -1,6 +1,5 @@
 package configgen.util;
 
-import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,8 +13,8 @@ import java.util.Map;
  */
 public class MarkdownReader {
 
-    public record MarkdownDocument(@NotNull Map<String, String> frontmatter,
-                                   @NotNull String content) {
+    public record MarkdownDocument(Map<String, String> frontmatter,
+                                   String content) {
     }
 
     public static MarkdownDocument read(Path path) {

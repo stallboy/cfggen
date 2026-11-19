@@ -1,5 +1,7 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,7 @@ public final class LoadValueErrs {
     }
     public record MissingSymbol(String table, String symbol, Object key) implements Error {}
     public record UnknownVariant(String union, String tag) implements Error {}
-    public record SchemaMismatch(String pack, String reason) implements Error {}
+    public record SchemaMismatch(String pack, @Nullable String reason) implements Error {}
     public record UnsupportedVersion(int version, int supported) implements Error {}
     public record OutOfBounds(int length, long remaining) implements Error {}
     public record UnconsumedBytes(long remaining) implements Error {}
@@ -39,7 +41,7 @@ public final class LoadValueErrs {
     public record MissingBlock(String block) implements Error {}
     public record MissingPackageName() implements Error {}
     public record InvalidPackageName(String name) implements Error {}
-    public record InvalidDependency(String pack, String dependency) implements Error {}
+    public record InvalidDependency(@Nullable String pack, String dependency) implements Error {}
     public record MissingDependency(String pack, String dependency) implements Error {}
     public record DuplicatePackage(String pack) implements Error {}
     public record MissingBasePackage() implements Error {}
@@ -86,7 +88,7 @@ public final class LoadValueErrs {
         add(new MissingSymbol(table, symbol, key));
     }
 
-    public void schemaMismatch(String pack, String reason) {
+    public void schemaMismatch(String pack, @Nullable String reason) {
         add(new SchemaMismatch(pack, reason));
     }
 
@@ -100,7 +102,7 @@ public final class LoadValueErrs {
     ConfigErr unsupportedSchemaTag(int tag) { return fail(new UnsupportedSchemaTag(tag)); }
 
     void invalidPackageName(String name) { add(new InvalidPackageName(name)); }
-    void invalidDependency(String pack, String dependency) { add(new InvalidDependency(pack, dependency)); }
+    void invalidDependency(@Nullable String pack, String dependency) { add(new InvalidDependency(pack, dependency)); }
     void missingDependency(String pack, String dependency) { add(new MissingDependency(pack, dependency)); }
     void duplicatePackage(String pack) { add(new DuplicatePackage(pack)); }
     void missingBasePackage() { add(new MissingBasePackage()); }

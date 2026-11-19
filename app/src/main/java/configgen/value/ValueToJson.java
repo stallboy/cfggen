@@ -1,5 +1,7 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
@@ -16,13 +18,13 @@ import static configgen.value.ValueRefCollector.RefId;
 import static configgen.value.ValueRefCollector.collectStructRef;
 
 public class ValueToJson {
-    private final CfgValue cfgValue;
-    private final Map<RefId, VStruct> refIdToRecordMap;
+    private final @Nullable CfgValue cfgValue;
+    private final @Nullable Map<RefId, VStruct> refIdToRecordMap;
     private boolean isSaveDefault;
     private boolean editorLongStrings;
 
     /** Use decimal strings for long values in the editor protocol. */
-    public static ValueToJson forEditor(CfgValue cfgValue, Map<RefId, VStruct> records) {
+    public static ValueToJson forEditor(@Nullable CfgValue cfgValue, @Nullable Map<RefId, VStruct> records) {
         ValueToJson result = new ValueToJson(cfgValue, records);
         result.editorLongStrings = true;
         return result;
@@ -39,7 +41,7 @@ public class ValueToJson {
         this(null, null);
     }
 
-    public ValueToJson(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap) {
+    public ValueToJson(@Nullable CfgValue cfgValue, @Nullable Map<RefId, VStruct> refIdToRecordMap) {
         this.cfgValue = cfgValue;
         this.refIdToRecordMap = refIdToRecordMap;
         this.isSaveDefault = true;
@@ -90,7 +92,7 @@ public class ValueToJson {
         }
 
         if (refIdToRecordMap != null) {
-            List<FieldRef> fieldRefs = collectStructRef(cfgValue, vStruct, refIdToRecordMap, null, "");
+            List<FieldRef> fieldRefs = collectStructRef(java.util.Objects.requireNonNull(cfgValue), vStruct, refIdToRecordMap, null, "");
             if (!fieldRefs.isEmpty()) {
                 json.put("$refs", fieldRefs);
             }

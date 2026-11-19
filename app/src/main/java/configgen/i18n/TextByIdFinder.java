@@ -1,5 +1,7 @@
 package configgen.i18n;
 
+import org.jspecify.annotations.Nullable;
+
 import org.dhatim.fastexcel.reader.*;
 
 import java.io.File;
@@ -15,7 +17,7 @@ import java.util.stream.Stream;
  * 每个表中的text字段，pk+fieldChain作为id---映射到--->翻译文本。
  * 这是最完备的机制，可以相同的原始本文，不同的翻译文本。
  */
-public class TextByIdFinder implements LangTextFinder.TextFinder {
+public class TextByIdFinder implements TranslationCatalog.TextFinder {
     public record OneText(String original,
                           String translated) {
         public OneText {
@@ -29,11 +31,11 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
      * @param description 可以为null
      * @param texts       里面元素可以为null
      */
-    public record OneRecord(String description,
+    public record OneRecord(@Nullable String description,
                             List<OneText> texts) {
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (!(obj instanceof OneRecord(String otherDescription, List<OneText> otherTexts))) {
                 return false;
             }
@@ -69,7 +71,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         }
     }
 
-    private String nullableDescriptionName;
+    private @Nullable String nullableDescriptionName;
     /**
      * 这个map的key是fieldChain的字符串表示
      * value是oneRecord.texts的index
@@ -78,7 +80,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
     private final Map<String, OneRecord> pkToTexts = new LinkedHashMap<>();
 
     @Override
-    public String findText(String pk, List<String> fieldChain, String original) {
+    public @Nullable String findText(String pk, List<String> fieldChain, String original) {
         String fieldChainStr = I18nUtils.fieldChainStr(fieldChain);
         Integer idx = fieldChainToIndex.get(fieldChainStr);
         if (idx == null) {
@@ -104,7 +106,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
     }
 
     @Override
-    public void foreachText(LangTextFinder.TextVisitor visitor) {
+    public void foreachText(TranslationCatalog.TextVisitor visitor) {
         for (OneRecord line : pkToTexts.values()) {
             for (OneText t : line.texts) {
                 if (t != null) {
@@ -115,7 +117,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
     }
 
     @Override
-    public boolean equals(Object otherObj) {
+    public boolean equals(@Nullable Object otherObj) {
         if (!(otherObj instanceof TextByIdFinder other)) {
             return false;
         }
@@ -156,8 +158,8 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         return true;
     }
 
-    public static Map<String, LangTextFinder> loadMultiLang(Path path) {
-        Map<String, LangTextFinder> lang2i18n = new TreeMap<>();
+    public static Map<String, TranslationCatalog> loadMultiLang(Path path) {
+        Map<String, TranslationCatalog> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langDir -> {
                 if (Files.isDirectory(langDir)) {
@@ -172,13 +174,13 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         return lang2i18n;
     }
 
-    public static LangTextFinder loadOneLang(Path langDir) {
+    public static TranslationCatalog loadOneLang(Path langDir) {
         String langName = langDir.getFileName().toString();
         String todoFilename = getTodoFileName(langName);
 
-        LangTextFinder langFinder = new LangTextFinder();
+        TranslationCatalog catalog = new TranslationCatalog();
         // 各 xlsx 互相独立（fastexcel 读+解析 CPU/IO 密集），可并行；invokeAll 按提交顺序返回、
-        // 顺序 putAll 合并，且 LangTextFinder 为 TreeMap（按 table 名排序），结果与串行完全一致
+        // 顺序 putAll 合并，且 TranslationCatalog 为 TreeMap（按 table 名排序），结果与串行完全一致
         try (Stream<Path> plist = Files.list(langDir)) {
             List<Path> xlsxFiles = plist.filter(Files::isRegularFile)
                     .filter(filePath -> {
@@ -192,7 +194,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
                     tasks.add(() -> loadOneFile(filePath));
                 }
                 for (Future<Map<String, TextByIdFinder>> fut : executor.invokeAll(tasks)) {
-                    langFinder.putAll(fut.get());
+                    catalog.putAll(fut.get());
                 }
             }
         } catch (IOException e) {
@@ -206,12 +208,12 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         }
 
         // 合并_todo_[lang].xlsx文件
-        Path langsDir = langDir.getParent();
+        Path langsDir = java.util.Objects.requireNonNull(langDir.getParent());
         File todoFile = langsDir.resolve(todoFilename).toFile();
         if (todoFile.exists()) {
-            TodoFile.readAndMergeToFinder(todoFile, langFinder);
+            TodoFile.readAndMergeIntoCatalog(todoFile, catalog);
         }
-        return langFinder;
+        return catalog;
     }
 
     public static Map<String, TextByIdFinder> loadOneFile(Path filePath) {
@@ -331,11 +333,11 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         return "_todo_" + lang + ".xlsx";
     }
 
-    public String getNullableDescriptionName() {
+    public @Nullable String getNullableDescriptionName() {
         return nullableDescriptionName;
     }
 
-    public void setNullableDescriptionName(String name) {
+    public void setNullableDescriptionName(@Nullable String name) {
         nullableDescriptionName = name;
     }
 

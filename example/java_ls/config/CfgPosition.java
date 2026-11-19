@@ -1,11 +1,11 @@
 package config;
 
+import org.jspecify.annotations.Nullable;
+
 public class CfgPosition {
-    private int x;
-    private int y;
-    private int z;
-    private CfgPosition() {
-    }
+    private final int x;
+    private final int y;
+    private final int z;
 
     public CfgPosition(int x, int y, int z) {
         this.x = x;
@@ -13,12 +13,10 @@ public class CfgPosition {
         this.z = z;
     }
 
-    public static CfgPosition _create(configgen.genjava.ConfigInput input) {
-        CfgPosition self = new CfgPosition();
-        self.x = input.readInt();
-        self.y = input.readInt();
-        self.z = input.readInt();
-        return self;
+    private CfgPosition(configgen.genjava.ConfigInput input) {
+        this.x = input.readInt();
+        this.y = input.readInt();
+        this.z = input.readInt();
     }
 
     public int getX() {
@@ -39,7 +37,7 @@ public class CfgPosition {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CfgPosition o)) {
             return false;
         }
@@ -49,6 +47,10 @@ public class CfgPosition {
     @Override
     public String toString() {
         return "(" + x + "," + y + "," + z + ")";
+    }
+
+    public static CfgPosition _create(configgen.genjava.ConfigInput input) {
+        return new CfgPosition(input);
     }
 
 }

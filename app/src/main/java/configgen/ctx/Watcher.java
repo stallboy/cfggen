@@ -1,7 +1,8 @@
 package configgen.ctx;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -20,16 +21,16 @@ import static java.nio.file.StandardWatchEventKinds.*;
  */
 public class Watcher {
     private final Path rootDir;
-    private final ExplicitDir explicitDir;
+    private final @Nullable ExplicitDir explicitDir;
     private volatile long lastEvtMillis;
     private final AtomicInteger eventVersion = new AtomicInteger(0);
-    private Thread startedThread;
-    private WatchService watchService;
+    private @Nullable Thread startedThread;
+    private @Nullable WatchService watchService;
     private volatile boolean recursiveSupport;
     // ENTRY_CREATE新目录时由轮询线程写入；stop后若旧线程迟迟未退出、实例被重启，存在跨线程访问，用并发map防损坏
     private final Map<WatchKey, Path> keys = new ConcurrentHashMap<>();
 
-    public Watcher(Path rootDir, ExplicitDir explicitDir) {
+    public Watcher(Path rootDir, @Nullable ExplicitDir explicitDir) {
         Objects.requireNonNull(rootDir);
         this.rootDir = rootDir;
         this.explicitDir = explicitDir;
@@ -130,8 +131,8 @@ public class Watcher {
     private void registerAll(final Path start, WatchService watcher) throws IOException {
         Files.walkFileTree(start, new SimpleFileVisitor<>() {
             @Override
-            public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir,
-                                                              @NotNull BasicFileAttributes attrs)
+            public FileVisitResult preVisitDirectory(Path dir,
+                                                              BasicFileAttributes attrs)
                     throws IOException {
                 register(dir, watcher);
                 return FileVisitResult.CONTINUE;

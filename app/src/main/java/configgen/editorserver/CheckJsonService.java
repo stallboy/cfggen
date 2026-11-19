@@ -1,5 +1,7 @@
 package configgen.editorserver;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.TableSchema;
 import configgen.genbyai.ByAIGenerator;
 import configgen.genbyai.PromptDefault;
@@ -15,7 +17,7 @@ public class CheckJsonService {
 
     public record CheckJsonResult(CheckJsonResultCode resultCode,
                                   String table,
-                                  String jsonResult) {
+                                  @Nullable String jsonResult) {
     }
 
     public enum CheckJsonResultCode {
@@ -26,7 +28,7 @@ public class CheckJsonService {
     }
 
 
-    public static CheckJsonResult checkJson(CfgValue cfgValue, String table, String raw) {
+    public static CheckJsonResult checkJson(CfgValue cfgValue, @Nullable String table, @Nullable String raw) {
         if (table == null || table.isEmpty()) {
             return new CheckJsonResult(tableNotFound, "", "table not found");
         }

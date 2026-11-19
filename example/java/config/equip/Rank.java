@@ -1,5 +1,7 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：equip/rank.csv
@@ -30,7 +32,7 @@ public enum Rank {
         map = java.util.Collections.unmodifiableMap(symbols);
     }
 
-    public static Rank get(int value) {
+    public static @Nullable Rank get(int value) {
         return map.get(value);
     }
 
@@ -52,19 +54,19 @@ public enum Rank {
      * 显示名称
      */
     public String getRankShowName() {
-        return ref().getRankShowName();
+        return java.util.Objects.requireNonNull(ref()).getRankShowName();
     }
 
-    public config.equip.Rank_Detail ref() {
+    public config.equip.@Nullable Rank_Detail ref() {
         return ref(config.ConfigMgr.getMgr());
     }
 
-    public config.equip.Rank_Detail ref(config.ConfigMgr mgr) {
+    public config.equip.@Nullable Rank_Detail ref(config.ConfigMgr mgr) {
         return mgr._get_equip_rank_Refs(ordinal());
     }
 
     public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
-        mgr._set_equip_rank_Refs(new config.equip.Rank_Detail[] {
+        mgr._set_equip_rank_Refs(new config.equip.@Nullable Rank_Detail[] {
             mgr.getEquipRank(WHITE.value),
             mgr.getEquipRank(GREEN.value),
             mgr.getEquipRank(BLUE.value),
@@ -72,7 +74,8 @@ public enum Rank {
             mgr.getEquipRank(YELLOW.value),
             mgr.getEquipRank(RED.value),
         });
-        for (var row : mgr._get_equip_rank_All()) {
+        for (var entry : mgr._get_equip_rank_All()) {
+            var row = java.util.Objects.requireNonNull(entry);
             var key = row.getRankID();
             String symbol = row.getRankName();
             Rank expected = switch (symbol) {

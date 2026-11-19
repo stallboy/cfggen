@@ -1,5 +1,7 @@
 package configgen.editorserver;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.genbyai.PromptGen;
 import configgen.genbyai.PromptGen.Prompt;
@@ -26,7 +28,7 @@ public class PromptService {
 
     public static PromptResult gen(Context context,
                                    CfgValue cfgValue,
-                                   String table) {
+                                   @Nullable String table) {
 
         if (table == null || table.isEmpty()) {
             return new PromptResult(tableNotSet, "", "");

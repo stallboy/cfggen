@@ -1,5 +1,7 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +25,7 @@ public final class SchemaBean implements Schema {
     }
 
     @Override
-    public boolean compatible(Schema other) {
+    public boolean compatible(@Nullable Schema other) {
         if (!(other instanceof SchemaBean sb)) {
             return false;
         }

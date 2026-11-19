@@ -1,5 +1,7 @@
 package configgen.ctx;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.Logger;
 
 import java.util.Objects;
@@ -16,7 +18,7 @@ public class WaitWatcher {
     private long lastEvtMillis;
     private int evtVersion;
     private volatile boolean stopped;
-    private Thread startedThread;
+    private @Nullable Thread startedThread;
 
     public WaitWatcher(Watcher watcher,
                        Runnable listener,

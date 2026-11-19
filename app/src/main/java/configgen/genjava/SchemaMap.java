@@ -1,10 +1,12 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 public record SchemaMap(Schema key,
                         Schema value) implements Schema {
 
     @Override
-    public boolean compatible(Schema other) {
+    public boolean compatible(@Nullable Schema other) {
         if (!(other instanceof SchemaMap(Schema key1, Schema value1))) {
             return false;
         }

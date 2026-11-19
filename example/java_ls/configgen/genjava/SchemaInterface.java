@@ -1,5 +1,7 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -21,7 +23,7 @@ public final class SchemaInterface implements Schema {
     }
 
     @Override
-    public boolean compatible(Schema other) {
+    public boolean compatible(@Nullable Schema other) {
         if (!(other instanceof SchemaInterface si)) {
             return false;
         }

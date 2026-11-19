@@ -1,5 +1,7 @@
 package configgen.ctx;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.ArgParser;
 
 import java.util.Map;
@@ -13,7 +15,7 @@ import java.util.Set;
  * @param excelFileDirs 用这些目录下的excel文件
  * @param jsonFileDirs 用这些目录下的json文件
  */
-public record ExplicitDir(Map<String, String> txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map,
+public record ExplicitDir(Map<String, @Nullable String> txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map,
                           Set<String> excelFileDirs,
                           Set<String> jsonFileDirs) {
 
@@ -23,8 +25,8 @@ public record ExplicitDir(Map<String, String> txtAsTsvFileInThisDirAsInRoot_To_A
         Objects.requireNonNull(jsonFileDirs);
     }
 
-    public static ExplicitDir parse(String asRoot, String excelDirs, String jsonDirs){
-        Map<String, String> root = ArgParser.parseToMap(asRoot);
+    public static @Nullable ExplicitDir parse(@Nullable String asRoot, @Nullable String excelDirs, @Nullable String jsonDirs){
+        Map<String, @Nullable String> root = ArgParser.parseToMap(asRoot);
         Set<String> excels = ArgParser.parseToSet(excelDirs);
         Set<String> jsons = ArgParser.parseToSet(jsonDirs);
 

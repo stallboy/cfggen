@@ -1,5 +1,7 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.data.HeadRow;
 import configgen.data.Source;
 import configgen.schema.*;
@@ -35,7 +37,7 @@ public class ValueParser {
     private final CfgValueErrs errs;
     private final HeadRow headRow;
     private final BlockParser blockParser;
-    private List<DCell> currentCells;
+    private @Nullable List<DCell> currentCells;
     // 缓存每个 structural 的 字段名→FieldSchema，避免 parseStructural 每行每字段线性查找（大表 O(N²·M)→O(N·M)）
     private final Map<Structural, Map<String, FieldSchema>> fieldMapCache = new IdentityHashMap<>();
 
@@ -49,7 +51,7 @@ public class ValueParser {
     }
 
 
-    VInterface parseInterface(InterfaceSchema subInterface, List<DCell> cells, InterfaceSchema sInterface,
+    @Nullable VInterface parseInterface(InterfaceSchema subInterface, List<DCell> cells, InterfaceSchema sInterface,
                               ParseContext parseContext) {
         List<DCell> parsed = cells;
         currentCells = cells;
@@ -99,7 +101,7 @@ public class ValueParser {
             require(subImpl != null);
 
             // 之后按pack为true来处理，因为反正parsed里都是单个cell，并且里面value为空
-            vImpl = parseStructural(subImpl, parsed, impl,
+            vImpl = parseStructural(java.util.Objects.requireNonNull(subImpl), parsed, impl,
                     new ParseContext(parseContext.nameable, true, true, parseContext.curRowIndex));
 
         } else {
@@ -134,7 +136,7 @@ public class ValueParser {
                 }
                 implCells = parsed.subList(1, expected + 1);
             }
-            vImpl = parseStructural(subImpl, implCells, impl,
+            vImpl = parseStructural(java.util.Objects.requireNonNull(subImpl), implCells, impl,
                     new ParseContext(parseContext.nameable, isPack, canChildBeEmpty, parseContext.curRowIndex));
         }
 
@@ -145,7 +147,7 @@ public class ValueParser {
         return new VInterface(subInterface, vImpl, Source.of(cells));
     }
 
-    public VStruct parseStructural(Structural subStructural, List<DCell> cells, Structural structural,
+    public @Nullable VStruct parseStructural(Structural subStructural, List<DCell> cells, Structural structural,
                                    ParseContext parseContext) {
         currentCells = cells;
 
@@ -191,7 +193,7 @@ public class ValueParser {
             for (FieldSchema subField : subStructural.fields()) {
                 FieldSchema field = findFieldCached(structural, subField.name());
                 require(field != null);
-                Value v = parseField(subField, parsed, field,
+                Value v = parseField(subField, parsed, java.util.Objects.requireNonNull(field),
                         new ParseContext(structural.name(), true, true, parseContext.curRowIndex));
 
                 if (v != null) {
@@ -248,7 +250,7 @@ public class ValueParser {
     }
 
     @SuppressWarnings("DuplicateExpressions")
-    SimpleValue parseSimpleType(FieldType.SimpleType subType, List<DCell> cells, FieldType.SimpleType type,
+    @Nullable SimpleValue parseSimpleType(FieldType.SimpleType subType, List<DCell> cells, FieldType.SimpleType type,
                                 ParseContext parseContext, FieldSchema fieldSchema) {
         currentCells = cells;
 
@@ -313,15 +315,15 @@ public class ValueParser {
             }
 
             case FieldType.StructRef structRef -> {
-                switch (structRef.obj()) {
+                switch (structRef.resolvedObj()) {
                     case InterfaceSchema sInterface -> {
-                        InterfaceSchema subInterface = (InterfaceSchema) (((FieldType.StructRef) subType).obj());
+                        InterfaceSchema subInterface = (InterfaceSchema) (((FieldType.StructRef) subType).resolvedObj());
 
                         return parseInterface(subInterface, cells, sInterface,
                                 parseContext);
                     }
                     case StructSchema struct -> {
-                        StructSchema subStruct = (StructSchema) (((FieldType.StructRef) subType).obj());
+                        StructSchema subStruct = (StructSchema) (((FieldType.StructRef) subType).resolvedObj());
                         return parseStructural(subStruct, cells, struct,
                                 parseContext);
                     }
@@ -332,14 +334,16 @@ public class ValueParser {
     }
 
 
-    public Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field, ParseContext parseContext) {
+    public @Nullable Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field, ParseContext parseContext) {
         currentCells = cells;
 
         switch (field.type()) {
             case FieldType.SimpleType simple -> {
                 SimpleValue v = parseSimpleType((FieldType.SimpleType) subField.type(), cells, simple, parseContext, field);
                 if (field.isMustFill() && cells.stream().allMatch(DCell::isCellEmpty)) {
+                    if (v != null) {
                     errs.addErr(new CfgValueErrs.MustFillButCellEmpty(v));
+                }
                 }
                 return v;
             }
@@ -367,7 +371,7 @@ public class ValueParser {
         }
     }
 
-    VMap parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
+    @Nullable VMap parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
                   ParseContext parseContext) {
         currentCells = cells;
 
@@ -408,7 +412,7 @@ public class ValueParser {
     }
 
 
-    VList parseList(FieldSchema subField, List<DCell> cells, FieldSchema field,
+    @Nullable VList parseList(FieldSchema subField, List<DCell> cells, FieldSchema field,
                     ParseContext parseContext) {
         currentCells = cells;
 
@@ -437,7 +441,7 @@ public class ValueParser {
     // 按 fmt 把 cells 解析成 blocks：pack 解包成单 block、block 按行分块、sep 按分隔符拆分、否则整体作为一个 block。
     // allowSep 区分 list（支持 sep fmt）和 map（不支持，sep fmt 走默认分支）。
     // pack 解包失败时记录 ParsePackErr 并返回 null。
-    private List<CellsWithRowIndex> parseToBlocks(List<DCell> cells, FieldSchema field,
+    private @Nullable List<CellsWithRowIndex> parseToBlocks(List<DCell> cells, FieldSchema field,
                                                   ParseContext parseContext, boolean allowSep) {
         List<DCell> parsed = null;
         List<CellsWithRowIndex> blocks = null;
@@ -467,7 +471,7 @@ public class ValueParser {
         }
 
         if (blocks == null) {
-            blocks = List.of(new CellsWithRowIndex(parsed, parseContext.curRowIndex));
+            blocks = List.of(new CellsWithRowIndex(java.util.Objects.requireNonNull(parsed), parseContext.curRowIndex));
         }
         return blocks;
     }
@@ -503,7 +507,7 @@ public class ValueParser {
         return false;
     }
 
-    private FieldSchema findFieldCached(Structural s, String name) {
+    private @Nullable FieldSchema findFieldCached(Structural s, String name) {
         Map<String, FieldSchema> m = fieldMapCache.get(s);
         if (m == null) {
             m = new HashMap<>();

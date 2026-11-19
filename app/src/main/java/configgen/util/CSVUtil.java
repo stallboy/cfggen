@@ -1,5 +1,7 @@
 package configgen.util;
 
+import org.jspecify.annotations.Nullable;
+
 import de.siegmar.fastcsv.reader.CommentStrategy;
 import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.CsvRecord;
@@ -138,7 +140,7 @@ public class CSVUtil {
         }
     }
 
-    public static String escapeCsv(String value) {
+    public static String escapeCsv(@Nullable String value) {
         if (value == null || value.isEmpty()) {
             return "";
         }

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.schema.FieldType.Primitive.STRING;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,15 +43,15 @@ class CfgSchemaAlignToDataTest {
         CfgSchema aligned = getAlignedCfgSchema(str);
 
         assertEquals(1, aligned.items().size());
-        TableSchema t = aligned.findTable("rank");
+        TableSchema t = requireNonNull(aligned.findTable("rank"));
 
         assertEquals(List.of("RankID"), t.primaryKey().fields());
         assertEquals(0, t.foreignKeys().size());
         assertEquals(0, t.uniqueKeys().size());
         assertEquals(3, t.fields().size());
-        assertEquals(STRING, t.findField("RankID").type());
-        assertEquals(STRING, t.findField("RankName").type());
-        assertEquals(STRING, t.findField("RankShowName").type());
+        assertEquals(STRING, requireNonNull(t.findField("RankID")).type());
+        assertEquals(STRING, requireNonNull(t.findField("RankName")).type());
+        assertEquals(STRING, requireNonNull(t.findField("RankShowName")).type());
 
     }
 
@@ -65,15 +66,15 @@ class CfgSchemaAlignToDataTest {
         CfgSchema aligned = getAlignedCfgSchema(str);
 
         assertEquals(1, aligned.items().size());
-        TableSchema t = aligned.findTable("rank");
+        TableSchema t = requireNonNull(aligned.findTable("rank"));
         assertEquals(List.of("RankID"), t.primaryKey().fields());
         assertEquals(0, t.foreignKeys().size());
         assertEquals(0, t.uniqueKeys().size());
 
         assertEquals(3, t.fields().size());
-        assertEquals(FieldType.Primitive.INT, t.findField("RankID").type());
-        assertEquals(STRING, t.findField("RankName").type());
-        assertEquals(STRING, t.findField("RankShowName").type());
+        assertEquals(FieldType.Primitive.INT, requireNonNull(t.findField("RankID")).type());
+        assertEquals(STRING, requireNonNull(t.findField("RankName")).type());
+        assertEquals(STRING, requireNonNull(t.findField("RankShowName")).type());
     }
 
 
@@ -88,7 +89,7 @@ class CfgSchemaAlignToDataTest {
         CfgSchema aligned = getAlignedCfgSchema(str);
 
         assertEquals(1, aligned.items().size());
-        TableSchema t = aligned.findTable("rank");
+        TableSchema t = requireNonNull(aligned.findTable("rank"));
         assertEquals(EntryType.ENo.NO, t.entry());
         assertEquals(3, t.fields().size());
     }
@@ -105,7 +106,7 @@ class CfgSchemaAlignToDataTest {
         CfgSchema aligned = getAlignedCfgSchema(str);
 
         assertEquals(1, aligned.items().size());
-        TableSchema t = aligned.findTable("rank");
+        TableSchema t = requireNonNull(aligned.findTable("rank"));
         assertEquals(3, t.fields().size());
     }
 
@@ -121,7 +122,7 @@ class CfgSchemaAlignToDataTest {
         CfgSchema aligned = getAlignedCfgSchema(str);
 
         assertEquals(1, aligned.items().size());
-        TableSchema t = aligned.findTable("rank");
+        TableSchema t = requireNonNull(aligned.findTable("rank"));
         assertEquals(0, t.uniqueKeys().size());
     }
 

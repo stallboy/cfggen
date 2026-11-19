@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PackageBuildTest {
@@ -55,7 +56,7 @@ class PackageBuildTest {
 
         Files.writeString(modDir.resolve("monsetr.csv"), "id\nid\n1\n");
         var failure = assertThrows(IllegalArgumentException.class, () -> new Context(Context.ContextCfg.of(modDir), base.cfgSchema()));
-        assertTrue(failure.getMessage().contains("monsetr"));
+        assertTrue(requireNonNull(failure.getMessage()).contains("monsetr"));
     }
 
     @Test
@@ -66,6 +67,6 @@ class PackageBuildTest {
         Files.writeString(data.resolve("color.csv"), "name,id,comment\nname,id,comment\nRed,9,changed\nBlue,2,blue\n");
         var error = assertThrows(configgen.genjava.ConfigErr.class, () -> new BytesGenerator(new ParameterParser("bytes,pack:base,dir:" + root.resolve("bad")))
                 .generate(new Context(Context.ContextCfg.of(data), schema)));
-        assertTrue(error.getMessage().contains("enum ID changed"));
+        assertTrue(requireNonNull(error.getMessage()).contains("enum ID changed"));
     }
 }

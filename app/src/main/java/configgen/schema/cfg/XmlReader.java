@@ -1,5 +1,7 @@
 package configgen.schema.cfg;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.CfgFileInfo;
 import configgen.schema.CommentData;
 import configgen.util.Logger;
@@ -7,7 +9,6 @@ import configgen.schema.*;
 import configgen.schema.RefKey.RefList;
 import configgen.schema.RefKey.RefPrimary;
 import configgen.util.DOMUtil;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Element;
 
 import java.nio.file.Path;
@@ -86,7 +87,7 @@ public enum XmlReader {
         return new KeySchema(Arrays.asList(keys));
     }
 
-    private StructSchema parseStruct(Element self, String pkgNameDot, Set<String> nullableInterfaceOwns) {
+    private StructSchema parseStruct(Element self, String pkgNameDot, @Nullable Set<String> nullableInterfaceOwns) {
         String name = self.getAttribute("name").trim();
         FieldTagMap fieldTagMap = nullableInterfaceOwns != null ?
                 parseImplOwn(self, nullableInterfaceOwns) : parseTableOrStructOwn(self);
@@ -243,7 +244,7 @@ public enum XmlReader {
         return new FieldTagMap(tag2FieldTag, meta);
     }
 
-    private static @NotNull Metadata createMetadata(Set<String> owns) {
+    private static Metadata createMetadata(Set<String> owns) {
         Metadata meta = Metadata.of();
         for (String tag : owns) {
             meta.putTag(tag);
@@ -252,7 +253,7 @@ public enum XmlReader {
     }
 
 
-    private FieldSchema parseField(Element self, Map<String, FieldTag> tag2OwnField) {
+    private @Nullable FieldSchema parseField(Element self, Map<String, FieldTag> tag2OwnField) {
         Set<String> ownSet = parseOwnSet(self);
         Metadata meta = Metadata.of();
         for (Map.Entry<String, FieldTag> e : tag2OwnField.entrySet()) {

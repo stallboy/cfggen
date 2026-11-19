@@ -1,7 +1,8 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.write.RecordBlock.RecordBlockTransformed;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public interface TableFile {
      * @param count    要清空的行数
      * @param fieldIndices 如果为null表示第一行全部清空，如果不为null表示第一行只清空指定indices下的数据
      */
-    void emptyRows(int startRow, int count, List<Integer> fieldIndices);
+    void emptyRows(int startRow, int count, @Nullable List<Integer> fieldIndices);
 
     /**
      * 插入记录块
@@ -25,7 +26,7 @@ public interface TableFile {
      * @param emptyRowCount 可用的空行数，这些空行可以被覆盖
      * @param content 记录块内容，但空行不足以放置content时，需要插入新行
      */
-    void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlockTransformed content);
+    void insertRecordBlock(int startRow, int emptyRowCount, RecordBlockTransformed content);
 
     /**
      * 保存文件并关闭

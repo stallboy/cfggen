@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import configgen.JavaTestClasspath;
+
 import configgen.JsonRecordFixture;
 import configgen.TestCtx;
 import configgen.ctx.Context;
@@ -22,6 +24,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.genjava.SchemaPrimitive.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -118,7 +121,7 @@ class SchemaReadConsistencyTest {
     private Path compile(Path generated) throws Exception {
         Path classes = Files.createDirectories(root.resolve("classes"));
         var args = new ArrayList<>(List.of("--release", "25", "-encoding", "UTF-8", "-classpath",
-                Path.of(ConfigInput.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString(), "-d", classes.toString()));
+                JavaTestClasspath.classpathWithJSpecify(ConfigInput.class), "-d", classes.toString()));
         try (var files = Files.walk(generated)) {
             files.filter(p -> p.toString().endsWith(".java")).forEach(p -> args.add(p.toString()));
         }
@@ -142,8 +145,8 @@ class SchemaReadConsistencyTest {
         checkText(words.get(0), multilingual, "原文", "hello");
         checkText(words.get(1), multilingual, "末尾", "tail");
         Object mappings = config.getClass().getMethod("getMappings", int.class).invoke(config, 1);
-        assertEquals(Long.MAX_VALUE, property(((Map<?, ?>) property(mappings, "getPoints")).get("p"), "getY"));
-        checkText(((Map<?, ?>) property(mappings, "getTexts")).get("t"), multilingual, "原文", "hello");
+        assertEquals(Long.MAX_VALUE, property(requireNonNull(((Map<?, ?>) property(mappings, "getPoints")).get("p")), "getY"));
+        checkText(requireNonNull(((Map<?, ?>) property(mappings, "getTexts")).get("t")), multilingual, "原文", "hello");
         assertEquals(Long.MAX_VALUE, property(property(row, "getChoice"), "getValue"));
         assertEquals(false, property(property(row, "getSingle"), "getValue"));
         Object rank = config.getClass().getMethod("getRanks", int.class).invoke(config, 1);
@@ -188,10 +191,10 @@ class SchemaReadConsistencyTest {
             var replacement = new SchemaBean(false); replacement.columns.addAll(bean(schema, "sample").columns);
             schema.implementations.put("sample", replacement);
         }));
-        changes.add(new Change("union member", schema -> column((SchemaBean) union(schema, "Choice").implementations.get("Number"), "value", SInt)));
+        changes.add(new Change("union member", schema -> column(requireNonNull((SchemaBean) union(schema, "Choice").implementations.get("Number")), "value", SInt)));
         changes.add(new Change("missing union branch", schema -> union(schema, "Choice").implementations.remove("Label")));
         changes.add(new Change("extra union branch", schema -> union(schema, "Choice").addImp("Extra", new SchemaBean(false))));
-        changes.add(new Change("single union branch", schema -> column((SchemaBean) union(schema, "Solo").implementations.get("Only"), "value", SInt)));
+        changes.add(new Change("single union branch", schema -> column(requireNonNull((SchemaBean) union(schema, "Solo").implementations.get("Only")), "value", SInt)));
         for (String name : List.of("colors", "ranks", "entries_Entry")) {
             changes.add(new Change(name + " fixed ID", schema -> symbols(schema, name).values.replaceAll((symbol, id) -> id + 1)));
             changes.add(new Change(name + " extra symbol", schema -> symbols(schema, name).addValue("Extra", 99)));
@@ -206,7 +209,7 @@ class SchemaReadConsistencyTest {
         // Count + id + bool + int + long + float: label's pool index starts at byte 25.
         return List.of(
                 new ChangeBody("truncated table", blocks -> blocks.put(".sample", new byte[]{0}), LoadValueErrs.OutOfBounds.class),
-                new ChangeBody("trailing table bytes", blocks -> blocks.put(".sample", Arrays.copyOf(blocks.get(".sample"), blocks.get(".sample").length + 1)), LoadValueErrs.UnconsumedBytes.class),
+                new ChangeBody("trailing table bytes", blocks -> blocks.put(".sample", Arrays.copyOf(blocks.get(".sample"), requireNonNull(blocks.get(".sample")).length + 1)), LoadValueErrs.UnconsumedBytes.class),
                 new ChangeBody("invalid string-pool index", blocks -> ByteBuffer.wrap(blocks.get(".sample")).order(ByteOrder.LITTLE_ENDIAN).putInt(25, Integer.MAX_VALUE), LoadValueErrs.InvalidPoolIndex.class));
     }
 
@@ -225,9 +228,9 @@ class SchemaReadConsistencyTest {
         return value.getClass().getMethod(method).invoke(value);
     }
 
-    private static SchemaBean bean(SchemaInterface schema, String name) { return (SchemaBean) schema.implementations.get(name); }
-    private static SchemaInterface union(SchemaInterface schema, String name) { return (SchemaInterface) schema.implementations.get(name); }
-    private static SchemaEnum symbols(SchemaInterface schema, String name) { return (SchemaEnum) schema.implementations.get(name); }
+    private static SchemaBean bean(SchemaInterface schema, String name) { return requireNonNull((SchemaBean) schema.implementations.get(name)); }
+    private static SchemaInterface union(SchemaInterface schema, String name) { return requireNonNull((SchemaInterface) schema.implementations.get(name)); }
+    private static SchemaEnum symbols(SchemaInterface schema, String name) { return requireNonNull((SchemaEnum) schema.implementations.get(name)); }
 
     private static void column(SchemaBean bean, String name, Schema type) {
         for (int i = 0; i < bean.columns.size(); i++) {
@@ -255,7 +258,7 @@ class SchemaReadConsistencyTest {
 
     private static ConfigPackage rewriteSchema(ConfigPackage pack, Consumer<SchemaInterface> change, boolean poisonBody) {
         return rewrite(pack, blocks -> {
-            SchemaInterface schema = (SchemaInterface) SchemaDeserializer.deserialize(new ConfigInput(blocks.get("schema")));
+            SchemaInterface schema = (SchemaInterface) SchemaDeserializer.deserialize(new ConfigInput(requireNonNull(blocks.get("schema"))));
             change.accept(schema);
             blocks.put("schema", encode(out -> new SchemaSerializer(out).serializeInterface(schema)));
             if (poisonBody) blocks.put(".sample", new byte[]{0});

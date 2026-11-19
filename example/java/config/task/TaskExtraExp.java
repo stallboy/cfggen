@@ -1,27 +1,25 @@
 package config.task;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：task/task_extra_exp.csv
 public class TaskExtraExp {
-    private int taskid;
-    private int extraexp;
-    private String test1;
-    private String test2;
-    private String fielda;
-    private String fieldb;
-    private String fieldc;
-    private TaskExtraExp() {
-    }
+    private final int taskid;
+    private final int extraexp;
+    private final String test1;
+    private final String test2;
+    private final String fielda;
+    private final String fieldb;
+    private final String fieldc;
 
-    public static TaskExtraExp _create(configgen.genjava.ConfigInput input) {
-        TaskExtraExp self = new TaskExtraExp();
-        self.taskid = input.readInt();
-        self.extraexp = input.readInt();
-        self.test1 = input.readStringInPool();
-        self.test2 = input.readStringInPool();
-        self.fielda = input.readStringInPool();
-        self.fieldb = input.readStringInPool();
-        self.fieldc = input.readStringInPool();
-        return self;
+    private TaskExtraExp(configgen.genjava.ConfigInput input) {
+        this.taskid = input.readInt();
+        this.extraexp = input.readInt();
+        this.test1 = input.readStringInPool();
+        this.test2 = input.readStringInPool();
+        this.fielda = input.readStringInPool();
+        this.fieldb = input.readStringInPool();
+        this.fieldc = input.readStringInPool();
     }
 
     /**
@@ -63,7 +61,11 @@ public class TaskExtraExp {
         return "(" + taskid + "," + extraexp + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + ")";
     }
 
-    public static TaskExtraExp get(int taskid) {
+    public static TaskExtraExp _create(configgen.genjava.ConfigInput input) {
+        return new TaskExtraExp(input);
+    }
+
+    public static @Nullable TaskExtraExp get(int taskid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getTaskTaskExtraExp(taskid);
     }

@@ -1,5 +1,7 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +55,7 @@ public class CsvTableFile extends AbstractCsvTableFile {
     }
 
     @Override
-    protected void writeLine(int lineNum, String[] lineData, int capacity) {
+    protected void writeLine(int lineNum, @Nullable String[] lineData, int capacity) {
         List<String> row = rows.get(lineNum);
         for (int col = 0; col < lineData.length; col++) {
             String cellValue = lineData[col];

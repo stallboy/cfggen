@@ -1,23 +1,21 @@
 package config.task.completecondition;
 
-public final class TalkNpc implements config.task.completecondition.Completecondition {
-    @Override
-    public config.task.CompleteConditionType type() {
-        return config.task.CompleteConditionType.TALK_NPC;
-    }
+import org.jspecify.annotations.Nullable;
 
-    private int npcid;
-    private TalkNpc() {
-    }
+public final class TalkNpc implements config.task.completecondition.Completecondition {
+    private final int npcid;
 
     public TalkNpc(int npcid) {
         this.npcid = npcid;
     }
 
-    public static TalkNpc _create(configgen.genjava.ConfigInput input) {
-        TalkNpc self = new TalkNpc();
-        self.npcid = input.readInt();
-        return self;
+    private TalkNpc(configgen.genjava.ConfigInput input) {
+        this.npcid = input.readInt();
+    }
+
+    @Override
+    public config.task.CompleteConditionType type() {
+        return config.task.CompleteConditionType.TALK_NPC;
     }
 
     public int getNpcid() {
@@ -30,7 +28,7 @@ public final class TalkNpc implements config.task.completecondition.Completecond
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof TalkNpc o)) {
             return false;
         }
@@ -40,6 +38,10 @@ public final class TalkNpc implements config.task.completecondition.Completecond
     @Override
     public String toString() {
         return "TalkNpc(" + npcid + ")";
+    }
+
+    public static TalkNpc _create(configgen.genjava.ConfigInput input) {
+        return new TalkNpc(input);
     }
 
 }

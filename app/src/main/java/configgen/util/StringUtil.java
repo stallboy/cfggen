@@ -1,5 +1,9 @@
 package configgen.util;
 
+import org.jetbrains.annotations.Contract;
+
+import org.jspecify.annotations.Nullable;
+
 public class StringUtil {
     public static String upper1(String value) {
         return value.substring(0, 1).toUpperCase() + value.substring(1);
@@ -13,7 +17,8 @@ public class StringUtil {
         return value.replace("\n", "---");
     }
 
-    public static String underscoreToPascalCase(String input) {
+    @Contract("!null -> !null")
+    public static @Nullable String underscoreToPascalCase(@Nullable String input) {
         if (input == null || input.isEmpty()) {
             return input;
         }
@@ -46,7 +51,8 @@ public class StringUtil {
      * 连续大写按缩写词处理，不在中间拆分：HTTPServer -> HTTP_SERVER、XMLParser -> XML_PARSER。
      * 多个连续下划线合并为一个，前导/尾随下划线丢弃；结果全部大写。
      */
-    public static String toScreamingSnakeCase(String input) {
+    @Contract("!null -> !null")
+    public static @Nullable String toScreamingSnakeCase(@Nullable String input) {
         if (input == null || input.isEmpty()) {
             return input;
         }

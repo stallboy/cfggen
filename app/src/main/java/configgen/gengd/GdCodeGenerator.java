@@ -1,5 +1,9 @@
 package configgen.gengd;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.gen.CliException;
 import configgen.gen.GeneratorWithTag;
@@ -64,6 +68,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
 
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
@@ -85,8 +90,8 @@ public class GdCodeGenerator extends GeneratorWithTag {
         dstDir = Paths.get(dir);
         outputFiles = ctx.outputFiles();
 
-        isLangSwitch = ctx.nullableLangSwitch() != null;
-        languageNames = isLangSwitch ? ctx.nullableLangSwitch().languages() : List.of();
+        isLangSwitch = ctx.nullableTranslationBundle() != null;
+        languageNames = isLangSwitch ? java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()).languages() : List.of();
 
         List<String> needCopyFiles = new ArrayList<>(4);
         needCopyFiles.addAll(COPY_FILES);
@@ -150,11 +155,11 @@ public class GdCodeGenerator extends GeneratorWithTag {
         generateStructOrTable(structSchema, null);
     }
 
-    private void generateTable(CfgValue.VTable vTable) {
-        generateStructOrTable(vTable.schema(), vTable);
+    private void generateTable(CfgValue.@Nullable VTable vTable) {
+        generateStructOrTable(java.util.Objects.requireNonNull(vTable).schema(), vTable);
     }
 
-    private void generateStructOrTable(Structural structural, CfgValue.VTable nullableVTable) {
+    private void generateStructOrTable(Structural structural, CfgValue.@Nullable VTable nullableVTable) {
         StructModel model = new StructModel(this, structural, nullableVTable);
         try (var ps = createCode(model.name.path)) {
             JteEngine.render("gd/GenStruct.jte", model, ps);

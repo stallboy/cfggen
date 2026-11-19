@@ -1,23 +1,21 @@
 package config.task.completecondition;
 
-public final class Chat implements config.task.completecondition.Completecondition {
-    @Override
-    public config.task.CompleteConditionType type() {
-        return config.task.CompleteConditionType.CHAT;
-    }
+import org.jspecify.annotations.Nullable;
 
-    private String msg;
-    private Chat() {
-    }
+public final class Chat implements config.task.completecondition.Completecondition {
+    private final String msg;
 
     public Chat(String msg) {
         this.msg = msg;
     }
 
-    public static Chat _create(configgen.genjava.ConfigInput input) {
-        Chat self = new Chat();
-        self.msg = input.readStringInPool();
-        return self;
+    private Chat(configgen.genjava.ConfigInput input) {
+        this.msg = input.readStringInPool();
+    }
+
+    @Override
+    public config.task.CompleteConditionType type() {
+        return config.task.CompleteConditionType.CHAT;
     }
 
     public String getMsg() {
@@ -30,7 +28,7 @@ public final class Chat implements config.task.completecondition.Completeconditi
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof Chat o)) {
             return false;
         }
@@ -40,6 +38,10 @@ public final class Chat implements config.task.completecondition.Completeconditi
     @Override
     public String toString() {
         return "Chat(" + msg + ")";
+    }
+
+    public static Chat _create(configgen.genjava.ConfigInput input) {
+        return new Chat(input);
     }
 
 }

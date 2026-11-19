@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import configgen.JavaTestClasspath;
+
 import configgen.ctx.Context;
 import configgen.gen.CliException;
 import configgen.gen.Parameter;
@@ -30,6 +32,60 @@ class JavaCodeGeneratorTest {
 
     @TempDir
     Path tempDir;
+
+    @Test
+    void jspecifyIsOptInAndUsesPackageDefaults() throws IOException {
+        var context = configgen.TestCtx.newContext(Files.createDirectories(tempDir.resolve("data")), """
+                interface Choice { struct Empty {} }
+                table target[id] { id:int; }
+                """, java.util.Map.of("target", "id\nid\n1\n"));
+        Path builders = Files.writeString(tempDir.resolve("builders.txt"), "target\n");
+        Path output = tempDir.resolve("generated");
+        String args = "java,pkg:config,dir:" + output + ",configgenDir:" + output + ",builders:" + builders;
+        Path root = output.resolve("config");
+        Path support = output.resolve("configgen/genjava");
+        Path table = root.resolve("Target.java");
+
+        new JavaCodeGenerator(new ParameterParser(args)).generate(context);
+        context.outputFiles().finalizeRun();
+        String plainTable = Files.readString(table);
+        String plainLoader = Files.readString(support.resolve("ConfigLoader.java"));
+        assertFalse(plainTable.contains("jspecify"));
+        assertTrue(plainTable.contains("return new Target(input);"));
+        assertTrue(plainTable.contains("private Target(configgen.genjava.ConfigInput input)"));
+        assertFalse(plainLoader.contains("jspecify"));
+        assertTrue(Files.readString(support.resolve("ConfigInput.java")).contains("texts[i] = textInPool(i, index);"));
+        assertFalse(Files.exists(root.resolve("package-info.java")));
+        assertFalse(Files.exists(support.resolve("package-info.java")));
+
+        new JavaCodeGenerator(new ParameterParser(args + ",jspecify")).generate(context);
+        context.outputFiles().finalizeRun();
+        assertEquals("""
+                @NullMarked
+                package config.choice;
+
+                import org.jspecify.annotations.NullMarked;
+                """, Files.readString(root.resolve("choice/package-info.java")));
+        assertTrue(Files.exists(root.resolve("package-info.java")));
+        assertTrue(Files.exists(support.resolve("package-info.java")));
+        assertTrue(Files.readString(support.resolve("ConfigLoader.java")).contains("@Nullable Consumer<T> resolve"));
+        String annotatedTable = Files.readString(table);
+        assertTrue(annotatedTable.contains("import org.jspecify.annotations.Nullable;"));
+        assertTrue(annotatedTable.contains("@Nullable Target get("));
+        assertTrue(annotatedTable.contains("return new Target(input);"));
+        assertFalse(annotatedTable.contains("@org.jspecify"));
+        assertFalse(annotatedTable.contains("@NullMarked"));
+        assertFalse(Files.readString(root.resolve("ConfigMgrLoader.java")).contains("annotations.Nullable"));
+        assertFalse(Files.readString(root.resolve("TargetBuilder.java")).contains("annotations.Nullable"));
+
+        new JavaCodeGenerator(new ParameterParser(args + ",jspecify:false")).generate(context);
+        context.outputFiles().finalizeRun();
+        assertEquals(plainTable, Files.readString(table));
+        assertEquals(plainLoader, Files.readString(support.resolve("ConfigLoader.java")));
+        assertFalse(Files.exists(root.resolve("package-info.java")));
+        assertFalse(Files.exists(root.resolve("choice/package-info.java")));
+        assertFalse(Files.exists(support.resolve("package-info.java")));
+    }
 
     @ParameterizedTest
     @ValueSource(ints = {-1, 2})
@@ -65,7 +121,7 @@ class JavaCodeGeneratorTest {
     private URLClassLoader compileGenerated(Path generated) throws Exception {
         var classes = Files.createDirectory(tempDir.resolve("classes"));
         var args = new ArrayList<>(List.of("--release", "25", "-d", classes.toString(), "-classpath",
-                Path.of(configgen.genjava.ConfigInput.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString()));
+                JavaTestClasspath.classpathWithJSpecify(configgen.genjava.ConfigInput.class)));
         try (var files = Files.walk(generated)) {
             files.filter(path -> path.toString().endsWith(".java")).forEach(path -> args.add(path.toString()));
         }
@@ -311,14 +367,21 @@ class JavaCodeGeneratorTest {
         }
     }
 
-    @Test
-    void generate_withBuilders() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void generate_withBuilders(boolean jspecify) throws Exception {
         // Given: 有效的配置目录，包含schema
         String cfgStr = """
                 table user[id] {
                     id:int;
                     name:str;
                     age:int;
+                    mode:Mode;
+                    tags:list<int> (pack);
+                }
+                interface Mode (defaultImpl='Normal', pack) {
+                    struct Fast {}
+                    struct Normal { limit:int; }
                 }
                 """;
 
@@ -326,8 +389,8 @@ class JavaCodeGeneratorTest {
 
         // 添加一个空的CSV文件来避免schema对齐失败
         String csvData = """
-                用户ID,姓名,年龄
-                id,name,age
+                用户ID,姓名,年龄,模式,标签
+                id,name,age,mode,tags
                 """;
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
@@ -337,11 +400,17 @@ class JavaCodeGeneratorTest {
 
         // When: 创建Context并生成配置值
         File outputDir = generateJavaCode("config_builders", "test.config.builders",
-                ",builders:" + buildersFile.getAbsolutePath());
+                ",builders:" + buildersFile.getAbsolutePath() + (jspecify ? ",jspecify" : ""));
 
         try (var loader = compileGenerated(outputDir.toPath())) {
             var builderClass = loader.loadClass("test.config.builders.UserBuilder");
             Object builder = builderClass.getConstructor().newInstance();
+            Object defaults = builderClass.getMethod("build").invoke(builder);
+            assertEquals("", defaults.getClass().getMethod("getName").invoke(defaults));
+            assertEquals(List.of(), defaults.getClass().getMethod("getTags").invoke(defaults));
+            Object mode = defaults.getClass().getMethod("getMode").invoke(defaults);
+            assertEquals("Normal", mode.getClass().getSimpleName());
+            assertEquals(0, mode.getClass().getMethod("getLimit").invoke(mode));
             builderClass.getField("id").setInt(builder, 7);
             builderClass.getField("name").set(builder, "Alice");
             builderClass.getField("age").setInt(builder, 25);

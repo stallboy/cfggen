@@ -43,7 +43,7 @@ public class TableSchemaRefGraph {
             Refs refs = e.getValue();
             for (TableSchema refToTable : refs.refOutTables.values()) {
                 Refs refsTo = refsMap.get(refToTable.name());
-                refsTo.refInTables.put(sourceTable.name(), sourceTable);
+                java.util.Objects.requireNonNull(refsTo).refInTables.put(java.util.Objects.requireNonNull(sourceTable).name(), sourceTable);
             }
         }
     }

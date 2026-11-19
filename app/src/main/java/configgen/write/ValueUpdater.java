@@ -10,7 +10,6 @@ import configgen.value.*;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.CfgValue.VTable;
 import configgen.value.CfgValue.Value;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,14 +19,14 @@ import java.util.*;
 public class ValueUpdater {
 
 
-    public record NewCfgValueResult(@NotNull CfgValue newCfgValue,
-                                    @NotNull CfgData newCfgData,
-                                    @NotNull List<String> errStrList) {
+    public record NewCfgValueResult(CfgValue newCfgValue,
+                                    CfgData newCfgData,
+                                    List<String> errStrList) {
     }
 
-    public static NewCfgValueResult updateByReloadTableData(@NotNull Context context,
-                                                            @NotNull CfgValue cfgValue,
-                                                            @NotNull VTable vTable) {
+    public static NewCfgValueResult updateByReloadTableData(Context context,
+                                                            CfgValue cfgValue,
+                                                            VTable vTable) {
 
         CfgSchema schema = cfgValue.schema();
         if (schema.isPartial()) {
@@ -41,10 +40,10 @@ public class ValueUpdater {
         NewCfgDataResult newDataResult = DataUpdater.updateByReloadTable(context, dTable);
         CfgData newCfgData = newDataResult.newCfgData();
         CfgValueErrs errs = CfgValueErrs.of();
-        VTableParser parser = new VTableParser(vTable.schema(), newCfgData.getDTable(vTable.name()),
+        VTableParser parser = new VTableParser(vTable.schema(), java.util.Objects.requireNonNull(newCfgData.getDTable(vTable.name())),
                 vTable.schema(), context.contextCfg().headRow(), errs);
         VTable newVTable = parser.parseTable();
-        TextValue.setTranslatedForTable(newVTable, context.nullableLangTextFinder());
+        TextValue.setTranslatedForTable(newVTable, context.nullableTranslationCatalog());
 
         Map<String, VTable> newTables = new LinkedHashMap<>(cfgValue.vTableMap());
         newTables.put(newVTable.name(), newVTable);
@@ -58,10 +57,10 @@ public class ValueUpdater {
     }
 
 
-    public static NewCfgValueResult updateByJsonFileAddOrUpdate(@NotNull Context context,
-                                                                @NotNull CfgValue cfgValue,
-                                                                @NotNull VTable vTable,
-                                                                @NotNull Path relativeJsonPath) {
+    public static NewCfgValueResult updateByJsonFileAddOrUpdate(Context context,
+                                                                CfgValue cfgValue,
+                                                                VTable vTable,
+                                                                Path relativeJsonPath) {
         CfgSchema schema = cfgValue.schema();
         if (schema.isPartial()) {
             throw new IllegalArgumentException("update only supports full value");
@@ -88,11 +87,11 @@ public class ValueUpdater {
         return updateByNewRecords(context, cfgValue, vTable, newRecordList, newCfgValueStat);
     }
 
-    public static NewCfgValueResult updateByJsonFileDelete(@NotNull Context context,
-                                                           @NotNull CfgValue cfgValue,
-                                                           @NotNull VTable vTable,
-                                                           @NotNull Value pkValue,
-                                                           @NotNull String id) {
+    public static NewCfgValueResult updateByJsonFileDelete(Context context,
+                                                           CfgValue cfgValue,
+                                                           VTable vTable,
+                                                           Value pkValue,
+                                                           String id) {
         CfgSchema schema = cfgValue.schema();
         if (schema.isPartial()) {
             throw new IllegalArgumentException("update only supports full value");
@@ -105,15 +104,15 @@ public class ValueUpdater {
         return updateByNewRecords(context, cfgValue, vTable, newRecordList, newCfgValueStat);
     }
 
-    private static @NotNull NewCfgValueResult updateByNewRecords(@NotNull Context context,
-                                                                 @NotNull CfgValue cfgValue,
-                                                                 @NotNull VTable vTable,
+    private static NewCfgValueResult updateByNewRecords(Context context,
+                                                                 CfgValue cfgValue,
+                                                                 VTable vTable,
                                                                  List<VStruct> newRecordList,
                                                                  CfgValueStat newCfgValueStat) {
         CfgValueErrs errs = CfgValueErrs.of();
         VTableCreator creator = new VTableCreator(vTable.schema(), errs);
         VTable newVTable = creator.create(newRecordList);
-        TextValue.setTranslatedForTable(newVTable, context.nullableLangTextFinder());
+        TextValue.setTranslatedForTable(newVTable, context.nullableTranslationCatalog());
 
         Map<String, VTable> newTables = new LinkedHashMap<>(cfgValue.vTableMap());
         newTables.put(newVTable.name(), newVTable);

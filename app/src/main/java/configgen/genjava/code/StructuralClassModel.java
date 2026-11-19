@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.*;
 
 import java.util.List;
@@ -18,9 +20,9 @@ public class StructuralClassModel {
     public final boolean isTable;
     public final boolean isTableAndNeedBuilder;
     public final boolean isStructAndHasNoField;
-    public final InterfaceSchema nullableInterface;
-    public final String nullableInterfaceFullName;
-    public final TableSchema enumRefTable;
+    public final @Nullable InterfaceSchema nullableInterface;
+    public final @Nullable String nullableInterfaceFullName;
+    public final @Nullable TableSchema enumRefTable;
     public final List<FieldInfo> fields;
     public final List<ForeignKeyInfo> foreignKeys;
     public final boolean hasRef;
@@ -30,7 +32,12 @@ public class StructuralClassModel {
 
     public record FieldInfo(String name,
                             String type,
-                            String comment) {
+                            String comment,
+                            boolean primitive,
+                            @Nullable String builderDefault) {
+        public boolean needsBuilderValue() {
+            return builderDefault == null;
+        }
     }
 
     public record ForeignKeyInfo(String type,
@@ -60,12 +67,13 @@ public class StructuralClassModel {
         // Interface information
         nullableInterface = structural instanceof StructSchema struct ? struct.nullableInterface() : null;
         this.isImpl = nullableInterface != null;
-        this.nullableInterfaceFullName = isImpl ? Name.fullName(cfg, nullableInterface) : null;
-        this.enumRefTable = isImpl ? nullableInterface.nullableEnumRefTable() : null;
+        this.nullableInterfaceFullName = nullableInterface != null ? Name.fullName(cfg, nullableInterface) : null;
+        this.enumRefTable = nullableInterface != null ? nullableInterface.nullableEnumRefTable() : null;
 
         // Fields
         this.fields = structural.fields().stream()
-                .map(f -> new FieldInfo(lower1(f.name()), TypeStr.type(cfg, f.type()), f.comment()))
+                .map(f -> new FieldInfo(lower1(f.name()), TypeStr.type(cfg, f.type()), f.comment(),
+                        TypeStr.isJavaPrimitive(f.type()), isTableAndNeedBuilder ? TypeStr.builderDefault(cfg, f.type()) : null))
                 .toList();
 
         // Foreign keys
@@ -105,7 +113,7 @@ public class StructuralClassModel {
         return Name.enumFieldName(cfg, enumName);
     }
 
-    public String readValue(FieldType t) {
+    public @Nullable String readValue(FieldType t) {
         return TypeStr.readValue(cfg, t);
     }
 

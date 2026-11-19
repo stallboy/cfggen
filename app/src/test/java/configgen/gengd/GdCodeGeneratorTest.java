@@ -1,5 +1,7 @@
 package configgen.gengd;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.CliException;
@@ -16,6 +18,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -90,7 +93,7 @@ class GdCodeGeneratorTest {
                 "枚举值应出现在生成的代码中");
     }
 
-    private static Path findFileContaining(Path dir, String namePart) throws IOException {
+    private static @Nullable Path findFileContaining(Path dir, String namePart) throws IOException {
         try (Stream<Path> files = Files.walk(dir)) {
             return files.filter(p -> p.getFileName().toString().endsWith(".gd"))
                     .filter(p -> p.getFileName().toString().toLowerCase().contains(namePart))
@@ -126,7 +129,8 @@ class GdCodeGeneratorTest {
         // 复合键应提前报清表名并给出处理办法，而不是渲染中途抛裸异常栈
         CliException e = assertThrows(CliException.class,
                 () -> new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx));
-        assertTrue(e.getMessage().contains("pair"), "错误信息应包含表名，实际: " + e.getMessage());
+        String message = requireNonNull(e.getMessage());
+        assertTrue(message.contains("pair"), "错误信息应包含表名，实际: " + message);
         assertTrue(e.getMessage().contains("nogd"), "错误信息应给出nogd处理提示，实际: " + e.getMessage());
     }
 

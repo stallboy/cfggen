@@ -1,23 +1,21 @@
 package config.task.completecondition;
 
-public final class CfgChat implements config.task.completecondition.CfgCompletecondition {
-    @Override
-    public config.task.CfgComplete_condition_type type() {
-        return config.task.CfgComplete_condition_type.CHAT;
-    }
+import org.jspecify.annotations.Nullable;
 
-    private String msg;
-    private CfgChat() {
-    }
+public final class CfgChat implements config.task.completecondition.CfgCompletecondition {
+    private final String msg;
 
     public CfgChat(String msg) {
         this.msg = msg;
     }
 
-    public static CfgChat _create(configgen.genjava.ConfigInput input) {
-        CfgChat self = new CfgChat();
-        self.msg = input.readStringInPool();
-        return self;
+    private CfgChat(configgen.genjava.ConfigInput input) {
+        this.msg = input.readStringInPool();
+    }
+
+    @Override
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.CHAT;
     }
 
     public String getMsg() {
@@ -30,7 +28,7 @@ public final class CfgChat implements config.task.completecondition.CfgCompletec
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CfgChat o)) {
             return false;
         }
@@ -40,6 +38,10 @@ public final class CfgChat implements config.task.completecondition.CfgCompletec
     @Override
     public String toString() {
         return "CfgChat(" + msg + ")";
+    }
+
+    public static CfgChat _create(configgen.genjava.ConfigInput input) {
+        return new CfgChat(input);
     }
 
 }

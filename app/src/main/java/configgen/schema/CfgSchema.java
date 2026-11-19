@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.cfg.CfgWriter;
 import configgen.util.Logger;
 
@@ -14,9 +16,9 @@ public class CfgSchema {
     private final List<Nameable> items;
     private final boolean isPartial;
 
-    private Map<String, Nameable> itemMap;
-    private Map<String, Fieldable> fieldableMap;
-    private Map<String, TableSchema> tableMap;
+    private @Nullable Map<String, Nameable> itemMap;
+    private @Nullable Map<String, Fieldable> fieldableMap;
+    private @Nullable Map<String, TableSchema> tableMap;
     private boolean isResolved = false;
 
     // 按包名（namespace）存储文件末尾注释
@@ -64,16 +66,16 @@ public class CfgSchema {
         return isPartial;
     }
 
-    public Fieldable findFieldable(String name) {
-        return fieldableMap.get(name);
+    public @Nullable Fieldable findFieldable(String name) {
+        return fieldableMap().get(name);
     }
 
-    public TableSchema findTable(String name) {
-        return tableMap.get(name);
+    public @Nullable TableSchema findTable(String name) {
+        return tableMap().get(name);
     }
 
-    public Nameable findItem(String name) {
-        return itemMap.get(name);
+    public @Nullable Nameable findItem(String name) {
+        return Objects.requireNonNull(itemMap).get(name);
     }
 
     void setMap(Map<String, Nameable> itemMap,
@@ -85,20 +87,20 @@ public class CfgSchema {
     }
 
     public Map<String, Fieldable> fieldableMap() {
-        return fieldableMap;
+        return Objects.requireNonNull(fieldableMap);
     }
 
     public Map<String, TableSchema> tableMap() {
-        return tableMap;
+        return Objects.requireNonNull(tableMap);
     }
 
     public Iterable<Fieldable> sortedFieldables() {
-        Map<String, Fieldable> sorted = new TreeMap<>(fieldableMap);
+        Map<String, Fieldable> sorted = new TreeMap<>(fieldableMap());
         return sorted.values();
     }
 
     public Iterable<TableSchema> sortedTables() {
-        Map<String, TableSchema> sorted = new TreeMap<>(tableMap);
+        Map<String, TableSchema> sorted = new TreeMap<>(tableMap());
         return sorted.values();
     }
 
@@ -119,7 +121,7 @@ public class CfgSchema {
      * @param comment 文件末尾注释内容
      */
     public void setFileEndComment(String pkgName, String comment) {
-        if (comment != null && !comment.isEmpty()) {
+        if (!comment.isEmpty()) {
             fileEndComments.put(pkgName, comment);
         }
     }
@@ -167,8 +169,9 @@ public class CfgSchema {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
+        //noinspection ConstantValue
         if (o == null || getClass() != o.getClass()) return false;
         CfgSchema cfgSchema = (CfgSchema) o;
         return Objects.equals(items, cfgSchema.items);

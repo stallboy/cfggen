@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -26,7 +28,7 @@ public sealed interface EntryType {
 
     sealed abstract class EntryBase implements EntryType {
         protected final String field;
-        protected FieldSchema fieldSchema;
+        private @Nullable FieldSchema fieldSchema;
 
         EntryBase(String field) {
             this.field = field;
@@ -36,7 +38,7 @@ public sealed interface EntryType {
             return field;
         }
 
-        public FieldSchema fieldSchema() {
+        public @Nullable FieldSchema fieldSchema() {
             return fieldSchema;
         }
 
@@ -45,7 +47,7 @@ public sealed interface EntryType {
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             EntryBase entryBase = (EntryBase) o;

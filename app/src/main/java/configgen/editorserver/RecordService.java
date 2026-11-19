@@ -1,5 +1,7 @@
 package configgen.editorserver;
 
+import org.jspecify.annotations.Nullable;
+
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
 import configgen.schema.EntryType;
@@ -29,28 +31,28 @@ public class RecordService {
 
     public record TableRecord(
             ResultCode resultCode,
-            String table,
-            String id,
+            @Nullable String table,
+            @Nullable String id,
             int maxObjs,
-            JSONObject object,
-            Collection<BriefRecord> refs) implements RecordResponse {
+            @Nullable JSONObject object,
+            @Nullable Collection<BriefRecord> refs) implements RecordResponse {
     }
 
     public record TableRecordRefs(
             ResultCode resultCode,
-            String table,
-            String id,
+            @Nullable String table,
+            @Nullable String id,
             int depth,
             boolean in,
             int maxObjs,
-            Collection<BriefRecord> refs) implements RecordResponse {
+            @Nullable Collection<BriefRecord> refs) implements RecordResponse {
     }
 
     public record UnreferencedRecords(
             ResultCode resultCode,
-            String table,
+            @Nullable String table,
             int maxObjs,
-            Collection<BriefRecord> refs) implements RecordResponse {
+            @Nullable Collection<BriefRecord> refs) implements RecordResponse {
     }
 
 
@@ -71,15 +73,15 @@ public class RecordService {
     }
 
     public record BriefRecord(
-            String table,
-            String id,
+            @Nullable String table,
+            @Nullable String id,
 
-            String title,
-            List<BriefDescription> descriptions,
+            @Nullable String title,
+            @Nullable List<BriefDescription> descriptions,
             String value,  // 完整信息
             // refName -> [refId]
             @JSONField(name = "$refs")
-            Collection<FieldRef> refs,
+            @Nullable Collection<FieldRef> refs,
             int depth) {
     }
 
@@ -92,15 +94,15 @@ public class RecordService {
     private final CfgValue cfgValue;
     private final TableSchemaRefGraph graph;
 
-    private final String table;
-    private final String id;
+    private final @Nullable String table;
+    private final @Nullable String id;
     private final int depth;
     private final boolean in;
     private final int maxObjs;
     private final RequestType requestType;
 
     public RecordService(CfgValue cfgValue, TableSchemaRefGraph graph,
-                         String tableName, String id,
+                         @Nullable String tableName, @Nullable String id,
                          int depth, boolean in, int maxObjs, RequestType requestType) {
         this.cfgValue = cfgValue;
         this.graph = graph;
@@ -147,7 +149,7 @@ public class RecordService {
         }
 
         CfgValueErrs errs = CfgValueErrs.of();
-        Value pkValue = ValuePack.unpackTablePrimaryKey(id, vTable.schema(), errs);
+        Value pkValue = ValuePack.unpackTablePrimaryKey(java.util.Objects.requireNonNull(id), vTable.schema(), errs);
 
         if (!errs.errs().isEmpty()) {
             for (CfgValueErrs.VErr err : errs.errs()) {
@@ -156,7 +158,7 @@ public class RecordService {
             return ofErr(idParseErr);
         }
 
-        String id = pkValue.packStr();
+        String id = java.util.Objects.requireNonNull(pkValue).packStr();
         VStruct vRecord = vTable.primaryKeyMap().get(pkValue);
         if (vRecord == null) {
             return ofErr(idNotFound);
@@ -278,7 +280,7 @@ public class RecordService {
         return new BriefRecord(refId.table(), refId.id(), title, descriptions, value, refs, depth);
     }
 
-    public static String getBriefTitle(VStruct vStruct) {
+    public static @Nullable String getBriefTitle(VStruct vStruct) {
         String title = null;
         String titleFieldName = vStruct.schema().meta().getStr("title", null);
         if (titleFieldName != null) {
@@ -307,7 +309,7 @@ public class RecordService {
         }
     }
 
-    public static List<BriefDescription> getBriefDescriptions(VStruct vStruct) {
+    public static @Nullable List<BriefDescription> getBriefDescriptions(VStruct vStruct) {
         String fields = vStruct.schema().meta().getStr("description", null);
         if (fields == null) {
             return null;

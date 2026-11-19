@@ -1,5 +1,7 @@
 package configgen.data;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 import configgen.schema.*;
@@ -76,7 +78,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
         return alignedCfg;
     }
 
-    TableSchema newTableSchema(CfgData.DTable th, CfgSchemaErrs errs) {
+    @Nullable TableSchema newTableSchema(CfgData.DTable th, CfgSchemaErrs errs) {
         List<FieldSchema> fields = new ArrayList<>(th.fields().size());
         for (DField hf : th.fields()) {
             if (CfgUtil.isIdentifier(hf.name())) {
@@ -113,7 +115,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
         }
         FieldType type;
         String typeStr = hf.suggestedType();
-        if (typeStr != null && !typeStr.isEmpty()) {
+        if (!typeStr.isEmpty()) {
             type = headRow.parseType(typeStr);
             if (type == null) {
                 errs.addWarn(new CfgSchemaErrs.SuggestTypeUnknown(tableName, hf.name(), typeStr));
@@ -125,7 +127,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
         return new FieldSchema(hf.name(), type, AUTO, meta);
     }
 
-    TableSchema alignTable(TableSchema table, List<DField> header, CfgSchemaErrs errs) {
+    @Nullable TableSchema alignTable(TableSchema table, List<DField> header, CfgSchemaErrs errs) {
         String name = table.name();
         Map<String, FieldSchema> fieldSchemas = alignFields(table, header, errs);
         if (fieldSchemas.isEmpty()) {
@@ -270,7 +272,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
     }
 
 
-    private FieldSchema findAndRemove(List<DField> headers, int index, Map<String, FieldSchema> curFields) {
+    private @Nullable FieldSchema findAndRemove(List<DField> headers, int index, Map<String, FieldSchema> curFields) {
         String name = headers.get(index).name();
         FieldSchema fs = curFields.remove(name);
         if (fs != null) {

@@ -1,20 +1,18 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public class ArgCaptureMode_Detail {
-    private String name;
-    private int id;
-    private String comment;
-    private ArgCaptureMode_Detail() {
-    }
+    private final String name;
+    private final int id;
+    private final String comment;
 
-    public static ArgCaptureMode_Detail _create(configgen.genjava.ConfigInput input) {
-        ArgCaptureMode_Detail self = new ArgCaptureMode_Detail();
-        self.name = input.readStringInPool();
-        self.id = input.readInt();
-        self.comment = input.readStringInPool();
-        return self;
+    private ArgCaptureMode_Detail(configgen.genjava.ConfigInput input) {
+        this.name = input.readStringInPool();
+        this.id = input.readInt();
+        this.comment = input.readStringInPool();
     }
 
     public String getName() {
@@ -34,12 +32,16 @@ public class ArgCaptureMode_Detail {
         return "(" + name + "," + id + "," + comment + ")";
     }
 
-    public static ArgCaptureMode_Detail get(String name) {
+    public static ArgCaptureMode_Detail _create(configgen.genjava.ConfigInput input) {
+        return new ArgCaptureMode_Detail(input);
+    }
+
+    public static @Nullable ArgCaptureMode_Detail get(String name) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherArgCaptureMode(name);
     }
 
-    public static ArgCaptureMode_Detail getById(int id) {
+    public static @Nullable ArgCaptureMode_Detail getById(int id) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherArgCaptureModeById(id);
     }

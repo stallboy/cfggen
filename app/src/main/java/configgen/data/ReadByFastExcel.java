@@ -1,8 +1,9 @@
 package configgen.data;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.Logger;
 import org.dhatim.fastexcel.reader.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -13,9 +14,9 @@ public enum ReadByFastExcel implements ExcelReader {
     INSTANCE;
 
     @Override
-    public ReadResult readExcels(@NotNull Path path,
-                                 @NotNull Path relativePath,
-                                 String readSheet) {
+    public ReadResult readExcels(Path path,
+                                 Path relativePath,
+                                 @Nullable String readSheet) {
         CfgDataStat stat = new CfgDataStat();
         List<ReadResult.OneSheet> sheets = new ArrayList<>();
 

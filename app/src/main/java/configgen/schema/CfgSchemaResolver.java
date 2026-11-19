@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.EntryType.EntryBase;
 import configgen.schema.cfg.CfgWriter;
 
@@ -17,8 +19,8 @@ import static configgen.schema.CfgSchemaErrs.*;
 public final class CfgSchemaResolver {
     private final CfgSchema cfgSchema;
     private final CfgSchemaErrs errs;
-    private Nameable curTopNameable;
-    private Nameable curNameable;
+    private @Nullable Nameable curTopNameable;
+    private @Nullable Nameable curNameable;
 
 
     public CfgSchemaResolver(CfgSchema cfg, CfgSchemaErrs errs) {
@@ -314,7 +316,7 @@ public final class CfgSchemaResolver {
     /**
      * 查找StructRef对应的对象，查找顺序：interface impl -> 本模块 -> 全局
      */
-    private Fieldable findStructRefObj(String name) {
+    private @Nullable Fieldable findStructRefObj(String name) {
         // interface里找
         if (curTopNameable instanceof InterfaceSchema sInterface) {
             StructSchema obj = sInterface.findImpl(name);
@@ -324,7 +326,7 @@ public final class CfgSchemaResolver {
         }
 
         // 本模块找
-        String namespace = curTopNameable.namespace();
+        String namespace = java.util.Objects.requireNonNull(curTopNameable).namespace();
         if (!namespace.isEmpty()) {
             String fullName = Nameable.makeName(namespace, name);
             Fieldable obj = cfgSchema.findFieldable(fullName);
@@ -338,7 +340,7 @@ public final class CfgSchemaResolver {
     }
 
     private String ctx() {
-        return curNameable.fullName();
+        return java.util.Objects.requireNonNull(curNameable).fullName();
     }
 
     /// /////////////////////////////////////////////////////////////////
@@ -381,9 +383,9 @@ public final class CfgSchemaResolver {
         }
     }
 
-    private TableSchema findTableInLocalThenGlobal(String name) {
+    private @Nullable TableSchema findTableInLocalThenGlobal(String name) {
         // 本模块找
-        String namespace = curTopNameable.namespace();
+        String namespace = java.util.Objects.requireNonNull(curTopNameable).namespace();
         if (!namespace.isEmpty()) {
             String fullName = Nameable.makeName(namespace, name);
             TableSchema table = cfgSchema.findTable(fullName);
@@ -435,10 +437,11 @@ public final class CfgSchemaResolver {
         boolean ok = true;
         for (String name : key.fields()) {
             FieldSchema field = structural.findField(name);
-            obj.add(field);
             if (field == null) {
                 errs.addErr(new KeyNotFound(ctx(), name));
                 ok = false;
+            }else{
+                obj.add(field);
             }
         }
         if (ok) {
@@ -484,6 +487,9 @@ public final class CfgSchemaResolver {
     private void checkPrimaryKeyEnumOrIntIfEnum(TableSchema table, KeySchema key) {
         if (table.entry() instanceof EntryType.EEnum eEnum) {
             FieldSchema enumField = eEnum.fieldSchema();
+            if (enumField == null) {
+                return;
+            }
             if (key.fieldSchemas().size() != 1) {
                 errPrimaryKeyNotEnumOrIntWhenEnum(String.join(",", key.fields()),
                         "size=" + key.fieldSchemas().size(), enumField.name());
@@ -521,7 +527,7 @@ public final class CfgSchemaResolver {
                     // TypeStructNotFound 已在 resolve 时记录，这里不再重复
                     err = true;
                 } else {
-                    switch (structRef.obj()) {
+                    switch (structRef.resolvedObj()) {
                         case InterfaceSchema ignored -> {
                             err = true;
                         }
@@ -681,7 +687,7 @@ public final class CfgSchemaResolver {
                 return primitive.equals(remote);
             }
             case StructRef structRef -> {
-                return remote instanceof StructRef ref && structRef.obj() == ref.obj();
+                return remote instanceof StructRef ref && structRef.obj() == ref.resolvedObj();
             }
         }
     }

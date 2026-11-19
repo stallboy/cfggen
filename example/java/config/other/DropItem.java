@@ -1,12 +1,12 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 public class DropItem {
-    private int chance;
-    private java.util.List<Integer> itemids;
-    private int countmin;
-    private int countmax;
-    private DropItem() {
-    }
+    private final int chance;
+    private final java.util.List<Integer> itemids;
+    private final int countmin;
+    private final int countmax;
 
     public DropItem(int chance, java.util.List<Integer> itemids, int countmin, int countmax) {
         this.chance = chance;
@@ -15,24 +15,22 @@ public class DropItem {
         this.countmax = countmax;
     }
 
-    public static DropItem _create(configgen.genjava.ConfigInput input) {
-        DropItem self = new DropItem();
-        self.chance = input.readInt();
+    private DropItem(configgen.genjava.ConfigInput input) {
+        this.chance = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.itemids = java.util.Collections.emptyList();
+                this.itemids = java.util.Collections.emptyList();
             } else {
-                self.itemids = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.itemids.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.itemids = java.util.Collections.unmodifiableList(self.itemids);
+                this.itemids = java.util.Collections.unmodifiableList(items);
             }
         }
-        self.countmin = input.readInt();
-        self.countmax = input.readInt();
-        return self;
+        this.countmin = input.readInt();
+        this.countmax = input.readInt();
     }
 
     /**
@@ -69,7 +67,7 @@ public class DropItem {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof DropItem o)) {
             return false;
         }
@@ -79,6 +77,10 @@ public class DropItem {
     @Override
     public String toString() {
         return "(" + chance + "," + itemids + "," + countmin + "," + countmax + ")";
+    }
+
+    public static DropItem _create(configgen.genjava.ConfigInput input) {
+        return new DropItem(input);
     }
 
 }

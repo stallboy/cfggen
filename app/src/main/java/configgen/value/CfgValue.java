@@ -1,9 +1,10 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.data.CfgData;
 import configgen.data.Source;
 import configgen.schema.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -29,7 +30,7 @@ public record CfgValue(CfgSchema schema,
         return sorted.values();
     }
 
-    public VTable getTable(String tableName) {
+    public @Nullable VTable getTable(String tableName) {
         return vTableMap.get(tableName);
     }
 
@@ -38,8 +39,8 @@ public record CfgValue(CfgSchema schema,
 
                          SequencedMap<Value, VStruct> primaryKeyMap,
                          SequencedMap<List<String>, SequencedMap<Value, VStruct>> uniqueKeyMaps,
-                         SequencedSet<String> enumNames, //可为null
-                         SequencedMap<String, Integer> enumNameToIntegerValueMap) { //可为null
+                         @Nullable SequencedSet<String> enumNames, //可为null
+                         @Nullable SequencedMap<String, Integer> enumNameToIntegerValueMap) { //可为null
         public VTable {
             Objects.requireNonNull(schema);
             Objects.requireNonNull(valueList);
@@ -67,7 +68,11 @@ public record CfgValue(CfgSchema schema,
     }
 
     public static sealed abstract class CompositeValue implements Value {
-        protected Source source;
+        protected final Source source;
+
+        protected CompositeValue(Source source) {
+            this.source = source;
+        }
 
         /**
          * shared用于lua生成时最小化内存占用，所以对同一个表中相同的table，就共享， 算是个优化
@@ -105,16 +110,16 @@ public record CfgValue(CfgSchema schema,
     public static final class VStruct extends CompositeValue implements SimpleValue {
         private final Structural schema;
         private final List<Value> values;
-        private String note;  // 用json存储的内部结构也要克注释，cfgeditor使用
+        private @Nullable String note;  // 用json存储的内部结构也要克注释，cfgeditor使用
         private boolean fold; // 用json存储的结构可被折叠，cfgeditor使用
-        private Map<String, Boolean> embedFields; // 各字段的嵌入状态，key为$embed_<fieldName>，cfgeditor使用
+        private @Nullable Map<String, Boolean> embedFields; // 各字段的嵌入状态，key为$embed_<fieldName>，cfgeditor使用
 
-        public VStruct(@NotNull Structural schema,
-                       @NotNull List<Value> values,
-                       @NotNull Source source) {
+        public VStruct(Structural schema,
+                       List<Value> values,
+                       Source source) {
+            super(source);
             this.schema = schema;
             this.values = values;
-            this.source = source;
         }
 
         public String name() {
@@ -122,7 +127,7 @@ public record CfgValue(CfgSchema schema,
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VStruct vStruct = (VStruct) o;
@@ -151,11 +156,11 @@ public record CfgValue(CfgSchema schema,
                     "source=" + source + ']';
         }
 
-        public String note() {
+        public @Nullable String note() {
             return note;
         }
 
-        public void setNote(String note) {
+        public void setNote(@Nullable String note) {
             this.note = note;
         }
 
@@ -167,11 +172,11 @@ public record CfgValue(CfgSchema schema,
             this.fold = fold;
         }
 
-        public Map<String, Boolean> embedFields() {
+        public @Nullable Map<String, Boolean> embedFields() {
             return embedFields;
         }
 
-        public void setEmbedFields(Map<String, Boolean> embedFields) {
+        public void setEmbedFields(@Nullable Map<String, Boolean> embedFields) {
             this.embedFields = embedFields;
         }
     }
@@ -180,16 +185,16 @@ public record CfgValue(CfgSchema schema,
         private final InterfaceSchema schema;
         private final VStruct child;
 
-        public VInterface(@NotNull InterfaceSchema schema,
-                          @NotNull VStruct child,
-                          @NotNull Source source) {
+        public VInterface(InterfaceSchema schema,
+                          VStruct child,
+                          Source source) {
+            super(source);
             this.schema = schema;
             this.child = child;
-            this.source = source;
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VInterface that = (VInterface) o;
@@ -229,15 +234,15 @@ public record CfgValue(CfgSchema schema,
     public static final class VList extends CompositeValue implements ContainerValue {
         private final List<SimpleValue> valueList;
 
-        public VList(@NotNull List<SimpleValue> valueList,
-                     @NotNull Source source) {
+        public VList(List<SimpleValue> valueList,
+                     Source source) {
+            super(source);
             this.valueList = valueList;
-            this.source = source;
         }
 
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VList vList = (VList) o;
@@ -263,18 +268,18 @@ public record CfgValue(CfgSchema schema,
 
     public static final class VMap extends CompositeValue implements ContainerValue {
         private final Map<SimpleValue, SimpleValue> valueMap;
-        private Map<SimpleValue, Boolean> entryEmbeds; // 各entry的value字段嵌入状态（$embed_value），cfgeditor使用
-        private Set<SimpleValue> foldedEntries; // 各entry的节点级折叠状态（$fold=true，折自己的子节点），cfgeditor使用
-        private Map<SimpleValue, String> entryNotes; // 各entry的备注（$note），cfgeditor使用
+        private @Nullable Map<SimpleValue, Boolean> entryEmbeds; // 各entry的value字段嵌入状态（$embed_value），cfgeditor使用
+        private @Nullable Set<SimpleValue> foldedEntries; // 各entry的节点级折叠状态（$fold=true，折自己的子节点），cfgeditor使用
+        private @Nullable Map<SimpleValue, String> entryNotes; // 各entry的备注（$note），cfgeditor使用
 
-        public VMap(@NotNull Map<SimpleValue, SimpleValue> valueMap,
-                    @NotNull Source source) {
+        public VMap(Map<SimpleValue, SimpleValue> valueMap,
+                    Source source) {
+            super(source);
             this.valueMap = valueMap;
-            this.source = source;
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VMap vMap = (VMap) o;
@@ -290,27 +295,27 @@ public record CfgValue(CfgSchema schema,
             return valueMap;
         }
 
-        public Map<SimpleValue, Boolean> entryEmbeds() {
+        public @Nullable Map<SimpleValue, Boolean> entryEmbeds() {
             return entryEmbeds;
         }
 
-        public void setEntryEmbeds(Map<SimpleValue, Boolean> entryEmbeds) {
+        public void setEntryEmbeds(@Nullable Map<SimpleValue, Boolean> entryEmbeds) {
             this.entryEmbeds = entryEmbeds;
         }
 
-        public Set<SimpleValue> foldedEntries() {
+        public @Nullable Set<SimpleValue> foldedEntries() {
             return foldedEntries;
         }
 
-        public void setFoldedEntries(Set<SimpleValue> foldedEntries) {
+        public void setFoldedEntries(@Nullable Set<SimpleValue> foldedEntries) {
             this.foldedEntries = foldedEntries;
         }
 
-        public Map<SimpleValue, String> entryNotes() {
+        public @Nullable Map<SimpleValue, String> entryNotes() {
             return entryNotes;
         }
 
-        public void setEntryNotes(Map<SimpleValue, String> entryNotes) {
+        public void setEntryNotes(@Nullable Map<SimpleValue, String> entryNotes) {
             this.entryNotes = entryNotes;
         }
 
@@ -324,13 +329,13 @@ public record CfgValue(CfgSchema schema,
     }
 
 
-    public record VBool(boolean value, @NotNull Source source) implements PrimitiveValue {
+    public record VBool(boolean value, Source source) implements PrimitiveValue {
         public VBool {
             Objects.requireNonNull(source);
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VBool vBool = (VBool) o;
@@ -343,13 +348,13 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VInt(int value, @NotNull Source source) implements PrimitiveValue {
+    public record VInt(int value, Source source) implements PrimitiveValue {
         public VInt {
             Objects.requireNonNull(source);
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VInt vInt = (VInt) o;
@@ -362,13 +367,13 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VLong(long value, @NotNull Source source) implements PrimitiveValue {
+    public record VLong(long value, Source source) implements PrimitiveValue {
         public VLong {
             Objects.requireNonNull(source);
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VLong vLong = (VLong) o;
@@ -381,13 +386,13 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VFloat(float value, @NotNull Source source) implements PrimitiveValue {
+    public record VFloat(float value, Source source) implements PrimitiveValue {
         public VFloat {
             Objects.requireNonNull(source);
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VFloat vFloat = (VFloat) o;
@@ -412,14 +417,14 @@ public record CfgValue(CfgSchema schema,
         String value();
     }
 
-    public record VString(@NotNull String value, @NotNull Source source) implements StringValue {
+    public record VString(String value, Source source) implements StringValue {
         public VString {
             Objects.requireNonNull(value);
             Objects.requireNonNull(source);
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VString vStr = (VString) o;
@@ -442,7 +447,7 @@ public record CfgValue(CfgSchema schema,
         private String value;
         private String translated;
 
-        public VText(@NotNull String original, @NotNull Source source) {
+        public VText(String original, Source source) {
             Objects.requireNonNull(original);
             Objects.requireNonNull(source);
             this.original = original;
@@ -451,7 +456,7 @@ public record CfgValue(CfgSchema schema,
             this.translated = "";
         }
 
-        public void setTranslated(String translated) {
+        public void setTranslated(@Nullable String translated) {
             if (translated == null) {
                 this.translated = "";
             } else {
@@ -479,7 +484,7 @@ public record CfgValue(CfgSchema schema,
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VText vText = (VText) o;

@@ -1,5 +1,7 @@
 package configgen.genbyai;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.genbyai.TableRelatedInfoFinder.ModuleRule;
 import configgen.genbyai.TableRelatedInfoFinder.TableRule;
@@ -8,7 +10,6 @@ import configgen.util.JteEngine;
 import configgen.util.MarkdownReader;
 import configgen.util.MarkdownReader.MarkdownDocument;
 import configgen.value.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,14 +17,14 @@ import java.util.*;
 
 public class PromptGen {
 
-    public record Prompt(@NotNull String prompt,
-                         @NotNull String init) {
+    public record Prompt(String prompt,
+                         String init) {
 
     }
 
-    public static @NotNull Prompt genPrompt(@NotNull Context context,
-                                            @NotNull CfgValue cfgValue,
-                                            @NotNull CfgValue.VTable vTable) {
+    public static Prompt genPrompt(Context context,
+                                            CfgValue cfgValue,
+                                            CfgValue.VTable vTable) {
         String table = vTable.name();
         TableSchema tableSchema = vTable.schema();
 
@@ -58,7 +59,7 @@ public class PromptGen {
         return new Prompt(prompt, init);
     }
 
-    private static String combineRule(ModuleRule moduleRule, TableRule rule) {
+    private static String combineRule(@Nullable ModuleRule moduleRule, @Nullable TableRule rule) {
         String mr = (moduleRule != null && moduleRule.rule() != null) ? moduleRule.rule().trim() : "";
         String r = (rule != null && rule.rule() != null) ? rule.rule().trim() : "";
 

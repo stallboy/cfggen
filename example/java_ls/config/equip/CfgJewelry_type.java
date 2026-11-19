@@ -1,5 +1,7 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：equip/jewelry_type.csv
 public enum CfgJewelry_type {
     JADE("Jade"),
@@ -24,7 +26,7 @@ public enum CfgJewelry_type {
         map = java.util.Collections.unmodifiableMap(symbols);
     }
 
-    public static CfgJewelry_type get(String value) {
+    public static @Nullable CfgJewelry_type get(String value) {
         return map.get(value);
     }
 

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,7 +36,7 @@ class IncludeStructsTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
 
-        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(cfg.findItem("t1"));
+        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(requireNonNull(cfg.findItem("t1")));
         assertEquals(1, r.size());
         assertTrue(r.containsKey("t1"));
     }
@@ -54,7 +55,7 @@ class IncludeStructsTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
 
-        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(cfg.findItem("f1"));
+        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(requireNonNull(cfg.findItem("f1")));
         assertEquals(3, r.size());
         assertTrue(r.containsKey("f1"));
         assertTrue(r.containsKey("f1.s1"));
@@ -83,7 +84,7 @@ class IncludeStructsTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
 
-        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(cfg.findItem("t1"));
+        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(requireNonNull(cfg.findItem("t1")));
         assertEquals(5, r.size());
         assertTrue(r.containsKey("t1"));
         assertTrue(r.containsKey("o1"));
@@ -108,7 +109,7 @@ class IncludeStructsTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
 
-        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(cfg.findItem("t1"));
+        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(requireNonNull(cfg.findItem("t1")));
         assertEquals(2, r.size());
         assertTrue(r.containsKey("t1"));
         assertTrue(r.containsKey("o1"));
@@ -133,7 +134,7 @@ class IncludeStructsTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
 
-        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(cfg.findItem("t1"));
+        Map<String, Nameable> r = IncludedStructs.findAllIncludedStructs(requireNonNull(cfg.findItem("t1")));
         assertEquals(3, r.size());
         assertTrue(r.containsKey("t1"));
         assertTrue(r.containsKey("k1"));

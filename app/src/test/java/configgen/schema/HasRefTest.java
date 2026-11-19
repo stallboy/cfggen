@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldType.Primitive.INT;
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,36 +59,36 @@ class HasRefTest {
 
     @Test
     void no_ref_table() {
-        assertFalse(HasRef.hasRef(cfg.findTable("item")));
+        assertFalse(HasRef.hasRef(requireNonNull(cfg.findTable("item"))));
     }
 
     @Test
     void ref_in_table() {
-        assertTrue(HasRef.hasRef(cfg.findTable("ability")));
+        assertTrue(HasRef.hasRef(requireNonNull(cfg.findTable("ability"))));
     }
 
 
     @Test
     void ref_in_interface() {
-        assertTrue(HasRef.hasRef(cfg.findFieldable("condition")));
+        assertTrue(HasRef.hasRef(requireNonNull(cfg.findFieldable("condition"))));
     }
 
     @Test
     void ref_in_interface_indirect() {
-        assertTrue(HasRef.hasRef(cfg.findFieldable("action")));
+        assertTrue(HasRef.hasRef(requireNonNull(cfg.findFieldable("action"))));
     }
 
 
     @Test
     void ref_on_field() {
-        TableSchema t = cfg.findTable("ability");
-        assertTrue(HasRef.hasRef(t.findField("action").type()));
+        TableSchema t = requireNonNull(cfg.findTable("ability"));
+        assertTrue(HasRef.hasRef(requireNonNull(t.findField("action")).type()));
     }
 
     @Test
     void no_ref_on_field() {
-        TableSchema t = cfg.findTable("ability");
-        assertFalse(HasRef.hasRef(t.findField("attr").type()));
+        TableSchema t = requireNonNull(cfg.findTable("ability"));
+        assertFalse(HasRef.hasRef(requireNonNull(t.findField("attr")).type()));
     }
 
     @Test

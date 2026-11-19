@@ -67,7 +67,7 @@ public class ConfigMgrLoader {
         };
         @for(String rows : model.extensionRows)
         for (var row : ${rows}) {
-            row._collectExtensions(collect);
+            ${model.cfg.requireNonNull("row")}._collectExtensions(collect);
         }
         @endfor
         for (var extension : extensions) {

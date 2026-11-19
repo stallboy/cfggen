@@ -1,5 +1,7 @@
 package configgen.tool;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.genjava.BytesInspector;
@@ -8,7 +10,7 @@ import java.io.IOException;
 
 public class BytesViewTool extends Tool {
     private final String bytesFilename;
-    private final String match;
+    private final @Nullable String match;
 
     public BytesViewTool(Parameter parameter) {
         super(parameter);

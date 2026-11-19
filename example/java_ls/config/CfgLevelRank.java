@@ -1,25 +1,22 @@
 package config;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public class CfgLevelRank {
-    private int level;
-    private int rank;
-    private config.equip.CfgRank RefRank;
-
-    private CfgLevelRank() {
-    }
+    private final int level;
+    private final int rank;
+    private config.equip.@Nullable CfgRank RefRank;
 
     public CfgLevelRank(int level, int rank) {
         this.level = level;
         this.rank = rank;
     }
 
-    public static CfgLevelRank _create(configgen.genjava.ConfigInput input) {
-        CfgLevelRank self = new CfgLevelRank();
-        self.level = input.readInt();
-        self.rank = input.readInt();
-        return self;
+    private CfgLevelRank(configgen.genjava.ConfigInput input) {
+        this.level = input.readInt();
+        this.rank = input.readInt();
     }
 
     /**
@@ -36,7 +33,7 @@ public class CfgLevelRank {
         return rank;
     }
 
-    public config.equip.CfgRank refRank() {
+    public config.equip.@Nullable CfgRank refRank() {
         return RefRank;
     }
 
@@ -46,7 +43,7 @@ public class CfgLevelRank {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CfgLevelRank o)) {
             return false;
         }
@@ -64,6 +61,10 @@ public class CfgLevelRank {
             errors.missingReference("LevelRank", "Rank", "equip.rank", this.rank);
         }
 
+    }
+
+    public static CfgLevelRank _create(configgen.genjava.ConfigInput input) {
+        return new CfgLevelRank(input);
     }
 
 }

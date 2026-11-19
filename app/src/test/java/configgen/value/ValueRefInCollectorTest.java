@@ -12,6 +12,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValueRefInCollectorTest {
@@ -58,7 +59,7 @@ class ValueRefInCollectorTest {
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        CfgValue.VTable assets = cfgValue.getTable("assets");
+        CfgValue.VTable assets = requireNonNull(cfgValue.getTable("assets"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
         var refIns = refInCollector.collect(assets, Values.ofStr("npc/a.prefab"));
@@ -105,7 +106,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -154,7 +155,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -194,7 +195,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -222,7 +223,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -261,7 +262,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -302,7 +303,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -343,7 +344,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -392,7 +393,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable itemTable = cfgValue.getTable("item");
+        CfgValue.VTable itemTable = requireNonNull(cfgValue.getTable("item"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -445,7 +446,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable playerTable = cfgValue.getTable("player");
+        CfgValue.VTable playerTable = requireNonNull(cfgValue.getTable("player"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -493,7 +494,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable lootTable = cfgValue.getTable("loot");
+        CfgValue.VTable lootTable = requireNonNull(cfgValue.getTable("loot"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
@@ -547,7 +548,7 @@ class ValueRefInCollectorTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        CfgValue.VTable itemTable = cfgValue.getTable("item");
+        CfgValue.VTable itemTable = requireNonNull(cfgValue.getTable("item"));
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 

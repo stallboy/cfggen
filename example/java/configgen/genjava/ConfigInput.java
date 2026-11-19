@@ -1,5 +1,7 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.IOException;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -25,9 +27,9 @@ public class ConfigInput {
     private long pos;
     private final long limit;
 
-    private String[] stringPool;
-    private LangTextPool[] langTextPools;
-    private LoadValueErrs errors;
+    private String @Nullable [] stringPool;
+    private LangTextPool @Nullable [] langTextPools;
+    private @Nullable LoadValueErrs errors;
 
     public LoadValueErrs errors() {
         if (errors == null) {
@@ -236,9 +238,10 @@ public class ConfigInput {
      */
     public String[] readTextsInPool() {
         int index = readTextIndex();
-        String[] texts = new String[langTextPools.length];
-        for (int i = 0; i < langTextPools.length; i++) {
-            texts[i] = textInPool(i, index);
+        LangTextPool[] pools = java.util.Objects.requireNonNull(langTextPools);
+        String[] texts = new String[pools.length];
+        for (int i = 0; i < pools.length; i++) {
+            texts[i] = pools[i].getText(index);
         }
         return texts;
     }
@@ -259,7 +262,7 @@ public class ConfigInput {
         return index;
     }
 
-    public String textInPool(int language, int index) { return langTextPools[language].getText(index); }
+    public String textInPool(int language, int index) { return java.util.Objects.requireNonNull(langTextPools)[language].getText(index); }
 
     public String readTextInPool() { return textInPool(0, readTextIndex()); }
 }

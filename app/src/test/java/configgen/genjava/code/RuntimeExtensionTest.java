@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import configgen.JavaTestClasspath;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RuntimeExtensionTest {
@@ -91,7 +94,7 @@ class RuntimeExtensionTest {
         Path classes = root.resolve("classes");
         Files.createDirectories(classes);
         List<String> args = new ArrayList<>(List.of("--release", "25", "-classpath",
-                Path.of(ConfigInput.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString(),
+                JavaTestClasspath.classpathWithJSpecify(ConfigInput.class),
                 "-d", classes.toString()));
         try (var files = Files.walk(generated)) {
             files.filter(p -> p.toString().endsWith(".java")).forEach(p -> args.add(p.toString()));
@@ -103,6 +106,10 @@ class RuntimeExtensionTest {
             Object a = load(loading);
             Object b = load(loading);
             Class<?> mgr = loader.loadClass("config.ConfigMgr");
+            assertEquals(false, mgr.getMethod("hasMgr").invoke(null));
+            var notLoaded = assertThrows(java.lang.reflect.InvocationTargetException.class,
+                    () -> mgr.getMethod("getMgr").invoke(null));
+            assertInstanceOf(IllegalStateException.class, notLoaded.getCause());
             Class<?> monster = loader.loadClass("config.Monster");
             assertEquals(0, mgr.getFields().length, "Table containers must not be public replaceable fields");
             Object rowA = mgr.getMethod("getMonster", int.class).invoke(a, 1);
@@ -119,6 +126,8 @@ class RuntimeExtensionTest {
             assertNestedKeys(loader, mgr, a, 2);
             assertEquals("old", property(mgr.getMethod("getPair", int.class, String.class).invoke(a, 1, "a"), "getName"));
             mgr.getMethod("setMgr", mgr).invoke(null, b);
+            assertEquals(true, mgr.getMethod("hasMgr").invoke(null));
+            assertSame(b, mgr.getMethod("getMgr").invoke(null));
             assertSame(rowB, monster.getMethod("get", int.class).invoke(null, 1));
             Object rank = loader.loadClass("config.Rank").getEnumConstants()[0];
             Object marker = loader.loadClass("config.Marker_Entry").getField("MAIN").get(null);
@@ -181,7 +190,7 @@ class RuntimeExtensionTest {
                 assertSame(b, mgr.getMethod("getMgr").invoke(null));
             }
             assertPackageErrors(loading, mgr, b, List.of(LoadValueErrs.DuplicateKey.class, LoadValueErrs.DuplicateKey.class), basePack, rewritePackage(modPack, blocks -> {
-                var original = new ConfigInput(blocks.get(".holder"));
+                var original = new ConfigInput(requireNonNull(blocks.get(".holder")));
                 int count = original.readInt();
                 int id = original.readInt();
                 assertEquals(1, original.readInt());
@@ -282,7 +291,7 @@ class RuntimeExtensionTest {
             Object published = mgr.getMethod("getMgr").invoke(null);
             var failure = assertThrows(java.lang.reflect.InvocationTargetException.class, () -> loading.getMethod("loadPackagesAndSetMgr", ConfigPackage[].class)
                     .invoke(null, (Object) new ConfigPackage[]{basePack, broken}));
-            assertEquals("cache failed", failure.getCause().getMessage());
+            assertEquals("cache failed", requireNonNull(failure.getCause()).getMessage());
             assertSame(published, mgr.getMethod("getMgr").invoke(null));
             assertEquals(20, monster.getMethod("power").invoke(rowA));
         }
@@ -349,7 +358,7 @@ class RuntimeExtensionTest {
             var block = pack.block(name);
             blocks.put(name, block.readRawBytes((int) block.remaining()));
         }
-        var pair = new ConfigInput(blocks.get(".pair"));
+        var pair = new ConfigInput(requireNonNull(blocks.get(".pair")));
         int count = pair.readInt();
         var rows = pair.readRawBytes((int) pair.remaining());
         var tableBytes = new java.io.ByteArrayOutputStream();

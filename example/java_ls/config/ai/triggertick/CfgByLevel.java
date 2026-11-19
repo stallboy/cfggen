@@ -1,21 +1,19 @@
 package config.ai.triggertick;
 
+import org.jspecify.annotations.Nullable;
+
 public final class CfgByLevel implements config.ai.triggertick.CfgTriggerTick {
-    private int init;
-    private float coefficient;
-    private CfgByLevel() {
-    }
+    private final int init;
+    private final float coefficient;
 
     public CfgByLevel(int init, float coefficient) {
         this.init = init;
         this.coefficient = coefficient;
     }
 
-    public static CfgByLevel _create(configgen.genjava.ConfigInput input) {
-        CfgByLevel self = new CfgByLevel();
-        self.init = input.readInt();
-        self.coefficient = input.readFloat();
-        return self;
+    private CfgByLevel(configgen.genjava.ConfigInput input) {
+        this.init = input.readInt();
+        this.coefficient = input.readFloat();
     }
 
     public int getInit() {
@@ -32,7 +30,7 @@ public final class CfgByLevel implements config.ai.triggertick.CfgTriggerTick {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CfgByLevel o)) {
             return false;
         }
@@ -42,6 +40,10 @@ public final class CfgByLevel implements config.ai.triggertick.CfgTriggerTick {
     @Override
     public String toString() {
         return "CfgByLevel(" + init + "," + coefficient + ")";
+    }
+
+    public static CfgByLevel _create(configgen.genjava.ConfigInput input) {
+        return new CfgByLevel(input);
     }
 
 }

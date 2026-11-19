@@ -1,12 +1,13 @@
 package configgen.util;
 
+import org.jspecify.annotations.Nullable;
+
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
 import gg.jte.resolve.DirectoryCodeResolver;
 import gg.jte.resolve.ResourceCodeResolver;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -77,8 +78,8 @@ public class JteEngine {
         engine.render(name, params, output);
     }
 
-    public static String renderTryFileFirst(String filePath,
-                                            @NotNull String fileInResources,
+    public static String renderTryFileFirst(@Nullable String filePath,
+                                            String fileInResources,
                                             Object model) {
         TemplateOutput prompt = new StringOutput();
         Path root = Path.of(".");

@@ -1,10 +1,13 @@
 plugins {
     id 'application'
+    id 'net.ltgt.errorprone' version '5.1.1'
 }
 
 repositories {
     mavenCentral()
 }
+
+apply from: '../../app/gradle/nullness.gradle'
 
 // 与主项目一致，使用 JDK 25 工具链
 java {
@@ -34,8 +37,6 @@ compileJava {
     options.encoding = 'UTF-8'
 }
 
-// run.bat 用 java -jar 运行，jar 需要 Main-Class；
-// 直接引用 application.mainClass，避免类名写两份
 jar {
     manifest {
         attributes 'Main-Class': application.mainClass.get()

@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 public class ForeachSchema {
 
     public interface StructuralVisitor {
@@ -42,7 +44,7 @@ public class ForeachSchema {
     }
 
     public interface FieldableVisitor {
-        void visit(Fieldable fieldable);
+        void visit(@Nullable Fieldable fieldable);
     }
 
     /**

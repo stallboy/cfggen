@@ -1,26 +1,24 @@
 package config.task.completecondition;
 
-public final class CfgCollectItem implements config.task.completecondition.CfgCompletecondition {
-    @Override
-    public config.task.CfgComplete_condition_type type() {
-        return config.task.CfgComplete_condition_type.COLLECTITEM;
-    }
+import org.jspecify.annotations.Nullable;
 
-    private int itemid;
-    private int count;
-    private CfgCollectItem() {
-    }
+public final class CfgCollectItem implements config.task.completecondition.CfgCompletecondition {
+    private final int itemid;
+    private final int count;
 
     public CfgCollectItem(int itemid, int count) {
         this.itemid = itemid;
         this.count = count;
     }
 
-    public static CfgCollectItem _create(configgen.genjava.ConfigInput input) {
-        CfgCollectItem self = new CfgCollectItem();
-        self.itemid = input.readInt();
-        self.count = input.readInt();
-        return self;
+    private CfgCollectItem(configgen.genjava.ConfigInput input) {
+        this.itemid = input.readInt();
+        this.count = input.readInt();
+    }
+
+    @Override
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.COLLECTITEM;
     }
 
     public int getItemid() {
@@ -37,7 +35,7 @@ public final class CfgCollectItem implements config.task.completecondition.CfgCo
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CfgCollectItem o)) {
             return false;
         }
@@ -47,6 +45,10 @@ public final class CfgCollectItem implements config.task.completecondition.CfgCo
     @Override
     public String toString() {
         return "CfgCollectItem(" + itemid + "," + count + ")";
+    }
+
+    public static CfgCollectItem _create(configgen.genjava.ConfigInput input) {
+        return new CfgCollectItem(input);
     }
 
 }

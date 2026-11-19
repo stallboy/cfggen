@@ -1,7 +1,10 @@
 package configgen.tool;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.ctx.Context.ContextCfg;
+import configgen.ctx.Context.I18nCfg;
 import configgen.data.HeadRow;
 import configgen.data.HeadRows;
 import configgen.data.CfgData;
@@ -34,7 +37,7 @@ public class BlockMigrationTool extends Tool {
     private final Path dataDir;
     private final HeadRow headRow;
     private final String encoding;
-    private final String to;
+    private final @Nullable String to;
 
     public BlockMigrationTool(Parameter parameter) {
         super(parameter);
@@ -46,7 +49,7 @@ public class BlockMigrationTool extends Tool {
 
     @Override
     public void call() {
-        ContextCfg cfg = new ContextCfg(dataDir, null, headRow, encoding, null, null, null, false);
+        ContextCfg cfg = new ContextCfg(dataDir, null, headRow, encoding, I18nCfg.Disabled.INSTANCE, false);
         Context ctx = new Context(cfg);
         MigrationReport report = compare(ctx);
         String text = formatReport(report);

@@ -1,8 +1,9 @@
 package configgen.data;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.CSVUtil;
 import de.siegmar.fastcsv.reader.CsvRecord;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,12 +19,12 @@ public class ReadCsv {
     }
 
 
-    public ReadResult readCsv(@NotNull Path path,
-                              @NotNull Path relativePath,
-                              @NotNull String tableName,
+    public ReadResult readCsv(Path path,
+                              Path relativePath,
+                              String tableName,
                               int index,
                               char fieldSeparator,
-                              String nullableAddTag) {
+                              @Nullable String nullableAddTag) {
         CfgDataStat stat = new CfgDataStat();
         List<DRawRow> rows = new ArrayList<>();
         List<CsvRecord> read = CSVUtil.read(path, defaultEncoding, fieldSeparator);

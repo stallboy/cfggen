@@ -1,5 +1,9 @@
 package configgen.schema;
 
+import org.jetbrains.annotations.Contract;
+
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -61,11 +65,12 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         Objects.requireNonNull(data);
     }
 
-    public MetaValue get(String name) {
+    public @Nullable MetaValue get(String name) {
         return data.get(name);
     }
 
-    public String getStr(String name, String def) {
+    @Contract("_, !null -> !null")
+    public @Nullable String getStr(String name, @Nullable String def) {
         MetaValue metaValue = data.get(name);
         if (metaValue instanceof MetaStr(String value)) {
             return value;
@@ -120,7 +125,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.putLast(HAS_REF, hasRef ? new MetaInt(1) : new MetaInt(0));
     }
 
-    public MetaValue getHasRef() {
+    public @Nullable MetaValue getHasRef() {
         return data.get(HAS_REF);
     }
 
@@ -128,7 +133,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.putLast(HAS_BLOCK, hasBlock ? new MetaInt(1) : new MetaInt(0));
     }
 
-    public MetaValue getHasBlock() {
+    public @Nullable MetaValue getHasBlock() {
         return data.get(HAS_BLOCK);
     }
 
@@ -136,7 +141,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.putLast(HAS_MAP, hasMap ? new MetaInt(1) : new MetaInt(0));
     }
 
-    public MetaValue getHasMap() {
+    public @Nullable MetaValue getHasMap() {
         return data.get(HAS_MAP);
     }
 
@@ -144,7 +149,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.putLast(HAS_TEXT, hasText ? new MetaInt(1) : new MetaInt(0));
     }
 
-    public MetaValue getHasText() {
+    public @Nullable MetaValue getHasText() {
         return data.get(HAS_TEXT);
     }
 
@@ -152,7 +157,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.putLast(SPAN, new MetaInt(value));
     }
 
-    public MetaValue getSpan() {
+    public @Nullable MetaValue getSpan() {
         return data.get(SPAN);
     }
 
@@ -272,7 +277,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return valueRequiredNames.contains(name);
     }
 
-    public CommentData getComment() {
+    public @Nullable CommentData getComment() {
         if (data.get(COMMENT) instanceof MetaComment(CommentData cd)) {
             return cd;
         }
@@ -283,7 +288,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.putLast(COMMENT, new MetaComment(comment));
     }
 
-    public CommentData removeComment() {
+    public @Nullable CommentData removeComment() {
         MetaValue obj = data.remove(COMMENT);
         if (obj instanceof MetaComment(CommentData cd)) {
             return cd;
@@ -300,7 +305,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.remove(ENUM_VALUES);
     }
 
-    public MetaEnumValues getEnumValues() {
+    public @Nullable MetaEnumValues getEnumValues() {
         MetaValue v = data.get(ENUM_VALUES);
         return v instanceof MetaEnumValues e ? e : null;
     }
@@ -309,7 +314,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return data.get(ENUM_VALUES) instanceof MetaEnumValues;
     }
 
-    public Integer assignedEnumId(String name) {
+    public @Nullable Integer assignedEnumId(String name) {
         if (getEnumValues() instanceof MetaEnumValues.OfAssigned assigned) {
             for (EnumValueAssigned value : assigned.values()) if (value.name().equals(name)) return value.number();
         }
@@ -325,7 +330,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return data.containsKey(FROM_ENUM_TYPE);
     }
 
-    public String getFromEnumType() {
+    public @Nullable String getFromEnumType() {
         MetaValue v = data.get(FROM_ENUM_TYPE);
         return v instanceof MetaStr(String value) ? value : null;
     }
@@ -334,7 +339,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.put(FROM_CFG_FILEPATH, new MetaStr(filepath));
     }
 
-    public String getFromCfgFilepath() {
+    public @Nullable String getFromCfgFilepath() {
         MetaValue v = data.get(FROM_CFG_FILEPATH);
         return v instanceof MetaStr(String value) ? value : null;
     }

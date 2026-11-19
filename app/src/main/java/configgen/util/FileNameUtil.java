@@ -1,12 +1,14 @@
 package configgen.util;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * 数据文件命名约定的解析：从带中文后缀/后缀名的文件名提取code名。
  * 原在 data.DataUtil，因 schema.cfg 等上游包也需要而移到 util（解 schema→data 依赖环）。
  */
 public class FileNameUtil {
 
-    public static String getCodeName(String fileName) {
+    public static @Nullable String getCodeName(String fileName) {
         if (fileName.isEmpty()) {
             return null;
         }

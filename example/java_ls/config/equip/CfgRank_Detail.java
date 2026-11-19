@@ -1,21 +1,19 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：equip/rank.csv
 public class CfgRank_Detail {
-    private int rankID;
-    private String rankName;
-    private String rankShowName;
-    private CfgRank_Detail() {
-    }
+    private final int rankID;
+    private final String rankName;
+    private final String rankShowName;
 
-    public static CfgRank_Detail _create(configgen.genjava.ConfigInput input) {
-        CfgRank_Detail self = new CfgRank_Detail();
-        self.rankID = input.readInt();
-        self.rankName = input.readStringInPool();
-        self.rankShowName = input.readStringInPool();
-        return self;
+    private CfgRank_Detail(configgen.genjava.ConfigInput input) {
+        this.rankID = input.readInt();
+        this.rankName = input.readStringInPool();
+        this.rankShowName = input.readStringInPool();
     }
 
     /**
@@ -44,19 +42,23 @@ public class CfgRank_Detail {
         return "(" + rankID + "," + rankName + "," + rankShowName + ")";
     }
 
-    public static CfgRank_Detail get(int rankID) {
+    public static CfgRank_Detail _create(configgen.genjava.ConfigInput input) {
+        return new CfgRank_Detail(input);
+    }
+
+    public static @Nullable CfgRank_Detail get(int rankID) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getEquipRank(rankID);
     }
 
-    public static java.util.List<CfgRank_Detail> all() {
+    public static java.util.List<@Nullable CfgRank_Detail> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipRank();
     }
 
     public static void _index(config.ConfigMgr mgr, java.util.Map<Integer, CfgRank_Detail> rows, LoadValueErrs errors) {
         int c = rows.size();
-        var equip_rank_All = new java.util.ArrayList<CfgRank_Detail>(java.util.Collections.nCopies(c, null));
+        var equip_rank_All = new java.util.ArrayList<@Nullable CfgRank_Detail>(java.util.Collections.nCopies(c, null));
         var seq_RankID = new boolean[c];
         for (var self : rows.values()) {
             {

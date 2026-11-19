@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Map;
 
 public class Generators {
@@ -8,7 +10,7 @@ public class Generators {
 
     private static final ProviderRegistry<GeneratorProvider, Generator> registry = new ProviderRegistry<>();
 
-    public static Generator create(String arg) {
+    public static @Nullable Generator create(String arg) {
         return registry.create(arg);
     }
 

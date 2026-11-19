@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.HasRef;
 import configgen.schema.InterfaceSchema;
 import configgen.genjava.GenJavaUtil;
@@ -11,7 +13,7 @@ public class InterfaceModel {
     public final String codeTopPkg;
     public final String className;
     public final boolean isSealedInterface;
-    public final String nullableEnumRefTable;
+    public final @Nullable String nullableEnumRefTable;
     public final boolean hasRef;
     public final boolean hasExtension;
     public final List<Impl> impls;

@@ -5,7 +5,6 @@ import configgen.data.CfgData;
 import configgen.data.CfgData.DRowId;
 import configgen.data.Source;
 import configgen.value.CfgValue.VStruct;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 
@@ -15,7 +14,7 @@ import java.nio.file.Path;
  */
 public class TableFileLocator {
 
-    public static DRowId getLocFromRecord(@NotNull VStruct record) {
+    public static DRowId getLocFromRecord(VStruct record) {
         switch (record.source()) {
             case CfgData.DCell dCell -> {
                 return dCell.rowId();
@@ -36,7 +35,7 @@ public class TableFileLocator {
     /**
      * 从dTable中获取文件位置信息
      */
-    public static CfgData.DRawSheet getSheetFromDTable(@NotNull CfgData.DTable dTable) {
+    public static CfgData.DRawSheet getSheetFromDTable(CfgData.DTable dTable) {
         if (dTable.rawSheets().isEmpty()) {
             throw new IllegalArgumentException("DTable has no rawSheets: " + dTable.tableName());
         }
@@ -48,9 +47,9 @@ public class TableFileLocator {
     /**
      * 创建TableFile实例
      */
-    public static TableFile createTableFile(@NotNull String fileName,
-                                            @NotNull String sheetName,
-                                            @NotNull Context context,
+    public static TableFile createTableFile(String fileName,
+                                            String sheetName,
+                                            Context context,
                                             boolean isColumnMode) {
         Path dataDir = context.rootDir();
         int headRow = context.contextCfg().headRow().rowCount();

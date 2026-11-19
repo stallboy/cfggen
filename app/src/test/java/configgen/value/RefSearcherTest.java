@@ -11,6 +11,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RefSearcherTest {
@@ -58,7 +59,7 @@ class RefSearcherTest {
 
         RefSearcher.RefSearchResult res = RefSearcher.search(cfgValue, "assets", null, Set.of());
         assertEquals(RefSearcher.RefSearchErr.Ok, res.err());
-        assertEquals(1, res.value2tables().size());
+        assertEquals(1, requireNonNull(res.value2tables()).size());
         CfgValue.Value v = res.value2tables().keySet().iterator().next();
         assertEquals("npc/a.prefab", ((CfgValue.VString)v).value());
         Set<String> tables = res.value2tables().values().iterator().next();

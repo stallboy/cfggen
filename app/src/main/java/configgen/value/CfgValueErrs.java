@@ -1,5 +1,7 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.data.Source;
 import configgen.schema.Msg;
 import configgen.util.LocaleUtil;
@@ -70,7 +72,7 @@ public record CfgValueErrs(List<VErr> errs,
      */
     public record ParsePackErr(Source source,
                                String nameable,
-                               String err) implements VErr {
+                               @Nullable String err) implements VErr {
     }
 
     /**
@@ -178,7 +180,7 @@ public record CfgValueErrs(List<VErr> errs,
     /**
      * 读json文件出错
      */
-    public record JsonFileReadErr(String jsonFile, String errMsg) implements VErr {
+    public record JsonFileReadErr(String jsonFile, @Nullable String errMsg) implements VErr {
     }
 
     /**
@@ -190,7 +192,7 @@ public record CfgValueErrs(List<VErr> errs,
     /**
      * 解析json出错
      */
-    public record JsonParseException(DFile source, String err) implements VErr {
+    public record JsonParseException(DFile source, @Nullable String err) implements VErr {
     }
 
     /**

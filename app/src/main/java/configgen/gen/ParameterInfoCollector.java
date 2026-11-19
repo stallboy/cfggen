@@ -1,5 +1,9 @@
 package configgen.gen;
 
+import org.jetbrains.annotations.Contract;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 
@@ -11,8 +15,8 @@ public class ParameterInfoCollector implements Parameter {
     private final String klass;
     private final String id;
     private final Map<String, Info> infos;
-    private String title;
-    private List<String> extra;
+    private @Nullable String title;
+    private @Nullable List<String> extra;
 
     public ParameterInfoCollector(String klass, String id) {
         this.klass = klass;
@@ -21,9 +25,9 @@ public class ParameterInfoCollector implements Parameter {
     }
 
 
-    public record Info(String def,
+    public record Info(@Nullable String def,
                         boolean isFlag,
-                        String messageId) {
+                        @Nullable String messageId) {
     }
 
     public void print() {
@@ -62,13 +66,14 @@ public class ParameterInfoCollector implements Parameter {
     }
 
     @Override
-    public String get(String key, String def, String messageId) {
+    @Contract("_, !null, _ -> !null")
+    public @Nullable String get(String key, @Nullable String def, @Nullable String messageId) {
         infos.put(key, new Info(def, false, messageId));
         return def;
     }
 
     @Override
-    public boolean has(String key, String messageId) {
+    public boolean has(String key, @Nullable String messageId) {
         infos.put(key, new Info("false", true, messageId));
         return false;
     }

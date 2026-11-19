@@ -1,5 +1,7 @@
 package configgen.editorserver;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.TableSchemaRefGraph;
 import configgen.value.*;
 import configgen.value.CfgValue.VStruct;
@@ -20,33 +22,33 @@ public class RecordRefIdsService {
 
     public record RecordRefIdsResponse(
             RecordService.ResultCode resultCode,
-            String table,
-            String id,
+            @Nullable String table,
+            @Nullable String id,
             int inDepth,
             int outDepth,
             int maxRefIds,
-            Collection<RecordRefId> recordRefIds) {
+            @Nullable Collection<RecordRefId> recordRefIds) {
     }
 
     public record RecordRefId(
-            String table,
-            String id,
-            String title,
+            @Nullable String table,
+            @Nullable String id,
+            @Nullable String title,
             int depth/*-1,-2,1,2..*/) {
     }
 
     private final CfgValue cfgValue;
     private final TableSchemaRefGraph graph;
 
-    private final String table;
-    private final String id;
+    private final @Nullable String table;
+    private final @Nullable String id;
     private final int inDepth;
     private final int outDepth;
     private final int maxRefIds;
 
     public RecordRefIdsService(CfgValue cfgValue,
                                TableSchemaRefGraph graph,
-                               String tableName, String id,
+                               @Nullable String tableName, @Nullable String id,
                                int inDepth, int outDepth, int maxRefIds) {
         this.cfgValue = cfgValue;
         this.graph = graph;
@@ -87,7 +89,7 @@ public class RecordRefIdsService {
             return ofErr(idParseErr);
         }
 
-        String id = pkValue.packStr();
+        String id = java.util.Objects.requireNonNull(pkValue).packStr();
         VStruct vRecord = vTable.primaryKeyMap().get(pkValue);
         if (vRecord == null) {
             return ofErr(idNotFound);

@@ -1,25 +1,22 @@
 package config;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public class LevelRank {
-    private int level;
-    private int rank;
-    private config.equip.Rank RefRank;
-
-    private LevelRank() {
-    }
+    private final int level;
+    private final int rank;
+    private config.equip.@Nullable Rank RefRank;
 
     public LevelRank(int level, int rank) {
         this.level = level;
         this.rank = rank;
     }
 
-    public static LevelRank _create(configgen.genjava.ConfigInput input) {
-        LevelRank self = new LevelRank();
-        self.level = input.readInt();
-        self.rank = input.readInt();
-        return self;
+    private LevelRank(configgen.genjava.ConfigInput input) {
+        this.level = input.readInt();
+        this.rank = input.readInt();
     }
 
     /**
@@ -36,7 +33,7 @@ public class LevelRank {
         return rank;
     }
 
-    public config.equip.Rank refRank() {
+    public config.equip.@Nullable Rank refRank() {
         return RefRank;
     }
 
@@ -46,7 +43,7 @@ public class LevelRank {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof LevelRank o)) {
             return false;
         }
@@ -64,6 +61,10 @@ public class LevelRank {
             errors.missingReference("LevelRank", "Rank", "equip.rank", this.rank);
         }
 
+    }
+
+    public static LevelRank _create(configgen.genjava.ConfigInput input) {
+        return new LevelRank(input);
     }
 
 }

@@ -1,5 +1,7 @@
 package configgen.util;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,7 +53,7 @@ public class CachedFiles {
         keepFile(path);
         if (!path.toFile().exists()) {
             Logger.log("create file: " + path);
-            mkDirs(path.getParent().toFile());
+            mkDirs(java.util.Objects.requireNonNull(path.getParent()).toFile());
             Files.write(path, data, StandardOpenOption.CREATE,
                     StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
             return;
@@ -146,7 +148,7 @@ public class CachedFiles {
         }
     }
 
-    private static String findNoMetaKey(String key) {
+    private static @Nullable String findNoMetaKey(String key) {
         for (String metaSuffix : metaSuffixSet) {
             if (key.endsWith(metaSuffix)) {
                 return key.substring(0, key.length() - metaSuffix.length());

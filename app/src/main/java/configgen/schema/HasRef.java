@@ -37,7 +37,7 @@ public class HasRef {
                 return false;
             }
             case StructRef structRef -> {
-                return hasRef(structRef.obj());
+                return hasRef(structRef.resolvedObj());
             }
             case FList fList -> {
                 return hasRef(fList.item());

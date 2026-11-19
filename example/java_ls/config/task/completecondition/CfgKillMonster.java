@@ -1,30 +1,27 @@
 package config.task.completecondition;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public final class CfgKillMonster implements config.task.completecondition.CfgCompletecondition {
-    @Override
-    public config.task.CfgComplete_condition_type type() {
-        return config.task.CfgComplete_condition_type.KILLMONSTER;
-    }
-
-    private int monsterid;
-    private int count;
-    private config.other.CfgMonster RefMonsterid;
-
-    private CfgKillMonster() {
-    }
+    private final int monsterid;
+    private final int count;
+    private config.other.@Nullable CfgMonster RefMonsterid;
 
     public CfgKillMonster(int monsterid, int count) {
         this.monsterid = monsterid;
         this.count = count;
     }
 
-    public static CfgKillMonster _create(configgen.genjava.ConfigInput input) {
-        CfgKillMonster self = new CfgKillMonster();
-        self.monsterid = input.readInt();
-        self.count = input.readInt();
-        return self;
+    private CfgKillMonster(configgen.genjava.ConfigInput input) {
+        this.monsterid = input.readInt();
+        this.count = input.readInt();
+    }
+
+    @Override
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.KILLMONSTER;
     }
 
     public int getMonsterid() {
@@ -35,7 +32,7 @@ public final class CfgKillMonster implements config.task.completecondition.CfgCo
         return count;
     }
 
-    public config.other.CfgMonster refMonsterid() {
+    public config.other.@Nullable CfgMonster refMonsterid() {
         return RefMonsterid;
     }
 
@@ -45,7 +42,7 @@ public final class CfgKillMonster implements config.task.completecondition.CfgCo
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CfgKillMonster o)) {
             return false;
         }
@@ -64,6 +61,10 @@ public final class CfgKillMonster implements config.task.completecondition.CfgCo
             errors.missingReference("KillMonster", "monsterid", "other.monster", this.monsterid);
         }
 
+    }
+
+    public static CfgKillMonster _create(configgen.genjava.ConfigInput input) {
+        return new CfgKillMonster(input);
     }
 
 }

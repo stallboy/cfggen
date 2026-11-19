@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.value.ForeachFinder.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,7 +56,7 @@ class ForeachFinderTest {
 
         List<CfgValue.Value> list = new ArrayList<>();
         Finder finder = new Finder(List.of(new FStructField(1)));
-        foreachVTable(list::add, cfgValue.getTable("t"), finder);
+        foreachVTable(list::add, requireNonNull(cfgValue.getTable("t")), finder);
         assertEquals(3, list.size());
     }
 
@@ -85,7 +86,7 @@ class ForeachFinderTest {
 
         List<Integer> list = new ArrayList<>();
         Finder finder = new Finder(List.of(new FStructField(1), new FStructField(1)));
-        foreachVTable((v) -> list.add(((CfgValue.VInt) v).value()), cfgValue.getTable("t"), finder);
+        foreachVTable((v) -> list.add(((CfgValue.VInt) v).value()), requireNonNull(cfgValue.getTable("t")), finder);
         assertEquals(List.of(22, 44), list);
     }
 
@@ -122,13 +123,13 @@ class ForeachFinderTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        InterfaceSchema action = (InterfaceSchema) ctx.cfgSchema().findItem("action");
+        InterfaceSchema action = requireNonNull((InterfaceSchema) ctx.cfgSchema().findItem("action"));
 
         List<Integer> list = new ArrayList<>();
         Finder finder = new Finder(List.of(new FStructField(1),
-                new FInterfaceImpl(action.findImpl("talk")),
+                new FInterfaceImpl(requireNonNull(action.findImpl("talk"))),
                 new FStructField(0)));
-        foreachVTable((v) -> list.add(((CfgValue.VInt) v).value()), cfgValue.getTable("t"), finder);
+        foreachVTable((v) -> list.add(((CfgValue.VInt) v).value()), requireNonNull(cfgValue.getTable("t")), finder);
         assertEquals(List.of(111), list);
     }
 }

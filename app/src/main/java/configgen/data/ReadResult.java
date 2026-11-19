@@ -1,14 +1,15 @@
 package configgen.data;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
+
 
 import java.util.List;
 
-public record ReadResult(@NotNull List<OneSheet> sheets,
-                         @NotNull CfgDataStat stat,
-                         String nullableAddTag) {
+public record ReadResult(List<OneSheet> sheets,
+                         CfgDataStat stat,
+                         @Nullable String nullableAddTag) {
 
-    public record OneSheet(@NotNull String tableName,
-                           @NotNull CfgData.DRawSheet sheet) {
+    public record OneSheet(String tableName,
+                           CfgData.DRawSheet sheet) {
     }
 }

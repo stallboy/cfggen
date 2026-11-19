@@ -1,5 +1,9 @@
 package configgen.geni18n;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.genbyai.AICfg;
@@ -30,10 +34,10 @@ public class TodoTranslator extends Tool {
     private final String sourceLang;
     private final String targetLang;
 
-    private final String termCfgFile;
+    private final @Nullable String termCfgFile;
     private final String todoFile;
     private final String aiCfgFile;
-    private final String promptJteFile; // 文件路径或null（使用默认模板）
+    private final @Nullable String promptJteFile; // 文件路径或null（使用默认模板）
 
     private final int batch;
     private AICfg aiCfg;
@@ -51,6 +55,7 @@ public class TodoTranslator extends Tool {
     }
 
     @Override
+    @Initializer
     public void call() {
         FileUtil.assureFileExistIf(promptJteFile);
 
@@ -212,7 +217,7 @@ public class TodoTranslator extends Tool {
         return entries;
     }
 
-    private static String buildRelatedTermsCsv(Set<String> todoOriginals, Map<String, String> terms) {
+    private static String buildRelatedTermsCsv(Set<String> todoOriginals, @Nullable Map<String, String> terms) {
         if (terms == null) {
             return "";
         }
@@ -252,8 +257,8 @@ public class TodoTranslator extends Tool {
     /**
      * 查找最相似的一个翻译
      */
-    private static Map.Entry<String, String> findMostSimilarTranslation(String todoOriginal,
-                                                                        Map<String, String> doneTranslations) {
+    private static Map.@Nullable Entry<String, String> findMostSimilarTranslation(String todoOriginal,
+                                                                        @Nullable Map<String, String> doneTranslations) {
         if (doneTranslations == null || doneTranslations.isEmpty()) {
             return null;
         }

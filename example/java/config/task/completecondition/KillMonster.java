@@ -1,30 +1,27 @@
 package config.task.completecondition;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public final class KillMonster implements config.task.completecondition.Completecondition {
-    @Override
-    public config.task.CompleteConditionType type() {
-        return config.task.CompleteConditionType.KILL_MONSTER;
-    }
-
-    private int monsterid;
-    private int count;
-    private config.other.Monster RefMonsterid;
-
-    private KillMonster() {
-    }
+    private final int monsterid;
+    private final int count;
+    private config.other.@Nullable Monster RefMonsterid;
 
     public KillMonster(int monsterid, int count) {
         this.monsterid = monsterid;
         this.count = count;
     }
 
-    public static KillMonster _create(configgen.genjava.ConfigInput input) {
-        KillMonster self = new KillMonster();
-        self.monsterid = input.readInt();
-        self.count = input.readInt();
-        return self;
+    private KillMonster(configgen.genjava.ConfigInput input) {
+        this.monsterid = input.readInt();
+        this.count = input.readInt();
+    }
+
+    @Override
+    public config.task.CompleteConditionType type() {
+        return config.task.CompleteConditionType.KILL_MONSTER;
     }
 
     public int getMonsterid() {
@@ -35,7 +32,7 @@ public final class KillMonster implements config.task.completecondition.Complete
         return count;
     }
 
-    public config.other.Monster refMonsterid() {
+    public config.other.@Nullable Monster refMonsterid() {
         return RefMonsterid;
     }
 
@@ -45,7 +42,7 @@ public final class KillMonster implements config.task.completecondition.Complete
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof KillMonster o)) {
             return false;
         }
@@ -64,6 +61,10 @@ public final class KillMonster implements config.task.completecondition.Complete
             errors.missingReference("KillMonster", "monsterid", "other.monster", this.monsterid);
         }
 
+    }
+
+    public static KillMonster _create(configgen.genjava.ConfigInput input) {
+        return new KillMonster(input);
     }
 
 }

@@ -1,6 +1,8 @@
 package configgen.genjava.code;
 
-import configgen.i18n.LangSwitchable;
+import org.jspecify.annotations.Nullable;
+
+import configgen.i18n.TranslationBundle;
 import configgen.genjava.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
@@ -12,8 +14,8 @@ import java.util.Map;
 import java.util.Set;
 
 final class GenConfigCodeSchema {
-    static void generateAll(JavaCodeGenerator gen, GenCfg cfg, int schemaNumPerFile, CfgValue cfgValue, LangSwitchable ls) {
-        SchemaInterface schemaInterface = SchemaParser.parsePackage(cfgValue, ls);
+    static void generateAll(JavaCodeGenerator gen, GenCfg cfg, int schemaNumPerFile, CfgValue cfgValue, @Nullable TranslationBundle translationBundle) {
+        SchemaInterface schemaInterface = SchemaParser.parsePackage(cfgValue, translationBundle);
         Set<String> packageOnly = new HashSet<>();
         for (var table : cfgValue.tables()) {
             if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(table.schema())) {

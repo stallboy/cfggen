@@ -1,5 +1,7 @@
 package configgen.ctx;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.data.*;
 import configgen.i18n.*;
 import configgen.util.CachedFiles;
@@ -17,40 +19,66 @@ import java.util.Objects;
 
 public class Context {
     public record ContextCfg(Path dataDir,
-                             ExplicitDir explicitDir,
+                             @Nullable ExplicitDir explicitDir,
                              HeadRow headRow,
                              String csvOrTsvDefaultEncoding,
-
-                             String i18nFilename,
-                             String langSwitchDir,
-                             String langSwitchDefaultLang,
+                             I18nCfg i18n,
                              boolean allowValueErr) {
 
         public ContextCfg {
             Objects.requireNonNull(dataDir);
             Objects.requireNonNull(headRow);
             Objects.requireNonNull(csvOrTsvDefaultEncoding);
+            Objects.requireNonNull(i18n);
         }
 
         public static ContextCfg of(Path dataDir) {
             return new ContextCfg(dataDir, null, HeadRows.A2_Default, "UTF-8",
-                    null, null, null, false);
+                    I18nCfg.Disabled.INSTANCE, false);
         }
+    }
+
+    public sealed interface I18nCfg permits I18nCfg.Disabled, I18nCfg.Replace, I18nCfg.Switchable {
+        enum Disabled implements I18nCfg {
+            INSTANCE
+        }
+
+        record Replace(Path path) implements I18nCfg {
+            public Replace {
+                Objects.requireNonNull(path);
+            }
+        }
+
+        record Switchable(Path dir, String defaultLang) implements I18nCfg {
+            public Switchable {
+                Objects.requireNonNull(dir);
+                Objects.requireNonNull(defaultLang);
+            }
+        }
+    }
+
+    private sealed interface I18nState permits I18nState.Disabled, I18nState.Replace, I18nState.Switchable {
+        enum Disabled implements I18nState {
+            INSTANCE
+        }
+
+        record Replace(TranslationCatalog catalog) implements I18nState {}
+
+        record Switchable(TranslationBundle translationBundle) implements I18nState {}
     }
 
     private final ContextCfg contextCfg;
     private final boolean fixedSchema;
+    private final I18nState i18nState;
 
     private DirectoryStructure sourceStructure;
-    private LangTextFinder nullableLangTextFinder;
-    private LangSwitchable nullableLangSwitch;
 
     // 本代生成输出的登记册：generators 写文件/登记清理目录都经它，Main.run 末尾 finalizeRun
     private final CachedFiles outputFiles = new CachedFiles();
 
     private final ExcelReader excelReader;
     private final ReadCsv csvReader;
-    private CfgSchema cfgSchema;
+    private final CfgSchema cfgSchema;
     private volatile CfgData cfgData;
     // 本次加载是否触发了autoFix写回config.cfg（供watch层检测写-触发循环）
     private boolean lastLoadDidAutoFix;
@@ -58,8 +86,8 @@ public class Context {
     /**
      * 优化，避免gen多次时，重复生成value
      */
-    private volatile CfgValue lastCfgValue;
-    private volatile String lastCfgValueTag;
+    private volatile @Nullable CfgValue lastCfgValue;
+    private volatile @Nullable String lastCfgValueTag;
     // 缓存键的一部分：见 makeValue 的说明，allowErr 必须参与缓存命中判断
     private volatile boolean lastCfgValueAllowErr;
 
@@ -80,16 +108,17 @@ public class Context {
         this(cfg, new DirectoryStructure(cfg.dataDir, cfg.explicitDir), schema);
     }
 
-    private Context(ContextCfg cfg, DirectoryStructure sourceStructure, CfgSchema fixed) {
+    private Context(ContextCfg cfg, DirectoryStructure sourceStructure, @Nullable CfgSchema fixed) {
         this.contextCfg = cfg;
         this.fixedSchema = fixed != null;
         this.sourceStructure = sourceStructure;
 
-        if (cfg.i18nFilename != null) {
-            nullableLangTextFinder = LangTextFinder.read(Path.of(cfg.i18nFilename));
-        } else if (cfg.langSwitchDir != null) {
-            nullableLangSwitch = LangSwitchable.read(Path.of(cfg.langSwitchDir), cfg.langSwitchDefaultLang);
-        }
+        i18nState = switch (cfg.i18n) {
+            case I18nCfg.Disabled _ -> I18nState.Disabled.INSTANCE;
+            case I18nCfg.Replace replace -> new I18nState.Replace(TranslationCatalog.read(replace.path()));
+            case I18nCfg.Switchable switchable ->
+                    new I18nState.Switchable(TranslationBundle.read(switchable.dir(), switchable.defaultLang()));
+        };
 
         excelReader = ReadByFastExcel.INSTANCE;
         csvReader = new ReadCsv(cfg.csvOrTsvDefaultEncoding);
@@ -101,21 +130,27 @@ public class Context {
             this.cfgData = dataReader.readCfgData(sourceStructure.getExcelFiles(), fixed, errs);
             errs.checkErrors("fixed schema data");
             for (String table : cfgData.tables().keySet()) {
-                if (fixed.findTable(table) == null) throw new IllegalArgumentException("Unknown table outside shared schema: " + table);
-                if (fixed.findTable(table).meta().isJson()) throw new IllegalArgumentException("JSON table cannot also use CSV/Excel data: " + table);
+                var tableSchema = fixed.findTable(table);
+                if (tableSchema == null) throw new IllegalArgumentException("Unknown table outside shared schema: " + table);
+                if (tableSchema.meta().isJson()) throw new IllegalArgumentException("JSON table cannot also use CSV/Excel data: " + table);
             }
             for (String table : sourceStructure.jsonTableNames()) {
-                if (!sourceStructure.jsonFilesOf(table).isEmpty() && (fixed.findTable(table) == null || !fixed.findTable(table).meta().isJson())) throw new IllegalArgumentException("Unknown JSON table outside shared schema: " + table);
+                var tableSchema = fixed.findTable(table);
+                if (!sourceStructure.jsonFilesOf(table).isEmpty() && (tableSchema == null || !tableSchema.meta().isJson())) throw new IllegalArgumentException("Unknown JSON table outside shared schema: " + table);
             }
             return;
         }
-        boolean ok = readSchemaAndData(dataReader, true);
-        if (!ok) {
-            readSchemaAndData(dataReader, false);
+        SchemaAndData loaded = readSchemaAndData(dataReader, true);
+        if (loaded == null) {
+            loaded = java.util.Objects.requireNonNull(readSchemaAndData(dataReader, false));
         }
+        cfgSchema = loaded.schema();
+        cfgData = loaded.data();
     }
 
-    private boolean readSchemaAndData(CfgDataReader dataReader, boolean autoFix) {
+    private record SchemaAndData(CfgSchema schema, CfgData data) {}
+
+    private @Nullable SchemaAndData readSchemaAndData(CfgDataReader dataReader, boolean autoFix) {
         CfgSchema schema = CfgSchemas.readFromDir(sourceStructure.getCfgFiles());
         Logger.profile("schema read");
 
@@ -134,9 +169,7 @@ public class Context {
 
 
         if (schema.equals(alignedSchema)) {
-            this.cfgData = data;
-            this.cfgSchema = schema;
-            return true;
+            return new SchemaAndData(schema, data);
         } else if (autoFix) {
             Logger.profile("schema aligned by data");
             // schema.printDiff(alignedSchema);
@@ -145,7 +178,7 @@ public class Context {
             sourceStructure = sourceStructure.reload();
             Logger.profile("schema write");
             lastLoadDidAutoFix = true;
-            return false;
+            return null;
         } else {
             schema.printDiff(alignedSchema);
             throw new RuntimeException("schema align failed");
@@ -199,26 +232,26 @@ public class Context {
     /**
      * 直接国际化,直接改成对应国家语言
      */
-    public LangTextFinder nullableLangTextFinder() {
-        return nullableLangTextFinder;
+    public @Nullable TranslationCatalog nullableTranslationCatalog() {
+        return i18nState instanceof I18nState.Replace(TranslationCatalog catalog) ? catalog : null;
     }
 
     /**
      * 这个是要实现客户端可在多国语言间切换语言，所以客户端服务器都需要完整的多国语言信息，而不能如i18n那样直接替换
      */
-    public LangSwitchable nullableLangSwitch() {
-        return nullableLangSwitch;
+    public @Nullable TranslationBundle nullableTranslationBundle() {
+        return i18nState instanceof I18nState.Switchable(TranslationBundle translationBundle) ? translationBundle : null;
     }
 
     public CfgValue makeValue() {
         return makeValue(null);
     }
 
-    public CfgValue makeValue(String tag) {
+    public CfgValue makeValue(@Nullable String tag) {
         return makeValue(tag, contextCfg.allowValueErr);
     }
 
-    public synchronized CfgValue makeValue(String tag, boolean allowValueErr) {
+    public synchronized CfgValue makeValue(@Nullable String tag, boolean allowValueErr) {
         if (tag != null && tag.isEmpty()) {
             throw new IllegalArgumentException("tag不能为空");
         }
@@ -232,6 +265,7 @@ public class Context {
         if (lastCfgValue != null
                 && Objects.equals(tag, lastCfgValueTag)
                 && (!lastCfgValueAllowErr || allowValueErr)) {
+            //noinspection DataFlowIssue
             return lastCfgValue;
         }
         lastCfgValue = null; //让它可以被尽快gc
@@ -248,7 +282,7 @@ public class Context {
         }
 
         CfgValueErrs valueErrs = CfgValueErrs.of();
-        ValueEnv env = new ValueEnv(cfgSchema, cfgData, contextCfg.headRow(), nullableLangTextFinder, sourceStructure);
+        ValueEnv env = new ValueEnv(cfgSchema, cfgData, contextCfg.headRow(), nullableTranslationCatalog(), sourceStructure);
         CfgValueParser clientValueParser = new CfgValueParser(tagSchema, env, valueErrs);
         CfgValue cfgValue = clientValueParser.parseCfgValue();
         String prefix = tag == null ? "value" : String.format("[%s] filtered value", tag);
@@ -257,7 +291,7 @@ public class Context {
         lastCfgValue = cfgValue;
         lastCfgValueTag = tag;
         lastCfgValueAllowErr = allowValueErr;
-        return lastCfgValue;
+        return cfgValue;
     }
 
     // 与 makeValue 共用 this 锁：二者都读写 lastCfgValue/lastCfgValueTag/lastCfgValueAllowErr，

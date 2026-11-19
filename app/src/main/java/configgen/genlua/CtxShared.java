@@ -1,5 +1,7 @@
 package configgen.genlua;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,7 +29,7 @@ class CtxShared {
      * 会生成 [name] = [valueStr] lua代码，供各 record 复用
      */
     static class CompositeValueStr {
-        private String valueStr = null;
+        private @Nullable String valueStr = null;
         private final String name;
 
         CompositeValueStr(int i) {
@@ -42,7 +44,7 @@ class CtxShared {
             return name;
         }
 
-        String getValueStr() {
+        @Nullable String getValueStr() {
             return valueStr;
         }
     }
@@ -78,7 +80,7 @@ class CtxShared {
         return sharedCompositeValues.values();
     }
 
-    String getSharedName(CompositeValue v) {
+    @Nullable String getSharedName(CompositeValue v) {
         CompositeValueStr vstr = sharedCompositeValues.get(v);
         if (vstr != null) {
             if (vstr.getValueStr() != null) {

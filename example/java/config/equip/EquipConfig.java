@@ -1,25 +1,23 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：equip/equip_config.csv
 public class EquipConfig {
-    private String entry;
-    private int stone_count_for_set;
-    private String draw_protect_name;
-    private int broadcastid;
-    private int broadcast_least_quality;
-    private int week_reward_mailid;
-    private EquipConfig() {
-    }
+    private final String entry;
+    private final int stone_count_for_set;
+    private final String draw_protect_name;
+    private final int broadcastid;
+    private final int broadcast_least_quality;
+    private final int week_reward_mailid;
 
-    public static EquipConfig _create(configgen.genjava.ConfigInput input) {
-        EquipConfig self = new EquipConfig();
-        self.entry = input.readStringInPool();
-        self.stone_count_for_set = input.readInt();
-        self.draw_protect_name = input.readStringInPool();
-        self.broadcastid = input.readInt();
-        self.broadcast_least_quality = input.readInt();
-        self.week_reward_mailid = input.readInt();
-        return self;
+    private EquipConfig(configgen.genjava.ConfigInput input) {
+        this.entry = input.readStringInPool();
+        this.stone_count_for_set = input.readInt();
+        this.draw_protect_name = input.readStringInPool();
+        this.broadcastid = input.readInt();
+        this.broadcast_least_quality = input.readInt();
+        this.week_reward_mailid = input.readInt();
     }
 
     /**
@@ -69,7 +67,11 @@ public class EquipConfig {
         return "(" + entry + "," + stone_count_for_set + "," + draw_protect_name + "," + broadcastid + "," + broadcast_least_quality + "," + week_reward_mailid + ")";
     }
 
-    public static EquipConfig get(String entry) {
+    public static EquipConfig _create(configgen.genjava.ConfigInput input) {
+        return new EquipConfig(input);
+    }
+
+    public static @Nullable EquipConfig get(String entry) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getEquipEquipConfig(entry);
     }

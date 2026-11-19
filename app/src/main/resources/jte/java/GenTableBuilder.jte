@@ -1,33 +1,18 @@
-@import configgen.genjava.code.NameableName
-@import configgen.genjava.code.TypeStr
-@import configgen.schema.*
-@import configgen.util.StringUtil
-@param TableSchema table
-@param NameableName name
-package ${name.pkg};
+@import configgen.genjava.code.StructuralClassModel
+@import configgen.genjava.code.StructuralClassModel.FieldInfo
+@param StructuralClassModel model
+package ${model.pkg};
 
-public class ${name.className}Builder {
-    @for(FieldSchema field : table.fields())
-        public ${TypeStr.type(name.cfg, field.type())} ${StringUtil.lower1(field.name())};
+@if(model.cfg.jspecify() && model.fields.stream().anyMatch(FieldInfo::needsBuilderValue))
+import org.jspecify.annotations.Nullable;
+
+@endif
+public class ${model.className}Builder {
+    @for(FieldInfo field : model.fields)
+        public ${field.needsBuilderValue() ? model.cfg.nullable(field.type()) : field.type()} ${field.name()}${field.primitive() || field.needsBuilderValue() ? "" : " = " + field.builderDefault()};
     @endfor
 
-
-    public ${name.className} build() {
-        @for(FieldSchema field : table.fields())
-            @if(!TypeStr.isJavaPrimitive(field.type()))
-                !{
-                    String fn = StringUtil.lower1(field.name());
-                }
-                @if(field.type() instanceof FieldType.StructRef)
-                    java.util.Objects.requireNonNull(${fn});
-                @else
-                    if (${fn} == null) {
-                        ${fn} = ${TypeStr.defaultValue(field.type())};
-                    }
-                @endif
-            @endif
-        @endfor
-        return new ${name.className}(this);
+${"\n"}    public ${model.className} build() {
+        return new ${model.className}(this);
     }
-
 }

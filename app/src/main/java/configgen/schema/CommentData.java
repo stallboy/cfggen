@@ -1,15 +1,16 @@
 package configgen.schema;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
+
 
 import java.util.stream.Collectors;
 
 /**
  * 封装注释的三部分数据
  */
-public record CommentData(@NotNull String leading,
-                          @NotNull String trailing,
-                          String suffix) {
+public record CommentData(String leading,
+                          String trailing,
+                          @Nullable String suffix) {
 
     public CommentData {
         if (trailing.contains("\n")) { // 不会发生，这里以防万一

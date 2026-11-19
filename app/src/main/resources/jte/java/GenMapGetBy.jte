@@ -8,7 +8,7 @@
         String methodName = Name.GetByKeyFunctionNameInConfigMgr(name.cfg, keySchema, isPrimaryKey, name.nameable);
         String getByName = Name.GetByKeyFunctionName(keySchema, isPrimaryKey);
     }
-public static ${name.className} ${getByName}(${MethodStr.formalParams(name.cfg, keySchema.fieldSchemas())}) {
+public static ${name.cfg.nullable(name.className)} ${getByName}(${MethodStr.formalParams(name.cfg, keySchema.fieldSchemas())}) {
         ${name.cfg.codeTopPkg()}.ConfigMgr mgr = ${name.cfg.codeTopPkg()}.ConfigMgr.getMgr();
         return mgr.${methodName}(${MethodStr.actualParamsKeyRaw(keySchema, "")});
     }

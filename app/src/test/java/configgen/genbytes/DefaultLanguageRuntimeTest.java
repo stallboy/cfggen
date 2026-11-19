@@ -1,5 +1,7 @@
 package configgen.genbytes;
 
+import configgen.JavaTestClasspath;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DefaultLanguageRuntimeTest {
@@ -45,7 +48,7 @@ class DefaultLanguageRuntimeTest {
         try (var out = new ConfigOutput(Files.newOutputStream(root.resolve("localized.bytes")))) {
             PackageSerializer.write(out, metadata, blocks);
         }
-        byte[] collections = blocks.get(".containers");
+        byte[] collections = requireNonNull(blocks.get(".containers"));
         assertEquals(16, collections.length);
         for (var entry : Map.of("list", 8, "map", 12).entrySet()) {
             byte[] invalid = collections.clone();
@@ -82,7 +85,8 @@ class DefaultLanguageRuntimeTest {
                 }
                 """);
         Path classes = Files.createDirectories(root.resolve("classes"));
-        var arguments = new ArrayList<>(List.of("-encoding", "UTF-8", "-d", classes.toString()));
+        var arguments = new ArrayList<>(List.of("-encoding", "UTF-8", "-classpath", JavaTestClasspath.classpathWithJSpecify(),
+                "-d", classes.toString()));
         try (var files = Files.walk(project)) { files.filter(p -> p.toString().endsWith(".java")).map(Path::toString).forEach(arguments::add); }
         assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null, arguments.toArray(String[]::new)));
         try (var loader = new URLClassLoader(new java.net.URL[]{classes.toUri().toURL()}, getClass().getClassLoader())) {

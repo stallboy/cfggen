@@ -1,5 +1,7 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：equip/ability.csv
 public enum Ability {
     ATTACK("attack", 1),
@@ -29,7 +31,7 @@ public enum Ability {
         map = java.util.Collections.unmodifiableMap(symbols);
     }
 
-    public static Ability get(int value) {
+    public static @Nullable Ability get(int value) {
         return map.get(value);
     }
 

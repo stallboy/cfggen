@@ -1,12 +1,16 @@
 package configgen.genbytes;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.gen.CliException;
 import configgen.genjava.*;
-import configgen.i18n.LangSwitchable;
-import configgen.i18n.LangSwitchableRuntime;
+import configgen.i18n.TranslationBundle;
+import configgen.i18n.TableTranslationLookup;
 import configgen.util.CachedFileOutputStream;
 import configgen.util.CachedFiles;
 import configgen.util.XorCipherOutputStream;
@@ -46,38 +50,38 @@ public class BytesGenerator extends GeneratorWithTag {
     }
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
         outputFiles = ctx.outputFiles();
         PackageBuilder.Result build = ctx.isFixedSchema() || !requires.isEmpty() || !dependencies.isEmpty()
                 ? PackageBuilder.build(ctx, tag, dependencies, pack, requires) : null;
         CfgValue cfgValue = build == null ? ctx.makeValue(tag) : build.own();
-        LangSwitchable langSwitch = ctx.nullableLangSwitch();
+        TranslationBundle translationBundle = ctx.nullableTranslationBundle();
 
-        // 初始化运行时
-        LangSwitchableRuntime langSwitchRuntime = null;
+        TableTranslationLookup tableTranslationLookup = null;
         LangTextPool langTextPool;
 
-        if (langSwitch != null) {
-            langSwitchRuntime = new LangSwitchableRuntime(langSwitch);
-            langTextPool = new LangTextPool(langSwitch.languages());
+        if (translationBundle != null) {
+            tableTranslationLookup = new TableTranslationLookup(translationBundle);
+            langTextPool = new LangTextPool(translationBundle.languages());
         } else {
             langTextPool = new LangTextPool(List.of("default"));
         }
 
-        writePackage(cfgValue, build == null ? cfgValue : build.effective(), langSwitch, langSwitchRuntime, langTextPool);
+        writePackage(cfgValue, build == null ? cfgValue : build.effective(), translationBundle, tableTranslationLookup, langTextPool);
     }
-    private void writePackage(CfgValue value, CfgValue schemaValue, LangSwitchable langSwitch,
-                              LangSwitchableRuntime runtime, LangTextPool texts) {
+    private void writePackage(CfgValue value, CfgValue schemaValue, @Nullable TranslationBundle translationBundle,
+                              @Nullable TableTranslationLookup tableTranslationLookup, LangTextPool texts) {
         Map<String, String> metadata = new LinkedHashMap<>();
         metadata.put("pack", pack);
         if (!requires.isEmpty()) metadata.put("requires", requires);
         metadata.put("defaultLanguage", texts.getTextPools()[0].getLangName());
         Map<String, byte[]> entries = new LinkedHashMap<>();
-        entries.put("schema", encode(out -> new SchemaSerializer(out).serializeInterface(SchemaParser.parsePackage(schemaValue, langSwitch))));
+        entries.put("schema", encode(out -> new SchemaSerializer(out).serializeInterface(SchemaParser.parsePackage(schemaValue, translationBundle))));
         StringPool strings = new StringPool();
         Map<String, byte[]> tables = new LinkedHashMap<>();
         for (CfgValue.VTable table : value.sortedTables()) {
-            tables.put("." + table.name(), CfgValueSerializer.serializeTableBytes(table, strings, texts, runtime));
+            tables.put("." + table.name(), CfgValueSerializer.serializeTableBytes(table, strings, texts, tableTranslationLookup));
         }
         entries.put("strings", encode(strings::serialize));
         for (int i = 0; i < texts.getTextPools().length; i++) {

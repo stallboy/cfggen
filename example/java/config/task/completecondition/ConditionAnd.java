@@ -1,28 +1,26 @@
 package config.task.completecondition;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public final class ConditionAnd implements config.task.completecondition.Completecondition {
-    @Override
-    public config.task.CompleteConditionType type() {
-        return config.task.CompleteConditionType.CONDITION_AND;
-    }
-
-    private config.task.completecondition.Completecondition cond1;
-    private config.task.completecondition.Completecondition cond2;
-    private ConditionAnd() {
-    }
+    private final config.task.completecondition.Completecondition cond1;
+    private final config.task.completecondition.Completecondition cond2;
 
     public ConditionAnd(config.task.completecondition.Completecondition cond1, config.task.completecondition.Completecondition cond2) {
         this.cond1 = cond1;
         this.cond2 = cond2;
     }
 
-    public static ConditionAnd _create(configgen.genjava.ConfigInput input) {
-        ConditionAnd self = new ConditionAnd();
-        self.cond1 = config.task.completecondition.Completecondition._create(input);
-        self.cond2 = config.task.completecondition.Completecondition._create(input);
-        return self;
+    private ConditionAnd(configgen.genjava.ConfigInput input) {
+        this.cond1 = config.task.completecondition.Completecondition._create(input);
+        this.cond2 = config.task.completecondition.Completecondition._create(input);
+    }
+
+    @Override
+    public config.task.CompleteConditionType type() {
+        return config.task.CompleteConditionType.CONDITION_AND;
     }
 
     public config.task.completecondition.Completecondition getCond1() {
@@ -39,7 +37,7 @@ public final class ConditionAnd implements config.task.completecondition.Complet
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof ConditionAnd o)) {
             return false;
         }
@@ -55,6 +53,10 @@ public final class ConditionAnd implements config.task.completecondition.Complet
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.cond1._resolve(mgr, errors);
         this.cond2._resolve(mgr, errors);
+    }
+
+    public static ConditionAnd _create(configgen.genjava.ConfigInput input) {
+        return new ConditionAnd(input);
     }
 
 }

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.genjava.SchemaPrimitive.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -29,7 +30,7 @@ class SchemaSerializerTest {
 
         SchemaInterface parsed = serializeAndDeserialize(root);
 
-        SchemaBean out = (SchemaBean) parsed.implementations.get("allPrimitives");
+        SchemaBean out = requireNonNull((SchemaBean) parsed.implementations.get("allPrimitives"));
         assertEquals(SBool, out.columns.get(0).schema());
         assertEquals(SInt, out.columns.get(1).schema());
         assertEquals(SLong, out.columns.get(2).schema());
@@ -48,7 +49,7 @@ class SchemaSerializerTest {
 
         SchemaInterface parsed = serializeAndDeserialize(root);
 
-        SchemaBean out = (SchemaBean) parsed.implementations.get("t");
+        SchemaBean out = requireNonNull((SchemaBean) parsed.implementations.get("t"));
         SchemaList list = assertInstanceOf(SchemaList.class, out.columns.get(0).schema());
         assertEquals(SText, list.ele());
         SchemaMap map = assertInstanceOf(SchemaMap.class, out.columns.get(1).schema());

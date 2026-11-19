@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValueParserConversionTest {
@@ -47,7 +48,7 @@ class ValueParserConversionTest {
                 3,-5,-10.5,TRUE
                 """));
 
-        var rows = context.makeValue().getTable("sample").valueList();
+        var rows = requireNonNull(context.makeValue().getTable("sample")).valueList();
         assertEquals(List.of(10, 0, -5), rows.stream().map(row -> ((VInt) row.values().get(1)).value()).toList());
         assertEquals(List.of(99.5f, 0f, -10.5f), rows.stream().map(row -> ((VFloat) row.values().get(2)).value()).toList());
         assertEquals(List.of(true, false, true), rows.stream().map(row -> ((VBool) row.values().get(3)).value()).toList());
@@ -159,7 +160,7 @@ class ValueParserConversionTest {
         // 验证每个员工的部门引用都存在
         for (VStruct employee : empTable.valueList()) {
             VInt deptId = (VInt) employee.values().get(2);
-            VTable deptRef = cfgValue.getTable("department");
+            VTable deptRef = requireNonNull(cfgValue.getTable("department"));
             VStruct department = deptRef.primaryKeyMap().get(deptId);
             assertNotNull(department, "Employee " + employee.values().get(1) + " references non-existent department " + deptId.value());
         }
@@ -387,14 +388,14 @@ class ValueParserConversionTest {
         }
 
         // 验证具体订单的状态
-        VStruct order1 = orderTable.primaryKeyMap().get(new VInt(1001, Source.of()));
+        VStruct order1 = requireNonNull(orderTable.primaryKeyMap().get(new VInt(1001, Source.of())));
         VInt status1 = (VInt) order1.values().get(2);
-        VStruct statusRef1 = statusTable.primaryKeyMap().get(status1);
+        VStruct statusRef1 = requireNonNull(statusTable.primaryKeyMap().get(status1));
         assertEquals("pending", ((VString) statusRef1.values().get(1)).value());
 
-        VStruct order5 = orderTable.primaryKeyMap().get(new VInt(1005, Source.of()));
+        VStruct order5 = requireNonNull(orderTable.primaryKeyMap().get(new VInt(1005, Source.of())));
         VInt status5 = (VInt) order5.values().get(2);
-        VStruct statusRef5 = statusTable.primaryKeyMap().get(status5);
+        VStruct statusRef5 = requireNonNull(statusTable.primaryKeyMap().get(status5));
         assertEquals("cancelled", ((VString) statusRef5.values().get(1)).value());
     }
 
@@ -424,7 +425,7 @@ class ValueParserConversionTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable tVTable = cfgValue.getTable("t");
+        VTable tVTable = requireNonNull(cfgValue.getTable("t"));
 
         assertEquals(2, tVTable.valueList().size());
 
@@ -474,7 +475,7 @@ class ValueParserConversionTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable userTable = cfgValue.getTable("user");
+        VTable userTable = requireNonNull(cfgValue.getTable("user"));
 
         assertEquals(4, userTable.valueList().size());
 

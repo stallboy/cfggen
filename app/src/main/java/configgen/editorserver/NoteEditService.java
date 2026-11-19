@@ -1,5 +1,7 @@
 package configgen.editorserver;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.CSVUtil;
 import configgen.util.Logger;
 import de.siegmar.fastcsv.reader.CsvRecord;
@@ -61,7 +63,7 @@ public class NoteEditService {
         return new Notes(noteMap.entrySet().stream().map(e -> new Note(e.getKey(), e.getValue())).toList());
     }
 
-    public synchronized NoteEditResult updateNote(String key, String note) {
+    public synchronized NoteEditResult updateNote(@Nullable String key, String note) {
         if (key == null || key.isEmpty()) {
             return new NoteEditResult(ResultCode.keyNotSet, getNotes());
         }

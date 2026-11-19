@@ -1,23 +1,21 @@
 package config.task.completecondition;
 
-public final class CfgTalkNpc implements config.task.completecondition.CfgCompletecondition {
-    @Override
-    public config.task.CfgComplete_condition_type type() {
-        return config.task.CfgComplete_condition_type.TALKNPC;
-    }
+import org.jspecify.annotations.Nullable;
 
-    private int npcid;
-    private CfgTalkNpc() {
-    }
+public final class CfgTalkNpc implements config.task.completecondition.CfgCompletecondition {
+    private final int npcid;
 
     public CfgTalkNpc(int npcid) {
         this.npcid = npcid;
     }
 
-    public static CfgTalkNpc _create(configgen.genjava.ConfigInput input) {
-        CfgTalkNpc self = new CfgTalkNpc();
-        self.npcid = input.readInt();
-        return self;
+    private CfgTalkNpc(configgen.genjava.ConfigInput input) {
+        this.npcid = input.readInt();
+    }
+
+    @Override
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.TALKNPC;
     }
 
     public int getNpcid() {
@@ -30,7 +28,7 @@ public final class CfgTalkNpc implements config.task.completecondition.CfgComple
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CfgTalkNpc o)) {
             return false;
         }
@@ -40,6 +38,10 @@ public final class CfgTalkNpc implements config.task.completecondition.CfgComple
     @Override
     public String toString() {
         return "CfgTalkNpc(" + npcid + ")";
+    }
+
+    public static CfgTalkNpc _create(configgen.genjava.ConfigInput input) {
+        return new CfgTalkNpc(input);
     }
 
 }

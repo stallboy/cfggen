@@ -44,7 +44,7 @@ class SchemaToCsvHeader {
         // 注意：PACK 或 Sep 格式时 span == 1，已在前面处理并 return
         switch (field.type()) {
             case FieldType.StructRef structRef -> {
-                flattenFieldable(structRef.obj());
+                flattenFieldable(structRef.resolvedObj());
             }
             case FieldType.FList fList -> {
                 int count = getCount(field.fmt());
@@ -104,7 +104,7 @@ class SchemaToCsvHeader {
         // span > 1 的情况，递归处理
         // Primitive 类型的 span 总是 1，不会进入这里
         if (type instanceof FieldType.StructRef structRef) {
-            flattenFieldable(structRef.obj());
+            flattenFieldable(structRef.resolvedObj());
         }
     }
 

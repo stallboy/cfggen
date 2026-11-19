@@ -1,5 +1,7 @@
 package configgen.mcpserver;
 
+import org.jspecify.annotations.Nullable;
+
 import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
 import com.github.codeboyzhou.mcp.declarative.server.McpStructuredContent;
@@ -15,7 +17,7 @@ public class WriteRecordTool {
 
     public record AddOrUpdateRecordResult(AddOrUpdateService.AddOrUpdateErrorCode errorCode,
                                           String table,
-                                          String recordId,
+                                          @Nullable String recordId,
                                           List<String> errorMessages) implements McpStructuredContent {
     }
 
@@ -39,7 +41,7 @@ public class WriteRecordTool {
 
     public record DeleteRecordResult(DeleteService.DeleteErrorCode errorCode,
                                      String table,
-                                     String recordId,
+                                     @Nullable String recordId,
                                      List<String> errorMessages) implements McpStructuredContent {
     }
 

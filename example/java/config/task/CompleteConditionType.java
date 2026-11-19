@@ -1,5 +1,7 @@
 package config.task;
 
+import org.jspecify.annotations.Nullable;
+
 // 任务完成条件类型
 // 来自：task/complete_condition_type任务完成条件类型.csv
 public enum CompleteConditionType {
@@ -30,7 +32,7 @@ public enum CompleteConditionType {
         map = java.util.Collections.unmodifiableMap(symbols);
     }
 
-    public static CompleteConditionType get(int value) {
+    public static @Nullable CompleteConditionType get(int value) {
         return map.get(value);
     }
 

@@ -1,5 +1,7 @@
 package configgen.gengo;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
@@ -16,11 +18,11 @@ public class StructModel {
     public final GoName name;
     public final Structural structural;
     public final String className;
-    public final CfgValue.VTable vTable;
+    public final CfgValue.@Nullable VTable vTable;
     public final List<FieldSchema> reverseFields;
     private final GoCodeGenerator gen;
 
-    public StructModel(GoCodeGenerator gen, String pkg, GoName name, Structural structural, CfgValue.VTable vTable) {
+    public StructModel(GoCodeGenerator gen, String pkg, GoName name, Structural structural, CfgValue.@Nullable VTable vTable) {
         this.gen = gen;
         this.pkg = pkg;
         this.name = name;
@@ -30,7 +32,7 @@ public class StructModel {
         this.reverseFields = vTable == null ? List.of() : gen.reverseFields(vTable.schema());
     }
 
-    public String genReadField(FieldType t) {
+    public @Nullable String genReadField(FieldType t) {
         return switch (t) {
             case BOOL -> "stream.ReadBool()";
             case INT -> "stream.ReadInt32()";
@@ -38,7 +40,7 @@ public class StructModel {
             case FLOAT -> "stream.ReadFloat32()";
             case STRING -> "stream.ReadStringInPool()";
             case TEXT -> gen.isLangSwitch ? "createText(stream)" : "stream.ReadTextInPool()";
-            case StructRef structRef -> String.format("create%s(stream)", ClassName(structRef.obj()));
+            case StructRef structRef -> String.format("create%s(stream)", ClassName(structRef.resolvedObj()));
             case FList ignored -> null;
             case FMap ignored -> null;
         };
@@ -59,7 +61,7 @@ public class StructModel {
             case STRING -> "string";
             case TEXT -> gen.isLangSwitch ? "*Text" : "string";
             case StructRef structRef -> {
-                Fieldable fieldable = structRef.obj();
+                Fieldable fieldable = structRef.resolvedObj();
                 yield switch (fieldable) {
                     case StructSchema ignored -> "*" + ClassName(fieldable);
                     case InterfaceSchema ignored -> ClassName(fieldable);
@@ -118,7 +120,7 @@ public class StructModel {
         else return type(keySchema.fieldSchemas().getFirst().type());
     }
 
-    public static StructSchema structKey(KeySchema keySchema) {
+    public static @Nullable StructSchema structKey(KeySchema keySchema) {
         return keySchema.fieldSchemas().size() == 1
                 && keySchema.fieldSchemas().getFirst().type() instanceof StructRef ref
                 ? (StructSchema) ref.obj() : null;
@@ -139,7 +141,7 @@ public class StructModel {
 
     public String reverseKeyType(FieldSchema field) {
         if (field.type() instanceof StructRef ref && KeySchema.isKeyType(field.type())) {
-            return "struct { " + ((StructSchema) ref.obj()).fields().stream()
+            return "struct { " + ((StructSchema) ref.resolvedObj()).fields().stream()
                     .map(f -> StringUtil.lower1(f.name()) + " " + type(f.type()))
                     .collect(Collectors.joining("; ")) + " }";
         }
@@ -148,7 +150,7 @@ public class StructModel {
 
     public String reverseKeyExpression(FieldSchema field, String value) {
         if (field.type() instanceof StructRef ref && KeySchema.isKeyType(field.type())) {
-            return reverseKeyType(field) + "{" + ((StructSchema) ref.obj()).fields().stream()
+            return reverseKeyType(field) + "{" + ((StructSchema) ref.resolvedObj()).fields().stream()
                     .map(f -> value + "." + StringUtil.lower1(f.name())).collect(Collectors.joining(", ")) + "}";
         }
         return value;

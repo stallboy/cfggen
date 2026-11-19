@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.value.CfgValue.VList;
 import static configgen.value.CfgValue.VStruct;
 import static configgen.value.CfgValue.VTable;
@@ -79,8 +80,8 @@ class VTableStorageTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable vTable = cfgValue.getTable("t");
-        DTable dTable = ctx.cfgData().getDTable("t");
+        VTable vTable = requireNonNull(cfgValue.getTable("t"));
+        DTable dTable = requireNonNull(ctx.cfgData().getDTable("t"));
 
         int expectedWaves = 2;
         int[] expectedSpawns = {3, 2};
@@ -95,9 +96,9 @@ class VTableStorageTest {
             ValueUpdater.NewCfgValueResult nr = ValueUpdater.updateByReloadTableData(ctx, cfgValue, vTable);
             ctx.updateDataAndValue(nr.newCfgData(), nr.newCfgValue(), !nr.errStrList().isEmpty());
             cfgValue = nr.newCfgValue();
-            vTable = cfgValue.getTable("t");
-            dTable = ctx.cfgData().getDTable("t");
-            record = vTable.primaryKeyMap().get(pk);
+            vTable = requireNonNull(cfgValue.getTable("t"));
+            dTable = requireNonNull(ctx.cfgData().getDTable("t"));
+            record = requireNonNull(vTable.primaryKeyMap().get(pk));
 
             VList waves = (VList) record.values().get(1);
             assertEquals(expectedWaves, waves.valueList().size(),

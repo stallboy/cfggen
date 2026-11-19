@@ -1,11 +1,13 @@
 package configgen.util;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.*;
 
 public class ArgParser {
 
     public record IdAndMap(String id,
-                           Map<String, String> map) {
+                           Map<String, @Nullable String> map) {
     }
 
     public static IdAndMap parseToIdAndMap(String arg) {
@@ -13,7 +15,7 @@ public class ArgParser {
         return new IdAndMap(sp[0], parseMap(sp, 1));
     }
 
-    public static Map<String, String> parseToMap(String arg) {
+    public static Map<String, @Nullable String> parseToMap(@Nullable String arg) {
         if (arg == null || arg.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -21,8 +23,8 @@ public class ArgParser {
         return parseMap(sp, 0);
     }
 
-    private static Map<String, String> parseMap(String[] sp, int fromIndex) {
-        Map<String, String> map = new LinkedHashMap<>();
+    private static Map<String, @Nullable String> parseMap(String[] sp, int fromIndex) {
+        Map<String, @Nullable String> map = new LinkedHashMap<>();
         for (int i = fromIndex; i < sp.length; i++) {
             String s = sp[i];
             // 取最先出现的分隔符（':' 或 '='），而不是固定优先 ':'：
@@ -40,7 +42,7 @@ public class ArgParser {
         return map;
     }
 
-    public static Set<String> parseToSet(String arg) {
+    public static Set<String> parseToSet(@Nullable String arg) {
         if (arg == null || arg.isEmpty()) {
             return Collections.emptySet();
         }

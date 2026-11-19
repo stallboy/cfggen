@@ -1,5 +1,7 @@
 package configgen.tool;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
@@ -10,8 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ValueInspectTool extends GeneratorWithTag {
-    private final String searchTo;
-    private final List<String> query;
+    private final @Nullable String searchTo;
+    private final @Nullable List<String> query;
 
     public ValueInspectTool(Parameter parameter) {
         super(parameter);

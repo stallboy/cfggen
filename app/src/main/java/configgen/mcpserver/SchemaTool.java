@@ -1,5 +1,7 @@
 package configgen.mcpserver;
 
+import org.jspecify.annotations.Nullable;
+
 import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
 import com.github.codeboyzhou.mcp.declarative.server.McpStructuredContent;
@@ -27,7 +29,7 @@ public class SchemaTool {
 
     public record TableSchemaResult(ErrorCode errorCode,
                                     String table,
-                                    RelatedInfo relatedInfo) implements McpStructuredContent {
+                                    @Nullable RelatedInfo relatedInfo) implements McpStructuredContent {
 
         @Override
         public String asTextContent() {

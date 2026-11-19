@@ -1,41 +1,38 @@
 package config.task;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：task/task_任务.csv
 public class Task {
-    private int taskid;
-    private java.util.List<String> name;
-    private int nexttask;
-    private config.task.completecondition.Completecondition completecondition;
-    private int exp;
-    private config.task.TestDefaultBean testDefaultBean;
-    private config.task.TaskExtraExp NullableRefTaskid;
-    private config.task.Task NullableRefNexttask;
+    private final int taskid;
+    private final java.util.List<String> name;
+    private final int nexttask;
+    private final config.task.completecondition.Completecondition completecondition;
+    private final int exp;
+    private final config.task.TestDefaultBean testDefaultBean;
+    private config.task.@Nullable TaskExtraExp NullableRefTaskid;
+    private config.task.@Nullable Task NullableRefNexttask;
 
-    private Task() {
-    }
-
-    public static Task _create(configgen.genjava.ConfigInput input) {
-        Task self = new Task();
-        self.taskid = input.readInt();
+    private Task(configgen.genjava.ConfigInput input) {
+        this.taskid = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.name = java.util.Collections.emptyList();
+                this.name = java.util.Collections.emptyList();
             } else {
-                self.name = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<String>(c);
                 for (; c > 0; c--) {
-                    self.name.add(input.readTextInPool());
+                    items.add(input.readTextInPool());
                 }
-                self.name = java.util.Collections.unmodifiableList(self.name);
+                this.name = java.util.Collections.unmodifiableList(items);
             }
         }
-        self.nexttask = input.readInt();
-        self.completecondition = config.task.completecondition.Completecondition._create(input);
-        self.exp = input.readInt();
-        self.testDefaultBean = config.task.TestDefaultBean._create(input);
-        return self;
+        this.nexttask = input.readInt();
+        this.completecondition = config.task.completecondition.Completecondition._create(input);
+        this.exp = input.readInt();
+        this.testDefaultBean = config.task.TestDefaultBean._create(input);
     }
 
     /**
@@ -71,11 +68,11 @@ public class Task {
         return testDefaultBean;
     }
 
-    public config.task.TaskExtraExp nullableRefTaskid() {
+    public config.task.@Nullable TaskExtraExp nullableRefTaskid() {
         return NullableRefTaskid;
     }
 
-    public config.task.Task nullableRefNexttask() {
+    public config.task.@Nullable Task nullableRefNexttask() {
         return NullableRefNexttask;
     }
 
@@ -91,7 +88,11 @@ public class Task {
 
     }
 
-    public static Task get(int taskid) {
+    public static Task _create(configgen.genjava.ConfigInput input) {
+        return new Task(input);
+    }
+
+    public static @Nullable Task get(int taskid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getTaskTask(taskid);
     }

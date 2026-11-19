@@ -1,10 +1,11 @@
 package configgen.editorserver;
 
+import org.jspecify.annotations.Nullable;
+
 import com.alibaba.fastjson2.annotation.JSONField;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgWriter;
 import configgen.value.CfgValue;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +20,9 @@ public class SchemaService {
         String name();
     }
 
-    public record SField(@NotNull String name,
-                         @NotNull String type,
-                         @NotNull String comment) {
+    public record SField(String name,
+                         String type,
+                         String comment) {
     }
 
     public enum SRefType {
@@ -36,13 +37,13 @@ public class SchemaService {
                               List<String> keys,
                               String refTable,
                               SRefType refType,
-                              List<String> refKeys) {
+                              @Nullable List<String> refKeys) {
     }
 
-    public record SStruct(@NotNull String name,
-                          @NotNull String comment,
-                          @NotNull List<SField> fields,
-                          @NotNull List<SForeignKey> foreignKeys) implements SNameable {
+    public record SStruct(String name,
+                          String comment,
+                          List<SField> fields,
+                          List<SForeignKey> foreignKeys) implements SNameable {
 
         @JSONField
         public String type() {
@@ -70,7 +71,7 @@ public class SchemaService {
     }
 
     public record RecordId(String id,
-                           String title) {
+                           @Nullable String title) {
     }
 
     public record STable(String name,
@@ -78,7 +79,7 @@ public class SchemaService {
                          List<String> pk,
                          List<List<String>> uks,
                          SEntryType entryType,
-                         String entryField,
+                         @Nullable String entryField,
                          List<SField> fields,
                          List<SForeignKey> foreignKeys,
                          List<RecordId> recordIds) implements SNameable {
@@ -114,7 +115,7 @@ public class SchemaService {
                 cfgValue.valueStat().getLastModifiedMap());
     }
 
-    public static SNameable fromNameable(Nameable n, CfgValue cfgValue) {
+    public static SNameable fromNameable(Nameable n, @Nullable CfgValue cfgValue) {
         return switch (n) {
             case InterfaceSchema is -> fromInterface(is);
             case StructSchema ss -> fromStruct(ss);
@@ -139,7 +140,7 @@ public class SchemaService {
                 fromFks(ss.foreignKeys()));
     }
 
-    public static STable fromTable(TableSchema ts, CfgValue cfgValue) {
+    public static STable fromTable(TableSchema ts, @Nullable CfgValue cfgValue) {
         SEntryType entryType;
         String entryField;
         switch (ts.entry()) {
@@ -172,7 +173,7 @@ public class SchemaService {
                 recordIds);
     }
 
-    public static List<RecordId> getRecordIds(VTable vTable) {
+    public static List<RecordId> getRecordIds(@Nullable VTable vTable) {
         if (vTable == null) {
             return List.of();
         }

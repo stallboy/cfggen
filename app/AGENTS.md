@@ -54,7 +54,7 @@ Java 配置生成器（cfggen）：从 Excel/CSV/JSON 读取配置数据，生�
 | `value` | 值模型 / 外键校验 | `CfgValue`、`CfgValueParser`、`RefValidator` |
 | `gen*` | 各语言代码生成 | `Generator` 基类 + `genjava`/`gencs`/`gengo`/`genlua`/`gents`/`gengd`/`genjson` |
 | `genbytes` | 二进制格式 | `BytesGenerator`（详见 [`docs/06`](docs/06-bytes-format.md)） |
-| `i18n` / `geni18n` | 国际化 | `LangTextFinder`、`LangSwitchable`、`I18nBy*Generator` |
+| `i18n` / `geni18n` | 国际化 | `TranslationCatalog`、`TranslationBundle`、`I18nBy*Generator` |
 | `write` + `editorserver` + `mcpserver` | 写回管道（编辑器/AI→文件） | `VTableStorage`、`EditorServer`、`CfgMcpServer`（详见 [`docs/07`](docs/07-write-back-and-servers.md)） |
 | `tool` | 校验 / 检索 | `ValueVerifyTool`、`ValueInspectTool` |
 | `util` | 模板 / 缓存输出 / 日志 | `JteEngine`、`CachedFiles`、`Logger` |

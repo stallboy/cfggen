@@ -1,5 +1,7 @@
 package configgen.util;
 
+import org.jspecify.annotations.Nullable;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +18,7 @@ public class LoggerTest {
         final List<String> lines = new ArrayList<>();
 
         @Override
-        public void printf(String fmt, Object... args) {
+        public void printf(String fmt, @Nullable Object... args) {
             lines.add(String.format(fmt, args));
         }
     }

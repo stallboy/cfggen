@@ -1,23 +1,21 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：other/loot_item.csv, other/loot_item_1.csv, other/loot_item_2.csv
 public class CfgLoot_item {
-    private int lootid;
-    private int itemid;
-    private int chance;
-    private int countmin;
-    private int countmax;
-    private CfgLoot_item() {
-    }
+    private final int lootid;
+    private final int itemid;
+    private final int chance;
+    private final int countmin;
+    private final int countmax;
 
-    public static CfgLoot_item _create(configgen.genjava.ConfigInput input) {
-        CfgLoot_item self = new CfgLoot_item();
-        self.lootid = input.readInt();
-        self.itemid = input.readInt();
-        self.chance = input.readInt();
-        self.countmin = input.readInt();
-        self.countmax = input.readInt();
-        return self;
+    private CfgLoot_item(configgen.genjava.ConfigInput input) {
+        this.lootid = input.readInt();
+        this.itemid = input.readInt();
+        this.chance = input.readInt();
+        this.countmin = input.readInt();
+        this.countmax = input.readInt();
     }
 
     /**
@@ -60,6 +58,10 @@ public class CfgLoot_item {
         return "(" + lootid + "," + itemid + "," + chance + "," + countmin + "," + countmax + ")";
     }
 
+    public static CfgLoot_item _create(configgen.genjava.ConfigInput input) {
+        return new CfgLoot_item(input);
+    }
+
     public static class LootidItemidKey {
         private final int lootid;
         private final int itemid;
@@ -75,7 +77,7 @@ public class CfgLoot_item {
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(@Nullable Object other) {
             if (!(other instanceof LootidItemidKey o)) {
                 return false;
             }
@@ -88,7 +90,7 @@ public class CfgLoot_item {
         }
     }
 
-    public static CfgLoot_item get(int lootid, int itemid) {
+    public static @Nullable CfgLoot_item get(int lootid, int itemid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherLoot_item(lootid, itemid);
     }

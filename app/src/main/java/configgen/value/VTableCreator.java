@@ -35,7 +35,7 @@ public class VTableCreator {
             valueList = new ArrayList<>();
             Source autoSource = Source.of();  // 自动生成的数据使用空 Source
             // comment值类型跟随合成字段类型：默认str，标记commentText时为text
-            boolean commentAsText = tableSchema.findField("comment").type() == FieldType.Primitive.TEXT;
+            boolean commentAsText = java.util.Objects.requireNonNull(tableSchema.findField("comment")).type() == FieldType.Primitive.TEXT;
             switch (enumValues) {
                 case MetaEnumValues.OfEmpty empty -> {
                     for (Metadata.EnumValueEmpty ev : empty.values()) {
@@ -84,7 +84,7 @@ public class VTableCreator {
         SequencedMap<String, Integer> enumNameToIntegerValueMap = null;
         if (tableSchema.entry() instanceof EntryType.EntryBase entry) {
             Set<String> names = new HashSet<>();
-            int idx = FindFieldIndex.findFieldIndex(tableSchema, entry.fieldSchema());
+            int idx = FindFieldIndex.findFieldIndex(tableSchema, java.util.Objects.requireNonNull(entry.fieldSchema()));
             enumNames = new LinkedHashSet<>();
 
             int pkIdx = -1;
@@ -113,7 +113,7 @@ public class VTableCreator {
                     } else {
                         enumNames.add(e);
 
-                        if (pkIdx != -1) { //必须是int，这里是java生成需要
+                        if (enumNameToIntegerValueMap != null) { //必须是int，这里是java生成需要
                             VInt vInt = (VInt) vStruct.values().get(pkIdx);
                             enumNameToIntegerValueMap.put(e, vInt.value());
                         }
@@ -141,7 +141,7 @@ public class VTableCreator {
                     Value v = vStruct.values().get(fieldIdx);
                     if (v instanceof VInt vInt) {
                         int val = vInt.value();
-                        boolean valid = requireSourceOrder ? val == nextExpected
+                        boolean valid = seen == null ? val == nextExpected
                                 : val >= 0 && val < seen.length && !seen[val];
                         if (!valid) {
                             errs.addErr(new CfgValueErrs.SeqValueNotContinuous(

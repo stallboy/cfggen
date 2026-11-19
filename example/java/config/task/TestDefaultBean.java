@@ -1,15 +1,15 @@
 package config.task;
 
+import org.jspecify.annotations.Nullable;
+
 public class TestDefaultBean {
-    private int testInt;
-    private boolean testBool;
-    private String testString;
-    private config.Position testSubBean;
-    private java.util.List<Integer> testList;
-    private java.util.List<Integer> testList2;
-    private java.util.Map<Integer, String> testMap;
-    private TestDefaultBean() {
-    }
+    private final int testInt;
+    private final boolean testBool;
+    private final String testString;
+    private final config.Position testSubBean;
+    private final java.util.List<Integer> testList;
+    private final java.util.List<Integer> testList2;
+    private final java.util.Map<Integer, String> testMap;
 
     public TestDefaultBean(int testInt, boolean testBool, String testString, config.Position testSubBean, java.util.List<Integer> testList, java.util.List<Integer> testList2, java.util.Map<Integer, String> testMap) {
         this.testInt = testInt;
@@ -21,53 +21,51 @@ public class TestDefaultBean {
         this.testMap = testMap;
     }
 
-    public static TestDefaultBean _create(configgen.genjava.ConfigInput input) {
-        TestDefaultBean self = new TestDefaultBean();
-        self.testInt = input.readInt();
-        self.testBool = input.readBool();
-        self.testString = input.readStringInPool();
-        self.testSubBean = config.Position._create(input);
+    private TestDefaultBean(configgen.genjava.ConfigInput input) {
+        this.testInt = input.readInt();
+        this.testBool = input.readBool();
+        this.testString = input.readStringInPool();
+        this.testSubBean = config.Position._create(input);
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.testList = java.util.Collections.emptyList();
+                this.testList = java.util.Collections.emptyList();
             } else {
-                self.testList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.testList.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.testList = java.util.Collections.unmodifiableList(self.testList);
+                this.testList = java.util.Collections.unmodifiableList(items);
             }
         }
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.testList2 = java.util.Collections.emptyList();
+                this.testList2 = java.util.Collections.emptyList();
             } else {
-                self.testList2 = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.testList2.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.testList2 = java.util.Collections.unmodifiableList(self.testList2);
+                this.testList2 = java.util.Collections.unmodifiableList(items);
             }
         }
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.testMap = java.util.Collections.emptyMap();
+                this.testMap = java.util.Collections.emptyMap();
             } else {
-                self.testMap = new java.util.LinkedHashMap<>(c);
+                var entries = new java.util.LinkedHashMap<Integer, String>(c);
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readStringInPool();
-                    if (self.testMap.putIfAbsent(key, value) != null) {
+                    if (entries.putIfAbsent(key, value) != null) {
                         input.errors().duplicateKey("task.TestDefaultBean.testMap", key);
                     }
                 }
-                self.testMap = java.util.Collections.unmodifiableMap(self.testMap);
+                this.testMap = java.util.Collections.unmodifiableMap(entries);
             }
         }
-        return self;
     }
 
     public int getTestInt() {
@@ -104,7 +102,7 @@ public class TestDefaultBean {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof TestDefaultBean o)) {
             return false;
         }
@@ -114,6 +112,10 @@ public class TestDefaultBean {
     @Override
     public String toString() {
         return "(" + testInt + "," + testBool + "," + testString + "," + testSubBean + "," + testList + "," + testList2 + "," + testMap + ")";
+    }
+
+    public static TestDefaultBean _create(configgen.genjava.ConfigInput input) {
+        return new TestDefaultBean(input);
     }
 
 }

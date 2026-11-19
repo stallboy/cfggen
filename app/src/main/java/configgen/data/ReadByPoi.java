@@ -1,9 +1,10 @@
 package configgen.data;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.data.ReadResult.OneSheet;
 import configgen.util.Logger;
 import org.apache.poi.ss.usermodel.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,9 +17,9 @@ public enum ReadByPoi implements ExcelReader {
     INSTANCE;
 
     @Override
-    public ReadResult readExcels(@NotNull Path path,
-                                 @NotNull Path relativePath,
-                                 String readSheet) {
+    public ReadResult readExcels(Path path,
+                                 Path relativePath,
+                                 @Nullable String readSheet) {
         CfgDataStat stat = new CfgDataStat();
         List<OneSheet> sheets = new ArrayList<>();
 

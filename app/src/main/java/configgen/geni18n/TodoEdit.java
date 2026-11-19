@@ -1,5 +1,7 @@
 package configgen.geni18n;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.i18n.TodoFile;
 
 import configgen.i18n.TodoFile.Line;
@@ -10,7 +12,6 @@ import org.dhatim.fastexcel.reader.ReadableWorkbook;
 import org.dhatim.fastexcel.reader.ReadingOptions;
 import org.dhatim.fastexcel.reader.Row;
 import org.dhatim.fastexcel.reader.Sheet;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -27,9 +28,9 @@ public record TodoEdit(List<TodoEntry> todo,
         public final String fieldChain;
         public final String original;
         public final String translated;
-        public String aiTranslated;
-        public String confidence;
-        public String note;
+        public @Nullable String aiTranslated;
+        public @Nullable String confidence;
+        public @Nullable String note;
 
         public TodoEntry(String table, String id, String fieldChain, String original, String translated) {
             this.table = table;
@@ -40,7 +41,7 @@ public record TodoEdit(List<TodoEntry> todo,
         }
 
         public boolean hasTranslated() {
-            return !translated.isBlank() || !aiTranslated.isBlank();
+            return !translated.isBlank() || (aiTranslated != null && !aiTranslated.isBlank());
         }
     }
 
@@ -74,7 +75,7 @@ public record TodoEdit(List<TodoEntry> todo,
     public record StatAndTodo(int alreadyTranslated,
                               int sameOriginalCount,
                               int needTranslateCount,
-                              @NotNull TodoOriginalsByTable todo) {
+                              TodoOriginalsByTable todo) {
 
     }
 
@@ -116,9 +117,9 @@ public record TodoEdit(List<TodoEntry> todo,
     /**
      * AI返回的翻译结果
      */
-    public record AITranslationEntry(@NotNull String translated,
-                                     String confidence,
-                                     String note) {
+    public record AITranslationEntry(String translated,
+                                     @Nullable String confidence,
+                                     @Nullable String note) {
     }
 
     public static class AITranslationResult extends LinkedHashMap<String, AITranslationEntry> {

@@ -1,5 +1,7 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.*;
 import java.util.function.*;
 
@@ -9,12 +11,15 @@ public final class ConfigLoader<K, T> {
     private final Function<ConfigInput, T> decode;
     private final Function<T, K> key;
     private final Consumer<Map<K, T>> index;
-    private final Consumer<T> resolve;
+    private final @Nullable Consumer<T> resolve;
     private Map<K, T> rows = new LinkedHashMap<>();
     private Map<K, List<String>> origins = new HashMap<>();
 
-    public ConfigLoader(String table, LoadValueErrs errors, Function<ConfigInput, T> decode, Function<T, K> key,
-                        Consumer<Map<K, T>> index, Consumer<T> resolve) {
+    public ConfigLoader(String table, LoadValueErrs errors,
+                        Function<ConfigInput, T> decode,
+                        Function<T, K> key,
+                        Consumer<Map<K, T>> index,
+                        @Nullable Consumer<T> resolve) {
         this.table = table;
         this.errors = errors;
         this.decode = decode;

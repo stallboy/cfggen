@@ -4,6 +4,7 @@ plugins {
     id 'application'
     id 'jacoco'
     id 'gg.jte.gradle' version '3.2.1'
+    id 'net.ltgt.errorprone' version '5.1.1'
 }
 
 group = 'cfggen'
@@ -11,6 +12,20 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
+}
+
+apply from: 'gradle/nullness.gradle'
+
+tasks.named('compileJava') {
+    options.errorprone.excludedPaths = /.*[\\\/]generated-sources[\\\/]jte[\\\/].*|.*[\\\/]schema[\\\/]cfg[\\\/]Cfg(?:Lexer|Parser)\.java/
+}
+
+tasks.named('compileTestJava') {
+    options.errorprone {
+        option('NullAway:HandleTestAssertionLibraries', true)
+        option('NullAway:ExcludedFieldAnnotations', 'org.junit.jupiter.api.io.TempDir')
+        option('NullAway:CustomInitializerAnnotations', 'org.junit.jupiter.api.BeforeEach,org.junit.jupiter.api.BeforeAll')
+    }
 }
 
 // 将版本号统一管理，方便后续升级
@@ -42,6 +57,8 @@ tasks.register('generateCfgParser', JavaExec) {
 tasks.named('compileJava') { dependsOn 'generateCfgParser' }
 
 dependencies {
+    compileOnly 'org.jetbrains:annotations:26.0.2-1'
+    compileOnly 'com.uber.nullaway:nullaway-annotations:0.14.3'
     antlrTool 'org.antlr:antlr4:4.13.2'
     // 核心业务依赖
     implementation "org.antlr:antlr4-runtime:${versions.antlr}"

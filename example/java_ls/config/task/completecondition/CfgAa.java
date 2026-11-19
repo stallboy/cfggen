@@ -1,17 +1,18 @@
 package config.task.completecondition;
 
+import org.jspecify.annotations.Nullable;
+
 public final class CfgAa implements config.task.completecondition.CfgCompletecondition {
-    @Override
-    public config.task.CfgComplete_condition_type type() {
-        return config.task.CfgComplete_condition_type.AA;
-    }
 
     public CfgAa() {
     }
 
-    public static CfgAa _create(configgen.genjava.ConfigInput input) {
-        CfgAa self = new CfgAa();
-        return self;
+    private CfgAa(configgen.genjava.ConfigInput input) {
+    }
+
+    @Override
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.AA;
     }
 
     @Override
@@ -20,13 +21,17 @@ public final class CfgAa implements config.task.completecondition.CfgCompletecon
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         return other instanceof CfgAa;
     }
 
     @Override
     public String toString() {
         return "CfgAa";
+    }
+
+    public static CfgAa _create(configgen.genjava.ConfigInput input) {
+        return new CfgAa(input);
     }
 
 }

@@ -11,7 +11,7 @@ export class Processor {
     ];
 
     static ProcessPackage(pack: ConfigPackage, errors: LoadErrors): Stream {
-        return Loader.LoadPackage(pack, Processor.Process, errors${model.nullableLanguageSwitch == null ? "" : ", [" + model.languageArguments() + "]"});
+        return Loader.LoadPackage(pack, Processor.Process, errors${model.nullableTranslationBundle == null ? "" : ", [" + model.languageArguments() + "]"});
     }
 
     // 从 bytes 文件加载（新格式）

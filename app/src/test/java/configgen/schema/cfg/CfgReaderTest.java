@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -598,7 +599,7 @@ class CfgReaderTest {
         String comment = struct.comment();
         // 使用 CommentUtils 解析注释
         CommentData parsed = CommentUtil.decode(comment);
-        assertTrue(parsed.suffix().contains("这是末尾注释"));
+        assertTrue(requireNonNull(parsed.suffix()).contains("这是末尾注释"));
     }
 
     @Test

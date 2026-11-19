@@ -1,6 +1,8 @@
 package configgen.genjava;
 
-import configgen.i18n.LangSwitchable;
+import org.jspecify.annotations.Nullable;
+
+import configgen.i18n.TranslationBundle;
 import configgen.schema.*;
 import configgen.value.CfgValue;
 
@@ -18,18 +20,18 @@ import static configgen.value.CfgValue.*;
 
 public final class SchemaParser {
 
-    public static SchemaInterface parse(CfgValue cfgValue, LangSwitchable langSwitch) {
-        return parse(cfgValue, langSwitch, false);
+    public static SchemaInterface parse(CfgValue cfgValue, @Nullable TranslationBundle translationBundle) {
+        return parse(cfgValue, translationBundle, false);
     }
 
-    public static SchemaInterface parsePackage(CfgValue cfgValue, LangSwitchable langSwitch) {
-        return parse(cfgValue, langSwitch, true);
+    public static SchemaInterface parsePackage(CfgValue cfgValue, @Nullable TranslationBundle translationBundle) {
+        return parse(cfgValue, translationBundle, true);
     }
 
-    private static SchemaInterface parse(CfgValue cfgValue, LangSwitchable langSwitch, boolean completeTableLayouts) {
+    private static SchemaInterface parse(CfgValue cfgValue, @Nullable TranslationBundle translationBundle, boolean completeTableLayouts) {
         SchemaInterface root = new SchemaInterface();
-        if (langSwitch != null) {
-            root.addImp("Text", parseLangSwitch(langSwitch)); //这里国际化的字段当作一个Bean
+        if (translationBundle != null) {
+            root.addImp("Text", parseLangSwitch(translationBundle)); //这里国际化的字段当作一个Bean
         }
 
         CfgSchema schema = cfgValue.schema();
@@ -61,9 +63,9 @@ public final class SchemaParser {
         return root;
     }
 
-    private static SchemaBean parseLangSwitch(LangSwitchable ls) {
+    private static SchemaBean parseLangSwitch(TranslationBundle translationBundle) {
         SchemaBean sb = new SchemaBean(false);
-        for (String lang : ls.languages()) {
+        for (String lang : translationBundle.languages()) {
             sb.addColumn(lang, SStr);
         }
         return sb;
@@ -74,11 +76,11 @@ public final class SchemaParser {
         SchemaEnum se = new SchemaEnum(isEnumPart, hasIntValue);
 
         if (hasIntValue) {
-            for (Map.Entry<String, Integer> e : vTable.enumNameToIntegerValueMap().entrySet()) {
+            for (Map.Entry<String, Integer> e : java.util.Objects.requireNonNull(vTable.enumNameToIntegerValueMap()).entrySet()) {
                 se.addValue(e.getKey(), e.getValue());
             }
         } else {
-            for (String enumName : vTable.enumNames()) {
+            for (String enumName : java.util.Objects.requireNonNull(vTable.enumNames())) {
                 se.addValue(enumName);
             }
         }

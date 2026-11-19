@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.value.CfgValue.*;
 import static configgen.value.Values.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,7 +43,7 @@ class ValueUtilTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve();
-        VStruct vStruct = ofStruct((Structural) cfg.findItem("st"), List.of(ofInt(1), ofStr("abc")));
+        VStruct vStruct = ofStruct(requireNonNull((Structural) cfg.findItem("st")), List.of(ofInt(1), ofStr("abc")));
         {
             Value keyValue = ValueUtil.extractKeyValue(vStruct, new int[]{0});
             assertTrue(keyValue instanceof VInt vInt && vInt.value() == 1);
@@ -68,7 +69,7 @@ class ValueUtilTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve();
-        TableSchema t = cfg.findTable("t");
+        TableSchema t = requireNonNull(cfg.findTable("t"));
         VStruct vStruct = ofStruct(t, List.of(ofInt(1), ofStr("abc")));
 
         Value keyValue = ValueUtil.extractPrimaryKeyValue(vStruct, t);
@@ -85,7 +86,7 @@ class ValueUtilTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
-        TableSchema t = cfg.findTable("t");
+        TableSchema t = requireNonNull(cfg.findTable("t"));
         VStruct vStruct = ofStruct(t, List.of(ofInt(1), ofStr("abc")));
 
 
@@ -129,9 +130,9 @@ class ValueUtilTest {
         Resources.addTempFileFromText("test.csv", tempDir, testStr);
 
         Context ctx = new Context(tempDir);
-        List<ForeignKeySchema> fks = ctx.cfgSchema().findTable("test").foreignKeys();
+        List<ForeignKeySchema> fks = requireNonNull(ctx.cfgSchema().findTable("test")).foreignKeys();
         CfgValue cfgValue = ctx.makeValue();
-        VTable rank = cfgValue.getTable("rank");
+        VTable rank = requireNonNull(cfgValue.getTable("rank"));
 
         {
             Map<Value, VStruct> foreignKeyValueMap = ValueUtil.getForeignKeyValueMap(cfgValue, fks.get(0));
@@ -155,7 +156,7 @@ class ValueUtilTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve();
-        VStruct vStruct = ofStruct((Structural) cfg.findItem("st"),
+        VStruct vStruct = ofStruct(requireNonNull((Structural) cfg.findItem("st")),
                 List.of(ofInt(1), ofStr("abc"), ofBool(true), ofFloat(3.14f)));
 
         {
@@ -198,29 +199,29 @@ class ValueUtilTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
 
-        VStruct inner = ofStruct((Structural) cfg.findItem("Inner"),
+        VStruct inner = ofStruct(requireNonNull((Structural) cfg.findItem("Inner")),
                 List.of(ofInt(100), ofStr("inner text")));
-        VStruct outer = ofStruct((Structural) cfg.findItem("Outer"),
+        VStruct outer = ofStruct(requireNonNull((Structural) cfg.findItem("Outer")),
                 List.of(ofInt(1), inner, ofBool(true)));
-        VStruct vStruct = ofStruct(cfg.findTable("t"),
+        VStruct vStruct = ofStruct(requireNonNull(cfg.findTable("t")),
                 List.of(ofInt(999), outer));
 
         {
             Value idValue = ValueUtil.extractFieldValue(vStruct, "id");
-            assertEquals(999, ((VInt) idValue).value());
+            assertEquals(999, requireNonNull(((VInt) idValue)).value());
         }
 
         {
             Value outerValue = ValueUtil.extractFieldValue(vStruct, "outer");
             assertTrue(outerValue instanceof VStruct);
-            assertEquals(1, ((VInt) ((VStruct) outerValue).values().getFirst()).value());
+            assertEquals(1, ((VInt) requireNonNull(((VStruct) outerValue)).values().getFirst()).value());
 
             Value innerValue = ValueUtil.extractFieldValue((VStruct) outerValue, "inner");
             assertTrue(innerValue instanceof VStruct);
-            assertEquals(100, ((VInt) ((VStruct) innerValue).values().getFirst()).value());
+            assertEquals(100, ((VInt) requireNonNull(((VStruct) innerValue)).values().getFirst()).value());
 
             Value innerTextValue = ValueUtil.extractFieldValue((VStruct) innerValue, "text");
-            assertEquals("inner text", ((VString) innerTextValue).value());
+            assertEquals("inner text", requireNonNull(((VString) innerTextValue)).value());
         }
     }
 
@@ -237,7 +238,7 @@ class ValueUtilTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
-        TableSchema t = cfg.findTable("t");
+        TableSchema t = requireNonNull(cfg.findTable("t"));
 
         VStruct vStruct = ofStruct(t, List.of(
                 ofInt(1),
@@ -249,22 +250,22 @@ class ValueUtilTest {
 
         {
             Value emptyStrValue = ValueUtil.extractFieldValue(vStruct, "emptyStr");
-            assertEquals("", ((VString) emptyStrValue).value());
+            assertEquals("", requireNonNull(((VString) emptyStrValue)).value());
         }
 
         {
             Value nullStrValue = ValueUtil.extractFieldValue(vStruct, "nullStr");
-            assertEquals("", ((VString) nullStrValue).value());
+            assertEquals("", requireNonNull(((VString) nullStrValue)).value());
         }
 
         {
             Value zeroIntValue = ValueUtil.extractFieldValue(vStruct, "zeroInt");
-            assertEquals(0, ((VInt) zeroIntValue).value());
+            assertEquals(0, requireNonNull(((VInt) zeroIntValue)).value());
         }
 
         {
             Value falseBoolValue = ValueUtil.extractFieldValue(vStruct, "falseBool");
-            assertFalse(((VBool) falseBoolValue).value());
+            assertFalse(requireNonNull(((VBool) falseBoolValue)).value());
         }
     }
 

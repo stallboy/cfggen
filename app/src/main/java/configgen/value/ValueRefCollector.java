@@ -1,5 +1,7 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
@@ -85,7 +87,7 @@ public class ValueRefCollector {
     static List<FieldRef> collectStructRef(CfgValue cfgValue,
                                            VStruct vStruct,
                                            Map<RefId, VStruct> refIdToRecordMap,
-                                           List<FieldRef> fieldRefs,
+                                           @Nullable List<FieldRef> fieldRefs,
                                            String namePrefix
     ) {
         if (fieldRefs == null) {

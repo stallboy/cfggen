@@ -1,5 +1,7 @@
 package configgen.editorserver;
 
+import static java.util.Objects.requireNonNull;
+
 import com.alibaba.fastjson2.JSONObject;
 import configgen.schema.CfgSchema;
 import configgen.schema.TableSchema;
@@ -21,7 +23,7 @@ class CheckJsonServiceTest {
     private static CfgValue cfgValue() {
         CfgSchema schema = CfgReader.parse("table t[id] { id:long; note:str; }");
         schema.resolve().checkErrors();
-        TableSchema table = schema.findTable("t");
+        TableSchema table = requireNonNull(schema.findTable("t"));
         CfgValue cfgValue = CfgValue.of(schema);
         cfgValue.vTableMap().put("t", new VTableCreator(table, CfgValueErrs.of()).create(List.of()));
         return cfgValue;
@@ -34,7 +36,7 @@ class CheckJsonServiceTest {
         for (String raw : List.of(json, "```json\n" + json + "\n```")) {
             var result = CheckJsonService.checkJson(cfgValue(), "t", raw);
             assertEquals(ParseJsonError, result.resultCode(), raw);
-            assertTrue(result.jsonResult().contains("t.id"), result.jsonResult());
+            assertTrue(requireNonNull(result.jsonResult()).contains("t.id"), result.jsonResult());
         }
     }
 

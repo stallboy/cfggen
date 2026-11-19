@@ -1,17 +1,18 @@
 package config.task.completecondition;
 
+import org.jspecify.annotations.Nullable;
+
 public final class Aa implements config.task.completecondition.Completecondition {
-    @Override
-    public config.task.CompleteConditionType type() {
-        return config.task.CompleteConditionType.AA;
-    }
 
     public Aa() {
     }
 
-    public static Aa _create(configgen.genjava.ConfigInput input) {
-        Aa self = new Aa();
-        return self;
+    private Aa(configgen.genjava.ConfigInput input) {
+    }
+
+    @Override
+    public config.task.CompleteConditionType type() {
+        return config.task.CompleteConditionType.AA;
     }
 
     @Override
@@ -20,13 +21,17 @@ public final class Aa implements config.task.completecondition.Completecondition
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         return other instanceof Aa;
     }
 
     @Override
     public String toString() {
         return "Aa";
+    }
+
+    public static Aa _create(configgen.genjava.ConfigInput input) {
+        return new Aa(input);
     }
 
 }

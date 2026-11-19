@@ -1,10 +1,14 @@
 package configgen.gencs;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.gen.CliException;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
-import configgen.i18n.LangSwitchable;
+import configgen.i18n.TranslationBundle;
 import configgen.schema.*;
 import configgen.util.*;
 import configgen.util.CachedIndentPrinter.CacheConfig;
@@ -57,6 +61,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
         CfgSchema cfgSchema = cfgValue.schema();
@@ -64,7 +69,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
         outputFiles = ctx.outputFiles();
 
-        isLangSwitch = ctx.nullableLangSwitch() != null;
+        isLangSwitch = ctx.nullableTranslationBundle() != null;
         // 普通和 Unity 模式共用 C#9 兼容的运行库。
         FileUtil.copyFileIfNotExist("/support/cs/Loader.cs",
                 "src/main/resources/support/cs/Loader.cs",
@@ -78,7 +83,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
                 });
 
         generateProcessor(cfgValue,
-                ctx.nullableLangSwitch() == null ? List.of() : ctx.nullableLangSwitch().languages());
+                ctx.nullableTranslationBundle() == null ? List.of() : ctx.nullableTranslationBundle().languages());
         try (var ps = createCode("ConfigPackage.cs")) {
             JteEngine.render("cs/ConfigPackage.jte", Map.of("pkg", pkg, "implicitUsings", implicitUsings), ps);
         }
@@ -121,7 +126,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         generateModuleLoaders(cfgSchema, cfgValue);
 
         if (isLangSwitch) { //生成 Text这个Bean
-            generateText(ctx.nullableLangSwitch());
+            generateText(java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()));
         }
 
         outputFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
@@ -138,11 +143,11 @@ public class CsCodeGenerator extends GeneratorWithTag {
         generateStructOrTable(structSchema, null);
     }
 
-    private void generateTable(CfgValue.VTable vTable) {
-        generateStructOrTable(vTable.schema(), vTable);
+    private void generateTable(CfgValue.@Nullable VTable vTable) {
+        generateStructOrTable(java.util.Objects.requireNonNull(vTable).schema(), vTable);
     }
 
-    private void generateStructOrTable(Structural structural, CfgValue.VTable nullableVTable) {
+    private void generateStructOrTable(Structural structural, CfgValue.@Nullable VTable nullableVTable) {
         StructModel model = new StructModel(this, structural, nullableVTable);
         try (var ps = createCode(model.name.path)) {
             JteEngine.render("cs/GenStruct.jte", model, ps);
@@ -159,8 +164,8 @@ public class CsCodeGenerator extends GeneratorWithTag {
         }
     }
 
-    private void generateText(LangSwitchable langSwitch) {
-        List<String> languages = langSwitch.languages().stream().map(StringUtil::upper1).toList();
+    private void generateText(TranslationBundle translationBundle) {
+        List<String> languages = translationBundle.languages().stream().map(StringUtil::upper1).toList();
         Map<String, Object> model = Map.of("pkg", pkg, "languages", languages, "unity", unity);
         try (var ps = createCode("Text.cs")) {
             String template = serverText ? "cs/ServerText.jte" : "cs/ClientText.jte";

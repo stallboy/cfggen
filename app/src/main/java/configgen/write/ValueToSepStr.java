@@ -5,7 +5,6 @@ import configgen.schema.FieldSchema;
 import configgen.schema.FieldType.FList;
 import configgen.value.CfgValue;
 import configgen.value.CfgValue.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.stream.Collectors;
 
@@ -13,8 +12,8 @@ import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 
 public class ValueToSepStr {
 
-    public static String toSepStr(@NotNull VList vList,
-                                  @NotNull FieldSchema field) {
+    public static String toSepStr(VList vList,
+                                  FieldSchema field) {
         if (!(field.fmt() instanceof Sep(char sep))) {
             throw new IllegalArgumentException("FieldFormat is not Sep");
         }
@@ -29,7 +28,7 @@ public class ValueToSepStr {
                 .collect(Collectors.joining(sepStr));
     }
 
-    public static String toSepStr(@NotNull VStruct vStruct) {
+    public static String toSepStr(VStruct vStruct) {
         if (!(vStruct.schema().fmt() instanceof Sep(char sep))) {
             throw new IllegalArgumentException("FieldFormat is not Sep");
         }

@@ -3,7 +3,6 @@ package configgen.geni18n;
 import configgen.i18n.TodoFile.Line;
 import configgen.util.CSVUtil;
 import de.siegmar.fastcsv.reader.CsvRecord;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,10 +10,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public record TermCfg(@NotNull List<TermCfgItem> items) {
+public record TermCfg(List<TermCfgItem> items) {
 
-    public record TermCfgItem(@NotNull String table,
-                              @NotNull String fieldChain) {
+    public record TermCfgItem(String table,
+                              String fieldChain) {
     }
 
     public static TermCfg load(Path termCfgFile) {
@@ -43,8 +42,8 @@ public record TermCfg(@NotNull List<TermCfgItem> items) {
         return false;
     }
 
-    public record TermsAndOthers(@NotNull Map<String, String> terms,
-                                 @NotNull List<Line> others) {
+    public record TermsAndOthers(Map<String, String> terms,
+                                 List<Line> others) {
 
     }
 

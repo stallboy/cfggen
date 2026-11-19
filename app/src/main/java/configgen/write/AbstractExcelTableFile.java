@@ -1,9 +1,10 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.Logger;
 import configgen.write.RecordBlock.RecordBlockTransformed;
 import org.apache.poi.ss.usermodel.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,8 +36,8 @@ public abstract class AbstractExcelTableFile implements TableFile {
      * @param sheetName 工作表名称，不能为null或空字符串
      * @param headRow 头行号
      */
-    public AbstractExcelTableFile(@NotNull Path filePath,
-                                  @NotNull String sheetName,
+    public AbstractExcelTableFile(Path filePath,
+                                  String sheetName,
                                   int headRow) {
         this.filePath = filePath;
         this.headRow = headRow;
@@ -127,7 +128,7 @@ public abstract class AbstractExcelTableFile implements TableFile {
      * @param fieldIndices 如果为null表示第一行/列全部清空，如果不为null表示第一行/列只清空指定indices下的数据
      */
     @Override
-    public void emptyRows(int startLine, int count, List<Integer> fieldIndices) {
+    public void emptyRows(int startLine, int count, @Nullable List<Integer> fieldIndices) {
         if (startLine < 0 || count <= 0) {
             return;
         }
@@ -159,7 +160,7 @@ public abstract class AbstractExcelTableFile implements TableFile {
      * @param content 记录块内容，包含要插入的数据
      */
     @Override
-    public void insertRecordBlock(int startLine, int emptyLineCount, @NotNull RecordBlockTransformed content) {
+    public void insertRecordBlock(int startLine, int emptyLineCount, RecordBlockTransformed content) {
         int contentLineCount = content.getRowCount();
         if (contentLineCount <= 0) {
             return;
@@ -212,10 +213,10 @@ public abstract class AbstractExcelTableFile implements TableFile {
     /**
      * 把一行/列内容写入lineNum位置，lineData为null时的处理由方向决定
      */
-    protected abstract void writeLine(int lineNum, String[] lineData);
+    protected abstract void writeLine(int lineNum, @Nullable String @Nullable [] lineData);
 
 
-    protected String getCellValue(int row, int col) {
+    protected @Nullable String getCellValue(int row, int col) {
         // 行模式：正常读取
         Row sheetRow = sheet.getRow(row);
         if (sheetRow == null) {

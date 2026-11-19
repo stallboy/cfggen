@@ -256,9 +256,9 @@ public class ValueJsonParser {
                     }
                 }
                 if (ov != null) {
-                    return parseNameable(structRef.obj(), ov, source);
+                    return parseNameable(structRef.resolvedObj(), ov, source);
                 } else {
-                    return ValueDefault.ofNamable(structRef.obj(), source);
+                    return ValueDefault.ofNamable(structRef.resolvedObj(), source);
                 }
             }
         }

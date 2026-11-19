@@ -1,5 +1,9 @@
 package configgen.gen;
 
+import org.jetbrains.annotations.Contract;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.ArgParser;
 
 import java.util.Map;
@@ -7,7 +11,7 @@ import java.util.Map;
 public class ParameterParser implements Parameter {
     private final String arg;
     private final String id;
-    private final Map<String, String> params;
+    private final Map<String, @Nullable String> params;
 
     public ParameterParser(String arg) {
         this.arg = arg;
@@ -17,13 +21,14 @@ public class ParameterParser implements Parameter {
     }
 
     @Override
-    public String get(String key, String def, String messageId) {
+    @Contract("_, !null, _ -> !null")
+    public @Nullable String get(String key, @Nullable String def, @Nullable String messageId) {
         String v = params.remove(key.toLowerCase());
         return v != null ? v : def;
     }
 
     @Override
-    public boolean has(String key, String messageId) {
+    public boolean has(String key, @Nullable String messageId) {
         String lowered = key.toLowerCase();
         if (!params.containsKey(lowered)) {
             return false;

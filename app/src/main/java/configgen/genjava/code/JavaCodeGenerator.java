@@ -1,5 +1,9 @@
 package configgen.genjava.code;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.gen.CliException;
@@ -11,13 +15,16 @@ import configgen.util.*;
 import configgen.util.CachedIndentPrinter.CacheConfig;
 import configgen.value.CfgValue;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -28,16 +35,18 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private final String pkg;
     private final String encoding;
     private final boolean sealed;
-    private final String buildersFilename;
-    private final String configgenDir; // 新增：configgen genjava 源文件复制目录
+    private final boolean jspecify;
+    private final @Nullable String buildersFilename;
+    private final @Nullable String configgenDir; // 新增：configgen genjava 源文件复制目录
     private final boolean beautifulName; // 美化由 snake_case schema 名派生的标识符（类名/getter 转 PascalCase、enum 常量转 SCREAMING_SNAKE_CASE），默认 false 保持老行为
     private final String prefix; // 生成类名的前缀，同 csharp 的 prefix，默认为空
-    private Set<String> needBuilderTables = null;
+    private @Nullable Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
 
     private Path dstDir;
     private CfgData cfgData;
     private CachedFiles outputFiles;
+    private final Set<String> generatedPackagePaths = ConcurrentHashMap.newKeySet();
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
 
@@ -73,6 +82,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         pkg = parameter.get("pkg", "config");
         encoding = parameter.get("encoding", "UTF-8");
         sealed = !parameter.has("noSealed"); // 默认sealed
+        jspecify = parameter.has("jspecify");
         buildersFilename = parameter.get("builders", null);
         configgenDir = parameter.get("configgenDir", null);
         schemaNumPerFile = Integer.parseInt(parameter.get("schemaNumPerFile", "100"));
@@ -91,21 +101,25 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgData = ctx.cfgData();
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
         outputFiles = ctx.outputFiles();
+        generatedPackagePaths.clear();
 
         // 一次生成的固定配置：不可变、随调用链显式传递，替代原先散落在 Name/TypeStr/NameableName 的
         // static 字段（并发生成时会互相踩踏）
-        GenCfg cfg = new GenCfg(pkg, sealed, beautifulName, ctx.nullableLangSwitch() != null, prefix);
+        var translationBundle = ctx.nullableTranslationBundle();
+        GenCfg cfg = new GenCfg(pkg, sealed, beautifulName, translationBundle == null ? 0 : translationBundle.languageCount(),
+                prefix, jspecify);
 
         List<NameableName> tableDataNames = new ArrayList<>();
         List<String> setAllRefsInMgrLoader = new ArrayList<>();
 
         if (buildersFilename != null) {
-            readNeedBuilderTables();
+            readNeedBuilderTables(buildersFilename);
         }
         // struct/interface 类与 table 类各自生成独立文件，互不依赖；并发渲染。
         // tableDataNames / setAllRefs 顺序敏感——故每个 table 任务用独立 local 列表，渲染后按原序合并，保证字节级一致。
@@ -153,30 +167,38 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             }
         }
 
-        if (cfg.isLangSwitch()) {
+        if (translationBundle != null) {
             try (var ps = createCode("Text.java")) {
                 JteEngine.render("java/Text.jte",
-                        new TextModel(pkg, ctx.nullableLangSwitch().languages()), ps);
+                        new TextModel(pkg, translationBundle.languages()), ps);
             }
         }
 
         try (var ps = createCode("ConfigMgr.java")) {
             JteEngine.render("java/ConfigMgr.jte",
-                    Map.of("pkg", cfg.codeTopPkg(), "tableDataNames", tableDataNames), ps);
+                    Map.of("cfg", cfg, "tableDataNames", tableDataNames), ps);
         }
 
         try (var ps = createCode("ConfigExtension.java")) {
-            JteEngine.render("java/ConfigExtension.jte", Map.of("pkg", cfg.codeTopPkg()), ps);
+            JteEngine.render("java/ConfigExtension.jte", Map.of("cfg", cfg), ps);
         }
 
         try (var ps = createCode("ConfigMgrLoader.java")) {
             JteEngine.render("java/ConfigMgrLoader.jte",
                     new ConfigMgrLoaderModel(cfg, cfgValue, setAllRefsInMgrLoader,
-                            ctx.nullableLangSwitch() == null ? List.of() : ctx.nullableLangSwitch().languages()), ps);
+                            translationBundle == null ? List.of() : translationBundle.languages()), ps);
         }
 
-        GenConfigCodeSchema.generateAll(this, cfg, schemaNumPerFile, cfgValue, ctx.nullableLangSwitch());
+        GenConfigCodeSchema.generateAll(this, cfg, schemaNumPerFile, cfgValue, translationBundle);
 
+        if (jspecify) {
+            Charset charset = Charset.forName(encoding);
+            for (String packagePath : new TreeSet<>(generatedPackagePaths)) {
+                String packageName = packagePath.isEmpty() ? pkg : pkg + "." + packagePath.replace('/', '.');
+                outputFiles.writeFile(dstDir.resolve(packagePath).resolve("package-info.java"),
+                        packageInfo(packageName).getBytes(charset));
+            }
+        }
         outputFiles.deleteOtherFiles(dstDir.toFile());
 
         copyConfigGenSourcesIfNeed();
@@ -186,8 +208,8 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private record TableRefs(List<NameableName> dataNames, List<String> setAllRefs) {
     }
 
-    private void readNeedBuilderTables() {
-        Path fn = Path.of(buildersFilename).normalize();
+    private void readNeedBuilderTables(String filename) {
+        Path fn = Path.of(filename).normalize();
         if (Files.exists(fn)) {
             try {
                 needBuilderTables = new HashSet<>();
@@ -201,7 +223,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
     /**
      * 复制 configgen genjava 源文件到指定目录
-     * 如果目标目录已存在则跳过，保护用户可能的修改
+     * 仅更新缺失文件或与另一种注解模式下的模板一致的文件。
      */
     private void copyConfigGenSourcesIfNeed() throws IOException {
         if (configgenDir == null || configgenDir.isEmpty()) {
@@ -211,15 +233,73 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         Path configgenPath = Path.of(configgenDir);
         Path targetDir = configgenPath.resolve("configgen/genjava");
 
-        // 逐个复制文件
+        Charset charset = Charset.forName(encoding);
         for (String fn : COPY_FILES) {
-            FileUtil.copyFileIfNotExist("/support/configgen/genjava/" + fn,
-                    "src/main/java/configgen/genjava/" + fn,
-                    targetDir.resolve(fn), encoding, outputFiles);
+            String annotated;
+            try (var source = FileUtil.openSupportSource("/support/configgen/genjava/" + fn,
+                    "src/main/java/configgen/genjava/" + fn);
+                 var reader = new BufferedReader(new UnicodeReader(source, StandardCharsets.UTF_8))) {
+                var contents = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    contents.append(line).append('\n');
+                }
+                annotated = contents.toString();
+            }
+            String plain = withoutJSpecify(fn, annotated);
+            Path target = targetDir.resolve(fn);
+            byte[] desired = (jspecify ? annotated : plain).getBytes(charset);
+            if (!Files.exists(target) || (!annotated.equals(plain) && Files.isRegularFile(target) && Files.readString(target, charset)
+                    .replace("\r\n", "\n").equals(jspecify ? plain : annotated))) {
+                outputFiles.writeFile(target, desired);
+            } else {
+                outputFiles.keepFile(target);
+            }
+        }
+        Path marker = targetDir.resolve("package-info.java");
+        String contents = packageInfo("configgen.genjava");
+        if (jspecify && !Files.exists(marker)) {
+            outputFiles.writeFile(marker, contents.getBytes(charset));
+        } else if (!jspecify && Files.isRegularFile(marker) &&
+                Files.readString(marker, charset).replace("\r\n", "\n").equals(contents)) {
+            Files.deleteIfExists(marker);
+        } else if (Files.exists(marker)) {
+            outputFiles.keepFile(marker);
         }
     }
 
+    private static String withoutJSpecify(String filename, String source) {
+        String plain = source.replace("import org.jspecify.annotations.Nullable;\n\n", "")
+                .replace(" @Nullable []", "[]")
+                .replace("@Nullable ", "");
+        // 保留旧版支持源码中的实现。以下改写只还原为 NullAway 分析增加的检查与局部变量。
+        return switch (filename) {
+            case "BytesInspector.java" -> plain
+                    .replace("java.util.Objects.requireNonNull(rootSchema)", "rootSchema")
+                    .replace("java.util.Objects.requireNonNull(schema)", "schema")
+                    .replace("java.util.Objects.requireNonNull(implSchema)", "implSchema")
+                    .replace("java.util.Objects.requireNonNull(deRef)", "deRef");
+            case "CodeDataInspector.java" -> plain
+                    .replace("switch (java.util.Objects.requireNonNull(target))", "switch (target)");
+            case "ConfigInput.java" -> plain
+                    .replace("        LangTextPool[] pools = java.util.Objects.requireNonNull(langTextPools);\n", "")
+                    .replace("new String[pools.length]", "new String[langTextPools.length]")
+                    .replace("i < pools.length; i++", "i < langTextPools.length; i++")
+                    .replace("texts[i] = pools[i].getText(index);", "texts[i] = textInPool(i, index);")
+                    .replace("java.util.Objects.requireNonNull(langTextPools)[language]", "langTextPools[language]");
+            default -> plain;
+        };
+    }
+
+    private static String packageInfo(String packageName) {
+        return "@NullMarked\npackage " + packageName + ";\n\nimport org.jspecify.annotations.NullMarked;\n";
+    }
+
     CachedIndentPrinter createCode(String fn) {
+        if (jspecify) {
+            int slash = fn.lastIndexOf('/');
+            generatedPackagePaths.add(slash < 0 ? "" : fn.substring(0, slash));
+        }
         return mainCc.get().printer(dstDir.resolve(fn), encoding, outputFiles);
     }
 
@@ -277,17 +357,15 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             NameableName name = new NameableName(cfg, schema, dataPostfix);
             tableDataNames.add(name);
             boolean isTableNeedBuilder = needBuilderTables != null && needBuilderTables.contains(vTable.name());
+            StructuralClassModel model = new StructuralClassModel(cfg, schema, name, isTableNeedBuilder, sourceComment);
             try (var ps = createCode(name.path)) {
-                StructuralClassModel model = new StructuralClassModel(cfg, vTable.schema(), name, isTableNeedBuilder,
-                        sourceComment);
                 JteEngine.render("java/GenStructuralClass.jte", model, ps);
             }
 
             if (isTableNeedBuilder) {
                 String builder = name.path.substring(0, name.path.length() - 5) + "Builder.java";
                 try (var ps = createCode(builder)) {
-                    JteEngine.render("java/GenTableBuilder.jte",
-                            Map.of("table", vTable.schema(), "name", name), ps);
+                    JteEngine.render("java/GenTableBuilder.jte", model, ps);
                 }
             }
 

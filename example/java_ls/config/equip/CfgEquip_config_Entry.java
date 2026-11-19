@@ -1,5 +1,7 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：equip/equip_config.csv
@@ -10,27 +12,28 @@ public class CfgEquip_config_Entry {
     private final String value;
 
 
-    CfgEquip_config_Entry(int index, String value) {
+    private CfgEquip_config_Entry(int index, String value) {
         this.index = index;
         this.value = value;
     }
 
     private final int index;
 
-    public config.equip.CfgEquip_config ref() {
+    public config.equip.@Nullable CfgEquip_config ref() {
         return ref(config.ConfigMgr.getMgr());
     }
 
-    public config.equip.CfgEquip_config ref(config.ConfigMgr mgr) {
+    public config.equip.@Nullable CfgEquip_config ref(config.ConfigMgr mgr) {
         return mgr._get_equip_equip_config_Refs(index);
     }
 
     public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
-        mgr._set_equip_equip_config_Refs(new config.equip.CfgEquip_config[] {
+        mgr._set_equip_equip_config_Refs(new config.equip.@Nullable CfgEquip_config[] {
             mgr.getEquipEquip_config(INSTANCE.value),
             mgr.getEquipEquip_config(INSTANCE2.value),
         });
-        for (var row : mgr._get_equip_equip_config_All().values()) {
+        for (var entry : mgr._get_equip_equip_config_All().values()) {
+            var row = java.util.Objects.requireNonNull(entry);
             var key = row.getEntry();
             String symbol = row.getEntry();
             if (symbol.isEmpty()) {

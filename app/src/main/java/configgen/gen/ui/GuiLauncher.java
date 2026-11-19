@@ -1,5 +1,9 @@
 package configgen.gen.ui;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.gen.Main;
 import configgen.util.Logger;
 import configgen.util.LocaleUtil;
@@ -17,33 +21,33 @@ import java.util.List;
 
 public class GuiLauncher {
     private JFrame mainFrame;
-    private JTextArea outputArea;
-    private JTextArea commandPreview;
+    private JTextArea outputArea = new JTextArea();
+    private JTextArea commandPreview = new JTextArea();
 
     // 包级私有成员变量，供CommandLineBuilder直接访问
-    JTextField datadirField;
-    JTextField encodingField;
-    JTextField headRowField;
-    JTextField asRootField;
-    JTextField excelDirsField;
-    JTextField jsonDirsField;
-    JTextField i18nfileField;
-    JTextField langSwitchDirField;
-    JTextField defaultLangField;
-    JRadioButton i18nFileRadio;
-    JRadioButton langSwitchRadio;
-    JCheckBox verboseCheckBox;
-    JCheckBox verbose2CheckBox;
-    JCheckBox profileCheckBox;
-    JCheckBox profileGcCheckBox;
-    JCheckBox noWarnCheckBox;
-    JCheckBox weakWarnCheckBox;
+    JTextField datadirField = createTextField();
+    JTextField encodingField = new JTextField(UIConstants.DEFAULT_ENCODING);
+    JTextField headRowField = new JTextField(UIConstants.DEFAULT_HEAD_ROW);
+    JTextField asRootField = createTextField();
+    JTextField excelDirsField = createTextField();
+    JTextField jsonDirsField = createTextField();
+    JTextField i18nfileField = createTextField();
+    JTextField langSwitchDirField = createTextField();
+    JTextField defaultLangField = new JTextField(UIConstants.DEFAULT_LANG);
+    JRadioButton i18nFileRadio = new JRadioButton(LocaleUtil.getLocaleString("GuiLauncher.I18nFile", "I18n File:"));
+    JRadioButton langSwitchRadio = new JRadioButton(LocaleUtil.getLocaleString("GuiLauncher.LangSwitch", "Lang Switch:"));
+    JCheckBox verboseCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Verbose", "Verbose (-v)"));
+    JCheckBox verbose2CheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Verbose2", "Verbose2 (-vv)"));
+    JCheckBox profileCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Profile", "Profile (-p)"));
+    JCheckBox profileGcCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.ProfileGC", "Profile+GC (-pp)"));
+    JCheckBox noWarnCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.NoWarn", "No Warn"));
+    JCheckBox weakWarnCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.WeakWarn", "Weak Warn"));
 
     final List<ParameterPanelItem> toolPanels = new ArrayList<>();
     final List<ParameterPanelItem> generatorPanels = new ArrayList<>();
     private final CommandLineBuilder commandBuilder = new CommandLineBuilder(this);
 
-    private JButton runButton;
+    private JButton runButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Run", "Run"));
 
     private final PrintStream originalOut = System.out;
     private final PrintStream originalErr = System.err;
@@ -58,6 +62,7 @@ public class GuiLauncher {
         });
     }
 
+    @Initializer
     private void init() {
         // GUI 是宿主：日志 printer 一次性接管到 GUI 控制台即可（GuiPrinter 经 invokeLater 投递，线程安全），
         // 不必每次 Run 换入换出——原先的 save/restore 正是把它当临时劫持才需要
@@ -138,7 +143,6 @@ public class GuiLauncher {
         content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.AsRoot", "As Root:")), gbc);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
-        asRootField = createTextField();
         content.add(asRootField, gbc);
         row++;
 
@@ -148,7 +152,6 @@ public class GuiLauncher {
         content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.ExcelDirs", "Excel Dirs:")), gbc);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
-        excelDirsField = createTextField();
         content.add(excelDirsField, gbc);
         row++;
 
@@ -158,7 +161,6 @@ public class GuiLauncher {
         content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.JsonDirs", "Json Dirs:")), gbc);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
-        jsonDirsField = createTextField();
         content.add(jsonDirsField, gbc);
 
         JButton toggleButton = createCollapseToggleButton(
@@ -190,7 +192,6 @@ public class GuiLauncher {
         content.add(i18nNoneRadio, gbc);
         row++;
 
-        i18nFileRadio = new JRadioButton(LocaleUtil.getLocaleString("GuiLauncher.I18nFile", "I18n File:"));
         i18nFileRadio.addActionListener(e -> onI18nModeChanged());
 
         gbc.gridx = 0;
@@ -199,12 +200,10 @@ public class GuiLauncher {
 
         gbc.gridx = 1;
         gbc.weightx = 1.0;
-        i18nfileField = createTextField();
         i18nfileField.setEnabled(false);
         content.add(i18nfileField, gbc);
         row++;
 
-        langSwitchRadio = new JRadioButton(LocaleUtil.getLocaleString("GuiLauncher.LangSwitch", "Lang Switch:"));
         langSwitchRadio.addActionListener(e -> onI18nModeChanged());
 
         gbc.gridx = 0;
@@ -220,7 +219,6 @@ public class GuiLauncher {
 
         gbc.gridx = 1;
         gbc.weightx = 0.5;
-        langSwitchDirField = createTextField();
         langSwitchDirField.setEnabled(false);
         content.add(langSwitchDirField, gbc);
 
@@ -230,7 +228,6 @@ public class GuiLauncher {
 
         gbc.gridx = 3;
         gbc.weightx = 0.5;
-        defaultLangField = new JTextField(UIConstants.DEFAULT_LANG);
         defaultLangField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         defaultLangField.setEnabled(false);
         content.add(defaultLangField, gbc);
@@ -265,7 +262,6 @@ public class GuiLauncher {
 
         JPanel datadirPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         datadirPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.DataDir", "Data Dir:*")));
-        datadirField = createTextField();
         datadirField.setPreferredSize(UIConstants.TEXT_FIELD_DATADIR_SIZE);
         datadirPanel.add(datadirField);
         JButton browseButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Browse", "Browse..."));
@@ -276,7 +272,6 @@ public class GuiLauncher {
 
         JPanel encodingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         encodingPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.Encoding", "Encoding:")));
-        encodingField = new JTextField(UIConstants.DEFAULT_ENCODING);
         encodingField.setPreferredSize(UIConstants.TEXT_FIELD_ENCODING_SIZE);
         encodingField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         encodingPanel.add(encodingField);
@@ -285,7 +280,6 @@ public class GuiLauncher {
 
         JPanel headRowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headRowPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.HeadRow", "Head Row:")));
-        headRowField = new JTextField(UIConstants.DEFAULT_HEAD_ROW);
         headRowField.setPreferredSize(UIConstants.TEXT_FIELD_HEADROW_SIZE);
         headRowField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         headRowPanel.add(headRowField);
@@ -305,12 +299,6 @@ public class GuiLauncher {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.setBorder(BorderFactory.createTitledBorder(LocaleUtil.getLocaleString("GuiLauncher.LogOptions", "Log Options")));
 
-        verboseCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Verbose", "Verbose (-v)"));
-        verbose2CheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Verbose2", "Verbose2 (-vv)"));
-        profileCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Profile", "Profile (-p)"));
-        profileGcCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.ProfileGC", "Profile+GC (-pp)"));
-        noWarnCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.NoWarn", "No Warn"));
-        weakWarnCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.WeakWarn", "Weak Warn"));
 
         panel.add(verboseCheckBox);
         panel.add(verbose2CheckBox);
@@ -355,7 +343,6 @@ public class GuiLauncher {
         panel.setBorder(BorderFactory.createTitledBorder(LocaleUtil.getLocaleString("GuiLauncher.CommandPreview", "Command Preview")));
         panel.setPreferredSize(new Dimension(0, UIConstants.COMMAND_PREVIEW_HEIGHT));
 
-        commandPreview = new JTextArea();
         commandPreview.setEditable(false);
         commandPreview.setBackground(UIConstants.COMMAND_PREVIEW_BG);
         commandPreview.setLineWrap(true);
@@ -382,7 +369,6 @@ public class GuiLauncher {
         });
         panel.add(copyButton);
 
-        runButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Run", "Run"));
         runButton.addActionListener(this::runGeneration);
         panel.add(runButton);
 
@@ -397,7 +383,6 @@ public class GuiLauncher {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(LocaleUtil.getLocaleString("GuiLauncher.Output", "Output")));
 
-        outputArea = new JTextArea();
         outputArea.setEditable(false);
         outputArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, UIConstants.OUTPUT_AREA_FONT_SIZE));
         outputArea.setBackground(UIConstants.OUTPUT_AREA_BG);
@@ -494,7 +479,7 @@ public class GuiLauncher {
 
     private class GuiPrinter implements Logger.Printer {
         @Override
-        public void printf(String fmt, Object... args) {
+        public void printf(String fmt, @Nullable Object... args) {
             try {
                 String message = String.format(fmt, args);
                 SwingUtilities.invokeLater(() -> {

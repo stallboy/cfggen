@@ -1,11 +1,13 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 public sealed interface Schema permits SchemaBean, SchemaEnum, SchemaInterface, SchemaList, SchemaMap, SchemaPrimitive, SchemaRef {
     /**
      * 比较兼容性，codeSchema.compatible(dataSchema);
      * 参照example/javaload/LoadConfig.java
      */
-    boolean compatible(Schema other);
+    boolean compatible(@Nullable Schema other);
 
     int BOOL = 1;
     int INT = 2;

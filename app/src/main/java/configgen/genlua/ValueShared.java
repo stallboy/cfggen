@@ -1,5 +1,7 @@
 package configgen.genlua;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +55,7 @@ class ValueShared {
         return layers;
     }
 
-    ValueSharedLayer.CompositeValueCnt remove(CompositeValue v) {
+    ValueSharedLayer.@Nullable CompositeValueCnt remove(CompositeValue v) {
         for (ValueSharedLayer layer : layers) {
             ValueSharedLayer.CompositeValueCnt old = layer.getCompositeValueToCnt().remove(v);
             if (old != null) {

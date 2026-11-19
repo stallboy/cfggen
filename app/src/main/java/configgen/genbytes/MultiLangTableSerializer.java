@@ -1,17 +1,16 @@
 package configgen.genbytes;
 
 import configgen.genjava.ConfigOutput;
-import configgen.i18n.LangSwitchableRuntime;
+import configgen.i18n.TableTranslationLookup;
 import configgen.value.CfgValue;
 import configgen.value.ForeachValue;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public record MultiLangTableSerializer(@NotNull ConfigOutput output,
-                                       @NotNull StringPool stringPool,
-                                       @NotNull LangTextPool langTextPool,
-                                       @NotNull LangSwitchableRuntime langSwitchRuntime)
+public record MultiLangTableSerializer(ConfigOutput output,
+                                       StringPool stringPool,
+                                       LangTextPool langTextPool,
+                                       TableTranslationLookup tableTranslationLookup)
         implements ForeachValue.ValueVisitor {
 
 
@@ -32,8 +31,9 @@ public record MultiLangTableSerializer(@NotNull ConfigOutput output,
             case CfgValue.VString vStr -> writeStringInPool(vStr.value());
 
             case CfgValue.VText vText -> {
-                String[] i18nStrings = langSwitchRuntime.findAllLangText(pk.packStr(), fieldChain, vText.value());
-                int idx = langTextPool.addText(i18nStrings);
+                String[] localizedTexts = tableTranslationLookup.resolveTextsForAllLanguages(
+                        pk.packStr(), fieldChain, vText.value());
+                int idx = langTextPool.addText(localizedTexts);
                 output.writeInt(idx);
             }
         }

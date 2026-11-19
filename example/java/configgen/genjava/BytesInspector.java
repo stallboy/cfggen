@@ -1,12 +1,14 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 
 public class BytesInspector {
     private final String bytesFilename;
-    private SchemaInterface rootSchema;
+    private @Nullable SchemaInterface rootSchema;
 
     public BytesInspector(String bytesFilename) {
         this.bytesFilename = bytesFilename;
@@ -34,7 +36,7 @@ public class BytesInspector {
      * 按表名前缀查看 bytes 文件里匹配的表（schema + 数据），返回渲染好的字符串。
      * 由 {@link Repl} 在交互式 loop 里调用，也被 {@code BytesViewTool} 一次性调用后打印。
      */
-    public String match(String tableMatch) {
+    public String match(@Nullable String tableMatch) {
         out.setLength(0);
         printedSchemas.clear();
         try {
@@ -65,16 +67,16 @@ public class BytesInspector {
 
 
     private boolean printTableInfo(String tableName, int tableSize, ConfigInput input) {
-        Schema schema = rootSchema.implementations.get(tableName);
+        Schema schema = java.util.Objects.requireNonNull(rootSchema).implementations.get(tableName);
 
-        switch (schema) {
+        switch (java.util.Objects.requireNonNull(schema)) {
             case SchemaBean schemaBean -> {
                 initDepSchemas();
                 printSchemaBean(tableName, schemaBean);
                 printDepSchemas();
 
                 String schemaName = tableName + "_Entry";
-                Schema entrySchema = rootSchema.implementations.get(schemaName);
+                Schema entrySchema = java.util.Objects.requireNonNull(rootSchema).implementations.get(schemaName);
                 if (entrySchema instanceof SchemaEnum) {
                     printSchemaEnum(schemaName, (SchemaEnum) entrySchema);
                 }
@@ -89,7 +91,7 @@ public class BytesInspector {
                 printDepSchemas();
 
                 String schemaName = tableName + "_Detail";
-                Schema realSchema = rootSchema.implementations.get(schemaName);
+                Schema realSchema = java.util.Objects.requireNonNull(rootSchema).implementations.get(schemaName);
                 if (realSchema instanceof SchemaBean schemaBean) {
                     println("%s data(size=%d):", tableName, tableSize);
                     printTableData(input, schemaBean);
@@ -141,7 +143,7 @@ public class BytesInspector {
         for (SchemaBean.Column column : schemaBean.columns) {
             println("%s: %s", column.name(), column.schema());
             if (column.schema() instanceof SchemaRef ref) {
-                Schema rs = rootSchema.implementations.get(ref.type);
+                Schema rs = java.util.Objects.requireNonNull(rootSchema).implementations.get(ref.type);
                 if (!printedSchemas.contains(rs)) {
                     needSchemas.put(ref.type, rs);
                 }
@@ -201,7 +203,7 @@ public class BytesInspector {
 
 
     private void visitSchemaToPrintSchema(String name, Schema schema) {
-        switch (schema) {
+        switch (java.util.Objects.requireNonNull(schema)) {
             case SchemaBean schemaBean -> {
                 printSchemaBean(name, schemaBean);
             }
@@ -238,7 +240,7 @@ public class BytesInspector {
                 String type = input.readStringInPool();
                 sb.append(type);
                 Schema implSchema = schemaInterface.implementations.get(type);
-                visitSchemaToReadData(implSchema, input, sb);
+                visitSchemaToReadData(java.util.Objects.requireNonNull(implSchema), input, sb);
             }
             case SchemaList schemaList -> {
                 sb.append("(");
@@ -275,8 +277,8 @@ public class BytesInspector {
                 }
             }
             case SchemaRef schemaRef -> {
-                Schema deRef = rootSchema.implementations.get(schemaRef.type);
-                visitSchemaToReadData(deRef, input, sb);
+                Schema deRef = java.util.Objects.requireNonNull(rootSchema).implementations.get(schemaRef.type);
+                visitSchemaToReadData(java.util.Objects.requireNonNull(deRef), input, sb);
             }
         }
 

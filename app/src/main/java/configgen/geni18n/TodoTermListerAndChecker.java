@@ -1,5 +1,7 @@
 package configgen.geni18n;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.i18n.TodoFile;
 
 import configgen.gen.Parameter;
@@ -17,8 +19,8 @@ import java.util.*;
  */
 public class TodoTermListerAndChecker extends Tool {
 
-    private final String todoFilepath;
-    private final String termFilepath;
+    private final @Nullable String todoFilepath;
+    private final @Nullable String termFilepath;
     private final boolean check;
     private final boolean checkAll;
 

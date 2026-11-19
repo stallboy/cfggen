@@ -1,5 +1,7 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -9,12 +11,12 @@ public final class ConfigPackage {
     public static final int FORMAT_VERSION = 1;
     private final Map<String, String> metadata;
     private final Map<String, ConfigInput> blocks;
-    private final String name;
+    private final @Nullable String name;
     private final List<String> dependencies;
     private final List<String> defaultLanguages;
     private final Map<List<String>, ConfigInput> pools = new HashMap<>();
 
-    private ConfigPackage(Map<String, String> metadata, Map<String, ConfigInput> blocks, String name,
+    private ConfigPackage(Map<String, String> metadata, Map<String, ConfigInput> blocks, @Nullable String name,
                           List<String> dependencies) {
         this.metadata = Collections.unmodifiableMap(metadata);
         this.blocks = Collections.unmodifiableMap(blocks);
@@ -142,7 +144,7 @@ public final class ConfigPackage {
 
     public List<String> dependencies() { return dependencies; }
 
-    private static List<String> parseDependencies(String value, String name, LoadValueErrs errors) {
+    private static List<String> parseDependencies(String value, @Nullable String name, LoadValueErrs errors) {
         if (value.isEmpty()) {
             return List.of();
         }

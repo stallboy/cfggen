@@ -1,21 +1,19 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 public class TestPackBean {
-    private String name;
-    private config.Range iRange;
-    private TestPackBean() {
-    }
+    private final String name;
+    private final config.Range iRange;
 
     public TestPackBean(String name, config.Range iRange) {
         this.name = name;
         this.iRange = iRange;
     }
 
-    public static TestPackBean _create(configgen.genjava.ConfigInput input) {
-        TestPackBean self = new TestPackBean();
-        self.name = input.readStringInPool();
-        self.iRange = config.Range._create(input);
-        return self;
+    private TestPackBean(configgen.genjava.ConfigInput input) {
+        this.name = input.readStringInPool();
+        this.iRange = config.Range._create(input);
     }
 
     public String getName() {
@@ -32,7 +30,7 @@ public class TestPackBean {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof TestPackBean o)) {
             return false;
         }
@@ -42,6 +40,10 @@ public class TestPackBean {
     @Override
     public String toString() {
         return "(" + name + "," + iRange + ")";
+    }
+
+    public static TestPackBean _create(configgen.genjava.ConfigInput input) {
+        return new TestPackBean(input);
     }
 
 }

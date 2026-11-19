@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldType.Primitive.INT;
 import static org.junit.jupiter.api.Assertions.*;
@@ -71,20 +72,20 @@ class HasBlockTest {
 
     @Test
     public void tableWithBlock() {
-        assertTrue(HasBlock.hasBlock(cfg.findTable("item")));
+        assertTrue(HasBlock.hasBlock(requireNonNull(cfg.findTable("item"))));
     }
 
     @Test
     public void directStructWithBlock() {
-        assertTrue(HasBlock.hasBlock(cfg.findFieldable("Attrs")));
+        assertTrue(HasBlock.hasBlock(requireNonNull(cfg.findFieldable("Attrs"))));
     }
 
 
     @Test
     public void innerStructWithBlock() {
-        assertTrue(HasBlock.hasBlock(cfg.findFieldable("WeightedAttrs")));
-        assertTrue(HasBlock.hasBlock(cfg.findFieldable("condition")));
-        assertTrue(HasBlock.hasBlock(cfg.findFieldable("action")));
+        assertTrue(HasBlock.hasBlock(requireNonNull(cfg.findFieldable("WeightedAttrs"))));
+        assertTrue(HasBlock.hasBlock(requireNonNull(cfg.findFieldable("condition"))));
+        assertTrue(HasBlock.hasBlock(requireNonNull(cfg.findFieldable("action"))));
     }
 
 

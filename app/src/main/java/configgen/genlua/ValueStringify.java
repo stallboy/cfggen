@@ -1,5 +1,7 @@
 package configgen.genlua;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.FieldSchema;
 
 import java.util.*;
@@ -32,17 +34,17 @@ class ValueStringify {
 
     private final StringBuilder res;
     private final Ctx ctx;
-    private final String beanTypeStr;
-    private final String pkStr;
+    private final @Nullable String beanTypeStr;
+    private final @Nullable String pkStr;
     private final boolean isKey;
 
-    private ValueStringify key;
-    private ValueStringify notKey;
+    private @Nullable ValueStringify key;
+    private @Nullable ValueStringify notKey;
 
     /**
      * @param pkStr 可为null。当设置时，此时ctx.aCtx().nullableLangSwitchSupport()！=null，并且此table含有text
      */
-    public ValueStringify(StringBuilder res, Ctx ctx, String beanTypeStr, String pkStr) {
+    public ValueStringify(StringBuilder res, Ctx ctx, @Nullable String beanTypeStr, @Nullable String pkStr) {
         this.res = res;
         this.ctx = ctx;
         this.beanTypeStr = beanTypeStr;
@@ -62,7 +64,7 @@ class ValueStringify {
         notKey.notKey = notKey;
     }
 
-    private ValueStringify(StringBuilder res, Ctx ctx, String pkStr, boolean isKey) {
+    private ValueStringify(StringBuilder res, Ctx ctx, @Nullable String pkStr, boolean isKey) {
         this.res = res;
         this.ctx = ctx;
         this.beanTypeStr = null;
@@ -113,8 +115,8 @@ class ValueStringify {
      * 之后的实现，需要保证fieldChain的法则跟value.ForeachValue中一致
      */
     private void addVText(VText value, List<String> fieldChain) {
-        if (hasLangSwitchAndText()) {
-            int id = ctx.aCtx().nullableLangSwitchSupport().enterText(pkStr, fieldChain, value.value()) + 1;
+        if (pkStr != null) {
+            int id = java.util.Objects.requireNonNull(ctx.aCtx().nullableLangSwitchSupport()).enterText(pkStr, fieldChain, value.value()) + 1;
             res.append(id);
         } else {
             addString(value.value());
@@ -159,7 +161,7 @@ class ValueStringify {
                 res.append(ctx.aCtx().getListMapPrefixStr());
                 int idx = 0;
                 for (Value eleValue : value.valueList()) {
-                    notKey.addValue(eleValue, subChain(fieldChain, String.valueOf(idx)));
+                    java.util.Objects.requireNonNull(notKey).addValue(eleValue, subChain(fieldChain, String.valueOf(idx)));
                     idx++;
                     if (idx != sz) {
                         res.append(", ");
@@ -170,7 +172,7 @@ class ValueStringify {
         }
     }
 
-    private String getSharedCompositeBriefName(CompositeValue value) {
+    private @Nullable String getSharedCompositeBriefName(CompositeValue value) {
         if (value.isShared()) {
             return ctx.ctxShared().getSharedName(value); //优化，重用相同的table
         }
@@ -194,9 +196,9 @@ class ValueStringify {
                 res.append(ctx.aCtx().getListMapPrefixStr());
                 int idx = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> e : value.valueMap().entrySet()) {
-                    key.addValue(e.getKey(), subChain(fieldChain, String.format("%dk", idx)));
+                    java.util.Objects.requireNonNull(key).addValue(e.getKey(), subChain(fieldChain, String.format("%dk", idx)));
                     res.append(" = ");
-                    notKey.addValue(e.getValue(), subChain(fieldChain, String.format("%dv", idx)));
+                    java.util.Objects.requireNonNull(notKey).addValue(e.getValue(), subChain(fieldChain, String.format("%dv", idx)));
                     idx++;
                     if (idx != sz) {
                         res.append(", ");
@@ -211,7 +213,7 @@ class ValueStringify {
         addVStruct(value.child(), value, fieldChain);
     }
 
-    private void addVStruct(VStruct vStruct, VInterface nullableInterface, List<String> fieldChain) {
+    private void addVStruct(VStruct vStruct, @Nullable VInterface nullableInterface, List<String> fieldChain) {
         CompositeValue value = nullableInterface != null ? nullableInterface : vStruct;
 
         String beanType = beanTypeStr;
@@ -276,7 +278,7 @@ class ValueStringify {
                         }
                     } else {
                         idx++;
-                        notKey.addValue(fieldValue, subChain(fieldChain, field.name()));
+                        java.util.Objects.requireNonNull(notKey).addValue(fieldValue, subChain(fieldChain, field.name()));
                         if (idx != sz) {
                             res.append(", ");
                         }

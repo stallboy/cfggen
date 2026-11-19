@@ -1,6 +1,8 @@
 package configgen.genlua;
 
-import configgen.i18n.LangSwitchable;
+import org.jspecify.annotations.Nullable;
+
+import configgen.i18n.TranslationBundle;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -10,7 +12,7 @@ import java.util.Set;
 /// 互相覆盖；现由 LuaCodeGenerator.generate() 每次构造一份实例，沿 Ctx 链传递。
 class AContext {
     private final String pkgPrefixStr;
-    private final LangSwitchSupport nullableLangSwitchSupport;
+    private final @Nullable LangSwitchSupport nullableLangSwitchSupport;
     private final boolean shared;
     private final boolean packBool;
     private final boolean noStr; //只用于测试
@@ -27,10 +29,10 @@ class AContext {
 
     private final AStat statistics;
 
-    AContext(String pkg, LangSwitchable ls, boolean shareEmptyTable, boolean shared,
+    AContext(String pkg, @Nullable TranslationBundle translationBundle, boolean shareEmptyTable, boolean shared,
              boolean packBool, boolean noStr, boolean rForOldShared) {
 
-        nullableLangSwitchSupport = ls != null ? new LangSwitchSupport(ls) : null;
+        nullableLangSwitchSupport = translationBundle != null ? new LangSwitchSupport(translationBundle) : null;
         this.shared = shared;
         this.packBool = packBool;
         this.noStr = noStr;
@@ -64,7 +66,7 @@ class AContext {
         return forbidLocalNames.contains(name);
     }
 
-    LangSwitchSupport nullableLangSwitchSupport() {
+    @Nullable LangSwitchSupport nullableLangSwitchSupport() {
         return nullableLangSwitchSupport;
     }
 

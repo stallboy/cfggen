@@ -1,18 +1,16 @@
 package config.ai.triggertick;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ConstValue implements config.ai.triggertick.TriggerTick {
-    private int value;
-    private ConstValue() {
-    }
+    private final int value;
 
     public ConstValue(int value) {
         this.value = value;
     }
 
-    public static ConstValue _create(configgen.genjava.ConfigInput input) {
-        ConstValue self = new ConstValue();
-        self.value = input.readInt();
-        return self;
+    private ConstValue(configgen.genjava.ConfigInput input) {
+        this.value = input.readInt();
     }
 
     public int getValue() {
@@ -25,7 +23,7 @@ public final class ConstValue implements config.ai.triggertick.TriggerTick {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof ConstValue o)) {
             return false;
         }
@@ -35,6 +33,10 @@ public final class ConstValue implements config.ai.triggertick.TriggerTick {
     @Override
     public String toString() {
         return "ConstValue(" + value + ")";
+    }
+
+    public static ConstValue _create(configgen.genjava.ConfigInput input) {
+        return new ConstValue(input);
     }
 
 }

@@ -1,5 +1,7 @@
 package configgen.ctx;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.Logger;
 
 import java.util.List;
@@ -32,7 +34,7 @@ public final class StateCoordinator<T> {
     }
 
     private final Object editLock = new Object();
-    private volatile T state;
+    private volatile @Nullable T state;
     // 注册发生在主线程（server的generate）、迭代发生在锁内刷新，用COW保证可见性
     private final List<Refresher<T>> refreshers = new CopyOnWriteArrayList<>();
 
@@ -40,11 +42,11 @@ public final class StateCoordinator<T> {
         this(null);
     }
 
-    public StateCoordinator(T initial) {
+    public StateCoordinator(@Nullable T initial) {
         this.state = initial;
     }
 
-    public T state() {
+    public @Nullable T state() {
         return state;
     }
 
@@ -71,7 +73,7 @@ public final class StateCoordinator<T> {
      */
     public <R> R runEdit(Function<T, R> edit) {
         synchronized (editLock) {
-            R result = edit.apply(state);
+            R result = edit.apply(java.util.Objects.requireNonNull(state));
             refreshAll();
             return result;
         }
@@ -82,7 +84,7 @@ public final class StateCoordinator<T> {
     }
 
     private void refreshAll() {
-        T cur = state;
+        T cur = java.util.Objects.requireNonNull(state);
         for (Refresher<T> refresher : refreshers) {
             try {
                 refresher.refresh(cur);

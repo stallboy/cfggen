@@ -1,16 +1,16 @@
 package config.ai;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：ai_行为/ai行为.xlsx[AI中文会被忽略只要a-z开头]
 public class Ai {
-    private int iD;
-    private String desc;
-    private String condID;
-    private config.ai.triggertick.TriggerTick trigTick;
-    private int trigOdds;
-    private java.util.List<Integer> actionID;
-    private boolean deathRemove;
-    private Ai() {
-    }
+    private final int iD;
+    private final String desc;
+    private final String condID;
+    private final config.ai.triggertick.TriggerTick trigTick;
+    private final int trigOdds;
+    private final java.util.List<Integer> actionID;
+    private final boolean deathRemove;
 
     Ai(AiBuilder b) {
         this.iD = b.iD;
@@ -22,27 +22,25 @@ public class Ai {
         this.deathRemove = b.deathRemove;
     }
 
-    public static Ai _create(configgen.genjava.ConfigInput input) {
-        Ai self = new Ai();
-        self.iD = input.readInt();
-        self.desc = input.readStringInPool();
-        self.condID = input.readStringInPool();
-        self.trigTick = config.ai.triggertick.TriggerTick._create(input);
-        self.trigOdds = input.readInt();
+    private Ai(configgen.genjava.ConfigInput input) {
+        this.iD = input.readInt();
+        this.desc = input.readStringInPool();
+        this.condID = input.readStringInPool();
+        this.trigTick = config.ai.triggertick.TriggerTick._create(input);
+        this.trigOdds = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.actionID = java.util.Collections.emptyList();
+                this.actionID = java.util.Collections.emptyList();
             } else {
-                self.actionID = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.actionID.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.actionID = java.util.Collections.unmodifiableList(self.actionID);
+                this.actionID = java.util.Collections.unmodifiableList(items);
             }
         }
-        self.deathRemove = input.readBool();
-        return self;
+        this.deathRemove = input.readBool();
     }
 
     public int getID() {
@@ -96,7 +94,11 @@ public class Ai {
         return "(" + iD + "," + desc + "," + condID + "," + trigTick + "," + trigOdds + "," + actionID + "," + deathRemove + ")";
     }
 
-    public static Ai get(int iD) {
+    public static Ai _create(configgen.genjava.ConfigInput input) {
+        return new Ai(input);
+    }
+
+    public static @Nullable Ai get(int iD) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getAiAi(iD);
     }

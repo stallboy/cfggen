@@ -1,5 +1,9 @@
 package configgen.mcpserver;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import com.github.codeboyzhou.mcp.declarative.McpServers;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpServerApplication;
 import com.github.codeboyzhou.mcp.declarative.server.McpStreamableServerInfo;
@@ -15,7 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @McpServerApplication(basePackage = "configgen.mcpserver")
 public class CfgMcpServer extends GeneratorWithTag {
-    private static final AtomicReference<CfgMcpServer> INSTANCE = new AtomicReference<>();
+    private static final AtomicReference<@Nullable CfgMcpServer> INSTANCE = new AtomicReference<>();
 
     public record CfgValueWithContext(CfgValue cfgValue,
                                       Context context) {
@@ -23,11 +27,11 @@ public class CfgMcpServer extends GeneratorWithTag {
 
     private final int port;
     private final int waitSecondsAfterWatchEvt;
-    private final String postRun;
+    private final @Nullable String postRun;
     private volatile CfgValueWithContext cfgValueWithContext;
 
     public static CfgMcpServer getInstance() {
-        return INSTANCE.get();
+        return java.util.Objects.requireNonNull(INSTANCE.get());
     }
 
     public CfgMcpServer(Parameter parameter) {
@@ -38,6 +42,7 @@ public class CfgMcpServer extends GeneratorWithTag {
     }
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
         if (INSTANCE.get() != null) {
             Logger.log("CfgMcpServer instance already exists! ignore this");

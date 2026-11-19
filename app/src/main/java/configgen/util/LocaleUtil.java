@@ -1,11 +1,15 @@
 package configgen.util;
 
+import org.jetbrains.annotations.Contract;
+
+import org.jspecify.annotations.Nullable;
+
 import java.text.MessageFormat;
 import java.util.*;
 
 public final class LocaleUtil {
     // 懒加载缓存：setLocale 置 null 失效；volatile 保证换语言后其他线程能立刻看到重建
-    private static volatile ResourceBundle resourceBundle;
+    private static volatile @Nullable ResourceBundle resourceBundle;
     private static final Set<Locale> availableLocalesSet;
 
     static {
@@ -21,7 +25,8 @@ public final class LocaleUtil {
         resourceBundle = null;
     }
 
-    public static String getLocaleString(String key, String defaultMsg) {
+    @Contract("_, !null -> !null")
+    public static @Nullable String getLocaleString(String key, @Nullable String defaultMsg) {
         String localeString = findLocaleString(key);
         if (localeString != null) {
             return localeString;
@@ -29,18 +34,20 @@ public final class LocaleUtil {
         return defaultMsg;
     }
 
-    public static String findLocaleString(String key) {
-        if (resourceBundle == null) {
-            resourceBundle = ResourceBundle.getBundle("messages");
+    public static @Nullable String findLocaleString(String key) {
+        ResourceBundle bundle = resourceBundle;
+        if (bundle == null) {
+            bundle = ResourceBundle.getBundle("messages");
+            resourceBundle = bundle;
         }
         try {
-            return resourceBundle.getString(key);
+            return bundle.getString(key);
         } catch (MissingResourceException ignored) {
             return null;
         }
     }
 
-    public static String getFormatedLocaleString(String key, String defaultMsg, Object... args) {
+    public static String getFormatedLocaleString(String key, String defaultMsg, @Nullable Object... args) {
         String localeString = getLocaleString(key, defaultMsg);
         if (args.length > 0) {
             return MessageFormat.format(localeString, args);

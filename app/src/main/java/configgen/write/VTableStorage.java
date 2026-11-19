@@ -15,7 +15,6 @@ import configgen.value.CfgValue.VStruct;
 import configgen.value.CfgValue.VTable;
 import configgen.value.CfgValue.Value;
 import configgen.write.RecordBlock.RecordBlockTransformed;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -26,11 +25,11 @@ import java.util.Deque;
  */
 public class VTableStorage {
 
-    public static DRawSheet addOrUpdateRecord(@NotNull Context context,
-                                              @NotNull VTable vTable,
-                                              @NotNull DTable dTable,
-                                              @NotNull Value pkValue,
-                                              @NotNull VStruct newRecord) {
+    public static DRawSheet addOrUpdateRecord(Context context,
+                                              VTable vTable,
+                                              DTable dTable,
+                                              Value pkValue,
+                                              VStruct newRecord) {
         RecordBlock block = RecordBlockMapper.mapToBlock(newRecord);
 
         CfgValue.VStruct oldRecord = vTable.primaryKeyMap().get(pkValue);
@@ -64,9 +63,9 @@ public class VTableStorage {
     }
 
 
-    public static DRawSheet deleteRecord(@NotNull Context context,
-                                         @NotNull DTable dTable,
-                                         @NotNull VStruct oldRecord) {
+    public static DRawSheet deleteRecord(Context context,
+                                         DTable dTable,
+                                         VStruct oldRecord) {
 
         RecordLoc loc = findRecordLoc(context, oldRecord);
         loc.tableFile.emptyRows(loc.startRow, loc.rowCount, null);
@@ -75,8 +74,8 @@ public class VTableStorage {
     }
 
 
-    private static RecordLoc findRecordLoc(@NotNull Context context,
-                                           @NotNull VStruct oldRecord) {
+    private static RecordLoc findRecordLoc(Context context,
+                                           VStruct oldRecord) {
 
         DRowId rowId = TableFileLocator.getLocFromRecord(oldRecord);
         int startRow = rowId.row();

@@ -1,5 +1,7 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：equip/rank.csv
@@ -30,7 +32,7 @@ public enum CfgRank {
         map = java.util.Collections.unmodifiableMap(symbols);
     }
 
-    public static CfgRank get(int value) {
+    public static @Nullable CfgRank get(int value) {
         return map.get(value);
     }
 
@@ -52,19 +54,19 @@ public enum CfgRank {
      * 显示名称
      */
     public String getRankShowName() {
-        return ref().getRankShowName();
+        return java.util.Objects.requireNonNull(ref()).getRankShowName();
     }
 
-    public config.equip.CfgRank_Detail ref() {
+    public config.equip.@Nullable CfgRank_Detail ref() {
         return ref(config.ConfigMgr.getMgr());
     }
 
-    public config.equip.CfgRank_Detail ref(config.ConfigMgr mgr) {
+    public config.equip.@Nullable CfgRank_Detail ref(config.ConfigMgr mgr) {
         return mgr._get_equip_rank_Refs(ordinal());
     }
 
     public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
-        mgr._set_equip_rank_Refs(new config.equip.CfgRank_Detail[] {
+        mgr._set_equip_rank_Refs(new config.equip.@Nullable CfgRank_Detail[] {
             mgr.getEquipRank(WHITE.value),
             mgr.getEquipRank(GREEN.value),
             mgr.getEquipRank(BLUE.value),
@@ -72,7 +74,8 @@ public enum CfgRank {
             mgr.getEquipRank(YELLOW.value),
             mgr.getEquipRank(RED.value),
         });
-        for (var row : mgr._get_equip_rank_All()) {
+        for (var entry : mgr._get_equip_rank_All()) {
+            var row = java.util.Objects.requireNonNull(entry);
             var key = row.getRankID();
             String symbol = row.getRankName();
             CfgRank expected = switch (symbol) {

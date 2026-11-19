@@ -1,14 +1,15 @@
 package configgen.schema.cfg;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.CommentData;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public final class CommentUtil {
 
-    public static @NotNull CommentData readFull3(List<CfgParser.Leading_commentContext> leadingContexts,
+    public static CommentData readFull3(List<CfgParser.Leading_commentContext> leadingContexts,
                                                  TerminalNode trailingNode,
                                                  List<CfgParser.Suffix_commentContext> suffixContexts) {
         String leading = readLeadingComment(leadingContexts);
@@ -17,7 +18,7 @@ public final class CommentUtil {
         return new CommentData(leading, trailing, suffix);
     }
 
-    public static @NotNull CommentData readFull2(List<CfgParser.Leading_commentContext> leadingContexts,
+    public static CommentData readFull2(List<CfgParser.Leading_commentContext> leadingContexts,
                                                  TerminalNode trailingNode) {
         String leading = readLeadingComment(leadingContexts);
         String trailing = readTrailingComment(trailingNode);
@@ -88,7 +89,7 @@ public final class CommentUtil {
         return sb.toString();
     }
 
-    public static CommentData decode(String raw) {
+    public static CommentData decode(@Nullable String raw) {
         if (raw == null || raw.isBlank()) {
             return new CommentData("", "", "");
         }

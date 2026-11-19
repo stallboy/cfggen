@@ -1,5 +1,7 @@
 package configgen.i18n;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.CSVUtil;
 import de.siegmar.fastcsv.reader.CsvRecord;
 
@@ -13,12 +15,12 @@ import java.util.stream.Stream;
  * 每个表中的text字段，原始文本---映射到--->翻译文本。
  * 以原始文本为key，相同的原始文本，必然对应相同翻译文本
  */
-public class TextByValueFinder implements LangTextFinder.TextFinder {
+public class TextByValueFinder implements TranslationCatalog.TextFinder {
     private final SequencedMap<String, String> originalToTranslated = new LinkedHashMap<>();
 
 
     @Override
-    public String findText(String pk, List<String> fieldChain, String original) {
+    public @Nullable String findText(String pk, List<String> fieldChain, String original) {
         String normalized = I18nUtils.normalize(original);
         String text = originalToTranslated.get(normalized);
         if (text != null && !text.isEmpty()) {
@@ -28,15 +30,15 @@ public class TextByValueFinder implements LangTextFinder.TextFinder {
     }
 
     @Override
-    public void foreachText(LangTextFinder.TextVisitor visitor) {
+    public void foreachText(TranslationCatalog.TextVisitor visitor) {
         for (Map.Entry<String, String> e : originalToTranslated.entrySet()) {
             visitor.visit(e.getKey(), e.getValue());
         }
     }
 
 
-    public static Map<String, LangTextFinder> loadMultiLang(Path path) {
-        Map<String, LangTextFinder> langMap = new TreeMap<>();
+    public static Map<String, TranslationCatalog> loadMultiLang(Path path) {
+        Map<String, TranslationCatalog> langMap = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langFilePath -> {
                 String langName = langFilePath.getFileName().toString();
@@ -52,7 +54,7 @@ public class TextByValueFinder implements LangTextFinder.TextFinder {
         return langMap;
     }
 
-    public static LangTextFinder loadOneLang(Path path) {
+    public static TranslationCatalog loadOneLang(Path path) {
         List<CsvRecord> rows = CSVUtil.read(path);
 
         if (rows.isEmpty()) {
@@ -63,7 +65,7 @@ public class TextByValueFinder implements LangTextFinder.TextFinder {
             throw new IllegalArgumentException("国际化i18n文件列数不为3");
         }
 
-        LangTextFinder res = new LangTextFinder();
+        TranslationCatalog res = new TranslationCatalog();
         for (CsvRecord row : rows) {
             if (row.getFields().isEmpty()) {
                 continue;

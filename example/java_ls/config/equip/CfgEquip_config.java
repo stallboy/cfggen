@@ -1,25 +1,23 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：equip/equip_config.csv
 public class CfgEquip_config {
-    private String entry;
-    private int stone_count_for_set;
-    private String draw_protect_name;
-    private int broadcastid;
-    private int broadcast_least_quality;
-    private int week_reward_mailid;
-    private CfgEquip_config() {
-    }
+    private final String entry;
+    private final int stone_count_for_set;
+    private final String draw_protect_name;
+    private final int broadcastid;
+    private final int broadcast_least_quality;
+    private final int week_reward_mailid;
 
-    public static CfgEquip_config _create(configgen.genjava.ConfigInput input) {
-        CfgEquip_config self = new CfgEquip_config();
-        self.entry = input.readStringInPool();
-        self.stone_count_for_set = input.readInt();
-        self.draw_protect_name = input.readStringInPool();
-        self.broadcastid = input.readInt();
-        self.broadcast_least_quality = input.readInt();
-        self.week_reward_mailid = input.readInt();
-        return self;
+    private CfgEquip_config(configgen.genjava.ConfigInput input) {
+        this.entry = input.readStringInPool();
+        this.stone_count_for_set = input.readInt();
+        this.draw_protect_name = input.readStringInPool();
+        this.broadcastid = input.readInt();
+        this.broadcast_least_quality = input.readInt();
+        this.week_reward_mailid = input.readInt();
     }
 
     /**
@@ -69,7 +67,11 @@ public class CfgEquip_config {
         return "(" + entry + "," + stone_count_for_set + "," + draw_protect_name + "," + broadcastid + "," + broadcast_least_quality + "," + week_reward_mailid + ")";
     }
 
-    public static CfgEquip_config get(String entry) {
+    public static CfgEquip_config _create(configgen.genjava.ConfigInput input) {
+        return new CfgEquip_config(input);
+    }
+
+    public static @Nullable CfgEquip_config get(String entry) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getEquipEquip_config(entry);
     }

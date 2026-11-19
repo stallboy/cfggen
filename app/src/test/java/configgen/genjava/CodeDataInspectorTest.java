@@ -1,10 +1,13 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
 import static configgen.genjava.JsonValue.*;
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -97,8 +100,8 @@ class CodeDataInspectorTest {
     @Test
     void discoversReadOnlyIndexGettersAndLooksUpSeqLists() {
         var inspector = new CodeDataInspector(new ReadOnlyMgr(), buildSchema());
-        assertEquals("readonly", ((Str) memberValue(inspector.getJson("test.user", "1"), "name")).value());
-        assertEquals(5, ((Num) memberValue(inspector.getJson("test.point", "0"), "y")).value().intValue());
+        assertEquals("readonly", ((Str) requireNonNull(memberValue(inspector.getJson("test.user", "1"), "name"))).value());
+        assertEquals(5, ((Num) requireNonNull(memberValue(inspector.getJson("test.point", "0"), "y"))).value().intValue());
     }
 
     @Test
@@ -309,7 +312,7 @@ class CodeDataInspectorTest {
 
     // ---------- helper ----------
 
-    private static JsonValue memberValue(JsonValue v, String name) {
+    private static @Nullable JsonValue memberValue(JsonValue v, String name) {
         Obj o = (Obj) v;
         for (Member m : o.members()) {
             if (m.name().equals(name)) {

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValueRefCollectorTest {
@@ -33,7 +34,7 @@ class ValueRefCollectorTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VStruct firstRecord = cfgValue.getTable("t").valueList().get(0);
+        CfgValue.VStruct firstRecord = requireNonNull(cfgValue.getTable("t")).valueList().get(0);
         CfgValue.VStruct secondRecord = cfgValue.getTable("t").valueList().get(1);
 
         List<ValueRefCollector.FieldRef> fieldRefs = new ArrayList<>();
@@ -79,7 +80,7 @@ class ValueRefCollectorTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VStruct firstRecord = cfgValue.getTable("t").valueList().get(0);
+        CfgValue.VStruct firstRecord = requireNonNull(cfgValue.getTable("t")).valueList().get(0);
         CfgValue.VStruct secondRecord = cfgValue.getTable("t").valueList().get(1);
 
         List<ValueRefCollector.FieldRef> fieldRefs = new ArrayList<>();

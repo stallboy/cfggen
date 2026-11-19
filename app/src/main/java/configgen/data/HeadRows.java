@@ -1,5 +1,7 @@
 package configgen.data;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.FieldType;
 
 public class HeadRows {
@@ -31,7 +33,7 @@ public class HeadRows {
         }
 
         @Override
-        public FieldType parseType(String type) {
+        public @Nullable FieldType parseType(String type) {
             return FieldType.Primitive.STRING;
         }
 
@@ -41,7 +43,7 @@ public class HeadRows {
         }
 
         @Override
-        public ParseBoolResult parseBool(String str) {
+        public ParseBoolResult parseBool(@Nullable String str) {
             if (str == null || str.isEmpty()) {
                 return ParseBoolResult.FALSE;
             }
@@ -98,7 +100,7 @@ public class HeadRows {
         }
 
         @Override
-        public FieldType parseType(String type) {
+        public @Nullable FieldType parseType(String type) {
             switch (type.toUpperCase()) {
                 case "INT", "SHORT", "BYTE" -> {
                     return FieldType.Primitive.INT;
@@ -125,8 +127,8 @@ public class HeadRows {
         }
 
         @Override
-        public ParseBoolResult parseBool(String str) {
-            if (str.isEmpty()) {
+        public ParseBoolResult parseBool(@Nullable String str) {
+            if (java.util.Objects.requireNonNull(str).isEmpty()) {
                 return ParseBoolResult.FALSE;
             }
             return str.equals("0") || str.equalsIgnoreCase("false") ? ParseBoolResult.FALSE : ParseBoolResult.TRUE;

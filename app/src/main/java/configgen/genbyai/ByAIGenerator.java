@@ -1,5 +1,7 @@
 package configgen.genbyai;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.gen.Generator;
@@ -135,7 +137,7 @@ public class ByAIGenerator extends Generator {
                                     context.rootDir(), context.sourceStructure(), context.outputFiles());
                         } else {
                             CfgData.DTable dTable = context.cfgData().getDTable(table);
-                            VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, record);
+                            VTableStorage.addOrUpdateRecord(context, vTable, java.util.Objects.requireNonNull(dTable), pkValue, record);
                         }
 
                     } catch (IOException e) {
@@ -152,7 +154,7 @@ public class ByAIGenerator extends Generator {
         }
     }
 
-    private String ask(List<ChatMessage> messages, SimpleOpenAI openAI, String model) {
+    private @Nullable String ask(List<ChatMessage> messages, SimpleOpenAI openAI, String model) {
         var chatRequest = ChatRequest.builder()
                 .model(model)
                 .messages(messages)
@@ -168,7 +170,7 @@ public class ByAIGenerator extends Generator {
 
     private static final Pattern pattern = Pattern.compile("```json\\s*([^`]+)\\s*```");
 
-    public static String extractJson(String input) {
+    public static @Nullable String extractJson(String input) {
         Matcher matcher = pattern.matcher(input);
         String lastJson = null;
         while (matcher.find()) {

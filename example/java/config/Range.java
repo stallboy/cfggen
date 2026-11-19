@@ -1,21 +1,19 @@
 package config;
 
+import org.jspecify.annotations.Nullable;
+
 public class Range {
-    private int min;
-    private int max;
-    private Range() {
-    }
+    private final int min;
+    private final int max;
 
     public Range(int min, int max) {
         this.min = min;
         this.max = max;
     }
 
-    public static Range _create(configgen.genjava.ConfigInput input) {
-        Range self = new Range();
-        self.min = input.readInt();
-        self.max = input.readInt();
-        return self;
+    private Range(configgen.genjava.ConfigInput input) {
+        this.min = input.readInt();
+        this.max = input.readInt();
     }
 
     /**
@@ -38,7 +36,7 @@ public class Range {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof Range o)) {
             return false;
         }
@@ -48,6 +46,10 @@ public class Range {
     @Override
     public String toString() {
         return "(" + min + "," + max + ")";
+    }
+
+    public static Range _create(configgen.genjava.ConfigInput input) {
+        return new Range(input);
     }
 
 }

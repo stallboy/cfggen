@@ -1,11 +1,11 @@
 package config.ai.triggertick;
 
+import org.jspecify.annotations.Nullable;
+
 public final class CfgByServerUpDay implements config.ai.triggertick.CfgTriggerTick {
-    private int init;
-    private float coefficient1;
-    private float coefficient2;
-    private CfgByServerUpDay() {
-    }
+    private final int init;
+    private final float coefficient1;
+    private final float coefficient2;
 
     public CfgByServerUpDay(int init, float coefficient1, float coefficient2) {
         this.init = init;
@@ -13,12 +13,10 @@ public final class CfgByServerUpDay implements config.ai.triggertick.CfgTriggerT
         this.coefficient2 = coefficient2;
     }
 
-    public static CfgByServerUpDay _create(configgen.genjava.ConfigInput input) {
-        CfgByServerUpDay self = new CfgByServerUpDay();
-        self.init = input.readInt();
-        self.coefficient1 = input.readFloat();
-        self.coefficient2 = input.readFloat();
-        return self;
+    private CfgByServerUpDay(configgen.genjava.ConfigInput input) {
+        this.init = input.readInt();
+        this.coefficient1 = input.readFloat();
+        this.coefficient2 = input.readFloat();
     }
 
     public int getInit() {
@@ -39,7 +37,7 @@ public final class CfgByServerUpDay implements config.ai.triggertick.CfgTriggerT
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CfgByServerUpDay o)) {
             return false;
         }
@@ -49,6 +47,10 @@ public final class CfgByServerUpDay implements config.ai.triggertick.CfgTriggerT
     @Override
     public String toString() {
         return "CfgByServerUpDay(" + init + "," + coefficient1 + "," + coefficient2 + ")";
+    }
+
+    public static CfgByServerUpDay _create(configgen.genjava.ConfigInput input) {
+        return new CfgByServerUpDay(input);
     }
 
 }

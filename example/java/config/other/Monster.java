@@ -1,72 +1,69 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：other/monster.csv
 public class Monster {
-    private int id;
-    private java.util.List<config.Position> posList;
-    private int lootId;
-    private int lootItemId;
-    private java.util.Map<String, Integer> enumMap1;
-    private java.util.Map<Integer, String> enumMap2;
-    private config.other.LootItem RefLoot;
-    private config.other.Loot RefAllLoot;
-    private java.util.Map<Integer, config.other.ArgCaptureMode> RefEnumMap2;
+    private final int id;
+    private final java.util.List<config.Position> posList;
+    private final int lootId;
+    private final int lootItemId;
+    private final java.util.Map<String, Integer> enumMap1;
+    private final java.util.Map<Integer, String> enumMap2;
+    private config.other.@Nullable LootItem RefLoot;
+    private config.other.@Nullable Loot RefAllLoot;
+    private java.util.@Nullable Map<Integer, config.other.@Nullable ArgCaptureMode> RefEnumMap2;
 
-    private Monster() {
-    }
-
-    public static Monster _create(configgen.genjava.ConfigInput input) {
-        Monster self = new Monster();
-        self.id = input.readInt();
+    private Monster(configgen.genjava.ConfigInput input) {
+        this.id = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.posList = java.util.Collections.emptyList();
+                this.posList = java.util.Collections.emptyList();
             } else {
-                self.posList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<config.Position>(c);
                 for (; c > 0; c--) {
-                    self.posList.add(config.Position._create(input));
+                    items.add(config.Position._create(input));
                 }
-                self.posList = java.util.Collections.unmodifiableList(self.posList);
+                this.posList = java.util.Collections.unmodifiableList(items);
             }
         }
-        self.lootId = input.readInt();
-        self.lootItemId = input.readInt();
+        this.lootId = input.readInt();
+        this.lootItemId = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.enumMap1 = java.util.Collections.emptyMap();
+                this.enumMap1 = java.util.Collections.emptyMap();
             } else {
-                self.enumMap1 = new java.util.LinkedHashMap<>(c);
+                var entries = new java.util.LinkedHashMap<String, Integer>(c);
                 for (; c > 0; c--) {
                     var key = input.readStringInPool();
                     var value = input.readInt();
-                    if (self.enumMap1.putIfAbsent(key, value) != null) {
+                    if (entries.putIfAbsent(key, value) != null) {
                         input.errors().duplicateKey("other.monster.enumMap1", key);
                     }
                 }
-                self.enumMap1 = java.util.Collections.unmodifiableMap(self.enumMap1);
+                this.enumMap1 = java.util.Collections.unmodifiableMap(entries);
             }
         }
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.enumMap2 = java.util.Collections.emptyMap();
+                this.enumMap2 = java.util.Collections.emptyMap();
             } else {
-                self.enumMap2 = new java.util.LinkedHashMap<>(c);
+                var entries = new java.util.LinkedHashMap<Integer, String>(c);
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readStringInPool();
-                    if (self.enumMap2.putIfAbsent(key, value) != null) {
+                    if (entries.putIfAbsent(key, value) != null) {
                         input.errors().duplicateKey("other.monster.enumMap2", key);
                     }
                 }
-                self.enumMap2 = java.util.Collections.unmodifiableMap(self.enumMap2);
+                this.enumMap2 = java.util.Collections.unmodifiableMap(entries);
             }
         }
-        return self;
     }
 
     public int getId() {
@@ -99,15 +96,15 @@ public class Monster {
         return enumMap2;
     }
 
-    public config.other.LootItem refLoot() {
+    public config.other.@Nullable LootItem refLoot() {
         return RefLoot;
     }
 
-    public config.other.Loot refAllLoot() {
+    public config.other.@Nullable Loot refAllLoot() {
         return RefAllLoot;
     }
 
-    public java.util.Map<Integer, config.other.ArgCaptureMode> refEnumMap2() {
+    public java.util.@Nullable Map<Integer, config.other.@Nullable ArgCaptureMode> refEnumMap2() {
         return RefEnumMap2;
     }
 
@@ -141,7 +138,11 @@ public class Monster {
 
     }
 
-    public static Monster get(int id) {
+    public static Monster _create(configgen.genjava.ConfigInput input) {
+        return new Monster(input);
+    }
+
+    public static @Nullable Monster get(int id) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherMonster(id);
     }

@@ -25,7 +25,7 @@ public class CfgSchemas {
         if (java.nio.file.Files.isDirectory(file)) file = file.resolve("config.cfg");
         if (!java.nio.file.Files.isRegularFile(file)) throw new IllegalArgumentException("Shared schema does not exist: " + file);
         Map<String, CfgFileInfo> files = new java.util.LinkedHashMap<>();
-        CfgUtil.findConfigFilesRecursively(file, null, "cfg", "", file.getParent(), files);
+        CfgUtil.findConfigFilesRecursively(file, null, "cfg", "", java.util.Objects.requireNonNull(file.getParent()), files);
         CfgSchema schema = readFromDir(files.values());
         schema.resolve().checkErrors("shared schema");
         return schema;

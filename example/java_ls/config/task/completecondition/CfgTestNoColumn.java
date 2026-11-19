@@ -1,17 +1,18 @@
 package config.task.completecondition;
 
+import org.jspecify.annotations.Nullable;
+
 public final class CfgTestNoColumn implements config.task.completecondition.CfgCompletecondition {
-    @Override
-    public config.task.CfgComplete_condition_type type() {
-        return config.task.CfgComplete_condition_type.TESTNOCOLUMN;
-    }
 
     public CfgTestNoColumn() {
     }
 
-    public static CfgTestNoColumn _create(configgen.genjava.ConfigInput input) {
-        CfgTestNoColumn self = new CfgTestNoColumn();
-        return self;
+    private CfgTestNoColumn(configgen.genjava.ConfigInput input) {
+    }
+
+    @Override
+    public config.task.CfgComplete_condition_type type() {
+        return config.task.CfgComplete_condition_type.TESTNOCOLUMN;
     }
 
     @Override
@@ -20,13 +21,17 @@ public final class CfgTestNoColumn implements config.task.completecondition.CfgC
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         return other instanceof CfgTestNoColumn;
     }
 
     @Override
     public String toString() {
         return "CfgTestNoColumn";
+    }
+
+    public static CfgTestNoColumn _create(configgen.genjava.ConfigInput input) {
+        return new CfgTestNoColumn(input);
     }
 
 }

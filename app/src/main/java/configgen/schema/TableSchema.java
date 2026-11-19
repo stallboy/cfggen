@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,11 +31,11 @@ public record TableSchema(String name,
         }
     }
 
-    public KeySchema findUniqueKey(KeySchema ref) {
+    public @Nullable KeySchema findUniqueKey(KeySchema ref) {
         return findUniqueKey(ref.fields());
     }
 
-    public KeySchema findUniqueKey(List<String> names) {
+    public @Nullable KeySchema findUniqueKey(List<String> names) {
         for (KeySchema uk : uniqueKeys) {
             if (uk.fields().equals(names)) {
                 return uk;

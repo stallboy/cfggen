@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 
@@ -12,7 +14,7 @@ public class Help {
         printHelp(null);
     }
 
-    public static void printHelp(String reason) {
+    public static void printHelp(@Nullable String reason) {
         if (reason != null && !reason.isBlank()) {
             Logger.log(reason);
         }

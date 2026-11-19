@@ -1,37 +1,34 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：other/loot.csv
 public class CfgLoot {
-    private int lootid;
-    private String ename;
-    private config.Text name;
-    private java.util.List<Integer> chanceList;
-    private java.util.List<config.other.CfgLoot_item> ListRefLootid;
-    private java.util.List<config.other.CfgLoot_item> ListRefAnotherWay;
+    private final int lootid;
+    private final String ename;
+    private final config.Text name;
+    private final java.util.List<Integer> chanceList;
+    private java.util.@Nullable List<config.other.CfgLoot_item> ListRefLootid;
+    private java.util.@Nullable List<config.other.CfgLoot_item> ListRefAnotherWay;
 
-    private CfgLoot() {
-    }
-
-    public static CfgLoot _create(configgen.genjava.ConfigInput input) {
-        CfgLoot self = new CfgLoot();
-        self.lootid = input.readInt();
-        self.ename = input.readStringInPool();
-        self.name = config.Text._create(input);
+    private CfgLoot(configgen.genjava.ConfigInput input) {
+        this.lootid = input.readInt();
+        this.ename = input.readStringInPool();
+        this.name = config.Text._create(input);
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.chanceList = java.util.Collections.emptyList();
+                this.chanceList = java.util.Collections.emptyList();
             } else {
-                self.chanceList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.chanceList.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.chanceList = java.util.Collections.unmodifiableList(self.chanceList);
+                this.chanceList = java.util.Collections.unmodifiableList(items);
             }
         }
-        return self;
     }
 
     /**
@@ -59,11 +56,11 @@ public class CfgLoot {
         return chanceList;
     }
 
-    public java.util.List<config.other.CfgLoot_item> listRefLootid() {
+    public java.util.@Nullable List<config.other.CfgLoot_item> listRefLootid() {
         return ListRefLootid;
     }
 
-    public java.util.List<config.other.CfgLoot_item> listRefAnotherWay() {
+    public java.util.@Nullable List<config.other.CfgLoot_item> listRefAnotherWay() {
         return ListRefAnotherWay;
     }
 
@@ -90,7 +87,11 @@ public class CfgLoot {
 
     }
 
-    public static CfgLoot get(int lootid) {
+    public static CfgLoot _create(configgen.genjava.ConfigInput input) {
+        return new CfgLoot(input);
+    }
+
+    public static @Nullable CfgLoot get(int lootid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherLoot(lootid);
     }

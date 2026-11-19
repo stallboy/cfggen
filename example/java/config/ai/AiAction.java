@@ -1,45 +1,43 @@
 package config.ai;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：ai_行为/ai行为.xlsx[AI_ACTION_中文测试], ai_行为/ai行为.xlsx[AI_ACTION_1_继续测试]
 public class AiAction {
-    private int iD;
-    private String desc;
-    private int formulaID;
-    private java.util.List<Integer> argIList;
-    private java.util.List<Integer> argSList;
-    private AiAction() {
-    }
+    private final int iD;
+    private final String desc;
+    private final int formulaID;
+    private final java.util.List<Integer> argIList;
+    private final java.util.List<Integer> argSList;
 
-    public static AiAction _create(configgen.genjava.ConfigInput input) {
-        AiAction self = new AiAction();
-        self.iD = input.readInt();
-        self.desc = input.readStringInPool();
-        self.formulaID = input.readInt();
+    private AiAction(configgen.genjava.ConfigInput input) {
+        this.iD = input.readInt();
+        this.desc = input.readStringInPool();
+        this.formulaID = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.argIList = java.util.Collections.emptyList();
+                this.argIList = java.util.Collections.emptyList();
             } else {
-                self.argIList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.argIList.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.argIList = java.util.Collections.unmodifiableList(self.argIList);
+                this.argIList = java.util.Collections.unmodifiableList(items);
             }
         }
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.argSList = java.util.Collections.emptyList();
+                this.argSList = java.util.Collections.emptyList();
             } else {
-                self.argSList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.argSList.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.argSList = java.util.Collections.unmodifiableList(self.argSList);
+                this.argSList = java.util.Collections.unmodifiableList(items);
             }
         }
-        return self;
     }
 
     public int getID() {
@@ -79,7 +77,11 @@ public class AiAction {
         return "(" + iD + "," + desc + "," + formulaID + "," + argIList + "," + argSList + ")";
     }
 
-    public static AiAction get(int iD) {
+    public static AiAction _create(configgen.genjava.ConfigInput input) {
+        return new AiAction(input);
+    }
+
+    public static @Nullable AiAction get(int iD) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getAiAiAction(iD);
     }

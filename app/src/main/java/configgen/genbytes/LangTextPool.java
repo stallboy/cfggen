@@ -1,6 +1,5 @@
 package configgen.genbytes;
 
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -12,7 +11,7 @@ public class LangTextPool {
     private final TextPool[] textPools;
     private int nextTextIndex;
 
-    public LangTextPool(@NotNull List<String> langNames) {
+    public LangTextPool(List<String> langNames) {
         this.textPools = new TextPool[langNames.size()];
         for (int i = 0; i < langNames.size(); i++) {
             textPools[i] = new TextPool(langNames.get(i));

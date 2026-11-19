@@ -1,37 +1,34 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：other/loot.csv
 public class Loot {
-    private int lootid;
-    private String ename;
-    private String name;
-    private java.util.List<Integer> chanceList;
-    private java.util.List<config.other.LootItem> ListRefLootid;
-    private java.util.List<config.other.LootItem> ListRefAnotherWay;
+    private final int lootid;
+    private final String ename;
+    private final String name;
+    private final java.util.List<Integer> chanceList;
+    private java.util.@Nullable List<config.other.LootItem> ListRefLootid;
+    private java.util.@Nullable List<config.other.LootItem> ListRefAnotherWay;
 
-    private Loot() {
-    }
-
-    public static Loot _create(configgen.genjava.ConfigInput input) {
-        Loot self = new Loot();
-        self.lootid = input.readInt();
-        self.ename = input.readStringInPool();
-        self.name = input.readTextInPool();
+    private Loot(configgen.genjava.ConfigInput input) {
+        this.lootid = input.readInt();
+        this.ename = input.readStringInPool();
+        this.name = input.readTextInPool();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.chanceList = java.util.Collections.emptyList();
+                this.chanceList = java.util.Collections.emptyList();
             } else {
-                self.chanceList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.chanceList.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.chanceList = java.util.Collections.unmodifiableList(self.chanceList);
+                this.chanceList = java.util.Collections.unmodifiableList(items);
             }
         }
-        return self;
     }
 
     /**
@@ -59,11 +56,11 @@ public class Loot {
         return chanceList;
     }
 
-    public java.util.List<config.other.LootItem> listRefLootid() {
+    public java.util.@Nullable List<config.other.LootItem> listRefLootid() {
         return ListRefLootid;
     }
 
-    public java.util.List<config.other.LootItem> listRefAnotherWay() {
+    public java.util.@Nullable List<config.other.LootItem> listRefAnotherWay() {
         return ListRefAnotherWay;
     }
 
@@ -90,7 +87,11 @@ public class Loot {
 
     }
 
-    public static Loot get(int lootid) {
+    public static Loot _create(configgen.genjava.ConfigInput input) {
+        return new Loot(input);
+    }
+
+    public static @Nullable Loot get(int lootid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherLoot(lootid);
     }

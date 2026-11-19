@@ -32,6 +32,20 @@ jobs:
         working-directory: app
         run: ./gradlew test fatJar --no-daemon
 
+      - name: Regenerate and check the Java example
+        working-directory: example/java
+        run: |
+          rm -- configgen/genjava/*.java
+          java --sun-misc-unsafe-memory-access=allow -jar ../../app/build/libs/cfggen.jar -datadir ../config -gen java,own:-noserver,dir:.,builders:../config/builders.txt,configgendir:.,beautifulName,jspecify
+          ../../app/gradlew -p . compileJava --no-daemon
+
+      - name: Regenerate and check the multilingual Java example
+        working-directory: example/java_ls
+        run: |
+          rm -- configgen/genjava/*.java
+          java --sun-misc-unsafe-memory-access=allow -jar ../../app/build/libs/cfggen.jar -datadir ../config -langswitchdir ../i18n/langs -gen java,own:-noserver,dir:.,configgendir:.,prefix:Cfg,jspecify
+          ../../app/gradlew -p . compileJava --no-daemon
+
       - name: Setup Node.js 24
         uses: actions/setup-node@v5
         with:

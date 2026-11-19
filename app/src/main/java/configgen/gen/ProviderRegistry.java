@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.Logger;
 
 import java.util.Collections;
@@ -15,12 +17,12 @@ import java.util.Map;
  */
 public class ProviderRegistry<P extends ProviderRegistry.Provider<T>, T> {
     public interface Provider<T> {
-        T create(Parameter parameter);
+        @Nullable T create(Parameter parameter);
     }
 
     private final Map<String, P> providers = new LinkedHashMap<>();
 
-    public T create(String arg) {
+    public @Nullable T create(String arg) {
         ParameterParser parameter = new ParameterParser(arg);
         P provider = providers.get(parameter.id());
         if (provider == null) {

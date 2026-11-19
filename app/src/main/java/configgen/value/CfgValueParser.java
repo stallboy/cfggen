@@ -51,7 +51,7 @@ public record CfgValueParser(CfgSchema subSchema,
                     VTableParser parser = new VTableParser(subTable, dTable, table,
                             env.headRow(), errs);
                     VTable vTable = parser.parseTable();
-                    TextValue.setTranslatedForTable(vTable, env.nullableLangTextFinder());
+                    TextValue.setTranslatedForTable(vTable, env.nullableTranslationCatalog());
                     if (Logger.isProfileEnabled()) {
                         long e = System.currentTimeMillis() - start;
                         if (e > 10) {
@@ -68,7 +68,7 @@ public record CfgValueParser(CfgSchema subSchema,
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
                             env.jsonTableFiles(), table, errs, cfgValue.valueStat());
                     VTable vTable = parser.parseTable();
-                    TextValue.setTranslatedForTable(vTable, env.nullableLangTextFinder());
+                    TextValue.setTranslatedForTable(vTable, env.nullableTranslationCatalog());
                     if (Logger.isProfileEnabled()) {
                         Logger.log("%40s: %d", name, System.currentTimeMillis() - start);
                     }

@@ -1,21 +1,19 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：equip/rank.csv
 public class Rank_Detail {
-    private int rankID;
-    private String rankName;
-    private String rankShowName;
-    private Rank_Detail() {
-    }
+    private final int rankID;
+    private final String rankName;
+    private final String rankShowName;
 
-    public static Rank_Detail _create(configgen.genjava.ConfigInput input) {
-        Rank_Detail self = new Rank_Detail();
-        self.rankID = input.readInt();
-        self.rankName = input.readStringInPool();
-        self.rankShowName = input.readStringInPool();
-        return self;
+    private Rank_Detail(configgen.genjava.ConfigInput input) {
+        this.rankID = input.readInt();
+        this.rankName = input.readStringInPool();
+        this.rankShowName = input.readStringInPool();
     }
 
     /**
@@ -44,19 +42,23 @@ public class Rank_Detail {
         return "(" + rankID + "," + rankName + "," + rankShowName + ")";
     }
 
-    public static Rank_Detail get(int rankID) {
+    public static Rank_Detail _create(configgen.genjava.ConfigInput input) {
+        return new Rank_Detail(input);
+    }
+
+    public static @Nullable Rank_Detail get(int rankID) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getEquipRank(rankID);
     }
 
-    public static java.util.List<Rank_Detail> all() {
+    public static java.util.List<@Nullable Rank_Detail> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipRank();
     }
 
     public static void _index(config.ConfigMgr mgr, java.util.Map<Integer, Rank_Detail> rows, LoadValueErrs errors) {
         int c = rows.size();
-        var equip_rank_All = new java.util.ArrayList<Rank_Detail>(java.util.Collections.nCopies(c, null));
+        var equip_rank_All = new java.util.ArrayList<@Nullable Rank_Detail>(java.util.Collections.nCopies(c, null));
         var seq_RankID = new boolean[c];
         for (var self : rows.values()) {
             {

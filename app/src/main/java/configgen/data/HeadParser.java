@@ -38,7 +38,7 @@ public final class HeadParser {
                 headerSheet = sheet;
             } else if (!curNames.equals(names)) {
                 // 多个sheet的表头不一致，但还是接着处理，按第一个header来处理，数据可能完全错位
-                errs.addErr(new CfgSchemaErrs.SplitDataHeaderNotEqual(sheet.id(), curNames, headerSheet.id(), names));
+                errs.addErr(new CfgSchemaErrs.SplitDataHeaderNotEqual(sheet.id(), curNames, java.util.Objects.requireNonNull(headerSheet).id(), java.util.Objects.requireNonNull(names)));
             }
         }
 

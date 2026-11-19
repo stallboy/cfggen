@@ -215,6 +215,8 @@ class WaitWatcherBehaviorTest {
         }, "负等待时间应该抛出异常");
     }
 
+    // This test deliberately violates the non-null argument contract.
+    @SuppressWarnings("NullAway")
     @Test
     void shouldHandleNullListenerGracefully() {
         // Given: null 监听器
@@ -226,6 +228,8 @@ class WaitWatcherBehaviorTest {
         }, "null 监听器应该抛出异常");
     }
 
+    // This test deliberately violates the non-null argument contract.
+    @SuppressWarnings("NullAway")
     @Test
     void shouldHandleNullWatcherGracefully() {
         // Given: null Watcher

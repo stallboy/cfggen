@@ -1,6 +1,8 @@
 package configgen.value;
 
-import configgen.i18n.LangTextFinder;
+import org.jspecify.annotations.Nullable;
+
+import configgen.i18n.TranslationCatalog;
 import configgen.schema.HasText;
 import configgen.value.ForeachValue.ValueVisitorForPrimitive;
 
@@ -38,17 +40,17 @@ public class TextValue {
         }
     }
 
-    public static void setTranslated(CfgValue cfgValue, LangTextFinder langFinder){
+    public static void setTranslated(CfgValue cfgValue, @Nullable TranslationCatalog catalog){
         for (VTable vTable : cfgValue.tables()) {
-            setTranslatedForTable(vTable, langFinder);
+            setTranslatedForTable(vTable, catalog);
         }
     }
 
-    public static void setTranslatedForTable(VTable vTable, LangTextFinder langFinder) {
-        if (langFinder == null) {
+    public static void setTranslatedForTable(VTable vTable, @Nullable TranslationCatalog catalog) {
+        if (catalog == null) {
             return;
         }
-        LangTextFinder.TextFinder textFinder = langFinder.getTextFinder(vTable.name());
+        TranslationCatalog.TextFinder textFinder = catalog.getTextFinder(vTable.name());
         if (textFinder == null) {
             return;
         }
@@ -62,9 +64,9 @@ public class TextValue {
 
 
     private static class SetTextTranslatedVisitor extends ValueVisitorForPrimitive {
-        private final LangTextFinder.TextFinder textFinder;
+        private final TranslationCatalog.TextFinder textFinder;
 
-        public SetTextTranslatedVisitor(LangTextFinder.TextFinder textFinder) {
+        public SetTextTranslatedVisitor(TranslationCatalog.TextFinder textFinder) {
             this.textFinder = textFinder;
         }
 

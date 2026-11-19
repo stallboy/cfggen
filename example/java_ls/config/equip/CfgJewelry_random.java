@@ -1,46 +1,44 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // struct 作为key，有些生成代码是不支持的
 // 来自：equip/jewelry_random.csv
 public class CfgJewelry_random {
-    private config.CfgLevelRank lvlRank;
-    private config.CfgRange attackRange;
-    private java.util.List<config.CfgRange> otherRange;
-    private java.util.List<config.equip.CfgTestPackBean> testPack;
-    private CfgJewelry_random() {
-    }
+    private final config.CfgLevelRank lvlRank;
+    private final config.CfgRange attackRange;
+    private final java.util.List<config.CfgRange> otherRange;
+    private final java.util.List<config.equip.CfgTestPackBean> testPack;
 
-    public static CfgJewelry_random _create(configgen.genjava.ConfigInput input) {
-        CfgJewelry_random self = new CfgJewelry_random();
-        self.lvlRank = config.CfgLevelRank._create(input);
-        self.attackRange = config.CfgRange._create(input);
+    private CfgJewelry_random(configgen.genjava.ConfigInput input) {
+        this.lvlRank = config.CfgLevelRank._create(input);
+        this.attackRange = config.CfgRange._create(input);
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.otherRange = java.util.Collections.emptyList();
+                this.otherRange = java.util.Collections.emptyList();
             } else {
-                self.otherRange = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<config.CfgRange>(c);
                 for (; c > 0; c--) {
-                    self.otherRange.add(config.CfgRange._create(input));
+                    items.add(config.CfgRange._create(input));
                 }
-                self.otherRange = java.util.Collections.unmodifiableList(self.otherRange);
+                this.otherRange = java.util.Collections.unmodifiableList(items);
             }
         }
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.testPack = java.util.Collections.emptyList();
+                this.testPack = java.util.Collections.emptyList();
             } else {
-                self.testPack = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<config.equip.CfgTestPackBean>(c);
                 for (; c > 0; c--) {
-                    self.testPack.add(config.equip.CfgTestPackBean._create(input));
+                    items.add(config.equip.CfgTestPackBean._create(input));
                 }
-                self.testPack = java.util.Collections.unmodifiableList(self.testPack);
+                this.testPack = java.util.Collections.unmodifiableList(items);
             }
         }
-        return self;
     }
 
     /**
@@ -80,7 +78,11 @@ public class CfgJewelry_random {
         this.lvlRank._resolve(mgr, errors);
     }
 
-    public static CfgJewelry_random get(config.CfgLevelRank lvlRank) {
+    public static CfgJewelry_random _create(configgen.genjava.ConfigInput input) {
+        return new CfgJewelry_random(input);
+    }
+
+    public static @Nullable CfgJewelry_random get(config.CfgLevelRank lvlRank) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getEquipJewelry_random(lvlRank);
     }

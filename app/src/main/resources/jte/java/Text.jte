@@ -6,25 +6,20 @@ package ${model.pkg};
 
 public class Text {
     @for(String lang : model.languages)
-    private String ${lang};
+    private final String ${lang};
     @endfor
 
-    private Text() {
-    }
-
-    public Text(@for(int i = 0; i < model.languages.size(); i++)@if(i > 0), @endifString ${model.languages.get(i)}@endfor) {
+${"\n"}    public Text(@for(int i = 0; i < model.languages.size(); i++)@if(i > 0), @endifString ${model.languages.get(i)}@endfor) {
         @for(String lang : model.languages)
         this.${lang} = ${lang};
         @endfor
     }
 
-    public static Text _create(configgen.genjava.ConfigInput input) {
-        Text self = new Text();
+    private Text(configgen.genjava.ConfigInput input) {
         int index = input.readTextIndex();
         @for(int i = 0; i < model.languages.size(); i++)
-        self.${model.languages.get(i)} = input.textInPool(${i}, index);
+        this.${model.languages.get(i)} = input.textInPool(${i}, index);
         @endfor
-        return self;
     }
 
     @for(String lang : model.languages)
@@ -36,5 +31,9 @@ public class Text {
     @Override
     public String toString() {
         return "Text(" + ${model.join()} + ")";
+    }
+
+    public static Text _create(configgen.genjava.ConfigInput input) {
+        return new Text(input);
     }
 }

@@ -1,5 +1,7 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.data.CfgData.DRawSheet;
 import configgen.data.CfgData.DTable;
@@ -7,7 +9,6 @@ import configgen.schema.TableSchema;
 import configgen.util.Logger;
 import configgen.value.*;
 import configgen.write.ValueUpdater.NewCfgValueResult;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -25,15 +26,15 @@ public class AddOrUpdateService {
     }
 
     public record AddOrUpdateRecordResult(AddOrUpdateErrorCode errorCode,
-                                          String recordId,
-                                          CfgValue newCfgValue,
+                                          @Nullable String recordId,
+                                          @Nullable CfgValue newCfgValue,
                                           List<String> errorMessages) {
     }
 
-    public static AddOrUpdateRecordResult addOrUpdateRecord(@NotNull Context context,
-                                                            @NotNull CfgValue cfgValue,
-                                                            @NotNull String tableName,
-                                                            @NotNull String recordJsonStr) {
+    public static AddOrUpdateRecordResult addOrUpdateRecord(Context context,
+                                                            CfgValue cfgValue,
+                                                            String tableName,
+                                                            String recordJsonStr) {
 
         if (cfgValue.schema().isPartial()) {
             return new AddOrUpdateRecordResult(AddOrUpdateErrorCode.PartialNotEditable, null, null, List.of());
@@ -73,7 +74,7 @@ public class AddOrUpdateService {
 
             } else {
                 DTable dTable = context.cfgData().getDTable(tableName);
-                DRawSheet dRawSheet = VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, thisValue);
+                DRawSheet dRawSheet = VTableStorage.addOrUpdateRecord(context, vTable, java.util.Objects.requireNonNull(dTable), pkValue, thisValue);
 
                 nr = ValueUpdater.updateByReloadTableData(context, cfgValue, vTable);
 

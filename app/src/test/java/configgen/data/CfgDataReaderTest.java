@@ -9,6 +9,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CfgDataReaderTest {
@@ -30,7 +31,7 @@ class CfgDataReaderTest {
         assertEquals(1, cfgData.tables().size());
         assertEquals(1, cfgData.stat().tableCount);
 
-        CfgData.DTable dt = cfgData.tables().get("rank");
+        CfgData.DTable dt = requireNonNull(cfgData.tables().get("rank"));
         assertEquals("rank", dt.tableName());
         assertEquals(1, dt.rawSheets().size());
 
@@ -69,13 +70,13 @@ class CfgDataReaderTest {
         assertEquals(4, cfgData.stat().sheetCount);
 
         {
-            CfgData.DTable dt = cfgData.tables().get("ai");
+            CfgData.DTable dt = requireNonNull(cfgData.tables().get("ai"));
             assertEquals("ai", dt.tableName());
             assertEquals(7, dt.fields().size());
             assertEquals(52, dt.rows().size());
         }
         {
-            CfgData.DTable dt = cfgData.tables().get("ai_action");
+            CfgData.DTable dt = requireNonNull(cfgData.tables().get("ai_action"));
             assertEquals("ai_action", dt.tableName());
             assertEquals(12, dt.fields().size());
             assertEquals(53, dt.rows().size());

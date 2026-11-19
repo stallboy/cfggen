@@ -1,5 +1,7 @@
 package configgen.genbytes;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.data.Source;
 import configgen.genjava.*;
@@ -16,7 +18,7 @@ import static configgen.value.CfgValue.*;
 final class PackageBuilder {
     record Result(CfgValue own, CfgValue effective) {}
 
-    static Result build(Context ctx, String tag, List<Path> paths, String name, String requires) throws IOException {
+    static Result build(Context ctx, @Nullable String tag, List<Path> paths, String name, String requires) throws IOException {
         CfgSchema schema = ctx.cfgSchema();
         if (tag != null) {
             var errors = CfgSchemaErrs.of();
@@ -45,7 +47,7 @@ final class PackageBuilder {
         var pending = new ArrayDeque<>(declared);
         while (!pending.isEmpty()) {
             String dependency = pending.removeFirst();
-            if (reachable.add(dependency)) pending.addAll(available.get(dependency).dependencies());
+            if (reachable.add(dependency)) pending.addAll(java.util.Objects.requireNonNull(available.get(dependency)).dependencies());
         }
         if (!reachable.containsAll(available.keySet())) throw new ConfigErr("Build inputs include undeclared dependencies");
 
@@ -54,10 +56,10 @@ final class PackageBuilder {
         for (TableSchema table : schema.tableMap().values()) {
             var source = ctx.cfgData().getDTable(table.name());
             if (source != null) {
-                local.put(table.name(), new VTableParser(table, source, ctx.cfgSchema().findTable(table.name()), ctx.contextCfg().headRow(), errors).parseRecords());
+                local.put(table.name(), new VTableParser(table, source, java.util.Objects.requireNonNull(ctx.cfgSchema().findTable(table.name())), ctx.contextCfg().headRow(), errors).parseRecords());
             } else if (!ctx.sourceStructure().jsonFilesOf(table.name()).isEmpty()) {
                 local.put(table.name(), new VTableJsonParser(table, schema.isPartial(), ctx.sourceStructure(),
-                        ctx.cfgSchema().findTable(table.name()), errors, new CfgValueStat()).parseRecords());
+                        java.util.Objects.requireNonNull(ctx.cfgSchema().findTable(table.name())), errors, new CfgValueStat()).parseRecords());
             } else if (packs.isEmpty() && table.meta().getEnumValues() != null) {
                 local.put(table.name(), new VTableCreator(table, errors).create(List.of()).valueList());
             }
@@ -65,7 +67,7 @@ final class PackageBuilder {
         errors.checkErrors("package fields", false);
         Map<String, LinkedHashMap<Value, VStruct>> merged = new LinkedHashMap<>();
         for (String table : schema.tableMap().keySet()) merged.put(table, new LinkedHashMap<>());
-        String[] languages = ctx.nullableLangSwitch() == null ? new String[0] : new String[]{ctx.nullableLangSwitch().defaultLang()};
+        String[] languages = ctx.nullableTranslationBundle() == null ? new String[0] : new String[]{ctx.nullableTranslationBundle().defaultLang()};
         for (var pack : packs) {
             for (String block : pack.blockNames()) {
                 if (!block.startsWith(".")) continue;
@@ -77,14 +79,14 @@ final class PackageBuilder {
                 var rows = new ArrayList<VStruct>(count);
                 for (int i = 0; i < count; i++) rows.add(readStruct(table, input, Source.DFile.of(pack.name(), tableName).child(Integer.toString(i))));
                 input.requireEnd();
-                merge(table, merged.get(tableName), rows);
+                merge(table, java.util.Objects.requireNonNull(merged.get(tableName)), rows);
             }
         }
-        for (var entry : local.entrySet()) merge(schema.findTable(entry.getKey()), merged.get(entry.getKey()), entry.getValue());
+        for (var entry : local.entrySet()) merge(java.util.Objects.requireNonNull(schema.findTable(entry.getKey())), java.util.Objects.requireNonNull(merged.get(entry.getKey())), entry.getValue());
         CfgValue effective = CfgValue.of(schema);
         CfgValue own = CfgValue.of(schema);
         for (TableSchema table : schema.tableMap().values()) {
-            var rows = new ArrayList<>(merged.get(table.name()).values());
+            var rows = new ArrayList<>(java.util.Objects.requireNonNull(merged.get(table.name())).values());
             if (table.primaryKey().fieldSchemas().size() == 1 && table.primaryKey().fieldSchemas().getFirst().isSeq()) {
                 rows.sort(Comparator.comparingInt(row -> ((VInt) ValueUtil.extractPrimaryKeyValue(row, table)).value()));
             }
@@ -96,9 +98,9 @@ final class PackageBuilder {
                     throw new ConfigErr("Fixed schema enum identity changed: " + table.name());
                 }
                 if (table.meta().getEnumValues() instanceof Metadata.MetaEnumValues.OfAssigned) {
-                    int idIndex = FindFieldIndex.findFieldIndex(table, table.findField("id"));
+                    int idIndex = FindFieldIndex.findFieldIndex(table, java.util.Objects.requireNonNull(table.findField("id")));
                     for (var fixedRow : fixed.primaryKeyMap().entrySet()) {
-                        if (!fixedRow.getValue().values().get(idIndex).equals(all.primaryKeyMap().get(fixedRow.getKey()).values().get(idIndex))) throw new ConfigErr("Fixed schema enum ID changed: " + table.name() + "." + fixedRow.getKey());
+                        if (!fixedRow.getValue().values().get(idIndex).equals(java.util.Objects.requireNonNull(all.primaryKeyMap().get(fixedRow.getKey())).values().get(idIndex))) throw new ConfigErr("Fixed schema enum ID changed: " + table.name() + "." + fixedRow.getKey());
                     }
                 }
             }
@@ -112,7 +114,7 @@ final class PackageBuilder {
         }
         new RefValidator(effective, errors).validate();
         errors.checkErrors("effective package " + name, false);
-        var expected = SchemaParser.parsePackage(effective, ctx.nullableLangSwitch());
+        var expected = SchemaParser.parsePackage(effective, ctx.nullableTranslationBundle());
         for (var pack : packs) {
             var input = pack.block("schema");
             Schema actual = SchemaDeserializer.deserialize(input); input.requireEnd();
@@ -153,7 +155,7 @@ final class PackageBuilder {
                             .orElseThrow(() -> new ConfigErr("Unknown union implementation: " + name));
                     yield new VInterface(iface, readStruct(impl, input, source), source);
                 }
-                yield readStruct((Structural) ref.obj(), input, source);
+                yield readStruct((Structural) ref.resolvedObj(), input, source);
             }
             case FieldType.FList list -> {
                 int count = input.readInt();

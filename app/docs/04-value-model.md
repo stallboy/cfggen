@@ -70,12 +70,12 @@ Value
 
 ## i18n 桥（`TextValue`，仅直接替换模式）
 
-见 `value/TextValue.java`。`-i18nfile` 模式下，每张表解析后按 **(主键 `packStr`, `fieldChain`, `original`)** 三元组查 `LangTextFinder`，命中就 `VText.setTranslated`。
+见 `value/TextValue.java`。`-i18nfile` 模式下，每张表解析后按 **(主键 `packStr`, `fieldChain`, `original`)** 三元组查 `TranslationCatalog`，命中就 `VText.setTranslated`。
 
 两个优化：
 
 - 用 schema 预计算的 `HasText` 剪枝——**整张表没有 text 字段就直接跳过**，不遍历。
-- 只在直接替换模式（`LangTextFinder != null`）下跑；lang-switch 模式不在此处理。
+- 只在直接替换模式（`TranslationCatalog != null`）下跑；lang-switch 模式不在此处理。
 
 > 两种 i18n 模式的完整对比见 [`09`](09-i18n.md)。
 

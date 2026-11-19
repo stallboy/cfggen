@@ -1,9 +1,13 @@
 package configgen.gengo;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
-import configgen.i18n.LangSwitchable;
+import configgen.i18n.TranslationBundle;
 import configgen.schema.*;
 import configgen.util.*;
 import configgen.util.CachedIndentPrinter.CacheConfig;
@@ -46,6 +50,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
         outputFiles = ctx.outputFiles();
@@ -61,8 +66,8 @@ public class GoCodeGenerator extends GeneratorWithTag {
             }
         }, cfgSchema);
 
-        isLangSwitch = ctx.nullableLangSwitch() != null;
-        languageNames = isLangSwitch ? ctx.nullableLangSwitch().languages() : List.of();
+        isLangSwitch = ctx.nullableTranslationBundle() != null;
+        languageNames = isLangSwitch ? java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()).languages() : List.of();
 
         for (String fn : COPY_FILES) {
             FileUtil.copyFileIfNotExist("/support/go/" + fn,
@@ -108,7 +113,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
         }
 
         if (isLangSwitch) {
-            generateText(ctx.nullableLangSwitch());
+            generateText(java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()));
         }
 
         outputFiles.deleteOtherFiles(dstDir.toFile());
@@ -134,7 +139,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
         }
     }
 
-    private void generateStruct(Structural structural, CfgValue.VTable vTable) {
+    private void generateStruct(Structural structural, CfgValue.@Nullable VTable vTable) {
         GoName name = new GoName(structural);
         StructModel model = new StructModel(this, pkg, name, structural, vTable);
         try (var ps = createCode(name.filePath)) {
@@ -150,8 +155,8 @@ public class GoCodeGenerator extends GeneratorWithTag {
         }
     }
 
-    private void generateText(LangSwitchable langSwitch) {
-        List<String> languages = langSwitch.languages().stream().map(StringUtil::upper1).toList();
+    private void generateText(TranslationBundle translationBundle) {
+        List<String> languages = translationBundle.languages().stream().map(StringUtil::upper1).toList();
         Map<String, Object> model = Map.of("pkg", pkg, "languages", languages);
         try (var ps = createCode("Text.go")) {
             String template = serverText ? "go/ServerText.jte" : "go/ClientText.jte";

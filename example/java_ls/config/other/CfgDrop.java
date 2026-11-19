@@ -1,47 +1,45 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：other/drop.csv
 public class CfgDrop {
-    private int dropid;
-    private config.Text name;
-    private java.util.List<config.other.CfgDropItem> items;
-    private java.util.Map<Integer, Integer> testmap;
-    private CfgDrop() {
-    }
+    private final int dropid;
+    private final config.Text name;
+    private final java.util.List<config.other.CfgDropItem> items;
+    private final java.util.Map<Integer, Integer> testmap;
 
-    public static CfgDrop _create(configgen.genjava.ConfigInput input) {
-        CfgDrop self = new CfgDrop();
-        self.dropid = input.readInt();
-        self.name = config.Text._create(input);
+    private CfgDrop(configgen.genjava.ConfigInput input) {
+        this.dropid = input.readInt();
+        this.name = config.Text._create(input);
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.items = java.util.Collections.emptyList();
+                this.items = java.util.Collections.emptyList();
             } else {
-                self.items = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<config.other.CfgDropItem>(c);
                 for (; c > 0; c--) {
-                    self.items.add(config.other.CfgDropItem._create(input));
+                    items.add(config.other.CfgDropItem._create(input));
                 }
-                self.items = java.util.Collections.unmodifiableList(self.items);
+                this.items = java.util.Collections.unmodifiableList(items);
             }
         }
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.testmap = java.util.Collections.emptyMap();
+                this.testmap = java.util.Collections.emptyMap();
             } else {
-                self.testmap = new java.util.LinkedHashMap<>(c);
+                var entries = new java.util.LinkedHashMap<Integer, Integer>(c);
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readInt();
-                    if (self.testmap.putIfAbsent(key, value) != null) {
+                    if (entries.putIfAbsent(key, value) != null) {
                         input.errors().duplicateKey("other.drop.testmap", key);
                     }
                 }
-                self.testmap = java.util.Collections.unmodifiableMap(self.testmap);
+                this.testmap = java.util.Collections.unmodifiableMap(entries);
             }
         }
-        return self;
     }
 
     /**
@@ -77,7 +75,11 @@ public class CfgDrop {
         return "(" + dropid + "," + name + "," + items + "," + testmap + ")";
     }
 
-    public static CfgDrop get(int dropid) {
+    public static CfgDrop _create(configgen.genjava.ConfigInput input) {
+        return new CfgDrop(input);
+    }
+
+    public static @Nullable CfgDrop get(int dropid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherDrop(dropid);
     }

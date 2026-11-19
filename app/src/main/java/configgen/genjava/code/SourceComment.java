@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.CommentData;
 import configgen.schema.Nameable;
 import configgen.util.LocaleUtil;
@@ -13,7 +15,7 @@ import java.util.stream.Collectors;
  */
 public final class SourceComment {
 
-    public static String of(Nameable nameable, List<String> rawSheetIds) {
+    public static String of(Nameable nameable, @Nullable List<String> rawSheetIds) {
         StringBuilder lines = new StringBuilder();
         CommentData cd = nameable.meta().getComment();
         if (cd != null) {

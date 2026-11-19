@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.ctx.DirectoryStructure;
 import configgen.ctx.StateCoordinator;
@@ -28,7 +30,7 @@ public enum WatchAndPostRun {
 
     private static class PostRunBat {
         String batFile; // .bat 或 .sh 文件
-        volatile Thread thread = null; // 执行该bat文件的线程
+        volatile @Nullable Thread thread = null; // 执行该bat文件的线程
 
         PostRunBat(String batFile) {
             this.batFile = batFile;
@@ -46,8 +48,8 @@ public enum WatchAndPostRun {
      * 写成功后锁内统一刷新所有订阅者快照，任一server的修改对其他server立即可见。
      */
     private final StateCoordinator<Context> coordinator = new StateCoordinator<>();
-    private Watcher watcher;
-    private WaitWatcher waitWatcher;
+    private @Nullable Watcher watcher;
+    private @Nullable WaitWatcher waitWatcher;
     // autoFix写回config.cfg会再触发watch→reload，若对齐不稳定会形成写-触发循环，需要上限保护。
     // 读写跨线程（reloadData在watcher线程、startWatch的重置在主线程），volatile 保证重置可见
     private volatile int consecutiveAutoFixReloads = 0;
@@ -161,7 +163,7 @@ public enum WatchAndPostRun {
      * 这是在virtual thread里执行的
      */
     private void reloadData() {
-        Context cur = coordinator.state();
+        Context cur = java.util.Objects.requireNonNull(coordinator.state());
         DirectoryStructure newStructure = cur.sourceStructure().reload();
         if (newStructure.lastModifiedEquals(cur.sourceStructure())) {
             Logger.verbose(LocaleUtil.getLocaleString("WatchAndPostRun.LastModifiedNotChanged",
@@ -228,7 +230,7 @@ public enum WatchAndPostRun {
                     genPrefix = "# -gen ";
                 }
                 if (genPrefix != null) {
-                    Context runCtx = coordinator.state();
+                    Context runCtx = java.util.Objects.requireNonNull(coordinator.state());
                     for (String line : Files.readAllLines(Path.of(postRun))) {
                         if (line.startsWith(genPrefix)) {
                             String parameter = line.substring(genPrefix.length());

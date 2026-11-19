@@ -1,10 +1,14 @@
 package configgen.gents;
 
+import com.uber.nullaway.annotations.Initializer;
+
+import org.jspecify.annotations.Nullable;
+
 import configgen.naming.GenNaming;
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
-import configgen.i18n.LangSwitchable;
+import configgen.i18n.TranslationBundle;
 import configgen.schema.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.util.FileUtil;
@@ -22,7 +26,7 @@ public class TsCodeGenerator extends GeneratorWithTag {
     private final Path dstDir;
     public CfgValue cfgValue;
     public CfgSchema cfgSchema;
-    public LangSwitchable nullableLanguageSwitch;
+    public @Nullable TranslationBundle nullableTranslationBundle;
 
     public TsCodeGenerator(Parameter parameter) {
         super(parameter);
@@ -33,6 +37,7 @@ public class TsCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
         // 注意：ts 不做 deleteOtherFiles/keepMetaAndDeleteOtherFiles 收尾清理，这是目录语义决定的、不是遗漏：
         // 1. dstDir 默认就是用户项目根（不传 dir 时为 "."），Config.ts 与 main.ts/package.json 等
@@ -41,7 +46,7 @@ public class TsCodeGenerator extends GeneratorWithTag {
         // 2. ts 产物仅 Config.ts + ConfigUtil.ts 两个固定文件名，不会产生陈旧文件堆积，无清理需求。
         cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
         cfgSchema = cfgValue.schema();
-        nullableLanguageSwitch = ctx.nullableLangSwitch();
+        nullableTranslationBundle = ctx.nullableTranslationBundle();
 
         try (var ps = new CachedIndentPrinter(dstDir.resolve("Config.ts"), encoding, ctx.outputFiles())) {
             JteEngine.render("ts/Config.jte", this, ps);
@@ -59,7 +64,7 @@ public class TsCodeGenerator extends GeneratorWithTag {
     }
 
     public String languageArguments() {
-        return (nullableLanguageSwitch == null ? java.util.List.<String>of() : nullableLanguageSwitch.languages())
+        return (nullableTranslationBundle == null ? java.util.List.<String>of() : nullableTranslationBundle.languages())
                 .stream().map(name -> "\"" + name + "\"").collect(java.util.stream.Collectors.joining(", "));
     }
 

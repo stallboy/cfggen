@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CfgValueParserTest {
@@ -49,7 +50,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable rank = cfgValue.getTable("rank");
+        VTable rank = requireNonNull(cfgValue.getTable("rank"));
         TableSchema rankSchema = ctx.cfgSchema().findTable("rank");
 
         assertEquals(rankSchema, rank.schema());
@@ -91,7 +92,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable tVTable = cfgValue.getTable("t");
+        VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
 
         assertEquals(tSchema, tVTable.schema());
@@ -143,7 +144,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable tVTable = cfgValue.getTable("t");
+        VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
 
         assertEquals(tSchema, tVTable.schema());
@@ -194,9 +195,9 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable tVTable = cfgValue.getTable("t");
+        VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
-        InterfaceSchema action = (InterfaceSchema) ctx.cfgSchema().findItem("action");
+        InterfaceSchema action = requireNonNull((InterfaceSchema) ctx.cfgSchema().findItem("action"));
 
 
         assertEquals(tSchema, tVTable.schema());
@@ -238,7 +239,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable tVTable = cfgValue.getTable("t");
+        VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
 
         assertEquals(tSchema, tVTable.schema());
@@ -283,7 +284,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable tVTable = cfgValue.getTable("t");
+        VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
 
         assertEquals(tSchema, tVTable.schema());
@@ -334,7 +335,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable tVTable = cfgValue.getTable("t");
+        VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
 
         assertEquals(tSchema, tVTable.schema());
@@ -386,7 +387,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable t = cfgValue.getTable("t");
+        VTable t = requireNonNull(cfgValue.getTable("t"));
         assertEquals(1, t.valueList().size());
 
         VStruct record = t.valueList().getFirst();
@@ -438,7 +439,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable tVTable = cfgValue.getTable("t");
+        VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
 
         assertEquals(tSchema, tVTable.schema());
@@ -521,7 +522,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable t = cfgValue.getTable("t");
+        VTable t = requireNonNull(cfgValue.getTable("t"));
         assertEquals(1, t.valueList().size());
 
         VStruct record = t.valueList().getFirst();
@@ -819,7 +820,7 @@ class CfgValueParserTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        VTable tVTable = cfgValue.getTable("t");
+        VTable tVTable = requireNonNull(cfgValue.getTable("t"));
 
         assertEquals(1, tVTable.valueList().size());
         VStruct v = tVTable.valueList().getFirst();
@@ -834,7 +835,7 @@ class CfgValueParserTest {
 
     private static CfgValueParser parserOf(Context ctx, CfgValueErrs errs) {
         ValueEnv env = new ValueEnv(ctx.cfgSchema(), ctx.cfgData(), ctx.contextCfg().headRow(),
-                ctx.nullableLangTextFinder(), ctx.sourceStructure());
+                ctx.nullableTranslationCatalog(), ctx.sourceStructure());
         return new CfgValueParser(ctx.cfgSchema(), env, errs);
     }
 

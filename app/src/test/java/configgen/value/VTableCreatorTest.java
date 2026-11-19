@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.SequencedMap;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.value.CfgValue.*;
 import static configgen.value.Values.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +27,7 @@ class VTableCreatorTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
-        TableSchema t = cfg.findTable("t");
+        TableSchema t = requireNonNull(cfg.findTable("t"));
 
         VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc")));
         VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg")));
@@ -56,7 +57,7 @@ class VTableCreatorTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
-        TableSchema t = cfg.findTable("t");
+        TableSchema t = requireNonNull(cfg.findTable("t"));
 
         VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc")));
         VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg")));
@@ -80,7 +81,7 @@ class VTableCreatorTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
-        TableSchema t = cfg.findTable("t");
+        TableSchema t = requireNonNull(cfg.findTable("t"));
 
         VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc")));
         VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg")));
@@ -89,7 +90,7 @@ class VTableCreatorTest {
         VTable vTable = new VTableCreator(t, errs).create(vStructList);
 
         assertEquals(1, vTable.uniqueKeyMaps().size());
-        SequencedMap<Value, VStruct> uk = vTable.uniqueKeyMaps().get(List.of("s"));
+        SequencedMap<Value, VStruct> uk = requireNonNull(vTable.uniqueKeyMaps().get(List.of("s")));
         assertEquals(2, uk.size());
         assertEquals(vStruct, uk.get(ofStr("abc")));
         assertEquals(vStruct2, uk.get(ofStr("efg")));
@@ -107,7 +108,7 @@ class VTableCreatorTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
-        TableSchema t = cfg.findTable("t");
+        TableSchema t = requireNonNull(cfg.findTable("t"));
 
         VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc"), ofLong(123456)));
         VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg"), ofLong(456789)));

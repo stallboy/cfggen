@@ -1,12 +1,13 @@
 package configgen.editorserver;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.Context;
 import configgen.value.*;
 import configgen.write.AddOrUpdateService;
 import configgen.write.AddOrUpdateService.AddOrUpdateRecordResult;
 import configgen.write.DeleteService;
 import configgen.write.DeleteService.DeleteRecordResult;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -31,19 +32,19 @@ public final class RecordEditService {
 
     public record RecordEditResult(ResultCode resultCode,
                                    String table,
-                                   String id,
+                                   @Nullable String id,
                                    List<String> valueErrs) {// 即使有错，也更新，只是这里提示
     }
 
     public record ResultWithNewCfgValue(RecordEditResult result,
-                                        CfgValue newCfgValue) {
+                                        @Nullable CfgValue newCfgValue) {
     }
 
 
-    public static ResultWithNewCfgValue addOrUpdateRecord(@NotNull Context context,
-                                                          @NotNull CfgValue cfgValue,
-                                                          String table,
-                                                          @NotNull String jsonStr) {
+    public static ResultWithNewCfgValue addOrUpdateRecord(Context context,
+                                                          CfgValue cfgValue,
+                                                          @Nullable String table,
+                                                          String jsonStr) {
 
 
         if (table == null) {
@@ -76,10 +77,10 @@ public final class RecordEditService {
     }
 
 
-    public static ResultWithNewCfgValue deleteRecord(@NotNull Context context,
-                                                     @NotNull CfgValue cfgValue,
-                                                     String table,
-                                                     String id) {
+    public static ResultWithNewCfgValue deleteRecord(Context context,
+                                                     CfgValue cfgValue,
+                                                     @Nullable String table,
+                                                     @Nullable String id) {
         if (table == null) {
             return new ResultWithNewCfgValue(
                     new RecordEditResult(tableNotSet, "", "", List.of()),

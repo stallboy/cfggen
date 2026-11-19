@@ -1,5 +1,7 @@
 package configgen.data;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.FileNameUtil;
 
 import java.nio.file.Path;
@@ -23,7 +25,7 @@ public class DataUtil {
         return path.toFile().isHidden() || path.getFileName().toString().startsWith("~");
     }
 
-    public static FileFmt getFileFormat(Path path) {
+    public static @Nullable FileFmt getFileFormat(Path path) {
         String fileName = path.getFileName().toString();
         String ext = "";
         int i = fileName.lastIndexOf('.');
@@ -45,7 +47,7 @@ public class DataUtil {
                                  int index) {
     }
 
-    public static TableNameIndex getTableNameIndex(Path filePath, String sheetName) {
+    public static @Nullable TableNameIndex getTableNameIndex(Path filePath, String sheetName) {
         Path path;
         if (filePath.getParent() != null) {
             path = filePath.getParent().resolve(sheetName);
@@ -56,7 +58,7 @@ public class DataUtil {
     }
 
     //现在都小写了，要是讲究的话，应该是路径小写，sheetName不改
-    public static TableNameIndex getTableNameIndex(Path filePath) {
+    public static @Nullable TableNameIndex getTableNameIndex(Path filePath) {
         List<String> codeNames = new ArrayList<>();
         for (Path path : filePath) {
             String fileName = path.getFileName().toString();
@@ -95,7 +97,7 @@ public class DataUtil {
 
     /// 从 "_" 开头的 JSON 目录名提取子表名。
     /// "_buff" → "buff"；非 "_" 开头、_后不是英文字母、或含中文返回 null。
-    private static String subTableNameIfJsonDir(String dirName) {
+    private static @Nullable String subTableNameIfJsonDir(String dirName) {
         if (!dirName.startsWith("_")) {
             return null;
         }
@@ -113,7 +115,7 @@ public class DataUtil {
         return sub;
     }
 
-    public static String getTableNameIfTableDirForJson(String dirName) {
+    public static @Nullable String getTableNameIfTableDirForJson(String dirName) {
         String sub = subTableNameIfJsonDir(dirName);
         if (sub == null) {
             return null;
@@ -124,7 +126,7 @@ public class DataUtil {
     /// 从嵌套的 JSON 子目录名提取表名的后半部分。
     /// 如 "_buff" → "buff"，"_instancelogic" → "instancelogic"。
     /// 非 "_" 开头或不符合规则返回 null。
-    public static String getSubTableNameIfJsonSubDir(String subDirName) {
+    public static @Nullable String getSubTableNameIfJsonSubDir(String subDirName) {
         return subTableNameIfJsonDir(subDirName);
     }
 

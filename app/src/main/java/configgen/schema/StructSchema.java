@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -14,7 +16,7 @@ public final class StructSchema implements Fieldable, Structural, Nameable {
     private final List<FieldSchema> fields;
     private final List<ForeignKeySchema> foreignKeys;
 
-    private InterfaceSchema nullableInterface;
+    private @Nullable InterfaceSchema nullableInterface;
 
     public StructSchema(String name, FieldFormat fmt, Metadata meta, List<FieldSchema> fields, List<ForeignKeySchema> foreignKeys) {
         Objects.requireNonNull(name);
@@ -84,7 +86,7 @@ public final class StructSchema implements Fieldable, Structural, Nameable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (StructSchema) obj;
@@ -111,11 +113,11 @@ public final class StructSchema implements Fieldable, Structural, Nameable {
     }
 
 
-    public InterfaceSchema nullableInterface() {
+    public @Nullable InterfaceSchema nullableInterface() {
         return nullableInterface;
     }
 
-    void setNullableInterface(InterfaceSchema nullableInterface) {
+    void setNullableInterface(@Nullable InterfaceSchema nullableInterface) {
         this.nullableInterface = nullableInterface;
     }
 }

@@ -1,6 +1,9 @@
 package configgen.gen;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.ctx.*;
+import configgen.ctx.Context.I18nCfg;
 import configgen.data.HeadRow;
 import configgen.data.HeadRows;
 import configgen.editorserver.EditorServer;
@@ -35,7 +38,7 @@ import java.util.Locale;
 public final class Main {
     private static final int MAX_EXCEPTION_DEPTH = 30;
 
-    private static int help(String reason) {
+    private static int help(@Nullable String reason) {
         Help.printHelp(reason);
         return 1;
     }
@@ -254,8 +257,14 @@ public final class Main {
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
 
+        I18nCfg i18n = I18nCfg.Disabled.INSTANCE;
+        if (i18nfile != null) {
+            i18n = new I18nCfg.Replace(Path.of(i18nfile));
+        } else if (langSwitchDir != null) {
+            i18n = new I18nCfg.Switchable(Path.of(langSwitchDir), langSwitchDefaultLang);
+        }
         var contextCfg = new Context.ContextCfg(dataDirPath, explicitDir, headRow, csvDefaultEncoding,
-                i18nfile, langSwitchDir, langSwitchDefaultLang, allowValueErr);
+                i18n, allowValueErr);
         Context context = sharedSchema == null ? new Context(contextCfg)
                 : new Context(contextCfg, configgen.schema.CfgSchemas.readFromRoot(Path.of(sharedSchema)));
         // 登记为当前代：server类generator（无论是否开watch）的编辑写路径统一经WatchAndPostRun取当前代并互斥

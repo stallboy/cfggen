@@ -1,5 +1,7 @@
 package configgen.gen.ui;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.gen.Generators;
 import configgen.gen.ParameterInfoCollector;
 import configgen.gen.Tools;
@@ -22,8 +24,8 @@ public class ParameterPanelItem {
     private final Map<String, JComponent> paramComponents = new LinkedHashMap<>();
 
     // 回调监听器
-    private Runnable changeListener;
-    private Runnable deleteListener;
+    private @Nullable Runnable changeListener;
+    private @Nullable Runnable deleteListener;
 
     public ParameterPanelItem(String type, String name, DocumentListener documentListener) {
         this.type = type;

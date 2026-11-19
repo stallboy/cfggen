@@ -1,5 +1,7 @@
 package configgen.util;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.gen.Generator;
 
 import java.io.*;
@@ -58,7 +60,7 @@ public class FileUtil {
         return files != null && files.length > 0;
     }
 
-    public static void assureFileExistIf(String filePath) {
+    public static void assureFileExistIf(@Nullable String filePath) {
         if (filePath != null) {
             Path root = Path.of(".");
             if (!Files.exists(root.resolve(filePath))) {
@@ -82,6 +84,18 @@ public class FileUtil {
             return;
         }
 
+        try (InputStream source = openSupportSource(sourceFileInResources, fallbackSourceFile);
+             BufferedReader br = new BufferedReader(new UnicodeReader(source, StandardCharsets.UTF_8));
+             CachedIndentPrinter ps = new CachedIndentPrinter(dstFile, dstEncoding, cachedFiles)) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                ps.println(transformLine.apply(line));
+            }
+        }
+    }
+
+    public static InputStream openSupportSource(String sourceFileInResources, String fallbackSourceFile)
+            throws IOException {
         // 1. 优先尝试从类路径获取
         InputStream is = Generator.class.getResourceAsStream(sourceFileInResources);
 
@@ -97,16 +111,7 @@ public class FileUtil {
             throw new FileNotFoundException("Could not find source: " + sourceFileInResources);
         }
 
-        // 3. 使用 try-with-resources 确保所有流（包括 InputStream）都被正确关闭
-        try (InputStream autoCloseIs = is;
-             BufferedReader br = new BufferedReader(new UnicodeReader(autoCloseIs, StandardCharsets.UTF_8));
-             CachedIndentPrinter ps = new CachedIndentPrinter(dstFile, dstEncoding, cachedFiles)) {
-
-            String line;
-            while ((line = br.readLine()) != null) {
-                ps.println(transformLine.apply(line));
-            }
-        }
+        return is;
     }
 
     private static File findSourceFile(String fallbackPath) {

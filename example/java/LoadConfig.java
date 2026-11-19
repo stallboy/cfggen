@@ -7,6 +7,8 @@ import config.other.Monster;
 import config.task.Task;
 import config.task.completecondition.KillMonster;
 import configgen.genjava.*;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -15,6 +17,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static java.util.Objects.requireNonNull;
+
+@NullMarked
 public class LoadConfig {
 
     private static final Logger logger = Logger.getLogger("LoadConfig");
@@ -32,22 +37,22 @@ public class LoadConfig {
         ConfigPackage mod = ConfigPackage.read(Path.of("demo-mod.bytes"));
         ConfigMgr modified = ConfigMgrLoader.loadPackages(base, mod);
         ConfigMgr.setMgr(modified);
-        Task hunt = Task.get(1001);
+        Task hunt = requireNonNull(Task.get(1001));
         var condition = (KillMonster) hunt.getCompletecondition();
 
         System.out.println("\n=== Mod example ===");
-        System.out.println("monster 1: base x=" + original.getOtherMonster(1).getPosList().getFirst().getX()
-                + ", mod x=" + Monster.get(1).getPosList().getFirst().getX());
-        System.out.println("monster 2 unchanged: x=" + Monster.get(2).getPosList().getFirst().getX());
+        System.out.println("monster 1: base x=" + requireNonNull(original.getOtherMonster(1)).getPosList().getFirst().getX()
+                + ", mod x=" + requireNonNull(Monster.get(1)).getPosList().getFirst().getX());
+        System.out.println("monster 2 unchanged: x=" + requireNonNull(Monster.get(2)).getPosList().getFirst().getX());
         System.out.println("monster 1001: base=" + original.getOtherMonster(1001) + ", mod=" + Monster.get(1001));
-        System.out.println("green: base=" + Rank.GREEN.ref(original).getRankShowName() + ", mod=" + Rank.GREEN.getRankShowName());
-        System.out.println("task 1001: " + hunt.getName() + ", target monster=" + condition.refMonsterid().getId()
+        System.out.println("green: base=" + requireNonNull(Rank.GREEN.ref(original)).getRankShowName() + ", mod=" + Rank.GREEN.getRankShowName());
+        System.out.println("task 1001: " + hunt.getName() + ", target monster=" + requireNonNull(condition.refMonsterid()).getId()
                 + ", exp=" + hunt.getExp());
         System.out.println("monster 1 sources=" + modified.explain("other.monster", 1));
         System.out.println("monster 1001 sources=" + modified.explain("other.monster", 1001));
     }
 
-    public static void autoReload(ScheduledExecutorService executorService, String fn, Runnable afterReload) throws IOException {
+    public static void autoReload(ScheduledExecutorService executorService, String fn, @Nullable Runnable afterReload) throws IOException {
         listen(executorService, Paths.get(fn), () -> {
             try {
                 load(fn);
@@ -62,7 +67,7 @@ public class LoadConfig {
     public static void listen(ScheduledExecutorService executorService, Path path, Runnable callback) throws IOException {
         path = path.toAbsolutePath().normalize();
         if (!path.toFile().isDirectory()) { // 简化
-            path = path.getParent();
+            path = requireNonNull(path.getParent());
         }
         Path watchPath = path;
         logger.info("start listen " + watchPath.toFile().getCanonicalPath());

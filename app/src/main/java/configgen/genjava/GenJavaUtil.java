@@ -23,7 +23,7 @@ public class GenJavaUtil {
     public static boolean hasExtension(FieldType type) {
         return switch (type) {
             case FieldType.Primitive ignored -> false;
-            case FieldType.StructRef ref -> hasExtension(ref.obj());
+            case FieldType.StructRef ref -> hasExtension(ref.resolvedObj());
             case FieldType.FList list -> hasExtension(list.item());
             case FieldType.FMap map -> hasExtension(map.key()) || hasExtension(map.value());
         };

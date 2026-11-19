@@ -1,5 +1,7 @@
 package configgen.gents;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
@@ -44,8 +46,8 @@ public class StructModel {
             case BOOL -> "boolean";
             case INT, LONG, FLOAT -> "number";
             case STRING -> "string";
-            case TEXT -> gen.nullableLanguageSwitch != null ? "Text" : "string";
-            case StructRef structRef -> asMapKey ? "number" : className(structRef.obj());
+            case TEXT -> gen.nullableTranslationBundle != null ? "Text" : "string";
+            case StructRef structRef -> asMapKey ? "number" : className(structRef.resolvedObj());
             case FList fList -> type(fList.item()) + "[]";
             case FMap fMap -> "Map<" + _type(fMap.key(), true) + ", " + type(fMap.value()) + ">";
         };
@@ -59,15 +61,15 @@ public class StructModel {
         }
     }
 
-    public String create(FieldType t) {
+    public @Nullable String create(FieldType t) {
         return switch (t) {
             case BOOL -> "os.ReadBool()";
             case INT -> "os.ReadInt32()";
             case LONG -> "os.ReadInt64()";
             case FLOAT -> "os.ReadSingle()";
             case STRING -> "os.ReadStringInPool()";
-            case TEXT -> gen.nullableLanguageSwitch != null ? "Text._create(os)" : "os.ReadTextInPool()";
-            case StructRef structRef -> className(structRef.obj()) + "._create(os)";
+            case TEXT -> gen.nullableTranslationBundle != null ? "Text._create(os)" : "os.ReadTextInPool()";
+            case StructRef structRef -> className(structRef.resolvedObj()) + "._create(os)";
             case FList ignored -> null;
             case FMap ignored -> null;
         };

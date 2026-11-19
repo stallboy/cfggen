@@ -8,14 +8,14 @@ import java.util.stream.Stream;
 
 
 /**
- * 多语言
- * @param langMap 在实现多种语言可切换时需要所有语言的信息
- * @param defaultLang 默认语言
+ * 可切换语言模式使用的一组译文。
+ * @param langMap 按语言代码索引的译文目录
+ * @param defaultLang 原文对应的语言
  */
-public record LangSwitchable(Map<String, LangTextFinder> langMap,
-                             String defaultLang) {
+public record TranslationBundle(Map<String, TranslationCatalog> langMap,
+                                String defaultLang) {
 
-    public LangSwitchable {
+    public TranslationBundle {
         Objects.requireNonNull(langMap);
         Objects.requireNonNull(defaultLang);
     }
@@ -31,11 +31,11 @@ public record LangSwitchable(Map<String, LangTextFinder> langMap,
         return langMap.size() + 1;
     }
 
-    public static LangSwitchable read(Path dir, String defaultLang) {
-        Map<String, LangTextFinder> langMap = isById(dir) ?
+    public static TranslationBundle read(Path dir, String defaultLang) {
+        Map<String, TranslationCatalog> langMap = isById(dir) ?
                 TextByIdFinder.loadMultiLang(dir) :
                 TextByValueFinder.loadMultiLang(dir);
-        return new LangSwitchable(langMap, defaultLang);
+        return new TranslationBundle(langMap, defaultLang);
     }
 
     /**

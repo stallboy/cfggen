@@ -1,44 +1,42 @@
 package config.equip;
 
+import org.jspecify.annotations.Nullable;
+
 // 来自：equip/jewelry_suit.csv
 public class CfgJewelry_suit {
-    private int suitID;
-    private String ename;
-    private config.Text name;
-    private int ability1;
-    private int ability1Value;
-    private int ability2;
-    private int ability2Value;
-    private int ability3;
-    private int ability3Value;
-    private java.util.List<Integer> suitList;
-    private CfgJewelry_suit() {
-    }
+    private final int suitID;
+    private final String ename;
+    private final config.Text name;
+    private final int ability1;
+    private final int ability1Value;
+    private final int ability2;
+    private final int ability2Value;
+    private final int ability3;
+    private final int ability3Value;
+    private final java.util.List<Integer> suitList;
 
-    public static CfgJewelry_suit _create(configgen.genjava.ConfigInput input) {
-        CfgJewelry_suit self = new CfgJewelry_suit();
-        self.suitID = input.readInt();
-        self.ename = input.readStringInPool();
-        self.name = config.Text._create(input);
-        self.ability1 = input.readInt();
-        self.ability1Value = input.readInt();
-        self.ability2 = input.readInt();
-        self.ability2Value = input.readInt();
-        self.ability3 = input.readInt();
-        self.ability3Value = input.readInt();
+    private CfgJewelry_suit(configgen.genjava.ConfigInput input) {
+        this.suitID = input.readInt();
+        this.ename = input.readStringInPool();
+        this.name = config.Text._create(input);
+        this.ability1 = input.readInt();
+        this.ability1Value = input.readInt();
+        this.ability2 = input.readInt();
+        this.ability2Value = input.readInt();
+        this.ability3 = input.readInt();
+        this.ability3Value = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.suitList = java.util.Collections.emptyList();
+                this.suitList = java.util.Collections.emptyList();
             } else {
-                self.suitList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.suitList.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.suitList = java.util.Collections.unmodifiableList(self.suitList);
+                this.suitList = java.util.Collections.unmodifiableList(items);
             }
         }
-        return self;
     }
 
     /**
@@ -113,7 +111,11 @@ public class CfgJewelry_suit {
         return "(" + suitID + "," + ename + "," + name + "," + ability1 + "," + ability1Value + "," + ability2 + "," + ability2Value + "," + ability3 + "," + ability3Value + "," + suitList + ")";
     }
 
-    public static CfgJewelry_suit get(int suitID) {
+    public static CfgJewelry_suit _create(configgen.genjava.ConfigInput input) {
+        return new CfgJewelry_suit(input);
+    }
+
+    public static @Nullable CfgJewelry_suit get(int suitID) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getEquipJewelry_suit(suitID);
     }

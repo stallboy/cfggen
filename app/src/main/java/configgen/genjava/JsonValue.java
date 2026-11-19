@@ -1,5 +1,7 @@
 package configgen.genjava;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 
 /**
@@ -17,7 +19,7 @@ public sealed interface JsonValue permits JsonValue.Obj, JsonValue.Arr, JsonValu
      * {@code impl} 为可空类型标记：非空时该 Obj 是接口多态值，渲染为 {@code ImplName{...}}；
      * 为 null 时渲染为普通 {@code {...}}。
      */
-    record Obj(String impl, List<Member> members) implements JsonValue {
+    record Obj(@Nullable String impl, List<Member> members) implements JsonValue {
     }
 
     /** 有序列表。 */
@@ -46,7 +48,7 @@ public sealed interface JsonValue permits JsonValue.Obj, JsonValue.Arr, JsonValu
     }
 
     /** 接口多态值：带实现类名作类型标记。 */
-    static Obj obj(String impl, Member... ms) {
+    static Obj obj(@Nullable String impl, Member... ms) {
         return new Obj(impl, List.of(ms));
     }
 
@@ -59,7 +61,7 @@ public sealed interface JsonValue permits JsonValue.Obj, JsonValue.Arr, JsonValu
     }
 
     /** 按运行时值自动选合适标量：Number→Num、Boolean→Bool、null→Null、其余→Str(toString)。 */
-    static JsonValue of(Object v) {
+    static JsonValue of(@Nullable Object v) {
         return switch (v) {
             case null -> new Null();
             case Number n -> new Num(n);

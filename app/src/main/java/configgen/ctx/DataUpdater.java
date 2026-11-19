@@ -12,7 +12,6 @@ import configgen.data.HeadRow;
 import configgen.data.ReadResult;
 import configgen.schema.CfgSchemaErrs;
 import configgen.schema.SchemaUtil;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -24,12 +23,12 @@ import static configgen.data.DataUtil.getTableNameIndex;
 
 public class DataUpdater {
 
-    public record NewCfgDataResult(@NotNull CfgData newCfgData,
-                                   @NotNull List<String> errStrList) {
+    public record NewCfgDataResult(CfgData newCfgData,
+                                   List<String> errStrList) {
     }
 
-    public static NewCfgDataResult updateByReloadTable(@NotNull Context context,
-                                                       @NotNull DTable dTable) {
+    public static NewCfgDataResult updateByReloadTable(Context context,
+                                                       DTable dTable) {
 
         DTable newTable = DTable.of(dTable.tableName(), new ArrayList<>(), dTable.nullableAddTag());
         Path rootDir = context.rootDir();

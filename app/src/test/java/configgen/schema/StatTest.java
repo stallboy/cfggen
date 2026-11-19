@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,7 +14,7 @@ class StatTest {
 
     static class StatImpl2 implements Stat {
         int field1;
-        String field2;
+        @Nullable String field2;
     }
 
 

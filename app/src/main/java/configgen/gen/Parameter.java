@@ -1,14 +1,20 @@
 package configgen.gen;
 
+import org.jetbrains.annotations.Contract;
+
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 
 public interface Parameter {
 
-    String get(String key, String def, String messageId);
+    @Contract("_, !null, _ -> !null")
+    @Nullable String get(String key, @Nullable String def, @Nullable String messageId);
 
-    boolean has(String key, String messageId);
+    boolean has(String key, @Nullable String messageId);
 
-    default String get(String key, String def) {
+    @Contract("_, !null -> !null")
+    default @Nullable String get(String key, @Nullable String def) {
         return get(key, def, null);
     }
 

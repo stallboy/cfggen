@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigPackageTest {
@@ -60,7 +61,7 @@ class ConfigPackageTest {
         for (int version : new int[]{0, 2, 512}) {
             var err = assertThrows(ConfigErr.class,
                     () -> ConfigPackage.read(new ConfigInput(bytes(out -> out.writeInt(version)))));
-            assertTrue(err.getMessage().contains(Integer.toString(version)));
+            assertTrue(requireNonNull(err.getMessage()).contains(Integer.toString(version)));
             assertTrue(err.getMessage().contains(Integer.toString(ConfigPackage.FORMAT_VERSION)));
         }
     }

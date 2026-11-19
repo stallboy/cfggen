@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigLoaderTest {
@@ -28,7 +29,7 @@ class ConfigLoaderTest {
         assertEquals(Map.of(1, List.of("mod"), 3, List.of("mod")), sources);
         assertThrows(UnsupportedOperationException.class, () -> published.get().clear());
         assertThrows(UnsupportedOperationException.class, sources::clear);
-        assertThrows(UnsupportedOperationException.class, () -> sources.get(1).add("late"));
+        assertThrows(UnsupportedOperationException.class, () -> requireNonNull(sources.get(1)).add("late"));
         assertThrows(UnsupportedOperationException.class, () -> loader.read(input(4, 50), "late", false));
         assertFalse(sources.containsKey(4));
         assertEquals(3, published.get().size());

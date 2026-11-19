@@ -1,5 +1,7 @@
 package configgen.data;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.FieldType;
 
 public interface HeadRow {
@@ -15,9 +17,9 @@ public interface HeadRow {
 
     int suggestedTypeRow();
 
-    FieldType parseType(String type);
+    @Nullable FieldType parseType(String type);
 
     long parseLong(String str);
 
-    ParseBoolResult parseBool(String str);
+    ParseBoolResult parseBool(@Nullable String str);
 }

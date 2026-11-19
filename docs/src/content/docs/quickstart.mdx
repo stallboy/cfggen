@@ -130,10 +130,13 @@ mygame/
 
 **说明**:
 - `-gen java,dir:../java,configgendir:../java`: 生成 Java 访问代码到 `../java` 目录，同时生成 Schema 框架文件
+
 - `-gen javadata,file:../java/config.data`: 生成二进制数据文件到 `../java/config.data`
 - 生成的代码位于 `java/config/` 目录
 - Schema 框架文件自动生成到 `java/configgen/genjava/` 目录
 - 数据文件为 `java/config.data`
+
+如需在生成的 Java 源码中启用 JSpecify，在 `-gen java` 的参数中加上 `,jspecify`，并在 Java 项目的编译和运行时依赖中加入 `org.jspecify:jspecify:1.0.0`。
 
 ### 步骤 4: 配置 Gradle 构建
 
@@ -148,6 +151,10 @@ echo rootProject.name = 'mygame' > settings.gradle
 ```groovy
 plugins {
     id 'application'
+}
+
+repositories {
+    mavenCentral()
 }
 
 sourceSets {
@@ -182,6 +189,7 @@ import config.ConfigMgrLoader;
 import configgen.genjava.ConfigPackage;
 
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class LoadConfig {
     public static void main(String[] args) throws Exception {
@@ -190,7 +198,7 @@ public class LoadConfig {
         ConfigMgrLoader.loadPackagesAndSetMgr(pack);
 
         // 2. 使用配置
-        config.item.Item item = config.item.Item.get(1001);
+        config.item.Item item = Objects.requireNonNull(config.item.Item.get(1001));
         System.out.println(item.getName());   // 输出: 铁剑
         System.out.println(item.getPrice());  // 输出: 100
 
@@ -209,9 +217,6 @@ gradle build
 
 # 运行
 gradle run
-
-# 或直接运行 JAR
-java -jar build/libs/mygame.jar
 ```
 
 **API 说明**:
@@ -219,7 +224,7 @@ java -jar build/libs/mygame.jar
 - `Schema.create(input)`: 从数据文件读取 Schema
 - `codeSchema.compatible(dataSchema)`: 检查兼容性
 - `ConfigMgrLoader.load(input)`: 加载配置数据
-- `Item.get(id)`: 根据主键获取记录
+- `Item.get(id)`: 根据主键获取记录，查不到时返回 `null`
 - `Item.all()`: 获取所有记录的集合
 
 ---

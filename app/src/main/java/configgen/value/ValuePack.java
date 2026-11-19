@@ -1,5 +1,7 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.data.CfgData;
 import configgen.data.HeadRows;
 import configgen.schema.*;
@@ -54,11 +56,11 @@ public class ValuePack {
         };
     }
 
-    static Value unpack(String content, FieldType type, CfgValueErrs errs) {
+    static @Nullable Value unpack(String content, FieldType type, CfgValueErrs errs) {
         return unpack(content, type, "<file>", errs);
     }
 
-    private static Value unpack(String content, FieldType type, String fileName, CfgValueErrs errs) {
+    private static @Nullable Value unpack(String content, FieldType type, String fileName, CfgValueErrs errs) {
         FieldSchema field = new FieldSchema("<field>", type, AUTO, Metadata.of());
         ValueParser parser = new ValueParser(errs, HeadRows.A2_Default, ValueParser.BlockParser.dummy);
 
@@ -73,7 +75,7 @@ public class ValuePack {
      * @param errs        错误
      * @return 解析后的主键值，跟VTable里的primaryKeyMap的Key相对应
      */
-    public static Value unpackTablePrimaryKey(String id, TableSchema tableSchema, CfgValueErrs errs) {
+    public static @Nullable Value unpackTablePrimaryKey(String id, TableSchema tableSchema, CfgValueErrs errs) {
         List<FieldSchema> keyFields = tableSchema.primaryKey().fieldSchemas();
         String fileName = "<" + tableSchema.name() + ">";
         if (keyFields.size() == 1) {

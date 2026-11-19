@@ -1,52 +1,49 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public class KeyTest {
-    private int id1;
-    private long id2;
-    private int id3;
-    private java.util.List<Integer> ids;
-    private String enumTest;
-    private java.util.List<String> enumList;
-    private java.util.List<config.other.SignIn> RefIds;
-    private config.other.ArgCaptureMode RefEnumTest;
-    private java.util.List<config.other.ArgCaptureMode> RefEnumList;
+    private final int id1;
+    private final long id2;
+    private final int id3;
+    private final java.util.List<Integer> ids;
+    private final String enumTest;
+    private final java.util.List<String> enumList;
+    private java.util.@Nullable List<config.other.@Nullable SignIn> RefIds;
+    private config.other.@Nullable ArgCaptureMode RefEnumTest;
+    private java.util.@Nullable List<config.other.@Nullable ArgCaptureMode> RefEnumList;
 
-    private KeyTest() {
-    }
-
-    public static KeyTest _create(configgen.genjava.ConfigInput input) {
-        KeyTest self = new KeyTest();
-        self.id1 = input.readInt();
-        self.id2 = input.readLong();
-        self.id3 = input.readInt();
+    private KeyTest(configgen.genjava.ConfigInput input) {
+        this.id1 = input.readInt();
+        this.id2 = input.readLong();
+        this.id3 = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.ids = java.util.Collections.emptyList();
+                this.ids = java.util.Collections.emptyList();
             } else {
-                self.ids = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.ids.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.ids = java.util.Collections.unmodifiableList(self.ids);
+                this.ids = java.util.Collections.unmodifiableList(items);
             }
         }
-        self.enumTest = input.readStringInPool();
+        this.enumTest = input.readStringInPool();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.enumList = java.util.Collections.emptyList();
+                this.enumList = java.util.Collections.emptyList();
             } else {
-                self.enumList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<String>(c);
                 for (; c > 0; c--) {
-                    self.enumList.add(input.readStringInPool());
+                    items.add(input.readStringInPool());
                 }
-                self.enumList = java.util.Collections.unmodifiableList(self.enumList);
+                this.enumList = java.util.Collections.unmodifiableList(items);
             }
         }
-        return self;
     }
 
     public int getId1() {
@@ -73,15 +70,15 @@ public class KeyTest {
         return enumList;
     }
 
-    public java.util.List<config.other.SignIn> refIds() {
+    public java.util.@Nullable List<config.other.@Nullable SignIn> refIds() {
         return RefIds;
     }
 
-    public config.other.ArgCaptureMode refEnumTest() {
+    public config.other.@Nullable ArgCaptureMode refEnumTest() {
         return RefEnumTest;
     }
 
-    public java.util.List<config.other.ArgCaptureMode> refEnumList() {
+    public java.util.@Nullable List<config.other.@Nullable ArgCaptureMode> refEnumList() {
         return RefEnumList;
     }
 
@@ -124,6 +121,10 @@ public class KeyTest {
 
     }
 
+    public static KeyTest _create(configgen.genjava.ConfigInput input) {
+        return new KeyTest(input);
+    }
+
     public static class Id1Id2Key {
         private final int id1;
         private final long id2;
@@ -139,7 +140,7 @@ public class KeyTest {
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(@Nullable Object other) {
             if (!(other instanceof Id1Id2Key o)) {
                 return false;
             }
@@ -152,7 +153,7 @@ public class KeyTest {
         }
     }
 
-    public static KeyTest get(int id1, long id2) {
+    public static @Nullable KeyTest get(int id1, long id2) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherKeyTest(id1, id2);
     }
@@ -172,7 +173,7 @@ public class KeyTest {
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(@Nullable Object other) {
             if (!(other instanceof Id1Id3Key o)) {
                 return false;
             }
@@ -185,12 +186,12 @@ public class KeyTest {
         }
     }
 
-    public static KeyTest getById1Id3(int id1, int id3) {
+    public static @Nullable KeyTest getById1Id3(int id1, int id3) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherKeyTestById1Id3(id1, id3);
     }
 
-    public static KeyTest getById2(long id2) {
+    public static @Nullable KeyTest getById2(long id2) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherKeyTestById2(id2);
     }
@@ -210,7 +211,7 @@ public class KeyTest {
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(@Nullable Object other) {
             if (!(other instanceof Id2Id3Key o)) {
                 return false;
             }
@@ -223,7 +224,7 @@ public class KeyTest {
         }
     }
 
-    public static KeyTest getById2Id3(long id2, int id3) {
+    public static @Nullable KeyTest getById2Id3(long id2, int id3) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherKeyTestById2Id3(id2, id3);
     }

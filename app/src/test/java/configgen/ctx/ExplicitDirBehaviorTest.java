@@ -16,7 +16,7 @@ class ExplicitDirBehaviorTest {
     @Test
     void shouldCreateExplicitDirWithValidConfiguration() {
         // Given: 有效的配置参数
-        Map<String, String> txtAsTsvMap = Map.of("client_tables", "noserver");
+        var txtAsTsvMap = Map.of("client_tables", "noserver");
         Set<String> excelDirs = Set.of("excel_files");
         Set<String> jsonDirs = Set.of("json_data");
 
@@ -30,6 +30,8 @@ class ExplicitDirBehaviorTest {
         assertEquals(jsonDirs, explicitDir.jsonFileDirs());
     }
 
+    // This test deliberately violates the non-null argument contract.
+    @SuppressWarnings("NullAway")
     @Test
     void shouldThrowExceptionWhenNullParametersAreProvided() {
         // Given: null 参数
@@ -64,7 +66,7 @@ class ExplicitDirBehaviorTest {
         assertNotNull(explicitDir, "应该成功解析配置");
 
         // 验证 txtAsTsv 映射
-        Map<String, String> txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
+        var txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
         assertEquals("noserver", txtAsTsvMap.get("client_tables"));
         assertEquals("", txtAsTsvMap.get("public_tables"));
         assertEquals("noclient", txtAsTsvMap.get("server_tables"));
@@ -107,7 +109,7 @@ class ExplicitDirBehaviorTest {
         // Then: 应该成功解析空标签
         assertNotNull(explicitDir, "应该成功解析包含空标签的配置");
 
-        Map<String, String> txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
+        var txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
         assertEquals("", txtAsTsvMap.get("public_tables"), "空标签应该被正确解析");
     }
 
@@ -146,7 +148,7 @@ class ExplicitDirBehaviorTest {
         // Then: 应该成功解析所有目录
         assertNotNull(explicitDir, "应该成功解析多个目录配置");
 
-        Map<String, String> txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
+        var txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
         assertEquals(3, txtAsTsvMap.size(), "应该包含 3 个 txtAsTsv 映射");
 
         Set<String> excelDirSet = explicitDir.excelFileDirs();
@@ -169,7 +171,7 @@ class ExplicitDirBehaviorTest {
         // Then: 应该成功创建（因为至少有一个参数不为空）
         assertNotNull(explicitDir, "只有 txtAsTsv 映射时应该创建 ExplicitDir");
 
-        Map<String, String> txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
+        var txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
         assertEquals(1, txtAsTsvMap.size(), "应该包含 1 个 txtAsTsv 映射");
 
         Set<String> excelDirSet = explicitDir.excelFileDirs();
@@ -192,7 +194,7 @@ class ExplicitDirBehaviorTest {
         // Then: 应该成功创建
         assertNotNull(explicitDir, "只有 Excel 目录时应该创建 ExplicitDir");
 
-        Map<String, String> txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
+        var txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
         assertTrue(txtAsTsvMap.isEmpty(), "txtAsTsv 映射应该为空");
 
         Set<String> excelDirSet = explicitDir.excelFileDirs();
@@ -215,7 +217,7 @@ class ExplicitDirBehaviorTest {
         // Then: 应该成功创建
         assertNotNull(explicitDir, "只有 JSON 目录时应该创建 ExplicitDir");
 
-        Map<String, String> txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
+        var txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
         assertTrue(txtAsTsvMap.isEmpty(), "txtAsTsv 映射应该为空");
 
         Set<String> excelDirSet = explicitDir.excelFileDirs();
@@ -239,7 +241,7 @@ class ExplicitDirBehaviorTest {
         assertNotNull(explicitDir, "应该成功解析包含重复目录的配置");
 
         // 注意：重复键的处理取决于 Map 的实现，通常后面的值会覆盖前面的
-        Map<String, String> txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
+        var txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
         // 这里不具体测试值，因为取决于解析器的行为
 
         Set<String> excelDirSet = explicitDir.excelFileDirs();
@@ -260,7 +262,7 @@ class ExplicitDirBehaviorTest {
         // Then: 应该成功解析特殊字符
         assertNotNull(explicitDir, "应该成功解析包含特殊字符的配置");
 
-        Map<String, String> txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
+        var txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
         assertEquals("noserver-123", txtAsTsvMap.get("client_tables"));
         assertEquals("tag_with_underscore", txtAsTsvMap.get("public_tables"));
 
@@ -282,7 +284,7 @@ class ExplicitDirBehaviorTest {
         // Then: 应该成功创建（因为至少有一个参数不为空）
         assertNotNull(explicitDir, "至少有一个非空参数时应该创建 ExplicitDir");
 
-        Map<String, String> txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
+        var txtAsTsvMap = explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map();
         assertTrue(txtAsTsvMap.isEmpty(), "txtAsTsv 映射应该为空");
 
         Set<String> excelDirSet = explicitDir.excelFileDirs();

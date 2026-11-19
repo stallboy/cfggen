@@ -23,7 +23,7 @@ public static class ${Name.keyClassName(cfg, keySchema)} {
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(${cfg.nullable("Object")} other) {
             if (!(other instanceof ${Name.keyClassName(cfg, keySchema)} o)) {
                 return false;
             }

@@ -2,13 +2,12 @@ package configgen.genbytes;
 
 import configgen.genjava.ConfigOutput;
 import configgen.value.CfgValue;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public record TableSerializer(@NotNull ConfigOutput output,
-                              @NotNull StringPool stringPool,
-                              @NotNull LangTextPool langTextPool) {
+public record TableSerializer(ConfigOutput output,
+                              StringPool stringPool,
+                              LangTextPool langTextPool) {
 
     public void serialize(CfgValue.VTable vTable) {
         output.writeInt(vTable.valueList().size());

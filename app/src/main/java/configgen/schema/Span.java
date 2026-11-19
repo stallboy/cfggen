@@ -1,6 +1,7 @@
 package configgen.schema;
 
 import configgen.schema.cfg.CfgWriter;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -92,8 +93,8 @@ public class Span {
                             CfgWriter.fmtStr(field.fmt())));
                 }
                 if (fmt instanceof FieldFormat.Sep(char sep) && flist.item() instanceof StructRef structRef) {
-                    if (structRef.obj().fmt() instanceof FieldFormat.Sep(char sep1) && sep == sep1 ||
-                        structRef.obj().fmt() == PACK && sep == ',') {
+                    if (structRef.resolvedObj().fmt() instanceof FieldFormat.Sep(char sep1) && sep == sep1 ||
+                        structRef.resolvedObj().fmt() == PACK && sep == ',') {
                         errs.addErr(new ListStructSepEqual(ctx, field.name()));
                     }
                 }
@@ -158,7 +159,7 @@ public class Span {
         return collectedNeedSpans;
     }
 
-    private static void addIfNotPack(Map<String, Fieldable> needChecks, Fieldable fieldable) {
+    private static void addIfNotPack(Map<String, Fieldable> needChecks, @Nullable Fieldable fieldable) {
         if (fieldable != null && fieldable.fmt() != PACK) {
             needChecks.put(fieldable.name(), fieldable);
         }
@@ -225,7 +226,7 @@ public class Span {
         int resultSpan;
         switch (field.type()) {
             case StructRef structRef -> {
-                resultSpan = calcSpanCheckLoop(structRef.obj(), stack);
+                resultSpan = calcSpanCheckLoop(structRef.resolvedObj(), stack);
             }
 
             case FList flist -> {
@@ -271,7 +272,7 @@ public class Span {
                 return 1;
             }
             case StructRef structRef -> {
-                return calcSpanCheckLoop(structRef.obj(), stack);
+                return calcSpanCheckLoop(structRef.resolvedObj(), stack);
             }
         }
     }
@@ -311,7 +312,7 @@ public class Span {
                 return 1;
             }
             case StructRef structRef -> {
-                return span(structRef.obj());
+                return span(structRef.resolvedObj());
             }
         }
     }

@@ -1,5 +1,7 @@
 package configgen.schema.cfg;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.CfgFileInfo;
 import configgen.util.FileNameUtil;
 import configgen.schema.CfgSchema;
@@ -47,7 +49,7 @@ public class CfgUtil {
             return absoluteTopDst;
         }
 
-        Path cur = absoluteTopDst.getParent();
+        Path cur = java.util.Objects.requireNonNull(absoluteTopDst.getParent());
 
         String lastName = "config";
         for (String name : ns.split("\\.")) {
@@ -85,7 +87,7 @@ public class CfgUtil {
     }
 
     public static void findConfigFilesRecursively(Path source,
-                                                  Set<String> nullableWhiteListSubDirs,
+                                                  @Nullable Set<String> nullableWhiteListSubDirs,
                                                   String ext,
                                                   String pkgNameDot,
                                                   Path rootDir,

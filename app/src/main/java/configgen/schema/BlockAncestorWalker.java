@@ -58,7 +58,7 @@ public final class BlockAncestorWalker {
         switch (field.type()) {
             case FieldType.Primitive ignored -> {
             }
-            case FieldType.StructRef sr -> walkFieldable(sr.obj(), startCol, ancestors, visitor);
+            case FieldType.StructRef sr -> walkFieldable(sr.resolvedObj(), startCol, ancestors, visitor);
             case FieldType.FList fl -> {
                 if (field.fmt() instanceof FieldFormat.Block(int fix)) {
                     visitor.onBlockField(structural, field, startCol, ancestors);
@@ -106,7 +106,7 @@ public final class BlockAncestorWalker {
         switch (st) {
             case FieldType.Primitive ignored -> {
             }
-            case FieldType.StructRef sr -> walkFieldable(sr.obj(), startCol, ancestors, visitor);
+            case FieldType.StructRef sr -> walkFieldable(sr.resolvedObj(), startCol, ancestors, visitor);
         }
     }
 

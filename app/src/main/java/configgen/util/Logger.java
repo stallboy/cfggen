@@ -1,5 +1,7 @@
 package configgen.util;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -9,7 +11,7 @@ import java.util.function.UnaryOperator;
 
 public class Logger {
     public interface Printer {
-        void printf(String fmt, Object... args);
+        void printf(String fmt, @Nullable Object... args);
 
 
         Printer nullPrinter = (fmt, args) -> {
@@ -124,13 +126,13 @@ public class Logger {
         updateConfig(c -> new LogConfig(newPrinter, c.verboseLevel(), c.profileEnabled(), c.profileGcEnabled(), c.warningEnabled(), c.weakWarningEnabled()));
     }
 
-    public static void verbose(String fmt, Object... args) {
+    public static void verbose(String fmt, @Nullable Object... args) {
         if (config.verboseLevel() > 0) {
             log(fmt, args);
         }
     }
 
-    public static void verbose2(String fmt, Object... args) {
+    public static void verbose2(String fmt, @Nullable Object... args) {
         if (config.verboseLevel() > 1) {
             log(fmt, args);
         }
@@ -141,7 +143,7 @@ public class Logger {
      * 可能含数据里的 "100%" 等）：走 %s 直出，不进格式解析，否则 % 会被当转换符解析而抛
      * UnknownFormatConversionException。带参数的调用保持 printf 语义。
      */
-    public static void log(String fmt, Object... args) {
+    public static void log(@Nullable String fmt, @Nullable Object... args) {
         if (args.length == 0) {
             currentPrinter().printf("%s", fmt + System.lineSeparator());
         } else {

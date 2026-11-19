@@ -1,26 +1,24 @@
 package config.task.completecondition;
 
-public final class CollectItem implements config.task.completecondition.Completecondition {
-    @Override
-    public config.task.CompleteConditionType type() {
-        return config.task.CompleteConditionType.COLLECT_ITEM;
-    }
+import org.jspecify.annotations.Nullable;
 
-    private int itemid;
-    private int count;
-    private CollectItem() {
-    }
+public final class CollectItem implements config.task.completecondition.Completecondition {
+    private final int itemid;
+    private final int count;
 
     public CollectItem(int itemid, int count) {
         this.itemid = itemid;
         this.count = count;
     }
 
-    public static CollectItem _create(configgen.genjava.ConfigInput input) {
-        CollectItem self = new CollectItem();
-        self.itemid = input.readInt();
-        self.count = input.readInt();
-        return self;
+    private CollectItem(configgen.genjava.ConfigInput input) {
+        this.itemid = input.readInt();
+        this.count = input.readInt();
+    }
+
+    @Override
+    public config.task.CompleteConditionType type() {
+        return config.task.CompleteConditionType.COLLECT_ITEM;
     }
 
     public int getItemid() {
@@ -37,7 +35,7 @@ public final class CollectItem implements config.task.completecondition.Complete
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (!(other instanceof CollectItem o)) {
             return false;
         }
@@ -47,6 +45,10 @@ public final class CollectItem implements config.task.completecondition.Complete
     @Override
     public String toString() {
         return "CollectItem(" + itemid + "," + count + ")";
+    }
+
+    public static CollectItem _create(configgen.genjava.ConfigInput input) {
+        return new CollectItem(input);
     }
 
 }

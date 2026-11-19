@@ -1,8 +1,9 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.util.CSVUtil;
 import configgen.write.RecordBlock.RecordBlockTransformed;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,8 +21,8 @@ public abstract class AbstractCsvTableFile implements TableFile {
     protected final int headRow;
     protected boolean modified = false;
 
-    public AbstractCsvTableFile(@NotNull Path filePath,
-                                @NotNull String defaultEncoding,
+    public AbstractCsvTableFile(Path filePath,
+                                String defaultEncoding,
                                 int headRow)  {
         if (headRow < 0) {
             throw new IllegalArgumentException("headRow must be non-negative");
@@ -45,7 +46,7 @@ public abstract class AbstractCsvTableFile implements TableFile {
      * @param fieldIndices 如果为null表示第一行/列全部清空，如果不为null表示第一行/列只清空指定indices下的数据
      */
     @Override
-    public void emptyRows(int startLine, int count, List<Integer> fieldIndices) {
+    public void emptyRows(int startLine, int count, @Nullable List<Integer> fieldIndices) {
         int lineCount = lineCount();
         if (startLine < 0 || count <= 0 || startLine >= lineCount) {
             return;
@@ -75,7 +76,7 @@ public abstract class AbstractCsvTableFile implements TableFile {
      * @param content 记录块内容
      */
     @Override
-    public void insertRecordBlock(int startLine, int emptyLineCount, @NotNull RecordBlockTransformed content) {
+    public void insertRecordBlock(int startLine, int emptyLineCount, RecordBlockTransformed content) {
         int contentLineCount = content.getRowCount();
         if (contentLineCount <= 0) {
             return;
@@ -100,7 +101,7 @@ public abstract class AbstractCsvTableFile implements TableFile {
 
         // 写入记录块内容
         for (int lineOffset = 0; lineOffset < contentLineCount; lineOffset++) {
-            String[] lineData = content.getRow(lineOffset);
+            var lineData = content.getRow(lineOffset);
             if (lineData != null) {
                 writeLine(actualStartLine + lineOffset, lineData, required);
             }
@@ -139,7 +140,7 @@ public abstract class AbstractCsvTableFile implements TableFile {
      * @param capacity 本次插入所需的总容量（= actualStartLine + contentLineCount），
      *                 列模式用它决定补齐新行的宽度
      */
-    protected abstract void writeLine(int lineNum, String[] lineData, int capacity);
+    protected abstract void writeLine(int lineNum, @Nullable String[] lineData, int capacity);
 
     /**
      * 保存文件并关闭所有资源

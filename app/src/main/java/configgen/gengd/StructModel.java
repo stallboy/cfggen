@@ -1,5 +1,7 @@
 package configgen.gengd;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
@@ -13,10 +15,10 @@ import static configgen.schema.FieldType.Primitive.*;
 public class StructModel {
     public final Name name;
     public final Structural structural;
-    public final CfgValue.VTable _vTable;
+    public final CfgValue.@Nullable VTable _vTable;
     private final GdCodeGenerator gen;
 
-    public StructModel(GdCodeGenerator gen, Structural structural, CfgValue.VTable _vTable) {
+    public StructModel(GdCodeGenerator gen, Structural structural, CfgValue.@Nullable VTable _vTable) {
         this.gen = gen;
         this.name = new Name(gen.prefix, structural);
         this.structural = structural;
@@ -42,13 +44,13 @@ public class StructModel {
             case FLOAT -> "float";
             case STRING -> "String";
             case TEXT -> gen.isLangSwitch ? "ConfigText" : "String";
-            case StructRef structRef -> fullName(structRef.obj());
+            case StructRef structRef -> fullName(structRef.resolvedObj());
             case FList fList -> "Array[" + type(fList.item()) + "]";
             case FMap fMap -> "Dictionary[" + type(fMap.key()) + ", " + type(fMap.value()) + "]";
         };
     }
 
-    public String create(FieldType t) {
+    public @Nullable String create(FieldType t) {
         return switch (t) {
             case BOOL -> "stream.read_bool()";
             case INT -> "stream.read_int32()";
@@ -56,7 +58,7 @@ public class StructModel {
             case FLOAT -> "stream.read_float()";
             case STRING -> "stream.read_string_in_pool()";
             case TEXT -> gen.isLangSwitch ? "ConfigText._create(stream)" : "stream.read_text_in_pool()";
-            case StructRef structRef -> fullName(structRef.obj()) + "._create(stream)";
+            case StructRef structRef -> fullName(structRef.resolvedObj()) + "._create(stream)";
             case FList ignored -> null;
             case FMap ignored -> null;
         };
@@ -161,14 +163,14 @@ public class StructModel {
         return lower1(field.name());
     }
 
-    public String primaryKeyFieldName() {
+    public @Nullable String primaryKeyFieldName() {
         if (structural instanceof TableSchema tableSchema) {
             return fieldName(tableSchema.primaryKey().fieldSchemas().getFirst());
         }
         return null;
     }
 
-    public String keyType() {
+    public @Nullable String keyType() {
         if (structural instanceof TableSchema tableSchema) {
             return type(tableSchema.primaryKey().fieldSchemas().getFirst().type());
         }

@@ -7,7 +7,7 @@
 @param TsCodeGenerator model
 // noinspection UnnecessaryLocalVariableJS,JSUnusedLocalSymbols,JSUnusedGlobalSymbols,DuplicatedCode,SpellCheckingInspection
 
-@if(model.nullableLanguageSwitch != null && !model.serverText)
+@if(model.nullableTranslationBundle != null && !model.serverText)
     import {Stream, LoadErrors, ToStringList, ToStringMap, TextPoolManager, ConfigPackage, Loader} from "./ConfigUtil";
 @else
     import {Stream, LoadErrors, ToStringList, ToStringMap, ConfigPackage, Loader} from "./ConfigUtil";
@@ -31,11 +31,11 @@ export namespace ${model.pkg} {
     @template.ts.GenStruct(model = new StructModel(model, vTable.schema(), vTable))
 @endfor
 
-@if(model.nullableLanguageSwitch != null)
+@if(model.nullableTranslationBundle != null)
     @if(model.serverText)
-        @template.ts.ServerText(pkg = model.pkg, languages = model.nullableLanguageSwitch.languages())
+        @template.ts.ServerText(pkg = model.pkg, languages = model.nullableTranslationBundle.languages())
     @else
-        @template.ts.ClientText(pkg = model.pkg, languages = model.nullableLanguageSwitch.languages())
+        @template.ts.ClientText(pkg = model.pkg, languages = model.nullableTranslationBundle.languages())
     @endif
 @endif
 

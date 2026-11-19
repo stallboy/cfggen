@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.*;
 import configgen.util.StringUtil;
 
@@ -19,7 +21,7 @@ public class MethodStr {
         return keys.stream().map(StringUtil::lower1).collect(Collectors.joining(", "));
     }
 
-    public static String actualParamsKey(GenCfg cfg, KeySchema keySchema, String pre, NameableName nullableName) {
+    public static String actualParamsKey(GenCfg cfg, KeySchema keySchema, String pre, @Nullable NameableName nullableName) {
         String p = actualParamsKeyRaw(keySchema, pre);
         return keySchema.fields().size() > 1 ? "new " + Name.keyClassName(cfg, keySchema, nullableName) + "(" + p + ")" : p;
     }

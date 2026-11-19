@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -17,7 +19,7 @@ public class KeySchema {
     }
 
     private final List<String> fields;
-    private List<FieldSchema> fieldSchemas;
+    private @Nullable List<FieldSchema> fieldSchemas;
 
     public KeySchema(List<String> key) {
         Objects.requireNonNull(key);
@@ -36,7 +38,7 @@ public class KeySchema {
     }
 
     public List<FieldSchema> fieldSchemas() {
-        return fieldSchemas;
+        return java.util.Objects.requireNonNull(fieldSchemas);
     }
 
     void setFieldSchemas(List<FieldSchema> fieldSchemas) {
@@ -44,7 +46,7 @@ public class KeySchema {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         KeySchema keySchema = (KeySchema) o;

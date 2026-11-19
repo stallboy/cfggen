@@ -10,6 +10,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ContextTest {
@@ -170,8 +171,8 @@ class ContextTest {
         // Then: 两者应该返回相同的配置值（无过滤）
         assertNotNull(nullTagValue);
         assertNotNull(noTagValue);
-        assertEquals(nullTagValue.getTable("user").valueList().size(),
-                     noTagValue.getTable("user").valueList().size());
+        assertEquals(requireNonNull(nullTagValue.getTable("user")).valueList().size(),
+                     requireNonNull(noTagValue.getTable("user")).valueList().size());
     }
 
     @Test
@@ -273,7 +274,7 @@ class ContextTest {
     }
 
     @Test
-    void shouldReturnNullForNullableLangTextFinderWhenNotConfigured() {
+    void shouldReturnNullForNullableTranslationCatalogWhenNotConfigured() {
         // Given: 没有配置国际化文件的Context
         String cfgStr = """
                 table user[id] {
@@ -296,8 +297,8 @@ class ContextTest {
         Context ctx = new Context(tempDir);
 
         // When & Then: 没有配置国际化时应该返回null
-        assertNull(ctx.nullableLangTextFinder());
-        assertNull(ctx.nullableLangSwitch());
+        assertNull(ctx.nullableTranslationCatalog());
+        assertNull(ctx.nullableTranslationBundle());
     }
 
     @Test

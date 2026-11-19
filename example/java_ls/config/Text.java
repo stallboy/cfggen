@@ -2,11 +2,9 @@
 package config;
 
 public class Text {
-    private String zh_cn;
-    private String en;
-    private String tw;
-    private Text() {
-    }
+    private final String zh_cn;
+    private final String en;
+    private final String tw;
 
     public Text(String zh_cn, String en, String tw) {
         this.zh_cn = zh_cn;
@@ -14,13 +12,11 @@ public class Text {
         this.tw = tw;
     }
 
-    public static Text _create(configgen.genjava.ConfigInput input) {
-        Text self = new Text();
+    private Text(configgen.genjava.ConfigInput input) {
         int index = input.readTextIndex();
-        self.zh_cn = input.textInPool(0, index);
-        self.en = input.textInPool(1, index);
-        self.tw = input.textInPool(2, index);
-        return self;
+        this.zh_cn = input.textInPool(0, index);
+        this.en = input.textInPool(1, index);
+        this.tw = input.textInPool(2, index);
     }
 
     public String getZh_cn() {
@@ -38,5 +34,9 @@ public class Text {
     @Override
     public String toString() {
         return "Text(" + zh_cn + "," + en + "," + tw + ")";
+    }
+
+    public static Text _create(configgen.genjava.ConfigInput input) {
+        return new Text(input);
     }
 }

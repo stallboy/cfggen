@@ -1,5 +1,7 @@
 package configgen.write;
 
+import org.jspecify.annotations.Nullable;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,7 +63,7 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
     }
 
     @Override
-    protected void writeLine(int lineNum, String[] lineData, int capacity) {
+    protected void writeLine(int lineNum, @Nullable String[] lineData, int capacity) {
         int newRowColCount = Math.max(getColumnCount(), capacity);
         // 确保有足够的行（block 的行数可能超过 CSV 现有行数）
         while (rows.size() < lineData.length) {

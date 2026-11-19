@@ -275,7 +275,7 @@ class RefValidatorTest {
 
     private static ValueEnv envOf(Context ctx) {
         return new ValueEnv(ctx.cfgSchema(), ctx.cfgData(), ctx.contextCfg().headRow(),
-                ctx.nullableLangTextFinder(), ctx.sourceStructure());
+                ctx.nullableTranslationCatalog(), ctx.sourceStructure());
     }
 
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.schema.TableSchemaRefGraph.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,13 +31,13 @@ class TableSchemaRefGraphTest {
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
         assertEquals(2, graph.refsMap().size());
         {
-            Refs ref1 = graph.refsMap().get("t1");
+            Refs ref1 = requireNonNull(graph.refsMap().get("t1"));
             assertEquals(Set.of(), ref1.refOut());
             assertEquals(Set.of(), ref1.refIn());
         }
 
         {
-            Refs ref2 = graph.refsMap().get("t2");
+            Refs ref2 = requireNonNull(graph.refsMap().get("t2"));
             assertEquals(Set.of(), ref2.refOut());
             assertEquals(Set.of(), ref2.refIn());
         }
@@ -63,13 +64,13 @@ class TableSchemaRefGraphTest {
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
         assertEquals(2, graph.refsMap().size());
         {
-            Refs ref1 = graph.refsMap().get("t1");
+            Refs ref1 = requireNonNull(graph.refsMap().get("t1"));
             assertEquals(Set.of("t2"), ref1.refOut());
             assertEquals(Set.of(), ref1.refIn());
         }
 
         {
-            Refs ref2 = graph.refsMap().get("t2");
+            Refs ref2 = requireNonNull(graph.refsMap().get("t2"));
             assertEquals(Set.of(), ref2.refOut());
             assertEquals(Set.of("t1"), ref2.refIn());
         }
@@ -91,7 +92,7 @@ class TableSchemaRefGraphTest {
 
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
         {
-            Refs ref1 = graph.refsMap().get("t1");
+            Refs ref1 = requireNonNull(graph.refsMap().get("t1"));
             assertEquals(Set.of("t1"), ref1.refOut());
             assertEquals(Set.of("t1"), ref1.refIn());
         }
@@ -120,13 +121,13 @@ class TableSchemaRefGraphTest {
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
         assertEquals(2, graph.refsMap().size());
         {
-            Refs ref1 = graph.refsMap().get("t1");
+            Refs ref1 = requireNonNull(graph.refsMap().get("t1"));
             assertEquals(Set.of("t2"), ref1.refOut());
             assertEquals(Set.of(), ref1.refIn());
         }
 
         {
-            Refs ref2 = graph.refsMap().get("t2");
+            Refs ref2 = requireNonNull(graph.refsMap().get("t2"));
             assertEquals(Set.of(), ref2.refOut());
             assertEquals(Set.of("t1"), ref2.refIn());
         }
@@ -158,13 +159,13 @@ class TableSchemaRefGraphTest {
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
         assertEquals(2, graph.refsMap().size());
         {
-            Refs ref1 = graph.refsMap().get("t1");
+            Refs ref1 = requireNonNull(graph.refsMap().get("t1"));
             assertEquals(Set.of("t2"), ref1.refOut());
             assertEquals(Set.of(), ref1.refIn());
         }
 
         {
-            Refs ref2 = graph.refsMap().get("t2");
+            Refs ref2 = requireNonNull(graph.refsMap().get("t2"));
             assertEquals(Set.of(), ref2.refOut());
             assertEquals(Set.of("t1"), ref2.refIn());
         }

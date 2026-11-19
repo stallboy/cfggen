@@ -2,6 +2,10 @@
 
 生成器、生成的 Java 代码和支持源码统一使用 JDK 25；示例 Gradle 工具链也是 JDK 25。
 
+本示例通过 `-gen java,...,jspecify` 开启 JSpecify。生成器在每个输出包的 `package-info.java` 中声明 `@NullMarked`，可能返回 `null` 的查询以 `@Nullable` 标记。启用了该参数的独立项目需要在编译和运行时依赖中加入 `org.jspecify:jspecify:1.0.0`。
+
+切换开关时，生成器会更新仍与导出模板一致的运行时支持文件。已有自定义支持源码的项目可以用 `configgenDir` 导出到新目录，再合并变更。
+
 在仓库根目录运行：
 
 ```powershell
@@ -21,7 +25,9 @@ ConfigMgrLoader.loadPackagesAndSetMgr(pack);
 
 `ConfigPackage.read(Path)` 直接读取并解析文件，无需手动创建读取器或关闭资源。
 
-加载器检查包版本、依赖和 schema，建立索引、解析引用并初始化扩展后，才发布默认实例。随后 `showMod` 按显式顺序加载基础包和 Mod：
+加载器检查包版本、依赖和 schema，建立索引、解析引用并初始化扩展后，才发布默认实例。调用 `ConfigMgr.hasMgr()` 可以检查是否已发布。发布后，`ConfigMgr.getMgr()` 返回默认实例，提前调用会抛出 `IllegalStateException`。
+
+随后 `showMod` 按显式顺序加载基础包和 Mod：
 
 ```java
 ConfigMgr original = ConfigMgr.getMgr();

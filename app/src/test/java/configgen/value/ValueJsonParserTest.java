@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.value.CfgValue.*;
 import static configgen.value.Values.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,7 +83,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_PrimitiveValue() {
-        TableSchema test = cfg.findTable("test");
+        TableSchema test = requireNonNull(cfg.findTable("test"));
         VStruct vStruct = ofStruct(test, List.of(ofInt(123), ofBool(true), ofLong(1234567890L), ofFloat(3.14f), ofStr("abc")));
 
         JSONObject json = new ValueToJson().toJson(vStruct);
@@ -113,7 +114,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_Primitive_DefaultValue() {
-        TableSchema test = cfg.findTable("test");
+        TableSchema test = requireNonNull(cfg.findTable("test"));
         VStruct vStruct = fromJson(test, """
                 {"$type":"test"}""");
         JSONObject json = new ValueToJson().toJson(vStruct);
@@ -129,7 +130,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_PrimitiveValue_TypeNotMatch() {
-        TableSchema test = cfg.findTable("test");
+        TableSchema test = requireNonNull(cfg.findTable("test"));
         {
             String jsonStr = """
                     {"$type":"test","id":123,"bool1":"should be bool,but str","long1":1234567890,"float1":3.14,"str1":"abc"}""";
@@ -153,8 +154,8 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VStruct() {
-        TableSchema ts = cfg.findTable("ts");
-        StructSchema attr = (StructSchema) cfg.findFieldable("attr");
+        TableSchema ts = requireNonNull(cfg.findTable("ts"));
+        StructSchema attr = requireNonNull((StructSchema) cfg.findFieldable("attr"));
         VStruct vAttr = ofStruct(attr, List.of(ofInt(111), ofInt(222), ofInt(333)));
         VStruct vTs = ofStruct(ts, List.of(ofInt(1), vAttr));
 
@@ -174,7 +175,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VStruct_DefaultValue() {
-        TableSchema ts = cfg.findTable("ts");
+        TableSchema ts = requireNonNull(cfg.findTable("ts"));
         String jsonStr = """
                 {"id":1,"$type":"ts"}""";
         VStruct vStruct = fromJson(ts, jsonStr);
@@ -187,7 +188,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VStruct_TypeNotMatch() {
-        TableSchema ts = cfg.findTable("ts");
+        TableSchema ts = requireNonNull(cfg.findTable("ts"));
         String jsonStr = """
                 {"id":1,"attr":123,"$type":"ts"}""";
         CfgValueErrs errs = CfgValueErrs.of();
@@ -197,7 +198,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VListPrimitive() {
-        TableSchema ts = cfg.findTable("tl");
+        TableSchema ts = requireNonNull(cfg.findTable("tl"));
         VList vList = ofList(List.of(ofInt(111), ofInt(222), ofInt(333)));
         VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vList));
 
@@ -213,7 +214,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VListPrimitive_DefaultValue() {
-        TableSchema ts = cfg.findTable("tl");
+        TableSchema ts = requireNonNull(cfg.findTable("tl"));
         String jsonStr = """
                 {"id":1,"$type":"tl"}""";
         VStruct vStruct = fromJson(ts, jsonStr);
@@ -226,7 +227,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_ExtraFieldsAsWarning() {
-        TableSchema ts = cfg.findTable("tl");
+        TableSchema ts = requireNonNull(cfg.findTable("tl"));
         String jsonStr = """
                 {"id":1,"extra":333,"$type":"tl"}""";
         CfgValueErrs errs = CfgValueErrs.of();
@@ -242,7 +243,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VMapPrimitive() {
-        TableSchema ts = cfg.findTable("tm");
+        TableSchema ts = requireNonNull(cfg.findTable("tm"));
         VMap vMap = ofMap(Map.of(ofInt(111), ofStr("aaa"), ofInt(222), ofStr("bbb")));
         VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vMap));
 
@@ -254,7 +255,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VMapPrimitive_DefaultValue() {
-        TableSchema ts = cfg.findTable("tm");
+        TableSchema ts = requireNonNull(cfg.findTable("tm"));
         String jsonStr = """
                 {"id":1,"$type":"tm"}""";
         VStruct vStruct = fromJson(ts, jsonStr);
@@ -267,8 +268,8 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VListStruct() {
-        TableSchema ts = cfg.findTable("tls");
-        StructSchema attr = (StructSchema) cfg.findFieldable("attr");
+        TableSchema ts = requireNonNull(cfg.findTable("tls"));
+        StructSchema attr = requireNonNull((StructSchema) cfg.findFieldable("attr"));
         VStruct vAttr = ofStruct(attr, List.of(ofInt(111), ofInt(222), ofInt(333)));
         VList vList = ofList(List.of(vAttr));
         VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vList));
@@ -290,10 +291,10 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VMapInterface() {
-        InterfaceSchema condition = (InterfaceSchema) cfg.findItem("condition");
-        StructSchema checkItem = condition.findImpl("checkItem");
-        StructSchema and = condition.findImpl("and");
-        TableSchema cond = cfg.findTable("cond");
+        InterfaceSchema condition = requireNonNull((InterfaceSchema) cfg.findItem("condition"));
+        StructSchema checkItem = requireNonNull(condition.findImpl("checkItem"));
+        StructSchema and = requireNonNull(condition.findImpl("and"));
+        TableSchema cond = requireNonNull(cfg.findTable("cond"));
 
         VStruct c1 = ofStruct(checkItem, List.of(ofInt(123)));
         VStruct c2 = ofStruct(checkItem, List.of(ofInt(456)));
@@ -320,7 +321,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_VMapInterface_Equal_ToJsonStr() {
-        TableSchema cond = cfg.findTable("cond");
+        TableSchema cond = requireNonNull(cfg.findTable("cond"));
         String jsonStr = """
                 {"$type":"cond","id":666,"c":[{"$type":"$entry","key":123456,"value":{"$type":"condition.and","c1":{"$type":"condition.checkItem","id":123},"c2":{"$type":"condition.checkItem","id":456}}}]}""";
 
@@ -330,7 +331,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_JsonParseError_When$TypeForInterfaceNotImpl() {
-        TableSchema cond = cfg.findTable("cond");
+        TableSchema cond = requireNonNull(cfg.findTable("cond"));
         String jsonStr = """
                 {"id":666,"c":[{"key":123456,"value":{"c1":{"id":123},"c2":{"id":456,"$type":"condition.checkItem"},"$type":"condition.and"},"$type":"$entry"}],"$type":"cond"}""";
 
@@ -342,7 +343,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_EmbedFields_RoundTrip() {
-        TableSchema test = cfg.findTable("test");
+        TableSchema test = requireNonNull(cfg.findTable("test"));
         String jsonStr = """
                 {"$type":"test","id":123,"bool1":true,"long1":1234567890,"float1":3.14,"str1":"abc","$embed_bool1":true,"$embed_long1":false}""";
         CfgValueErrs errs = CfgValueErrs.of();
@@ -361,7 +362,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_EmbedFields_NonBooleanStillWarn() {
-        TableSchema test = cfg.findTable("test");
+        TableSchema test = requireNonNull(cfg.findTable("test"));
         String jsonStr = """
                 {"$type":"test","id":123,"$embed_bool1":"yes"}""";
         CfgValueErrs errs = CfgValueErrs.of();
@@ -372,7 +373,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_EmbedFields_NestedStruct_RoundTrip() {
-        TableSchema ts = cfg.findTable("ts");
+        TableSchema ts = requireNonNull(cfg.findTable("ts"));
         String jsonStr = """
                 {"$type":"ts","id":1,"$embed_attr":true,"attr":{"$type":"attr","Attr":111,"Min":222,"Max":333,"$embed_Attr":true,"$embed_Min":false}}""";
         VStruct vStruct = fromJson(ts, jsonStr);
@@ -386,7 +387,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_MapEntryEmbed_RoundTrip() {
-        TableSchema tm = cfg.findTable("tm");
+        TableSchema tm = requireNonNull(cfg.findTable("tm"));
         String jsonStr = """
                 {"$type":"tm","id":1,"mapIntStr":[{"$type":"$entry","key":111,"value":"aaa","$embed_value":true},{"$type":"$entry","key":222,"value":"bbb","$embed_value":false}]}""";
         VStruct vStruct = fromJson(tm, jsonStr);
@@ -408,7 +409,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_MapEntryNodeFold_RoundTrip() {
-        TableSchema tm = cfg.findTable("tm");
+        TableSchema tm = requireNonNull(cfg.findTable("tm"));
         String jsonStr = """
                 {"$type":"tm","id":1,"mapIntStr":[{"$type":"$entry","key":111,"value":"aaa","$fold":true,"$embed_value":false,"$note":"精锐"},{"$type":"$entry","key":222,"value":"bbb"}]}""";
         VStruct vStruct = fromJson(tm, jsonStr);
@@ -432,7 +433,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_MapEntryFoldFalse_Dropped() {
-        TableSchema tm = cfg.findTable("tm");
+        TableSchema tm = requireNonNull(cfg.findTable("tm"));
         String jsonStr = """
                 {"$type":"tm","id":1,"mapIntStr":[{"$type":"$entry","key":111,"value":"aaa","$fold":false}]}""";
         VStruct vStruct = fromJson(tm, jsonStr);
@@ -445,7 +446,7 @@ class ValueJsonParserTest {
 
     @Test
     void fromJson_NoEmbedFields_NoEntryEmbed() {
-        TableSchema tm = cfg.findTable("tm");
+        TableSchema tm = requireNonNull(cfg.findTable("tm"));
         String jsonStr = """
                 {"$type":"tm","id":1,"mapIntStr":[{"$type":"$entry","key":111,"value":"aaa"}]}""";
         VStruct vStruct = fromJson(tm, jsonStr);

@@ -1,5 +1,7 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.data.CfgData;
 import configgen.schema.*;
 
@@ -58,7 +60,7 @@ public class ValueUtil {
         return extractKeyValue(vStruct, keyIndices);
     }
 
-    public static Value extractFieldValue(VStruct vStruct, String fieldName) {
+    public static @Nullable Value extractFieldValue(VStruct vStruct, String fieldName) {
         int idx = FindFieldIndex.findFieldIndex(vStruct.schema(), fieldName);
         if (idx == -1) {
             return null;
@@ -66,7 +68,7 @@ public class ValueUtil {
         return vStruct.values().get(idx);
     }
 
-    public static String extractFieldValueStr(VStruct vStruct, String fieldName) {
+    public static @Nullable String extractFieldValueStr(VStruct vStruct, String fieldName) {
         Value fv = extractFieldValue(vStruct, fieldName);
         if (fv == null) {
             return null;
@@ -79,15 +81,15 @@ public class ValueUtil {
         }
     }
 
-    public static Map<Value, VStruct> getForeignKeyValueMap(CfgValue cfgValue, ForeignKeySchema fk) {
+    public static @Nullable Map<Value, VStruct> getForeignKeyValueMap(CfgValue cfgValue, ForeignKeySchema fk) {
         switch (fk.refKey()) {
             case RefKey.RefPrimary ignored -> {
                 VTable vTable = cfgValue.vTableMap().get(fk.refTableNormalized());
-                return vTable.primaryKeyMap();
+                return java.util.Objects.requireNonNull(vTable).primaryKeyMap();
             }
             case RefKey.RefUniq refUniq -> {
                 VTable vTable = cfgValue.vTableMap().get(fk.refTableNormalized());
-                return vTable.uniqueKeyMaps().get(refUniq.keyNames());
+                return java.util.Objects.requireNonNull(vTable).uniqueKeyMaps().get(refUniq.keyNames());
             }
             case RefKey.RefList ignored -> {
                 return null;

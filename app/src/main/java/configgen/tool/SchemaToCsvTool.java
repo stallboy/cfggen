@@ -46,7 +46,7 @@ public class SchemaToCsvTool extends Tool {
                 continue;
             }
 
-            Path csvPath = Path.of(fromCfgFilepath).getParent().resolve(table.lastName() + ".csv");
+            Path csvPath = java.util.Objects.requireNonNull(Path.of(fromCfgFilepath).getParent()).resolve(table.lastName() + ".csv");
             SchemaToCsvHeader headerGen = new SchemaToCsvHeader();
             headerGen.flattenFields(table.fields());
 

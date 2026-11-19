@@ -1,41 +1,38 @@
 package config.task;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：task/task_任务.csv
 public class CfgTask {
-    private int taskid;
-    private java.util.List<config.Text> name;
-    private int nexttask;
-    private config.task.completecondition.CfgCompletecondition completecondition;
-    private int exp;
-    private config.task.CfgTestDefaultBean testDefaultBean;
-    private config.task.CfgTask_extra_exp NullableRefTaskid;
-    private config.task.CfgTask NullableRefNexttask;
+    private final int taskid;
+    private final java.util.List<config.Text> name;
+    private final int nexttask;
+    private final config.task.completecondition.CfgCompletecondition completecondition;
+    private final int exp;
+    private final config.task.CfgTestDefaultBean testDefaultBean;
+    private config.task.@Nullable CfgTask_extra_exp NullableRefTaskid;
+    private config.task.@Nullable CfgTask NullableRefNexttask;
 
-    private CfgTask() {
-    }
-
-    public static CfgTask _create(configgen.genjava.ConfigInput input) {
-        CfgTask self = new CfgTask();
-        self.taskid = input.readInt();
+    private CfgTask(configgen.genjava.ConfigInput input) {
+        this.taskid = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.name = java.util.Collections.emptyList();
+                this.name = java.util.Collections.emptyList();
             } else {
-                self.name = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<config.Text>(c);
                 for (; c > 0; c--) {
-                    self.name.add(config.Text._create(input));
+                    items.add(config.Text._create(input));
                 }
-                self.name = java.util.Collections.unmodifiableList(self.name);
+                this.name = java.util.Collections.unmodifiableList(items);
             }
         }
-        self.nexttask = input.readInt();
-        self.completecondition = config.task.completecondition.CfgCompletecondition._create(input);
-        self.exp = input.readInt();
-        self.testDefaultBean = config.task.CfgTestDefaultBean._create(input);
-        return self;
+        this.nexttask = input.readInt();
+        this.completecondition = config.task.completecondition.CfgCompletecondition._create(input);
+        this.exp = input.readInt();
+        this.testDefaultBean = config.task.CfgTestDefaultBean._create(input);
     }
 
     /**
@@ -71,11 +68,11 @@ public class CfgTask {
         return testDefaultBean;
     }
 
-    public config.task.CfgTask_extra_exp nullableRefTaskid() {
+    public config.task.@Nullable CfgTask_extra_exp nullableRefTaskid() {
         return NullableRefTaskid;
     }
 
-    public config.task.CfgTask nullableRefNexttask() {
+    public config.task.@Nullable CfgTask nullableRefNexttask() {
         return NullableRefNexttask;
     }
 
@@ -91,7 +88,11 @@ public class CfgTask {
 
     }
 
-    public static CfgTask get(int taskid) {
+    public static CfgTask _create(configgen.genjava.ConfigInput input) {
+        return new CfgTask(input);
+    }
+
+    public static @Nullable CfgTask get(int taskid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getTaskTask(taskid);
     }

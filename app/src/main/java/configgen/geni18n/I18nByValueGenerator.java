@@ -1,5 +1,7 @@
 package configgen.geni18n;
 
+import com.uber.nullaway.annotations.Initializer;
+
 import configgen.ctx.Context;
 import configgen.gen.*;
 import configgen.schema.HasText;
@@ -23,6 +25,7 @@ public final class I18nByValueGenerator extends Generator {
     }
 
     @Override
+    @Initializer
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue();
 

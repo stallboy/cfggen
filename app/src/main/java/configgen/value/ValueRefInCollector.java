@@ -1,5 +1,7 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.*;
 
 import java.util.LinkedHashMap;
@@ -58,7 +60,7 @@ public class ValueRefInCollector {
      * @param pkValue 主键值
      * @return 搜索参数，如果前置检查失败则返回 null
      */
-    private SearchParams buildSearchParams(VTable vTable, Value pkValue) {
+    private @Nullable SearchParams buildSearchParams(VTable vTable, Value pkValue) {
         // 检查记录是否存在
         if (vTable.primaryKeyMap().get(pkValue) == null) {
             return null;
@@ -91,11 +93,11 @@ public class ValueRefInCollector {
     private boolean searchReferences(Set<String> refInTables,
                                      VTable targetTable,
                                      Value targetPkValue,
-                                     Map<RefId, ForeachVStruct.Context> result,
+                                     @Nullable Map<RefId, ForeachVStruct.Context> result,
                                      boolean stopAtFirst) {
         for (String refInTable : refInTables) {
             VTable vRefInTable = cfgValue.vTableMap().get(refInTable);
-            boolean found = searchInTable(vRefInTable, targetTable, targetPkValue, result, stopAtFirst);
+            boolean found = searchInTable(java.util.Objects.requireNonNull(vRefInTable), targetTable, targetPkValue, result, stopAtFirst);
             if (found && stopAtFirst) {
                 return true;
             }
@@ -116,7 +118,7 @@ public class ValueRefInCollector {
     private static boolean searchInTable(VTable searchTable,
                                          VTable targetTable,
                                          Value targetPkValue,
-                                         Map<RefId, ForeachVStruct.Context> result,
+                                         @Nullable Map<RefId, ForeachVStruct.Context> result,
                                          boolean stopAtFirst) {
         // 获取目标记录（提前获取，避免在循环中重复查找）
         VStruct targetRecord = targetTable.primaryKeyMap().get(targetPkValue);
@@ -194,7 +196,7 @@ public class ValueRefInCollector {
         } else if (refKey instanceof RefKey.RefUniq refUniq) {
             // RefUniq: 使用 findFieldIndices + extractKeyValue
             KeySchema uniqKey = tableSchema.findUniqueKey(refUniq.keyNames());
-            int[] indices = FindFieldIndex.findFieldIndices(tableSchema, uniqKey);
+            int[] indices = FindFieldIndex.findFieldIndices(tableSchema, java.util.Objects.requireNonNull(uniqKey));
             return ValueUtil.extractKeyValue(targetRecord, indices);
         } else if (refKey instanceof RefKey.RefList refList) {
             // RefList: 使用 findFieldIndices + extractKeyValue

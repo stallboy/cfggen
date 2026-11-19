@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RecordBlockTest {
@@ -33,6 +34,8 @@ class RecordBlockTest {
         assertEquals(11, block.getRowCount());
     }
 
+    // This test deliberately violates the non-null argument contract.
+    @SuppressWarnings("NullAway")
     @Test
     void testSetCellInvalidArgs() {
         RecordBlock block = new RecordBlock(2);
@@ -54,14 +57,14 @@ class RecordBlockTest {
         RecordBlockTransformed transformed = new RecordBlockTransformed(block, indices);
 
         assertEquals(1, transformed.getRowCount());
-        String[] row = transformed.getRow(0);
+        var row = java.util.Objects.requireNonNull(transformed.getRow(0));
 
         // Expected: size 4.
         // 0 -> A
         // 1 -> null
         // 2 -> B
         // 3 -> C
-        assertEquals(4, row.length);
+        assertEquals(4, requireNonNull(row).length);
         assertEquals("A", row[0]);
         assertNull(row[1]);
         assertEquals("B", row[2]);

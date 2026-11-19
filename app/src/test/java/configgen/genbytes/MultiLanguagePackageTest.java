@@ -1,5 +1,7 @@
 package configgen.genbytes;
 
+import configgen.JavaTestClasspath;
+
 import configgen.TestCtx;
 import configgen.gen.ParameterParser;
 import configgen.genjava.ConfigInput;
@@ -34,7 +36,7 @@ class MultiLanguagePackageTest {
         Path textSource = generated.resolve("generatedtext/Text.java");
         assertFalse(Files.readString(textSource).contains("readTextsInPool()"));
         Path classes = Files.createDirectories(root.resolve("text-classes"));
-        String runtimeClasses = Path.of(ConfigInput.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+        String runtimeClasses = JavaTestClasspath.classpathWithJSpecify(ConfigInput.class);
         assertEquals(0, javax.tools.ToolProvider.getSystemJavaCompiler().run(null, null, null,
                 "-encoding", "UTF-8", "-classpath", runtimeClasses, "-d", classes.toString(), textSource.toString()));
         try (var loader = new java.net.URLClassLoader(new java.net.URL[]{classes.toUri().toURL()}, getClass().getClassLoader())) {

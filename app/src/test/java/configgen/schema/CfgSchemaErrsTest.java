@@ -31,6 +31,8 @@ class CfgSchemaErrsTest {
 
 
     // Adding a null error or warning should not be allowed
+    // This test deliberately violates the non-null argument contract.
+    @SuppressWarnings("NullAway")
     @Test
     public void test_add_null_error_or_warning() {
         CfgSchemaErrs cfgSchemaErrs = CfgSchemaErrs.of();

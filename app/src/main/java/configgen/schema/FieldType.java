@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 public sealed interface FieldType {
@@ -59,7 +61,7 @@ public sealed interface FieldType {
 
     final class StructRef implements SimpleType {
         private final String name;
-        private Fieldable obj;
+        private @Nullable Fieldable obj;
 
         public StructRef(String name) {
             Objects.requireNonNull(name);
@@ -77,11 +79,15 @@ public sealed interface FieldType {
         }
 
         public String nameNormalized() {
-            return obj.name();
+            return resolvedObj().name();
         }
 
-        public Fieldable obj() {
+        public @Nullable Fieldable obj() {
             return obj;
+        }
+
+        public Fieldable resolvedObj() {
+            return java.util.Objects.requireNonNull(obj);
         }
 
         public void setObj(Fieldable obj) {
@@ -97,7 +103,7 @@ public sealed interface FieldType {
 
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             StructRef structRef = (StructRef) o;

@@ -1,5 +1,7 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.*;
 
 import java.util.*;
@@ -17,7 +19,7 @@ public final class RefSearcher {
     }
 
     public record RefSearchResult(RefSearchErr err,
-                                  Map<Value, Set<String>> value2tables) {
+                                  @Nullable Map<Value, Set<String>> value2tables) {
 
     }
 
@@ -30,7 +32,7 @@ public final class RefSearcher {
      * 否则：value是唯一键的具体值
      */
     public static RefSearchResult search(CfgValue cfgValue, String tableName,
-                                         List<String> nullableUniqueKeys, Set<String> ignoredTables) {
+                                         @Nullable List<String> nullableUniqueKeys, Set<String> ignoredTables) {
         TableSchema refTable = cfgValue.schema().findTable(tableName);
         if (refTable == null) {
             return new RefSearchResult(TableNotFound, null);
@@ -52,7 +54,7 @@ public final class RefSearcher {
     }
 
     private static boolean search(VStruct vStruct, ForeachVStruct.Context ctx, CfgValue cfgValue,
-                                 TableSchema refTable, List<String> nullableUniqueKeys, Map<Value, Set<String>> res) {
+                                 TableSchema refTable, @Nullable List<String> nullableUniqueKeys, Map<Value, Set<String>> res) {
         VTable fromTable = ctx.fromVTable();
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {

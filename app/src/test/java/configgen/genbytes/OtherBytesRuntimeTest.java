@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Real TS/Go compilers and runtimes; run with otherRuntimeTest after installing cfgeditor's dev dependencies. */
@@ -152,7 +153,7 @@ class OtherBytesRuntimeTest {
             var input = pack.block(name);
             blocks.put(name, input.readRawBytes((int) input.remaining()));
         }
-        byte[] table = blocks.remove(".item");
+        byte[] table = requireNonNull(blocks.remove(".item"));
         try (var out = new configgen.genjava.ConfigOutput(Files.newOutputStream(root.resolve("pack/incomplete.bytes")))) {
             PackageSerializer.write(out, pack.metadata(), blocks);
         }

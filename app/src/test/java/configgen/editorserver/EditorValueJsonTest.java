@@ -1,5 +1,7 @@
 package configgen.editorserver;
 
+import static java.util.Objects.requireNonNull;
+
 import com.alibaba.fastjson2.JSONObject;
 import configgen.schema.CfgSchema;
 import configgen.schema.TableSchema;
@@ -27,7 +29,7 @@ class EditorValueJsonTest {
                 }
                 """);
         schema.resolve().checkErrors();
-        return schema.findTable("t");
+        return requireNonNull(schema.findTable("t"));
     }
 
     @Test

@@ -1,5 +1,7 @@
 package configgen.tool;
 
+import org.jspecify.annotations.Nullable;
+
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONWriter;
 import configgen.editorserver.SchemaService;
@@ -25,9 +27,9 @@ import static configgen.value.CfgValue.*;
  */
 public class ValueInspector implements AutoCloseable {
     private final CfgValue cfgValue;
-    private final BomUtf8Writer fileWriter;
+    private final @Nullable BomUtf8Writer fileWriter;
 
-    public ValueInspector(CfgValue cfgValue, String searchTo) {
+    public ValueInspector(CfgValue cfgValue, @Nullable String searchTo) {
         this.cfgValue = cfgValue;
         if (searchTo != null) {
             try {
@@ -47,7 +49,7 @@ public class ValueInspector implements AutoCloseable {
 
     // --- 打印辅助逻辑 ---
 
-    private void println(String fmt, Object... args) {
+    private void println(String fmt, @Nullable Object... args) {
         String str = (args.length == 0) ? fmt : String.format(fmt, args);
         if (fileWriter != null) {
             fileWriter.write(str + System.lineSeparator());
@@ -158,10 +160,10 @@ public class ValueInspector implements AutoCloseable {
         }, cfgValue);
     }
 
-    public void searchRef(String refTable, List<String> nullableUniqKeys, Set<String> ignoredTables) {
+    public void searchRef(String refTable, @Nullable List<String> nullableUniqKeys, Set<String> ignoredTables) {
         RefSearcher.RefSearchResult res = RefSearcher.search(cfgValue, refTable, nullableUniqKeys, ignoredTables);
         switch (res.err()) {
-            case Ok -> res.value2tables().forEach((val, tables) ->
+            case Ok -> java.util.Objects.requireNonNull(res.value2tables()).forEach((val, tables) ->
                     println("%s, %d, %s", val.packStr(), tables.size(), tables));
             case TableNotFound -> println("Table '%s' not found.", refTable);
             case UniqueKeyNotFound -> println("Unique key %s not found in table '%s'.", nullableUniqKeys, refTable);
@@ -182,7 +184,7 @@ public class ValueInspector implements AutoCloseable {
                 print(nameable.stringify());
                 if (nameable instanceof TableSchema) {
                     VTable vTable = cfgValue.vTableMap().get(name);
-                    List<VStruct> list = vTable.valueList();
+                    List<VStruct> list = java.util.Objects.requireNonNull(vTable).valueList();
                     println(" (count: %d)", list.size());
                     list.stream().limit(100).forEach(v -> println("  " + v.packStr()));
                 }

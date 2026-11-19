@@ -11,6 +11,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UnreferencedRecordCollectorTest {
@@ -60,7 +61,7 @@ class UnreferencedRecordCollectorTest {
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         UnreferencedRecordCollector.UnreferencedInTable result =
                 UnreferencedRecordCollector.collectUnreferencedInTable(cfgValue, typeTable, graph);
@@ -103,7 +104,7 @@ class UnreferencedRecordCollectorTest {
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         UnreferencedRecordCollector.UnreferencedInTable result =
                 UnreferencedRecordCollector.collectUnreferencedInTable(cfgValue, typeTable, graph);
@@ -147,7 +148,7 @@ class UnreferencedRecordCollectorTest {
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         UnreferencedRecordCollector.UnreferencedInTable result =
                 UnreferencedRecordCollector.collectUnreferencedInTable(cfgValue, typeTable, graph);
@@ -187,7 +188,7 @@ class UnreferencedRecordCollectorTest {
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         UnreferencedRecordCollector.UnreferencedInTable result =
                 UnreferencedRecordCollector.collectUnreferencedInTable(cfgValue, typeTable, graph);
@@ -227,7 +228,7 @@ class UnreferencedRecordCollectorTest {
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         UnreferencedRecordCollector.UnreferencedInTable result =
                 UnreferencedRecordCollector.collectUnreferencedInTable(cfgValue, typeTable, graph);
@@ -268,7 +269,7 @@ class UnreferencedRecordCollectorTest {
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         UnreferencedRecordCollector.UnreferencedInTable result =
                 UnreferencedRecordCollector.collectUnreferencedInTable(cfgValue, typeTable, graph);
@@ -328,11 +329,11 @@ class UnreferencedRecordCollectorTest {
 
         // type 表有 1 个未引用记录
         assertTrue(result.tableToUnreferenced().containsKey("type"));
-        assertEquals(1, result.tableToUnreferenced().get("type").size());
+        assertEquals(1, requireNonNull(result.tableToUnreferenced().get("type")).size());
 
         // item 表有 1 个未引用记录（id=2,3）
         assertTrue(result.tableToUnreferenced().containsKey("item"));
-        assertEquals(2, result.tableToUnreferenced().get("item").size());
+        assertEquals(2, requireNonNull(result.tableToUnreferenced().get("item")).size());
     }
 
     @Test
@@ -354,7 +355,7 @@ class UnreferencedRecordCollectorTest {
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         UnreferencedRecordCollector.UnreferencedInTable result =
                 UnreferencedRecordCollector.collectUnreferencedInTable(cfgValue, typeTable, graph);
@@ -402,7 +403,7 @@ class UnreferencedRecordCollectorTest {
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        CfgValue.VTable typeTable = cfgValue.getTable("type");
+        CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
 
         UnreferencedRecordCollector.UnreferencedInTable result =
                 UnreferencedRecordCollector.collectUnreferencedInTable(cfgValue, typeTable, graph);
@@ -463,11 +464,11 @@ class UnreferencedRecordCollectorTest {
 
         // normaltable 有未引用记录，应该被检查到
         assertTrue(result.tableToUnreferenced().containsKey("normaltable"));
-        assertEquals(2, result.tableToUnreferenced().get("normaltable").size());
+        assertEquals(2, requireNonNull(result.tableToUnreferenced().get("normaltable")).size());
 
         // reftable 也没有被其他表引用
         assertTrue(result.tableToUnreferenced().containsKey("reftable"));
-        assertEquals(1, result.tableToUnreferenced().get("reftable").size());
+        assertEquals(1, requireNonNull(result.tableToUnreferenced().get("reftable")).size());
 
         // 总共 3 个未引用记录
         assertEquals(3, result.total());
@@ -576,11 +577,11 @@ class UnreferencedRecordCollectorTest {
 
         // item 表有未引用记录
         assertTrue(result.tableToUnreferenced().containsKey("item"));
-        assertEquals(2, result.tableToUnreferenced().get("item").size());
+        assertEquals(2, requireNonNull(result.tableToUnreferenced().get("item")).size());
 
         // player 表有未引用记录
         assertTrue(result.tableToUnreferenced().containsKey("player"));
-        assertEquals(1, result.tableToUnreferenced().get("player").size());
+        assertEquals(1, requireNonNull(result.tableToUnreferenced().get("player")).size());
 
         // 总共 3 个未引用记录
         assertEquals(3, result.total());

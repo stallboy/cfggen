@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SchemaToCsvHeaderTest {
@@ -16,7 +17,7 @@ class SchemaToCsvHeaderTest {
         CfgSchema cfgSchema = CfgReader.parse("table t[id] { id:int; }");
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -34,7 +35,7 @@ class SchemaToCsvHeaderTest {
                 """);
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -54,7 +55,7 @@ class SchemaToCsvHeaderTest {
                 """);
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -68,7 +69,7 @@ class SchemaToCsvHeaderTest {
         CfgSchema cfgSchema = CfgReader.parse("table t[id] { id:int; items:list<int> (fix=3); }");
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -86,7 +87,7 @@ class SchemaToCsvHeaderTest {
                 """);
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -100,7 +101,7 @@ class SchemaToCsvHeaderTest {
         CfgSchema cfgSchema = CfgReader.parse("table t[id] { id:int; attrs:map<int,int> (fix=2); }");
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -121,7 +122,7 @@ class SchemaToCsvHeaderTest {
                 """);
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -137,7 +138,7 @@ class SchemaToCsvHeaderTest {
         CfgSchema cfgSchema = CfgReader.parse("table t[id] { id:int; // 主键\n }");
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -155,7 +156,7 @@ class SchemaToCsvHeaderTest {
                 """);
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -169,7 +170,7 @@ class SchemaToCsvHeaderTest {
         CfgSchema cfgSchema = CfgReader.parse("table t[id] { id:int; items:list<int> (fix=3); // 物品列表\n }");
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -183,7 +184,7 @@ class SchemaToCsvHeaderTest {
         CfgSchema cfgSchema = CfgReader.parse("table t[id] { id:int; attrs:map<int,int> (fix=2); // 属性映射\n }");
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -204,7 +205,7 @@ class SchemaToCsvHeaderTest {
                 """);
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -222,7 +223,7 @@ class SchemaToCsvHeaderTest {
                 """);
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());
@@ -236,7 +237,7 @@ class SchemaToCsvHeaderTest {
         CfgSchema cfgSchema = CfgReader.parse("table t[id] { id:int; items:list<int> (block=3); }");
         CfgSchemaErrs errs = cfgSchema.resolve();
         assertEquals(0, errs.errs().size());
-        TableSchema table = cfgSchema.findTable("t");
+        TableSchema table = requireNonNull(cfgSchema.findTable("t"));
 
         SchemaToCsvHeader header = new SchemaToCsvHeader();
         header.flattenFields(table.fields());

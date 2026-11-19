@@ -1,18 +1,17 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 // 来自：other/sign_in.csv
 public class SignIn {
-    private int id;
-    private java.util.Map<Integer, Integer> item2countMap;
-    private java.util.Map<Integer, Integer> vipitem2vipcountMap;
-    private int viplevel;
-    private String iconFile;
-    private java.util.Map<Integer, config.other.Loot> RefVipitem2vipcountMap;
-
-    private SignIn() {
-    }
+    private final int id;
+    private final java.util.Map<Integer, Integer> item2countMap;
+    private final java.util.Map<Integer, Integer> vipitem2vipcountMap;
+    private final int viplevel;
+    private final String iconFile;
+    private java.util.@Nullable Map<Integer, config.other.@Nullable Loot> RefVipitem2vipcountMap;
 
     SignIn(SignInBuilder b) {
         this.id = b.id;
@@ -22,44 +21,42 @@ public class SignIn {
         this.iconFile = b.iconFile;
     }
 
-    public static SignIn _create(configgen.genjava.ConfigInput input) {
-        SignIn self = new SignIn();
-        self.id = input.readInt();
+    private SignIn(configgen.genjava.ConfigInput input) {
+        this.id = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.item2countMap = java.util.Collections.emptyMap();
+                this.item2countMap = java.util.Collections.emptyMap();
             } else {
-                self.item2countMap = new java.util.LinkedHashMap<>(c);
+                var entries = new java.util.LinkedHashMap<Integer, Integer>(c);
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readInt();
-                    if (self.item2countMap.putIfAbsent(key, value) != null) {
+                    if (entries.putIfAbsent(key, value) != null) {
                         input.errors().duplicateKey("other.sign_in.item2countMap", key);
                     }
                 }
-                self.item2countMap = java.util.Collections.unmodifiableMap(self.item2countMap);
+                this.item2countMap = java.util.Collections.unmodifiableMap(entries);
             }
         }
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.vipitem2vipcountMap = java.util.Collections.emptyMap();
+                this.vipitem2vipcountMap = java.util.Collections.emptyMap();
             } else {
-                self.vipitem2vipcountMap = new java.util.LinkedHashMap<>(c);
+                var entries = new java.util.LinkedHashMap<Integer, Integer>(c);
                 for (; c > 0; c--) {
                     var key = input.readInt();
                     var value = input.readInt();
-                    if (self.vipitem2vipcountMap.putIfAbsent(key, value) != null) {
+                    if (entries.putIfAbsent(key, value) != null) {
                         input.errors().duplicateKey("other.sign_in.vipitem2vipcountMap", key);
                     }
                 }
-                self.vipitem2vipcountMap = java.util.Collections.unmodifiableMap(self.vipitem2vipcountMap);
+                this.vipitem2vipcountMap = java.util.Collections.unmodifiableMap(entries);
             }
         }
-        self.viplevel = input.readInt();
-        self.iconFile = input.readStringInPool();
-        return self;
+        this.viplevel = input.readInt();
+        this.iconFile = input.readStringInPool();
     }
 
     /**
@@ -97,7 +94,7 @@ public class SignIn {
         return iconFile;
     }
 
-    public java.util.Map<Integer, config.other.Loot> refVipitem2vipcountMap() {
+    public java.util.@Nullable Map<Integer, config.other.@Nullable Loot> refVipitem2vipcountMap() {
         return RefVipitem2vipcountMap;
     }
 
@@ -123,7 +120,11 @@ public class SignIn {
 
     }
 
-    public static SignIn get(int id) {
+    public static SignIn _create(configgen.genjava.ConfigInput input) {
+        return new SignIn(input);
+    }
+
+    public static @Nullable SignIn get(int id) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherSignIn(id);
     }

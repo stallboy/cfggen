@@ -71,7 +71,7 @@ public class IncludedStructs {
                     case Structural structural -> {
                         for (FieldSchema field : structural.fields()) {
                             ForeachSchema.foreachFieldStructRef(field, obj -> {
-                                String fn = obj.fullName();
+                                String fn = java.util.Objects.requireNonNull(obj).fullName();
                                 if (!checked.containsKey(fn)) {
                                     newFrontiers.put(fn, obj);
                                 }

@@ -21,7 +21,7 @@
         String primaryMapName = model.name.containerPrefix + "All";
         String functionAllName = "all" + Arrays.stream(model.structural.name().split("\\.")).map(s -> Name.pascalName(model.cfg, s)).collect(Collectors.joining());
     }
-    public static java.util.${primarySeq ? "List" : "Collection"}<${model.className}> all() {
+    public static java.util.${primarySeq ? "List" : "Collection"}<${primarySeq ? model.cfg.nullable(model.className) : model.className}> all() {
         ${model.codeTopPkg}.ConfigMgr mgr = ${model.codeTopPkg}.ConfigMgr.getMgr();
         return mgr.${functionAllName}();
     }
@@ -30,12 +30,12 @@
     public static void _index(${model.codeTopPkg}.ConfigMgr mgr, java.util.Map<${Name.keyClassName(model.cfg, table.primaryKey(), model.name)}, ${model.className}> rows, ${errorsClass} errors) {
         int c = rows.size();
         @if(primarySeq)
-            var ${primaryMapName} = new java.util.ArrayList<${model.className}>(java.util.Collections.nCopies(c, null));
+            var ${primaryMapName} = new java.util.ArrayList<${model.cfg.nullable(model.className)}>(java.util.Collections.nCopies(c, null));
         @endif
         @for(KeySchema uk : table.uniqueKeys())
             !{ boolean ukSeqInit = uk.fieldSchemas().size() == 1 && uk.fieldSchemas().getFirst().isSeq(); }
             @if(ukSeqInit)
-                var ${model.name.containerPrefix + Name.uniqueKeyMapName(uk)} = new java.util.ArrayList<${model.className}>(java.util.Collections.nCopies(c, null));
+                var ${model.name.containerPrefix + Name.uniqueKeyMapName(uk)} = new java.util.ArrayList<${model.cfg.nullable(model.className)}>(java.util.Collections.nCopies(c, null));
             @else
                 var ${model.name.containerPrefix + Name.uniqueKeyMapName(uk)} = new java.util.LinkedHashMap<${Name.keyClassName(model.cfg, uk, model.name)}, ${model.className}>(c);
             @endif

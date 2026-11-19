@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.value.CfgValue.*;
 import static configgen.value.Values.*;
@@ -114,9 +115,9 @@ class ValueToJsonTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve();
 
-        InterfaceSchema condition = (InterfaceSchema) cfg.findItem("condition");
-        StructSchema checkItem = condition.findImpl("checkItem");
-        StructSchema and = condition.findImpl("and");
+        InterfaceSchema condition = requireNonNull((InterfaceSchema) cfg.findItem("condition"));
+        StructSchema checkItem = requireNonNull(condition.findImpl("checkItem"));
+        StructSchema and = requireNonNull(condition.findImpl("and"));
 
         VStruct c1 = ofStruct(checkItem, List.of(ofInt(123)));
         VStruct c2 = ofStruct(checkItem, List.of(ofInt(456)));
@@ -153,10 +154,10 @@ class ValueToJsonTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve();
 
-        InterfaceSchema condition = (InterfaceSchema) cfg.findItem("condition");
-        StructSchema checkItem = condition.findImpl("checkItem");
-        StructSchema and = condition.findImpl("and");
-        TableSchema cond = cfg.findTable("cond");
+        InterfaceSchema condition = requireNonNull((InterfaceSchema) cfg.findItem("condition"));
+        StructSchema checkItem = requireNonNull(condition.findImpl("checkItem"));
+        StructSchema and = requireNonNull(condition.findImpl("and"));
+        TableSchema cond = requireNonNull(cfg.findTable("cond"));
 
         VStruct c1 = ofStruct(checkItem, List.of(ofInt(123)));
         VStruct c2 = ofStruct(checkItem, List.of(ofInt(456)));

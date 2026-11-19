@@ -49,7 +49,7 @@ final class EditorValueJson {
                 throw new IllegalArgumentException(path + ": long requires a 64-bit decimal string or a safe integer number");
             }
             case FieldType.StructRef ref when value instanceof JSONObject object -> {
-                switch (ref.obj()) {
+                switch (ref.resolvedObj()) {
                     case Structural structural -> decodeStructural(structural, object, path);
                     case InterfaceSchema iface -> {
                         String name = object.getString("$type");

@@ -1,52 +1,49 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public class CfgKey_test {
-    private int id1;
-    private long id2;
-    private int id3;
-    private java.util.List<Integer> ids;
-    private String enumTest;
-    private java.util.List<String> enumList;
-    private java.util.List<config.other.CfgSign_in> RefIds;
-    private config.other.CfgArgCaptureMode RefEnumTest;
-    private java.util.List<config.other.CfgArgCaptureMode> RefEnumList;
+    private final int id1;
+    private final long id2;
+    private final int id3;
+    private final java.util.List<Integer> ids;
+    private final String enumTest;
+    private final java.util.List<String> enumList;
+    private java.util.@Nullable List<config.other.@Nullable CfgSign_in> RefIds;
+    private config.other.@Nullable CfgArgCaptureMode RefEnumTest;
+    private java.util.@Nullable List<config.other.@Nullable CfgArgCaptureMode> RefEnumList;
 
-    private CfgKey_test() {
-    }
-
-    public static CfgKey_test _create(configgen.genjava.ConfigInput input) {
-        CfgKey_test self = new CfgKey_test();
-        self.id1 = input.readInt();
-        self.id2 = input.readLong();
-        self.id3 = input.readInt();
+    private CfgKey_test(configgen.genjava.ConfigInput input) {
+        this.id1 = input.readInt();
+        this.id2 = input.readLong();
+        this.id3 = input.readInt();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.ids = java.util.Collections.emptyList();
+                this.ids = java.util.Collections.emptyList();
             } else {
-                self.ids = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<Integer>(c);
                 for (; c > 0; c--) {
-                    self.ids.add(input.readInt());
+                    items.add(input.readInt());
                 }
-                self.ids = java.util.Collections.unmodifiableList(self.ids);
+                this.ids = java.util.Collections.unmodifiableList(items);
             }
         }
-        self.enumTest = input.readStringInPool();
+        this.enumTest = input.readStringInPool();
         {
             int c = input.readCount(0);
             if (c == 0) {
-                self.enumList = java.util.Collections.emptyList();
+                this.enumList = java.util.Collections.emptyList();
             } else {
-                self.enumList = new java.util.ArrayList<>(c);
+                var items = new java.util.ArrayList<String>(c);
                 for (; c > 0; c--) {
-                    self.enumList.add(input.readStringInPool());
+                    items.add(input.readStringInPool());
                 }
-                self.enumList = java.util.Collections.unmodifiableList(self.enumList);
+                this.enumList = java.util.Collections.unmodifiableList(items);
             }
         }
-        return self;
     }
 
     public int getId1() {
@@ -73,15 +70,15 @@ public class CfgKey_test {
         return enumList;
     }
 
-    public java.util.List<config.other.CfgSign_in> refIds() {
+    public java.util.@Nullable List<config.other.@Nullable CfgSign_in> refIds() {
         return RefIds;
     }
 
-    public config.other.CfgArgCaptureMode refEnumTest() {
+    public config.other.@Nullable CfgArgCaptureMode refEnumTest() {
         return RefEnumTest;
     }
 
-    public java.util.List<config.other.CfgArgCaptureMode> refEnumList() {
+    public java.util.@Nullable List<config.other.@Nullable CfgArgCaptureMode> refEnumList() {
         return RefEnumList;
     }
 
@@ -124,6 +121,10 @@ public class CfgKey_test {
 
     }
 
+    public static CfgKey_test _create(configgen.genjava.ConfigInput input) {
+        return new CfgKey_test(input);
+    }
+
     public static class Id1Id2Key {
         private final int id1;
         private final long id2;
@@ -139,7 +140,7 @@ public class CfgKey_test {
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(@Nullable Object other) {
             if (!(other instanceof Id1Id2Key o)) {
                 return false;
             }
@@ -152,7 +153,7 @@ public class CfgKey_test {
         }
     }
 
-    public static CfgKey_test get(int id1, long id2) {
+    public static @Nullable CfgKey_test get(int id1, long id2) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherKey_test(id1, id2);
     }
@@ -172,7 +173,7 @@ public class CfgKey_test {
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(@Nullable Object other) {
             if (!(other instanceof Id1Id3Key o)) {
                 return false;
             }
@@ -185,12 +186,12 @@ public class CfgKey_test {
         }
     }
 
-    public static CfgKey_test getById1Id3(int id1, int id3) {
+    public static @Nullable CfgKey_test getById1Id3(int id1, int id3) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherKey_testById1Id3(id1, id3);
     }
 
-    public static CfgKey_test getById2(long id2) {
+    public static @Nullable CfgKey_test getById2(long id2) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherKey_testById2(id2);
     }
@@ -210,7 +211,7 @@ public class CfgKey_test {
         }
 
         @Override
-        public boolean equals(Object other) {
+        public boolean equals(@Nullable Object other) {
             if (!(other instanceof Id2Id3Key o)) {
                 return false;
             }
@@ -223,7 +224,7 @@ public class CfgKey_test {
         }
     }
 
-    public static CfgKey_test getById2Id3(long id2, int id3) {
+    public static @Nullable CfgKey_test getById2Id3(long id2, int id3) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherKey_testById2Id3(id2, id3);
     }

@@ -117,7 +117,7 @@ class TypeStr {
                 return "nil";
             }
             case EntryType.EntryBase entryBase -> {
-                return getColumnStrOrIndex(ctx.aCtx(), entryBase.fieldSchema(), table);
+                return getColumnStrOrIndex(ctx.aCtx(), java.util.Objects.requireNonNull(entryBase.fieldSchema()), table);
             }
         }
     }
@@ -330,7 +330,7 @@ class TypeStr {
             case INT, LONG, FLOAT -> "number";
             case STRING -> "string";
             case TEXT -> "text";
-            case StructRef structRef -> Name.fullName(aCtx, structRef.obj());
+            case StructRef structRef -> Name.fullName(aCtx, structRef.resolvedObj());
             case FList fList -> String.format("table<number,%s>", typeToLuaType(aCtx, fList.item()));
             case FMap fMap -> String.format("table<%s,%s>", typeToLuaType(aCtx, fMap.key()), typeToLuaType(aCtx, fMap.value()));
         };

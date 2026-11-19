@@ -1,7 +1,7 @@
 package configgen.geni18n;
 
 import configgen.i18n.I18nUtils;
-import configgen.i18n.LangTextFinder.TextFinder;
+import configgen.i18n.TranslationCatalog.TextFinder;
 import configgen.i18n.TextByIdFinder;
 import configgen.schema.HasText;
 import configgen.util.Logger;
@@ -121,7 +121,7 @@ public class LangText extends LinkedHashMap<String, LangText.ModuleText> {
                 String table = w.getKey();
                 TextByIdFinder wroteTable = w.getValue();
                 TextByIdFinder extractedTable = otherTop.get(table);
-                if (!wroteTable.equals(extractedTable)) {
+                if (!java.util.Objects.equals(wroteTable, extractedTable)) {
                     Logger.log("%s NOT match", table);
                     return false;
                 }

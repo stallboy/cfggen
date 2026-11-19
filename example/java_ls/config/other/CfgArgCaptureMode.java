@@ -1,5 +1,7 @@
 package config.other;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.genjava.LoadValueErrs;
 
 public enum CfgArgCaptureMode {
@@ -26,7 +28,7 @@ public enum CfgArgCaptureMode {
         map = java.util.Collections.unmodifiableMap(symbols);
     }
 
-    public static CfgArgCaptureMode get(String value) {
+    public static @Nullable CfgArgCaptureMode get(String value) {
         return map.get(value);
     }
 
@@ -35,27 +37,28 @@ public enum CfgArgCaptureMode {
     }
 
     public int getId() {
-        return ref().getId();
+        return java.util.Objects.requireNonNull(ref()).getId();
     }
 
     public String getComment() {
-        return ref().getComment();
+        return java.util.Objects.requireNonNull(ref()).getComment();
     }
 
-    public config.other.CfgArgCaptureMode_Detail ref() {
+    public config.other.@Nullable CfgArgCaptureMode_Detail ref() {
         return ref(config.ConfigMgr.getMgr());
     }
 
-    public config.other.CfgArgCaptureMode_Detail ref(config.ConfigMgr mgr) {
+    public config.other.@Nullable CfgArgCaptureMode_Detail ref(config.ConfigMgr mgr) {
         return mgr._get_other_ArgCaptureMode_Refs(ordinal());
     }
 
     public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
-        mgr._set_other_ArgCaptureMode_Refs(new config.other.CfgArgCaptureMode_Detail[] {
+        mgr._set_other_ArgCaptureMode_Refs(new config.other.@Nullable CfgArgCaptureMode_Detail[] {
             mgr.getOtherArgCaptureMode(SNAPSHOT.value),
             mgr.getOtherArgCaptureMode(DYNAMIC.value),
         });
-        for (var row : mgr._get_other_ArgCaptureMode_All().values()) {
+        for (var entry : mgr._get_other_ArgCaptureMode_All().values()) {
+            var row = java.util.Objects.requireNonNull(entry);
             var key = row.getName();
             String symbol = row.getName();
             CfgArgCaptureMode expected = get(symbol);

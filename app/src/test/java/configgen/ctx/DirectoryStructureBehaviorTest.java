@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -387,7 +388,7 @@ class DirectoryStructureBehaviorTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             new DirectoryStructure(tempDir);
         });
-        assertTrue(ex.getMessage().contains("conflict"), "应该报告冲突: " + ex.getMessage());
+        assertTrue(requireNonNull(ex.getMessage()).contains("conflict"), "应该报告冲突: " + ex.getMessage());
     }
 
     @Test

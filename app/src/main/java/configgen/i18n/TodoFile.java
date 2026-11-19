@@ -116,7 +116,7 @@ public record TodoFile(List<Line> todo,
     }
 
 
-    public static void readAndMergeToFinder(File todoFile, LangTextFinder langFinder) {
+    public static void readAndMergeIntoCatalog(File todoFile, TranslationCatalog catalog) {
         try (ReadableWorkbook wb = new ReadableWorkbook(todoFile,
                 new ReadingOptions(true, false))) {
 
@@ -139,9 +139,9 @@ public record TodoFile(List<Line> todo,
                     // 当一个翻译项在item.xlsx和TODO文件都存在时，优先用TODO里的，在TODO的翻译为空时，会用item.xlsx里的
                     continue;
                 }
-                TextByIdFinder finder = (TextByIdFinder) langFinder.getTextFinder(table);
+                TextByIdFinder finder = (TextByIdFinder) catalog.getTextFinder(table);
                 if (finder == null) {
-                    Logger.log("Table %s not found in langTextFinder, skipping row %d",
+                    Logger.log("Table %s not found in translation catalog, skipping row %d",
                             table, i + 1);
                     continue;
                 }

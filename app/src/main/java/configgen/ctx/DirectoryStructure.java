@@ -1,5 +1,7 @@
 package configgen.ctx;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
@@ -79,7 +81,7 @@ public class DirectoryStructure implements JsonTableFiles {
         Map<String, JsonFileInfo> map = new LinkedHashMap<>();
         /// 该表 JSON 文件所在目录（相对 rootDir），在发现时记录。
         /// 写入/删除必须用这个目录，避免与发现位置不一致导致数据被拆到两个目录。
-        Path tableDirRelativePath;
+        @Nullable Path tableDirRelativePath;
 
 
         void sort() {
@@ -101,7 +103,7 @@ public class DirectoryStructure implements JsonTableFiles {
             return c;
         }
 
-        public JsonFileInfo removeFile(String jsonFileRelativePath) {
+        public @Nullable JsonFileInfo removeFile(String jsonFileRelativePath) {
             return map.remove(jsonFileRelativePath);
         }
 
@@ -109,7 +111,7 @@ public class DirectoryStructure implements JsonTableFiles {
 
 
     private final Path rootDir;
-    private final ExplicitDir explicitDir;
+    private final @Nullable ExplicitDir explicitDir;
     /**
      * 配置文件信息
      */
@@ -127,7 +129,7 @@ public class DirectoryStructure implements JsonTableFiles {
         this(rootDir, null);
     }
 
-    public DirectoryStructure(Path rootDir, ExplicitDir explicitDir) {
+    public DirectoryStructure(Path rootDir, @Nullable ExplicitDir explicitDir) {
         this.rootDir = rootDir;
         this.explicitDir = explicitDir;
 
@@ -172,7 +174,7 @@ public class DirectoryStructure implements JsonTableFiles {
         return rootDir;
     }
 
-    public ExplicitDir getExplicitDir() {
+    public @Nullable ExplicitDir getExplicitDir() {
         return explicitDir;
     }
 
@@ -183,7 +185,7 @@ public class DirectoryStructure implements JsonTableFiles {
                 .toList();
     }
 
-    public Path getCfgFilePathByPkgName(String pkgName) {
+    public @Nullable Path getCfgFilePathByPkgName(String pkgName) {
         String pkgNameDot = pkgName.isEmpty() ? "" : pkgName + ".";
         for (CfgFileInfo c : cfgFiles.values()) {
             if (c.pkgNameDot().equals(pkgNameDot)) {
@@ -216,7 +218,7 @@ public class DirectoryStructure implements JsonTableFiles {
     /// 这是发现阶段记录的真实位置（根级 _skill_buff 或嵌套 skill/_buff 都可能），
     /// 写入/删除应据此进行，避免重新推导出另一个目录而把同一表的数据拆到两处。
     /// 表不是 JSON 表或尚未被发现（没有目录）时返回 null。
-    public Path getJsonTableDir(String tableName) {
+    public @Nullable Path getJsonTableDir(String tableName) {
         JsonFileList list = jsonFiles.get(tableName);
         return list == null ? null : list.tableDirRelativePath;
     }
@@ -265,7 +267,7 @@ public class DirectoryStructure implements JsonTableFiles {
         }
     }
 
-    private void findTxtAsTsvFiles(Path dir, String nullableAddTag) {
+    private void findTxtAsTsvFiles(Path dir, @Nullable String nullableAddTag) {
         try (Stream<Path> paths = Files.list(dir)) {
             for (Path path : paths.toList()) {
                 if (isFileIgnored(path)) {

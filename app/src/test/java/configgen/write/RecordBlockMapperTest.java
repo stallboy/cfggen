@@ -13,6 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RecordBlockMapperTest {
@@ -53,7 +54,7 @@ class RecordBlockMapperTest {
         // When: Parse and map to block
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VTable table = cfgValue.getTable("simple");
+        CfgValue.VTable table = requireNonNull(cfgValue.getTable("simple"));
         CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
@@ -63,8 +64,8 @@ class RecordBlockMapperTest {
 
         // Use identity mapping to check
         RecordBlockTransformed transformed = new RecordBlockTransformed(block, List.of(0, 1, 2));
-        String[] row = transformed.getRow(0);
-        assertEquals("10", row[0]);
+        var row = java.util.Objects.requireNonNull(transformed.getRow(0));
+        assertEquals("10", requireNonNull(row)[0]);
         assertEquals("Alice", row[1]);
         assertEquals("25", row[2]);
     }
@@ -97,7 +98,7 @@ class RecordBlockMapperTest {
         // When: Parse and map to block
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VTable table = cfgValue.getTable("entity");
+        CfgValue.VTable table = requireNonNull(cfgValue.getTable("entity"));
         CfgValue.VStruct record = (CfgValue.VStruct) table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
@@ -106,8 +107,8 @@ class RecordBlockMapperTest {
         assertEquals(1, block.getRowCount());
 
         RecordBlockTransformed transformed = new RecordBlockTransformed(block, List.of(0, 1, 2, 3));
-        String[] row = transformed.getRow(0);
-        assertEquals("1", row[0]);
+        var row = java.util.Objects.requireNonNull(transformed.getRow(0));
+        assertEquals("1", requireNonNull(row)[0]);
         assertEquals("100", row[1]);
         assertEquals("200", row[2]);
         assertEquals("Player", row[3]);
@@ -140,7 +141,7 @@ class RecordBlockMapperTest {
         // When: Parse and map to block
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VTable table = cfgValue.getTable("entity");
+        CfgValue.VTable table = requireNonNull(cfgValue.getTable("entity"));
         CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
@@ -149,8 +150,8 @@ class RecordBlockMapperTest {
         assertEquals(1, block.getRowCount());
 
         RecordBlockTransformed transformed = new RecordBlockTransformed(block, List.of(0, 1));
-        String[] row = transformed.getRow(0);
-        assertEquals("1", row[0]);
+        var row = java.util.Objects.requireNonNull(transformed.getRow(0));
+        assertEquals("1", requireNonNull(row)[0]);
         assertEquals("100,200", row[1]);
     }
 
@@ -176,7 +177,7 @@ class RecordBlockMapperTest {
         // When: Parse and map to block
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VTable table = cfgValue.getTable("item");
+        CfgValue.VTable table = requireNonNull(cfgValue.getTable("item"));
         CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
@@ -185,8 +186,8 @@ class RecordBlockMapperTest {
         assertEquals(1, block.getRowCount());
 
         RecordBlockTransformed transformed = new RecordBlockTransformed(block, List.of(0, 1));
-        String[] row = transformed.getRow(0);
-        assertEquals("1", row[0]);
+        var row = java.util.Objects.requireNonNull(transformed.getRow(0));
+        assertEquals("1", requireNonNull(row)[0]);
         assertEquals("tag1,tag2,tag3", row[1]);
     }
 
@@ -212,7 +213,7 @@ class RecordBlockMapperTest {
         // When: Parse and map to block
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VTable table = cfgValue.getTable("item");
+        CfgValue.VTable table = requireNonNull(cfgValue.getTable("item"));
         CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
@@ -221,8 +222,8 @@ class RecordBlockMapperTest {
         assertEquals(1, block.getRowCount());
 
         RecordBlockTransformed transformed = new RecordBlockTransformed(block, List.of(0, 1, 2, 3));
-        String[] row = transformed.getRow(0);
-        assertEquals("1", row[0]);
+        var row = java.util.Objects.requireNonNull(transformed.getRow(0));
+        assertEquals("1", requireNonNull(row)[0]);
         assertEquals("10", row[1]);
         assertEquals("20", row[2]);
         assertEquals("30", row[3]);
@@ -252,7 +253,7 @@ class RecordBlockMapperTest {
         // When: Parse and map to block
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VTable table = cfgValue.getTable("item");
+        CfgValue.VTable table = requireNonNull(cfgValue.getTable("item"));
         CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
@@ -261,11 +262,11 @@ class RecordBlockMapperTest {
         assertEquals(3, block.getRowCount());
 
         RecordBlockTransformed transformed = new RecordBlockTransformed(block, List.of(0, 1));
-        assertEquals("1", transformed.getRow(0)[0]);
+        assertEquals("1", requireNonNull(transformed.getRow(0))[0]);
         assertEquals("10", transformed.getRow(0)[1]);
-        assertNull(transformed.getRow(1)[0]);
+        assertNull(requireNonNull(transformed.getRow(1))[0]);
         assertEquals("20", transformed.getRow(1)[1]);
-        assertNull(transformed.getRow(2)[0]);
+        assertNull(requireNonNull(transformed.getRow(2))[0]);
         assertEquals("30", transformed.getRow(2)[1]);
     }
 }

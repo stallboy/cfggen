@@ -1,5 +1,7 @@
 package configgen.gen.ui;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,8 +13,8 @@ public record CommandLineBuilder(GuiLauncher launcher) {
     /**
      * 命令参数的简单封装
      */
-    private record CmdArg(String name, String value, boolean quoteSpaces) {
-        CmdArg(String name, String value) {
+    private record CmdArg(String name, @Nullable String value, boolean quoteSpaces) {
+        CmdArg(String name, @Nullable String value) {
             this(name, value, false);
         }
     }
@@ -137,7 +139,7 @@ public record CommandLineBuilder(GuiLauncher launcher) {
     /**
      * 条件添加参数的辅助方法
      */
-    private void addIf(List<CmdArg> args, String name, String value, String defaultValue, boolean quoteSpaces) {
+    private void addIf(List<CmdArg> args, String name, String value, @Nullable String defaultValue, boolean quoteSpaces) {
         if (value != null && !value.isEmpty() && !value.equals(defaultValue)) {
             args.add(new CmdArg(name, value, quoteSpaces));
         }

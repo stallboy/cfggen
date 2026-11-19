@@ -1,5 +1,7 @@
 package configgen.genbyai;
 
+import org.jspecify.annotations.Nullable;
+
 import configgen.schema.*;
 import configgen.value.CfgValue;
 import configgen.value.ValueUtil;
@@ -17,7 +19,7 @@ public class SchemaToTs {
     private final List<String> extraRefTables;
 
     private record Struct(Nameable nameable,
-                          String tableKey /* 如果为null，表示结构，否则表示引用表的数据 */) {
+                          @Nullable String tableKey /* 如果为null，表示结构，否则表示引用表的数据 */) {
     }
 
     private record RefName(String namespace,
@@ -97,7 +99,7 @@ public class SchemaToTs {
         return sb.toString();
     }
 
-    private void addStruct(String name, Nameable struct, String tableKey) {
+    private void addStruct(String name, Nameable struct, @Nullable String tableKey) {
         String ns = struct.namespace();
         if (struct instanceof StructSchema sc) {
             if (sc.nullableInterface() != null) {
@@ -149,7 +151,7 @@ public class SchemaToTs {
         return raw.isEmpty() ? "" : " /* %s */".formatted(raw);
     }
 
-    private void generateUnionTypeByValues(String structName, Nameable nameable, String tableKey) {
+    private void generateUnionTypeByValues(String structName, Nameable nameable, @Nullable String tableKey) {
         CfgValue.VTable table = cfgValue.getTable(nameable.name());
         Objects.requireNonNull(table);
 
@@ -170,7 +172,7 @@ public class SchemaToTs {
         List<CfgValue.VStruct> valueList = table.valueList();
         int size_1 = valueList.size() - 1;
         for (CfgValue.VStruct record : valueList) {
-            CfgValue.Value fv = ValueUtil.extractFieldValue(record, tableKey);
+            CfgValue.Value fv = ValueUtil.extractFieldValue(record, java.util.Objects.requireNonNull(tableKey));
             Objects.requireNonNull(fv);
             String v;
             switch (fv) {
@@ -240,7 +242,7 @@ public class SchemaToTs {
                 };
             }
             case FieldType.StructRef structRef -> {
-                Fieldable obj = structRef.obj();
+                Fieldable obj = structRef.resolvedObj();
                 if (obj.namespace().equals(structural.namespace())) {
                     return obj.lastName();
                 }

@@ -1,14 +1,13 @@
 package configgen.genbyai;
 
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
 
-public record PromptModel(@NotNull String table,
-                          @NotNull String structInfo, // typescript 包含了一些 ref table info， 包含id，title
-                          @NotNull String rule, // 关于此表的一些补充信息，一些规则，从$mod.md + [table].md中读到
-                          @NotNull List<Example> examples) {
+public record PromptModel(String table,
+                          String structInfo, // typescript 包含了一些 ref table info， 包含id，title
+                          String rule, // 关于此表的一些补充信息，一些规则，从$mod.md + [table].md中读到
+                          List<Example> examples) {
 
     public PromptModel {
         Objects.requireNonNull(table);
@@ -17,9 +16,9 @@ public record PromptModel(@NotNull String table,
         Objects.requireNonNull(examples);
     }
 
-    public record Example(@NotNull String id,
-                          @NotNull String description,
-                          @NotNull String json) {
+    public record Example(String id,
+                          String description,
+                          String json) {
 
         public Example {
             Objects.requireNonNull(id);

@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -31,8 +33,8 @@ public final class InterfaceSchema implements Fieldable, Nameable {
      */
     private final List<StructSchema> impls;
 
-    private TableSchema enumRefTable;
-    private StructSchema nullableDefaultImplStruct;
+    private @Nullable TableSchema enumRefTable;
+    private @Nullable StructSchema nullableDefaultImplStruct;
 
     public InterfaceSchema(String name, String enumRef, String defaultImpl,
                            FieldFormat fmt, Metadata meta,
@@ -90,7 +92,7 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         return impls;
     }
 
-    public StructSchema findImpl(String name) {
+    public @Nullable StructSchema findImpl(String name) {
         for (StructSchema impl : impls) {
             if (impl.name().equals(name)) {
                 return impl;
@@ -99,7 +101,7 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         return null;
     }
 
-    public TableSchema nullableEnumRefTable() {
+    public @Nullable TableSchema nullableEnumRefTable() {
         return enumRefTable;
     }
 
@@ -151,7 +153,7 @@ public final class InterfaceSchema implements Fieldable, Nameable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         InterfaceSchema that = (InterfaceSchema) o;

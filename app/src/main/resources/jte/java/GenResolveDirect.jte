@@ -70,7 +70,12 @@
                         }
                 @else
                     @if(refTable.primaryKey().fieldSchemas().size() == 1 && refTable.primaryKey().fieldSchemas().getFirst().isSeq())
+                        @if(cfg.jspecify())
+                            for (var row : mgr._get_${refN.containerPrefix}All()) {
+                                var v = java.util.Objects.requireNonNull(row);
+                        @else
                         for (${Name.refType(cfg, refTable)} v : mgr._get_${refN.containerPrefix}All()) {
+                        @endif
                     @else
                         for (${Name.refType(cfg, refTable)} v : mgr._get_${refN.containerPrefix}All().values()) {
                     @endif
