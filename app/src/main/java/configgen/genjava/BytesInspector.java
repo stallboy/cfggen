@@ -155,32 +155,17 @@ public class BytesInspector {
     }
 
     private void printSchemaInterface(String name, SchemaInterface schemaInterface) {
-        boolean isNotRoot = name != null;
-        if (isNotRoot) {
-            if (printedSchemas.contains(schemaInterface)) {
-                return;
-            }
-
-            printedSchemas.add(schemaInterface);
-            println(name + " {");
-
+        if (!printedSchemas.add(schemaInterface)) {
+            return;
         }
 
+        println(name + " {");
+        indent++;
         for (Map.Entry<String, Schema> stringSchemaEntry : schemaInterface.implementations.entrySet()) {
-            if (isNotRoot) {
-                indent++;
-            }
-
             visitSchemaToPrintSchema(stringSchemaEntry.getKey(), stringSchemaEntry.getValue());
-
-            if (isNotRoot) {
-                indent--;
-            }
         }
-
-        if (isNotRoot) {
-            println("}");
-        }
+        indent--;
+        println("}");
     }
 
 
