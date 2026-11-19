@@ -41,7 +41,7 @@ public class EntryOrEnumModel {
         this.hasFixedId = vTable.schema().meta().getEnumValues() instanceof Metadata.MetaEnumValues.OfAssigned
                 && !vTable.schema().primaryKey().fields().getFirst().equals("id");
         this.enumNameToIntegerValueMap = vTable.enumNameToIntegerValueMap();
-        this.enumNames = java.util.Objects.requireNonNull(vTable.enumNames());
+        this.enumNames = vTable.requireEnumNames();
         this.table = vTable.schema();
         this.isNeedReadData = isNeedReadData;
         this.dataNameFullName = dataName.fullName;

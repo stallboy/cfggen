@@ -67,7 +67,8 @@ final class PackageBuilder {
         errors.checkErrors("package fields", false);
         Map<String, LinkedHashMap<Value, VStruct>> merged = new LinkedHashMap<>();
         for (String table : schema.tableMap().keySet()) merged.put(table, new LinkedHashMap<>());
-        String[] languages = ctx.nullableTranslationBundle() == null ? new String[0] : new String[]{ctx.nullableTranslationBundle().defaultLang()};
+        var translationBundle = ctx.nullableTranslationBundle();
+        String[] languages = translationBundle == null ? new String[0] : new String[]{translationBundle.defaultLang()};
         for (var pack : packs) {
             for (String block : pack.blockNames()) {
                 if (!block.startsWith(".")) continue;
@@ -114,7 +115,7 @@ final class PackageBuilder {
         }
         new RefValidator(effective, errors).validate();
         errors.checkErrors("effective package " + name, false);
-        var expected = SchemaParser.parsePackage(effective, ctx.nullableTranslationBundle());
+        var expected = SchemaParser.parsePackage(effective, translationBundle);
         for (var pack : packs) {
             var input = pack.block("schema");
             Schema actual = SchemaDeserializer.deserialize(input); input.requireEnd();

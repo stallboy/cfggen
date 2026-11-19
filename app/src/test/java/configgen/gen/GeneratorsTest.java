@@ -2,11 +2,13 @@ package configgen.gen;
 
 import configgen.gengo.GoCodeGenerator;
 import configgen.util.Logger;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+@NullMarked
 class GeneratorsTest {
 
     @Test

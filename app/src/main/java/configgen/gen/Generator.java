@@ -1,6 +1,7 @@
 package configgen.gen;
 
 import configgen.ctx.Context;
+import org.jspecify.annotations.Nullable;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ public abstract class Generator {
      * 任务异常解包传播（RuntimeException/Error 原样抛出，其余包成 RuntimeException），
      * InterruptedException 恢复中断标记后包成 RuntimeException。
      */
-    protected static <T> List<T> invokeAllAndWait(ExecutorService pool, List<Callable<T>> tasks) {
+    protected static <T extends @Nullable Object> List<T> invokeAllAndWait(ExecutorService pool, List<Callable<T>> tasks) {
         try {
             List<T> results = new ArrayList<>(tasks.size());
             for (Future<T> f : pool.invokeAll(tasks)) {

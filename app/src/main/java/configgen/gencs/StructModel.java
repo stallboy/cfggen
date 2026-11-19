@@ -8,6 +8,8 @@ import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -180,6 +182,10 @@ public class StructModel {
 
     public String indexField(KeySchema key) {
         return tableField(key.equals(((TableSchema) structural).primaryKey()) ? "All" : GenNaming.uniqueKeyMapName(key));
+    }
+
+    public SequencedSet<String> requireEnumNames() {
+        return Objects.requireNonNull(_vTable).requireEnumNames();
     }
 
     public String formalParams(List<FieldSchema> fs) {

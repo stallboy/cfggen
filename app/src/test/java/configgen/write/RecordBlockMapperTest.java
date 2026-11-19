@@ -262,11 +262,14 @@ class RecordBlockMapperTest {
         assertEquals(3, block.getRowCount());
 
         RecordBlockTransformed transformed = new RecordBlockTransformed(block, List.of(0, 1));
-        assertEquals("1", requireNonNull(transformed.getRow(0))[0]);
-        assertEquals("10", transformed.getRow(0)[1]);
-        assertNull(requireNonNull(transformed.getRow(1))[0]);
-        assertEquals("20", transformed.getRow(1)[1]);
-        assertNull(requireNonNull(transformed.getRow(2))[0]);
-        assertEquals("30", transformed.getRow(2)[1]);
+        var firstRow = requireNonNull(transformed.getRow(0));
+        var secondRow = requireNonNull(transformed.getRow(1));
+        var thirdRow = requireNonNull(transformed.getRow(2));
+        assertEquals("1", firstRow[0]);
+        assertEquals("10", firstRow[1]);
+        assertNull(secondRow[0]);
+        assertEquals("20", secondRow[1]);
+        assertNull(thirdRow[0]);
+        assertEquals("30", thirdRow[1]);
     }
 }

@@ -1,5 +1,7 @@
 package configgen.value;
 
+import org.jspecify.annotations.Nullable;
+
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONException;
@@ -15,7 +17,6 @@ import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.*;
 import static configgen.value.CfgValueErrs.*;
 
-@SuppressWarnings("SwitchStatementWithTooFewBranches")
 public class ValueJsonParser {
     private final TableSchema tableSchema;
     private final boolean isTableSchemaPartial;
@@ -156,7 +157,7 @@ public class ValueJsonParser {
         return new VInterface(interfaceSchema, implValue, source); // 需要这层包装，以方便生成data file
     }
 
-    private boolean parseBool(Object obj, DFile source) {
+    private boolean parseBool(@Nullable Object obj, DFile source) {
         if (obj == null) {
             return false;
         }
@@ -174,7 +175,7 @@ public class ValueJsonParser {
         }
     }
 
-    private SimpleValue parseSimpleType(SimpleType type, Object obj, DFile source, FieldSchema fieldSchema) {
+    private SimpleValue parseSimpleType(SimpleType type, @Nullable Object obj, DFile source, FieldSchema fieldSchema) {
         switch (type) {
             case BOOL -> {
                 return new VBool(parseBool(obj, source), source);
@@ -265,7 +266,7 @@ public class ValueJsonParser {
 
     }
 
-    private Value parse(FieldType type, Object obj, DFile source, FieldSchema fieldSchema) {
+    private Value parse(FieldType type, @Nullable Object obj, DFile source, FieldSchema fieldSchema) {
         switch (type) {
             case SimpleType simpleType -> {
                 return parseSimpleType(simpleType, obj, source, fieldSchema);

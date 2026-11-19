@@ -45,7 +45,8 @@ class CheckJsonServiceTest {
     void normalizesSafeIntegralScientificNotationForEditorTransport(String raw) {
         var result = CheckJsonService.checkJson(cfgValue(), "t", raw);
         assertEquals(ok, result.resultCode(), result.jsonResult());
-        assertEquals("1000", JSONObject.parseObject(result.jsonResult()).get("id"));
+        JSONObject normalized = requireNonNull(JSONObject.parseObject(result.jsonResult()));
+        assertEquals("1000", normalized.get("id"));
     }
 
     @Test
@@ -54,7 +55,7 @@ class CheckJsonServiceTest {
         String raw = "{\"id\":\"9007199254740993\",\"note\":\"" + note + "\"}";
         var result = CheckJsonService.checkJson(cfgValue(), "t", raw);
         assertEquals(ok, result.resultCode(), result.jsonResult());
-        JSONObject normalized = JSONObject.parseObject(result.jsonResult());
+        JSONObject normalized = requireNonNull(JSONObject.parseObject(result.jsonResult()));
         assertEquals("9007199254740993", normalized.get("id"));
         assertEquals(note, normalized.get("note"));
     }

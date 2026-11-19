@@ -62,10 +62,11 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
     @else
         !{
-            int len = model.enumNameToIntegerValueMap.size();
+            var enumIds = java.util.Objects.requireNonNull(model.enumNameToIntegerValueMap);
+            int len = enumIds.size();
             int c = 0;
         }
-        @for(var entry : model.enumNameToIntegerValueMap.entrySet())
+        @for(var entry : enumIds.entrySet())
             !{
                 String enumName = entry.getKey();
                 int value = entry.getValue();
@@ -172,7 +173,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 var row = java.util.Objects.requireNonNull(entry);
                 @endif
                 var key = row.get${StringUtil.upper1(model.table.primaryKey().fieldSchemas().getFirst().name())}();
-                String symbol = row.get${StringUtil.upper1(model.entryBase.fieldSchema().name())}();
+                String symbol = row.get${StringUtil.upper1(model.entryBase.field())}();
                 @if(!model.isEnum)
                     if (symbol.isEmpty()) {
                         continue;

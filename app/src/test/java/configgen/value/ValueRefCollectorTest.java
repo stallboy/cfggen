@@ -34,8 +34,9 @@ class ValueRefCollectorTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VStruct firstRecord = requireNonNull(cfgValue.getTable("t")).valueList().get(0);
-        CfgValue.VStruct secondRecord = cfgValue.getTable("t").valueList().get(1);
+        var records = requireNonNull(cfgValue.getTable("t")).valueList();
+        CfgValue.VStruct firstRecord = records.get(0);
+        CfgValue.VStruct secondRecord = records.get(1);
 
         List<ValueRefCollector.FieldRef> fieldRefs = new ArrayList<>();
         Map<ValueRefCollector.RefId, CfgValue.VStruct> refIdToRecordMap = new LinkedHashMap<>();
@@ -80,8 +81,9 @@ class ValueRefCollectorTest {
 
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
-        CfgValue.VStruct firstRecord = requireNonNull(cfgValue.getTable("t")).valueList().get(0);
-        CfgValue.VStruct secondRecord = cfgValue.getTable("t").valueList().get(1);
+        var records = requireNonNull(cfgValue.getTable("t")).valueList();
+        CfgValue.VStruct firstRecord = records.get(0);
+        CfgValue.VStruct secondRecord = records.get(1);
 
         List<ValueRefCollector.FieldRef> fieldRefs = new ArrayList<>();
         Map<ValueRefCollector.RefId, CfgValue.VStruct> refIdToRecordMap = new LinkedHashMap<>();

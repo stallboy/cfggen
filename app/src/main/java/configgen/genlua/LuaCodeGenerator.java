@@ -122,8 +122,9 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
         aCtx.getStatistics().print();
 
-        if (aCtx.nullableLangSwitchSupport() != null) {
-            Map<String, List<String>> lang2Texts = aCtx.nullableLangSwitchSupport().getLang2Texts();
+        var langSwitchSupport = aCtx.nullableLangSwitchSupport();
+        if (langSwitchSupport != null) {
+            Map<String, List<String>> lang2Texts = langSwitchSupport.getLang2Texts();
             StringBuilder lineCache = lineCacheTl.get();
             for (Map.Entry<String, List<String>> e : lang2Texts.entrySet()) {
                 String lang = e.getKey();
@@ -151,7 +152,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     }
 
     private void generateTablesParallel() {
-        List<Callable<Void>> tasks = new ArrayList<>();
+        List<Callable<@Nullable Void>> tasks = new ArrayList<>();
         for (VTable v : cfgValue.sortedTables()) {
             tasks.add(() -> {
                 // 每任务借本线程的缓冲区（lineCache/mainCc/extraCc），互不干扰

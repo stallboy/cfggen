@@ -192,7 +192,7 @@ class CfgSchemaFilterByTagTest {
         assertEquals(0, errs.errs().size());
         assertEquals(0, errs2.errs().size());
 
-        tab1 = cfg.findTable("tab1");
+        tab1 = requireNonNull(cfg.findTable("tab1"));
         assertEquals(2, tab1.fields().size());
     }
 

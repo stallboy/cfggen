@@ -36,7 +36,7 @@ class_name ${model.name.className}
 
 	@if(model._vTable.schema().entry() instanceof EntryType.EntryBase)
 		# 静态枚举实例
-		@for(String enumName : model._vTable.enumNames())
+		@for(String enumName : model.requireEnumNames())
 			static var ${model.upper1(enumName)}: ${model.name.className}
 		@endfor
 	@endif
@@ -77,7 +77,7 @@ func _to_string() -> String:
 	static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 		_data = {}
 		@if(table.entry() instanceof EntryType.EntryBase)
-			@for(String enumName : model._vTable.enumNames())
+			@for(String enumName : model.requireEnumNames())
 				${model.upper1(enumName)} = null
 			@endfor
 		@endif
@@ -94,10 +94,10 @@ func _to_string() -> String:
 			@endfor
 
 			@if(table.entry() instanceof EntryType.EntryBase entryBase)
-				!{String ef = model.fieldName(entryBase.fieldSchema());}
+				!{String ef = model.lower1(entryBase.field());}
 				if item.${ef}.strip_edges() != "":
 					match item.${ef}.strip_edges():
-						@for(String enumName : model._vTable.enumNames())
+						@for(String enumName : model.requireEnumNames())
 							"${enumName}":
 								if ${model.upper1(enumName)} != null:
 									_errors.enum_dup("${model.structural.name()}", str(item))
@@ -108,7 +108,7 @@ func _to_string() -> String:
 			@endif
 
 		@if(table.entry() instanceof EntryType.EntryBase entryBase)
-			@for(String enumName : model._vTable.enumNames())
+			@for(String enumName : model.requireEnumNames())
 				if ${model.upper1(enumName)} == null:
 					_errors.enum_null("${model.structural.name()}", "${enumName}")
 			@endfor

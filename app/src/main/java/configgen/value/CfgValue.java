@@ -51,6 +51,10 @@ public record CfgValue(CfgSchema schema,
         public String name() {
             return schema.name();
         }
+
+        public SequencedSet<String> requireEnumNames() {
+            return Objects.requireNonNull(enumNames, () -> "No enum names for table " + name());
+        }
     }
 
     public sealed interface Value {

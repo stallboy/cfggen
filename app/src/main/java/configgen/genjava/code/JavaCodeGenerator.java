@@ -119,12 +119,11 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         }
         // struct/interface 类与 table 类各自生成独立文件，互不依赖；并发渲染。
         // tableDataNames / setAllRefs 顺序敏感——故每个 table 任务用独立 local 列表，渲染后按原序合并，保证字节级一致。
-        List<Callable<Void>> structTasks = new ArrayList<>();
+        List<Callable<@Nullable Void>> structTasks = new ArrayList<>();
         for (Nameable nameable : cfgValue.schema().items()) {
             switch (nameable) {
                 case StructSchema s -> structTasks.add(() -> {
                     generateStructClass(cfg, s, openCode);
-                    //noinspection DataFlowIssue
                     return null;
                 });
                 case InterfaceSchema iface -> {
@@ -136,7 +135,6 @@ public class JavaCodeGenerator extends GeneratorWithTag {
                         for (StructSchema impl : ifaceF.impls()) {
                             generateStructClass(cfg, impl, openCode);
                         }
-                        //noinspection DataFlowIssue
                         return null;
                     });
                 }

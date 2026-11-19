@@ -8,21 +8,27 @@ import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.SequencedSet;
 import java.util.stream.Collectors;
 
 import static configgen.schema.FieldType.Primitive.*;
 
 public class StructModel {
     public final Structural structural;
-    public final CfgValue.VTable _vTable;
+    public final CfgValue.@Nullable VTable _vTable;
     public final String structClassName;
     private final TsCodeGenerator gen;
 
-    public StructModel(TsCodeGenerator gen, Structural structural, CfgValue.VTable _vTable) {
+    public StructModel(TsCodeGenerator gen, Structural structural, CfgValue.@Nullable VTable _vTable) {
         this.gen = gen;
         this.structural = structural;
         this._vTable = _vTable;
         this.structClassName = gen.className(structural);
+    }
+
+    public SequencedSet<String> requireEnumNames() {
+        return Objects.requireNonNull(_vTable).requireEnumNames();
     }
 
     public String className(Nameable nameable) {

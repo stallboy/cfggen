@@ -66,7 +66,8 @@ public class CsCodeGenerator extends GeneratorWithTag {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
         outputFiles = ctx.outputFiles();
 
-        isLangSwitch = ctx.nullableTranslationBundle() != null;
+        var translationBundle = ctx.nullableTranslationBundle();
+        isLangSwitch = translationBundle != null;
         // 普通和 Unity 模式共用 C#9 兼容的运行库。
         FileUtil.copyFileIfNotExist("/support/cs/Loader.cs",
                 "src/main/resources/support/cs/Loader.cs",
@@ -79,15 +80,14 @@ public class CsCodeGenerator extends GeneratorWithTag {
                     return line.replace("namespace Config", "namespace " + pkg);
                 });
 
-        generateProcessor(cfgValue,
-                ctx.nullableTranslationBundle() == null ? List.of() : ctx.nullableTranslationBundle().languages());
+        generateProcessor(cfgValue, translationBundle == null ? List.of() : translationBundle.languages());
         try (var ps = createCode("ConfigPackage.cs")) {
             JteEngine.render("cs/ConfigPackage.jte", Map.of("pkg", pkg, "implicitUsings", implicitUsings), ps);
         }
 
         // struct/interface/table 类各自生成独立文件，互不依赖；单阶段并发渲染。
         // 唯一共享可变状态是打印机缓冲区，已用 ThreadLocal（mainCc）按线程隔离。
-        List<Callable<Void>> tasks = new ArrayList<>();
+        List<Callable<@Nullable Void>> tasks = new ArrayList<>();
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
             switch (fieldable) {
                 case StructSchema structSchema -> tasks.add(() -> {
@@ -122,8 +122,8 @@ public class CsCodeGenerator extends GeneratorWithTag {
 
         generateModuleLoaders(cfgSchema, cfgValue);
 
-        if (isLangSwitch) { //生成 Text这个Bean
-            generateText(java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()));
+        if (translationBundle != null) { //生成 Text这个Bean
+            generateText(translationBundle);
         }
 
         outputFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());

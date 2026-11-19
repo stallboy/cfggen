@@ -27,7 +27,7 @@ ${model.nsLine()}
 @elseif(isEnum)
     public enum ${className}
     {
-        @for(String enumName : model._vTable.enumNames())
+        @for(String enumName : model.requireEnumNames())
             ${model.upper1(enumName)},
         @endfor
     }
@@ -40,7 +40,7 @@ ${model.nsLine()}
     <%--static enum--%>
         !{boolean hasEntry = model.hasEntry();}
         @if(hasEntry)
-            @for(String enumName : model._vTable.enumNames())
+            @for(String enumName : model.requireEnumNames())
                 public static ${className} ${model.upper1(enumName)} => ${model.upper1(enumName)}In(ConfigMgr.GetMgr());
                 public static ${className} ${model.upper1(enumName)}In(ConfigMgr config) => config.${model.tableField("Symbol_" + model.upper1(enumName))}!;
             @endfor

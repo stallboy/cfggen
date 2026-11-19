@@ -13,6 +13,7 @@ public class XorCipherOutputStreamTest {
     public void constructor_NullOrEmptyCipher_ThrowsException() {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
+        //noinspection DataFlowIssue
         assertThrows(IllegalArgumentException.class, () -> new XorCipherOutputStream(out, null));
         assertThrows(IllegalArgumentException.class, () -> new XorCipherOutputStream(out, ""));
     }

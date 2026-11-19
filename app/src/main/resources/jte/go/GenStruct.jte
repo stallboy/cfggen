@@ -43,7 +43,7 @@ func create${className}(${streamIf} *Stream) *${className} {
         !{var t = fieldSchema.type();}
         !{var n = lower1(fieldSchema.name());}
         @if (t instanceof StructRef structRef)
-            v.${n} = create${model.ClassName(structRef.obj())}(stream)
+            v.${n} = create${model.ClassName(structRef.resolvedObj())}(stream)
         @elseif(t instanceof FList (SimpleType item))
             ${n}Size := stream.ReadCount(0)
             v.${n} = make([]${model.type(item)}, ${n}Size)
@@ -78,7 +78,7 @@ func (t *${className}) String() string {
 @if (table != null && table.entry() instanceof EntryType.EntryBase)
 //entries
 var (
-    @for (String e : vTable.enumNames())
+    @for (String e : java.util.Objects.requireNonNull(vTable).requireEnumNames())
     ${lower1(e)} ${name.className}
     @endfor
 )
@@ -130,7 +130,7 @@ var (
     <%--EnumGetter--%>
     @if(vTable.schema().entry() instanceof EntryType.EntryBase)
         !{var tableName = new GoName(vTable.schema());}
-        @for (String e : vTable.enumNames())
+        @for (String e : vTable.requireEnumNames())
         func (t *${tableName.className}Mgr) Get${upper1(e)}() *${tableName.className} {
         	return &${lower1(e)}
         }
@@ -143,9 +143,10 @@ var (
         keySchemas.addAll(table.uniqueKeys());
     }
     @for (KeySchema keySchema : keySchemas)
-        @if (keySchema.fieldSchemas().size() > 1 || StructModel.structKey(keySchema) != null)
+        !{StructSchema structKey = StructModel.structKey(keySchema);}
+        @if (keySchema.fieldSchemas().size() > 1 || structKey != null)
             type ${model.keyClassName(keySchema)} struct {
-                @for (FieldSchema field : StructModel.structKey(keySchema) != null ? StructModel.structKey(keySchema).fields() : keySchema.fieldSchemas())
+                @for (FieldSchema field : structKey != null ? structKey.fields() : keySchema.fieldSchemas())
                     ${lower1(field.name())} ${model.type(field.type())}
                 @endfor
             }
@@ -254,17 +255,9 @@ var (
                 t.${mapName}Map[${model.keyExpression(keySchema, "v.")}] = v
             @endif
             @endfor
-            @if (vTable.enumNames() != null)
-            !{
-                var entry = vTable.schema().entry();
-                String entryVarName = switch (entry) {
-                    case EntryType.EEntry eEntry -> eEntry.field();
-                    case EntryType.EEnum eEnum -> eEnum.field();
-                    default -> null; // Default case, use a generic name
-                };
-            }
-            switch v.${lower1(entryVarName)} {
-            @for (String enumName : vTable.enumNames())
+            @if (table.entry() instanceof EntryType.EntryBase entry && vTable.enumNames() != null)
+            switch v.${lower1(entry.field())} {
+            @for (String enumName : vTable.requireEnumNames())
             case "${upper1(enumName)}":
                 ${StringUtil.lower1(enumName)} = *v
             @endfor

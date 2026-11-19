@@ -41,6 +41,7 @@ class RecordBlockTest {
         assertThrows(IllegalArgumentException.class, () -> block.setCell(-1, 0, "val"));
         assertThrows(IllegalArgumentException.class, () -> block.setCell(0, -1, "val"));
         assertThrows(IllegalArgumentException.class, () -> block.setCell(0, 2, "val"));
+        //noinspection DataFlowIssue
         assertThrows(NullPointerException.class, () -> block.setCell(0, 0, null));
     }
 

@@ -25,9 +25,9 @@ namespace ${model.topPkg}
             @endfor
             internal readonly Dictionary<${sm.qualifiedKeyType(table.primaryKey())}, List<string>> ${sm.tableField("Origins")} = new Dictionary<${sm.qualifiedKeyType(table.primaryKey())}, List<string>>();
             @if(table.entry() instanceof EntryType.EEnum)
-                internal readonly ${model.fullName(table)}?[] ${sm.tableField("Symbols")} = new ${model.fullName(table)}?[${sm._vTable.enumNames().size()}];
+                internal readonly ${model.fullName(table)}?[] ${sm.tableField("Symbols")} = new ${model.fullName(table)}?[${sm.requireEnumNames().size()}];
             @elseif(table.entry() instanceof EntryType.EEntry)
-                @for(String symbol : sm._vTable.enumNames())
+                @for(String symbol : sm.requireEnumNames())
                     internal ${model.fullName(table)}? ${sm.tableField("Symbol_" + sm.upper1(symbol))};
                 @endfor
             @endif

@@ -39,14 +39,17 @@ class ExplicitDirBehaviorTest {
 
         // When & Then: 应该为每个 null 参数抛出 NullPointerException
         assertThrows(NullPointerException.class, () -> {
+            //noinspection DataFlowIssue
             new ExplicitDir(null, validSet, validSet);
         }, "null txtAsTsvMap 应该抛出异常");
 
         assertThrows(NullPointerException.class, () -> {
+            //noinspection DataFlowIssue
             new ExplicitDir(validMap, null, validSet);
         }, "null excelFileDirs 应该抛出异常");
 
         assertThrows(NullPointerException.class, () -> {
+            //noinspection DataFlowIssue
             new ExplicitDir(validMap, validSet, null);
         }, "null jsonFileDirs 应该抛出异常");
     }

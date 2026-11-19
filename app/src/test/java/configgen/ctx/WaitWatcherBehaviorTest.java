@@ -223,6 +223,7 @@ class WaitWatcherBehaviorTest {
 
         // When & Then: 应该抛出 NullPointerException
         assertThrows(NullPointerException.class, () -> {
+            //noinspection DataFlowIssue
             new WaitWatcher(watcher, null, 100);
         }, "null 监听器应该抛出异常");
     }
@@ -235,6 +236,7 @@ class WaitWatcherBehaviorTest {
 
         // When & Then: 应该抛出 NullPointerException
         assertThrows(NullPointerException.class, () -> {
+            //noinspection DataFlowIssue
             new WaitWatcher(null, listenerCallCount::incrementAndGet, 1);
         }, "null Watcher 应该抛出异常");
     }

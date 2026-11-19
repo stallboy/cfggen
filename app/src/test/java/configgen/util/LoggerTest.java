@@ -1,6 +1,7 @@
 package configgen.util;
 
 import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class LoggerTest {
 
     // 用 String.format 渲染，与真实 PrintStream.printf 同语义：fmt 非法时同样抛异常
+    @NullMarked
     private static final class RecordingPrinter implements Logger.Printer {
         final List<String> lines = new ArrayList<>();
 

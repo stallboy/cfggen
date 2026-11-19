@@ -35,7 +35,9 @@ class CfgSchemaErrsTest {
     @Test
     public void test_add_null_error_or_warning() {
         CfgSchemaErrs cfgSchemaErrs = CfgSchemaErrs.of();
+        //noinspection DataFlowIssue
         assertThrows(NullPointerException.class, () -> cfgSchemaErrs.addErr(null));
+        //noinspection DataFlowIssue
         assertThrows(NullPointerException.class, () -> cfgSchemaErrs.addWarn(null));
     }
 

@@ -8,6 +8,8 @@ import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.SequencedSet;
 import java.util.stream.Collectors;
 
 import static configgen.schema.FieldType.Primitive.*;
@@ -157,6 +159,10 @@ public class StructModel {
                         + "(" + actualParam + ")";
             }
         }
+    }
+
+    public SequencedSet<String> requireEnumNames() {
+        return Objects.requireNonNull(_vTable).requireEnumNames();
     }
 
     public String fieldName(FieldSchema field) {

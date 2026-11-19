@@ -77,7 +77,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
 
         // struct/interface/table 类各自生成独立文件，互不依赖；单阶段并发渲染。
         // 唯一共享可变状态是打印机缓冲区，已用 ThreadLocal（mainCc）按线程隔离。
-        List<Callable<Void>> tasks = new ArrayList<>();
+        List<Callable<@Nullable Void>> tasks = new ArrayList<>();
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
             switch (fieldable) {
                 case StructSchema structSchema -> tasks.add(() -> {
@@ -121,11 +121,11 @@ public class GoCodeGenerator extends GeneratorWithTag {
     }
 
     List<FieldSchema> reverseFields(TableSchema table) {
-        Set<String> names = new LinkedHashSet<>();
-        if (table.primaryKey().fieldSchemas().size() > 1) names.addAll(table.primaryKey().fields());
+        Set<FieldSchema> fields = new LinkedHashSet<>();
+        if (table.primaryKey().fieldSchemas().size() > 1) fields.addAll(table.primaryKey().fieldSchemas());
         Set<String> requested = reverseFields.getOrDefault(table, Set.of());
-        for (FieldSchema field : table.fields()) if (requested.contains(field.name())) names.add(field.name());
-        return names.stream().map(table::findField).toList();
+        for (FieldSchema field : table.fields()) if (requested.contains(field.name())) fields.add(field);
+        return List.copyOf(fields);
     }
 
     private void generateInterface(InterfaceSchema sInterface) {

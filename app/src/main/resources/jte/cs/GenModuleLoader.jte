@@ -32,11 +32,11 @@ namespace ${group.ns}
                 !{boolean hasSymbols = table.entry() instanceof EntryType.EntryBase;}
                 !{String symbolField = hasSymbols ? ((EntryType.EntryBase)table.entry()).field() : "";}
                 !{boolean fixedId = sm.isEnum() && table.meta().getEnumValues() instanceof Metadata.MetaEnumValues.OfAssigned && !table.primaryKey().fields().getFirst().equals("id");}
-                @if(hasSymbols && !sm._vTable.enumNames().isEmpty() && !table.primaryKey().fields().getFirst().equals(symbolField))
-                    private static readonly ${sm.keyClassName(table.primaryKey())}[] _symbolKeys = { ${sm._vTable.enumNames().stream().map(sm::symbolKey).collect(java.util.stream.Collectors.joining(", "))} };
+                @if(hasSymbols && !sm.requireEnumNames().isEmpty() && !table.primaryKey().fields().getFirst().equals(symbolField))
+                    private static readonly ${sm.keyClassName(table.primaryKey())}[] _symbolKeys = { ${sm.requireEnumNames().stream().map(sm::symbolKey).collect(java.util.stream.Collectors.joining(", "))} };
                 @endif
-                @if(fixedId && !sm._vTable.enumNames().isEmpty())
-                    private static readonly int[] _symbolIds = { ${sm._vTable.enumNames().stream().map(symbol -> table.meta().assignedEnumId(symbol).toString()).collect(java.util.stream.Collectors.joining(", "))} };
+                @if(fixedId && !sm.requireEnumNames().isEmpty())
+                    private static readonly int[] _symbolIds = { ${sm.requireEnumNames().stream().map(symbol -> java.util.Objects.requireNonNull(table.meta().assignedEnumId(symbol)).toString()).collect(java.util.stream.Collectors.joining(", "))} };
                 @endif
                 internal static ${sm.keyClassName(table.primaryKey())} PrimaryKey(${className} self) => ${sm.actualParamsKeySelf(table.primaryKey())};
                 internal static void InitializeAll(List<${className}> list, LoadErrors errors, ConfigMgr config)
@@ -100,7 +100,7 @@ namespace ${group.ns}
                         @endfor
                         @if(hasSymbols)
                             string name = self.${sm.upper1(symbolField)};
-                            @if(sm._vTable.enumNames().isEmpty())
+                            @if(sm.requireEnumNames().isEmpty())
                                 @if(sm.isEnum())
                                     errors.UnknownSymbol("${table.name()}", name, key, config.Explain("${table.name()}", key));
                                 @else
@@ -115,12 +115,12 @@ namespace ${group.ns}
                                     if (name.Length == 0) {
                                         continue;
                                     }
-                                    @if(sm._vTable.enumNames().size() == 1)
-                                        int symbol = name == "${sm._vTable.enumNames().getFirst()}" ? 0 : -1;
+                                    @if(sm.requireEnumNames().size() == 1)
+                                        int symbol = name == "${sm.requireEnumNames().getFirst()}" ? 0 : -1;
                                     @else
                                         int symbol = name switch {
                                             !{int index = 0;}
-                                            @for(String enumName : sm._vTable.enumNames())
+                                            @for(String enumName : sm.requireEnumNames())
                                                 "${enumName}" => ${index++},
                                             @endfor
                                             _ => -1
@@ -153,7 +153,7 @@ namespace ${group.ns}
                         config.${sm.indexField(uk)} = ${sm.isSeqKey(uk) ? index : "new System.Collections.ObjectModel.ReadOnlyDictionary<" + sm.keyClassName(uk) + ", " + className + ">(" + index + ")"};
                     @endfor
                     @if(hasSymbols)
-                        @for(String enumName : sm._vTable.enumNames())
+                        @for(String enumName : sm.requireEnumNames())
                             !{String slot = sm.isEnum() ? sm.tableField("Symbols") + "[(int)" + sm.name.className + "." + sm.upper1(enumName) + "]" : sm.tableField("Symbol_" + sm.upper1(enumName));}
                             config.${slot} = Get(config, ${sm.symbolKey(enumName)});
                             if (config.${slot} == null) {
@@ -205,14 +205,15 @@ namespace ${group.ns}
                         @for(FieldSchema field : sm.structural.fields())
                             ${sm.upper1(field.name())} = ${"value" + sm.upper1(field.name())},
                         @endfor
-                        @if(sm.isEnum())
-                            @if(sm._vTable.enumNames().isEmpty())
+                        @if(sm.structural instanceof TableSchema enumTable && enumTable.entry() instanceof EntryType.EEnum enumEntry)
+                            !{String enumValue = "value" + sm.upper1(enumEntry.field());}
+                            @if(sm.requireEnumNames().isEmpty())
                                 EEnum = (${sm.name.className})(-1)
-                            @elseif(sm._vTable.enumNames().size() == 1)
-                                    EEnum = ${"value" + sm.upper1(((EntryType.EEnum)(sm._vTable.schema().entry())).field())} == "${sm._vTable.enumNames().getFirst()}" ? ${sm.name.className}.${sm.upper1(sm._vTable.enumNames().getFirst())} : (${sm.name.className})(-1)
+                            @elseif(sm.requireEnumNames().size() == 1)
+                                    EEnum = ${enumValue} == "${sm.requireEnumNames().getFirst()}" ? ${sm.name.className}.${sm.upper1(sm.requireEnumNames().getFirst())} : (${sm.name.className})(-1)
                                 @else
-                                EEnum = ${"value" + sm.upper1(((EntryType.EEnum)(sm._vTable.schema().entry())).field())} switch {
-                                    @for(String enumName : sm._vTable.enumNames())
+                                EEnum = ${enumValue} switch {
+                                    @for(String enumName : sm.requireEnumNames())
                                         "${enumName}" => ${sm.name.className}.${sm.upper1(enumName)},
                                     @endfor
                                     _ => (${sm.name.className})(-1)

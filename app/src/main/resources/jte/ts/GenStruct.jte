@@ -21,7 +21,7 @@
 
     <%--static enum--%>
     @if(model._vTable != null && model._vTable.schema().entry() instanceof EntryType.EntryBase)
-        @for(String enumName : model._vTable.enumNames())
+        @for(String enumName : model.requireEnumNames())
             private static _${enumName} : ${className};
             static get ${model.upper1(enumName)}() :${className} { return this._${enumName}; }
 
@@ -72,7 +72,7 @@
 
         static Initialize(os: Stream, errors: LoadErrors) {
             @if(table.entry() instanceof EntryType.EntryBase)
-                @for(String enumName : model._vTable.enumNames())
+                @for(String enumName : model.requireEnumNames())
                     this._${enumName} = undefined!;
                 @endfor
             @endif
@@ -94,7 +94,7 @@
                         continue;
                     }
                     switch(self._${ef}.trim()) {
-                        @for(String enumName : model._vTable.enumNames())
+                        @for(String enumName : model.requireEnumNames())
                             case "${enumName}":
                                 if (this._${enumName} != null) {
                                     errors.EnumDup("${model.structural.name()}", "${enumName}");
@@ -110,7 +110,7 @@
             }
 
             @if(table.entry() instanceof EntryType.EntryBase)
-                @for(String enumName : model._vTable.enumNames())
+                @for(String enumName : model.requireEnumNames())
                     if (this._${enumName} == null) {
                         errors.EnumNull("${model.structural.name()}", "${enumName}");
                     }

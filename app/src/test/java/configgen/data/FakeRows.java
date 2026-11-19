@@ -1,8 +1,11 @@
 package configgen.data;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.List;
 
 public class FakeRows {
+    @NullMarked
     static class FakeRow implements CfgData.DRawRow {
         private final String[] cells;
 

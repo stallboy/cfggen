@@ -55,9 +55,10 @@ public final class I18nByIdGenerator extends Generator {
         CfgValue cfgValue = ctx.makeValue();
 
 
-        if (ctx.nullableTranslationBundle() != null) {
+        var translationBundle = ctx.nullableTranslationBundle();
+        if (translationBundle != null) {
             // -langSwitchDir 对应的outputDir是单一语言的上层目录
-            for (var e : ctx.nullableTranslationBundle().langMap().entrySet()) {
+            for (var e : translationBundle.langMap().entrySet()) {
                 String lang = e.getKey();
                 TranslationCatalog catalog = e.getValue();
                 TextValue.setTranslated(cfgValue, catalog);
