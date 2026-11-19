@@ -878,6 +878,22 @@ class CfgSchemaResolverTest {
     }
 
     @Test
+    void reportsDiagnosticsWhenForeignKeyTargetTypeIsUndefined() {
+        CfgSchema cfg = CfgReader.parse("""
+                struct Key { number:int; }
+                table source[id] { id:int; related:Key ->target; }
+                table target[id] { id:MissingKey; }
+                """);
+
+        assertEquals(List.of(
+                new TypeStructNotFound("target", "id", "MissingKey"),
+                new KeyTypeNotSupport("target", "id", "StructRef{name='MissingKey'}"),
+                new RefLocalKeyRemoteKeyTypeNotMatch("source", "related",
+                        "StructRef{name='Key'}", "StructRef{name='MissingKey'}")
+        ), cfg.resolve().errs());
+    }
+
+    @Test
     public void RefContainerNullable() {
         String str = """
                 table t1[id] {

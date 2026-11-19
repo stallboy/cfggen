@@ -683,7 +683,7 @@ public final class CfgSchemaResolver {
                 return primitive.equals(remote);
             }
             case StructRef structRef -> {
-                return remote instanceof StructRef ref && structRef.obj() == ref.resolvedObj();
+                return remote instanceof StructRef ref && structRef.obj() == ref.obj();
             }
         }
     }
