@@ -1,6 +1,9 @@
 packages:
   - '.'
 
+minimumReleaseAgeExclude:
+  - i18next@27.2.1
+
 onlyBuiltDependencies:
   - '@swc/core'
   - esbuild
