@@ -1,7 +1,5 @@
 package configgen.geni18n;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.gen.Parameter;
@@ -55,7 +53,6 @@ public class TodoTranslator extends Tool {
     }
 
     @Override
-    @Initializer
     public void call() {
         FileUtil.assureFileExistIf(promptJteFile);
 

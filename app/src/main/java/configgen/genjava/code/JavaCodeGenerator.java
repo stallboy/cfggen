@@ -1,7 +1,5 @@
 package configgen.genjava.code;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -101,7 +99,6 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
 
     @Override
-    @Initializer
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgData = ctx.cfgData();
@@ -272,7 +269,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         String plain = source.replace("import org.jspecify.annotations.Nullable;\n\n", "")
                 .replace(" @Nullable []", "[]")
                 .replace("@Nullable ", "");
-        // 保留旧版支持源码中的实现。以下改写只还原为 NullAway 分析增加的检查与局部变量。
+        // 保留旧版支持源码中的实现，包括启用空值注解前的检查与局部变量用法。
         return switch (filename) {
             case "BytesInspector.java" -> plain
                     .replace("java.util.Objects.requireNonNull(rootSchema)", "rootSchema")

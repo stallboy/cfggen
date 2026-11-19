@@ -1,7 +1,6 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
-    id 'net.ltgt.errorprone' version '5.1.1'
 }
 
 repositories {
@@ -9,7 +8,9 @@ repositories {
     mavenCentral()
 }
 
-apply from: '../../app/gradle/nullness.gradle'
+dependencies {
+    implementation 'org.jspecify:jspecify:1.0.0'
+}
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {

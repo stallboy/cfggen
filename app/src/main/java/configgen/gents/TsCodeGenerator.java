@@ -1,7 +1,5 @@
 package configgen.gents;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.naming.GenNaming;
@@ -37,7 +35,6 @@ public class TsCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
-    @Initializer
     public void generate(Context ctx) throws IOException {
         // 注意：ts 不做 deleteOtherFiles/keepMetaAndDeleteOtherFiles 收尾清理，这是目录语义决定的、不是遗漏：
         // 1. dstDir 默认就是用户项目根（不传 dir 时为 "."），Config.ts 与 main.ts/package.json 等

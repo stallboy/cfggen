@@ -1,7 +1,5 @@
 package configgen.gengo;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -50,7 +48,6 @@ public class GoCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
-    @Initializer
     public void generate(Context ctx) throws IOException {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
         outputFiles = ctx.outputFiles();

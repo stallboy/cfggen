@@ -1,7 +1,5 @@
 package configgen.gengd;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -68,7 +66,6 @@ public class GdCodeGenerator extends GeneratorWithTag {
 
 
     @Override
-    @Initializer
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();

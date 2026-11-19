@@ -1,7 +1,5 @@
 package configgen.genbytes;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -50,7 +48,6 @@ public class BytesGenerator extends GeneratorWithTag {
     }
 
     @Override
-    @Initializer
     public void generate(Context ctx) throws IOException {
         outputFiles = ctx.outputFiles();
         PackageBuilder.Result build = ctx.isFixedSchema() || !requires.isEmpty() || !dependencies.isEmpty()

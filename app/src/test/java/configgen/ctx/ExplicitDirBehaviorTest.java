@@ -31,7 +31,6 @@ class ExplicitDirBehaviorTest {
     }
 
     // This test deliberately violates the non-null argument contract.
-    @SuppressWarnings("NullAway")
     @Test
     void shouldThrowExceptionWhenNullParametersAreProvided() {
         // Given: null 参数

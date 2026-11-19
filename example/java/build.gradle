@@ -1,13 +1,14 @@
 plugins {
     id 'application'
-    id 'net.ltgt.errorprone' version '5.1.1'
 }
 
 repositories {
     mavenCentral()
 }
 
-apply from: '../../app/gradle/nullness.gradle'
+dependencies {
+    implementation 'org.jspecify:jspecify:1.0.0'
+}
 
 // 与主项目一致，使用 JDK 25 工具链
 java {

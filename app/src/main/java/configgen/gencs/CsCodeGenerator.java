@@ -1,7 +1,5 @@
 package configgen.gencs;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -61,7 +59,6 @@ public class CsCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
-    @Initializer
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
         CfgSchema cfgSchema = cfgValue.schema();

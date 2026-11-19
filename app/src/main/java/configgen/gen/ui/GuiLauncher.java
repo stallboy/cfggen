@@ -1,7 +1,5 @@
 package configgen.gen.ui;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.gen.Main;
@@ -62,7 +60,6 @@ public class GuiLauncher {
         });
     }
 
-    @Initializer
     private void init() {
         // GUI 是宿主：日志 printer 一次性接管到 GUI 控制台即可（GuiPrinter 经 invokeLater 投递，线程安全），
         // 不必每次 Run 换入换出——原先的 save/restore 正是把它当临时劫持才需要

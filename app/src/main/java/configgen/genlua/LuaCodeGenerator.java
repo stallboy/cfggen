@@ -1,7 +1,5 @@
 package configgen.genlua;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -83,7 +81,6 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
-    @Initializer
     public void generate(Context ctx) throws IOException {
         aCtx = new AContext(pkg, ctx.nullableTranslationBundle(), useSharedEmptyTable, useShared,
                 packBool, noStr, rForOldShared);

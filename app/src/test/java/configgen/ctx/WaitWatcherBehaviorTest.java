@@ -216,7 +216,6 @@ class WaitWatcherBehaviorTest {
     }
 
     // This test deliberately violates the non-null argument contract.
-    @SuppressWarnings("NullAway")
     @Test
     void shouldHandleNullListenerGracefully() {
         // Given: null 监听器
@@ -229,7 +228,6 @@ class WaitWatcherBehaviorTest {
     }
 
     // This test deliberately violates the non-null argument contract.
-    @SuppressWarnings("NullAway")
     @Test
     void shouldHandleNullWatcherGracefully() {
         // Given: null Watcher

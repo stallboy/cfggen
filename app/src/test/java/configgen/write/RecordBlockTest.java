@@ -35,7 +35,6 @@ class RecordBlockTest {
     }
 
     // This test deliberately violates the non-null argument contract.
-    @SuppressWarnings("NullAway")
     @Test
     void testSetCellInvalidArgs() {
         RecordBlock block = new RecordBlock(2);

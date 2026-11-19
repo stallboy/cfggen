@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class XorCipherOutputStreamTest {
 
     // This test deliberately violates the non-null argument contract.
-    @SuppressWarnings("NullAway")
     @Test
     public void constructor_NullOrEmptyCipher_ThrowsException() {
         ByteArrayOutputStream out = new ByteArrayOutputStream();

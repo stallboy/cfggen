@@ -1,7 +1,5 @@
 package configgen.editorserver;
 
-import com.uber.nullaway.annotations.Initializer;
-
 import org.jspecify.annotations.Nullable;
 
 import com.alibaba.fastjson2.JSON;
@@ -72,7 +70,6 @@ public class EditorServer extends GeneratorWithTag {
     }
 
     @Override
-    @Initializer
     public void generate(Context ctx) throws IOException {
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
         initFromCtx(ctx);
