@@ -12,9 +12,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 final class GenConfigCodeSchema {
-    static void generateAll(JavaCodeGenerator gen, GenCfg cfg, int schemaNumPerFile, CfgValue cfgValue, @Nullable TranslationBundle translationBundle) {
+    static void generateAll(Function<String, CachedIndentPrinter> openCode, GenCfg cfg, int schemaNumPerFile,
+                            CfgValue cfgValue, @Nullable TranslationBundle translationBundle) {
         SchemaInterface schemaInterface = SchemaParser.parsePackage(cfgValue, translationBundle);
         Set<String> packageOnly = new HashSet<>();
         for (var table : cfgValue.tables()) {
@@ -40,9 +42,9 @@ final class GenConfigCodeSchema {
             }
         }
 
-        generateFile(gen, cfg, 0, main, others, packageOnly);
+        generateFile(openCode, cfg, 0, main, others, packageOnly);
         for (int i = 0; i < others.size(); i++) {
-            generateFile(gen, cfg, i + 1, others.get(i), List.of(), packageOnly);
+            generateFile(openCode, cfg, i + 1, others.get(i), List.of(), packageOnly);
         }
     }
 
@@ -50,12 +52,12 @@ final class GenConfigCodeSchema {
         return idx > 0 ? "ConfigCodeSchema" + idx : "ConfigCodeSchema";
     }
 
-    private static void generateFile(JavaCodeGenerator gen, GenCfg cfg, int idx,
-                             List<Map.Entry<String, Schema>> schemas,
-                             List<List<Map.Entry<String, Schema>>> others, Set<String> packageOnly) {
+    private static void generateFile(Function<String, CachedIndentPrinter> openCode, GenCfg cfg, int idx,
+                                     List<Map.Entry<String, Schema>> schemas,
+                                     List<List<Map.Entry<String, Schema>>> others, Set<String> packageOnly) {
 
         String className = getClassName(idx);
-        try (CachedIndentPrinter ps = gen.createCode(className + ".java")) {
+        try (CachedIndentPrinter ps = openCode.apply(className + ".java")) {
             ps.println("package %s;", cfg.codeTopPkg());
             ps.println();
             ps.println("import configgen.genjava.*;");

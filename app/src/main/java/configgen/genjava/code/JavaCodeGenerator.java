@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 import static configgen.value.CfgValue.VTable;
 
@@ -41,9 +42,6 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private @Nullable Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
 
-    private Path dstDir;
-    private CfgData cfgData;
-    private CachedFiles outputFiles;
     private final Set<String> generatedPackagePaths = ConcurrentHashMap.newKeySet();
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
@@ -101,9 +99,10 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     @Override
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
-        cfgData = ctx.cfgData();
-        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        outputFiles = ctx.outputFiles();
+        CfgData cfgData = ctx.cfgData();
+        Path dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
+        CachedFiles outputFiles = ctx.outputFiles();
+        Function<String, CachedIndentPrinter> openCode = filename -> createCode(filename, dstDir, outputFiles);
         generatedPackagePaths.clear();
 
         // 一次生成的固定配置：不可变、随调用链显式传递，替代原先散落在 Name/TypeStr/NameableName 的
@@ -124,7 +123,8 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         for (Nameable nameable : cfgValue.schema().items()) {
             switch (nameable) {
                 case StructSchema s -> structTasks.add(() -> {
-                    generateStructClass(cfg, s);
+                    generateStructClass(cfg, s, openCode);
+                    //noinspection DataFlowIssue
                     return null;
                 });
                 case InterfaceSchema iface -> {
@@ -132,10 +132,11 @@ public class JavaCodeGenerator extends GeneratorWithTag {
                     // interface 连同其 impls 放一个任务：二者可能同名同包（如 Effect），
                     // 串行下 impl 后写覆盖 interface；任务内保持先 interface 后 impls 的顺序，避免并发竞态写反。
                     structTasks.add(() -> {
-                        generateInterfaceClass(cfg, ifaceF);
+                        generateInterfaceClass(cfg, ifaceF, openCode);
                         for (StructSchema impl : ifaceF.impls()) {
-                            generateStructClass(cfg, impl);
+                            generateStructClass(cfg, impl, openCode);
                         }
+                        //noinspection DataFlowIssue
                         return null;
                     });
                 }
@@ -150,7 +151,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             tableTasks.add(() -> {
                 List<NameableName> localDataNames = new ArrayList<>();
                 List<String> localSetAllRefs = new ArrayList<>();
-                generateTableClass(cfg, vt, localDataNames, localSetAllRefs);
+                generateTableClass(cfg, vt, cfgData, openCode, localDataNames, localSetAllRefs);
                 return new TableRefs(localDataNames, localSetAllRefs);
             });
         }
@@ -165,28 +166,28 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         }
 
         if (translationBundle != null) {
-            try (var ps = createCode("Text.java")) {
+            try (var ps = openCode.apply("Text.java")) {
                 JteEngine.render("java/Text.jte",
                         new TextModel(pkg, translationBundle.languages()), ps);
             }
         }
 
-        try (var ps = createCode("ConfigMgr.java")) {
+        try (var ps = openCode.apply("ConfigMgr.java")) {
             JteEngine.render("java/ConfigMgr.jte",
                     Map.of("cfg", cfg, "tableDataNames", tableDataNames), ps);
         }
 
-        try (var ps = createCode("ConfigExtension.java")) {
+        try (var ps = openCode.apply("ConfigExtension.java")) {
             JteEngine.render("java/ConfigExtension.jte", Map.of("cfg", cfg), ps);
         }
 
-        try (var ps = createCode("ConfigMgrLoader.java")) {
+        try (var ps = openCode.apply("ConfigMgrLoader.java")) {
             JteEngine.render("java/ConfigMgrLoader.jte",
                     new ConfigMgrLoaderModel(cfg, cfgValue, setAllRefsInMgrLoader,
                             translationBundle == null ? List.of() : translationBundle.languages()), ps);
         }
 
-        GenConfigCodeSchema.generateAll(this, cfg, schemaNumPerFile, cfgValue, translationBundle);
+        GenConfigCodeSchema.generateAll(openCode, cfg, schemaNumPerFile, cfgValue, translationBundle);
 
         if (jspecify) {
             Charset charset = Charset.forName(encoding);
@@ -198,7 +199,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         }
         outputFiles.deleteOtherFiles(dstDir.toFile());
 
-        copyConfigGenSourcesIfNeed();
+        copyConfigGenSourcesIfNeed(outputFiles);
     }
 
     // 单个 table 任务的并发产物：本任务收集的 dataName（供 ConfigMgr 渲染成员）与 setAllRefs 类名
@@ -222,7 +223,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
      * 复制 configgen genjava 源文件到指定目录
      * 仅更新缺失文件或与另一种注解模式下的模板一致的文件。
      */
-    private void copyConfigGenSourcesIfNeed() throws IOException {
+    private void copyConfigGenSourcesIfNeed(CachedFiles outputFiles) throws IOException {
         if (configgenDir == null || configgenDir.isEmpty()) {
             return;
         }
@@ -292,7 +293,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         return "@NullMarked\npackage " + packageName + ";\n\nimport org.jspecify.annotations.NullMarked;\n";
     }
 
-    CachedIndentPrinter createCode(String fn) {
+    private CachedIndentPrinter createCode(String fn, Path dstDir, CachedFiles outputFiles) {
         if (jspecify) {
             int slash = fn.lastIndexOf('/');
             generatedPackagePaths.add(slash < 0 ? "" : fn.substring(0, slash));
@@ -300,24 +301,27 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         return mainCc.get().printer(dstDir.resolve(fn), encoding, outputFiles);
     }
 
-    private void generateStructClass(GenCfg cfg, StructSchema struct) {
+    private void generateStructClass(GenCfg cfg, StructSchema struct, Function<String, CachedIndentPrinter> openCode) {
         NameableName name = new NameableName(cfg, struct);
-        try (var ps = createCode(name.path)) {
+        try (var ps = openCode.apply(name.path)) {
             StructuralClassModel model = new StructuralClassModel(cfg, struct, name, false,
                     SourceComment.of(struct, null));
             JteEngine.render("java/GenStructuralClass.jte", model, ps);
         }
     }
 
-    private void generateInterfaceClass(GenCfg cfg, InterfaceSchema interfaceSchema) {
+    private void generateInterfaceClass(GenCfg cfg, InterfaceSchema interfaceSchema,
+                                        Function<String, CachedIndentPrinter> openCode) {
         NameableName name = new NameableName(cfg, interfaceSchema);
-        try (CachedIndentPrinter ps = createCode(name.path)) {
+        try (CachedIndentPrinter ps = openCode.apply(name.path)) {
             InterfaceModel model = new InterfaceModel(cfg, interfaceSchema, name);
             JteEngine.render("java/GenInterface.jte", model, ps);
         }
     }
 
-    private void generateTableClass(GenCfg cfg, VTable vTable, List<NameableName> tableDataNames, List<String> setAllRefsInMgrLoader) {
+    private void generateTableClass(GenCfg cfg, VTable vTable, CfgData cfgData,
+                                    Function<String, CachedIndentPrinter> openCode,
+                                    List<NameableName> tableDataNames, List<String> setAllRefsInMgrLoader) {
         boolean isNeedReadData = true;
         String dataPostfix = "";
         TableSchema schema = vTable.schema();
@@ -344,7 +348,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
                 setAllRefsInMgrLoader.add(name.fullName);
             }
             NameableName dataName = new NameableName(cfg, schema, dataPostfix);
-            try (var ps = createCode(name.path)) {
+            try (var ps = openCode.apply(name.path)) {
                 JteEngine.render("java/GenEntryOrEnumClass.jte",
                         new EntryOrEnumModel(cfg, vTable, entryBase, name, isNeedReadData, dataName, sourceComment), ps);
             }
@@ -355,13 +359,13 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             tableDataNames.add(name);
             boolean isTableNeedBuilder = needBuilderTables != null && needBuilderTables.contains(vTable.name());
             StructuralClassModel model = new StructuralClassModel(cfg, schema, name, isTableNeedBuilder, sourceComment);
-            try (var ps = createCode(name.path)) {
+            try (var ps = openCode.apply(name.path)) {
                 JteEngine.render("java/GenStructuralClass.jte", model, ps);
             }
 
             if (isTableNeedBuilder) {
                 String builder = name.path.substring(0, name.path.length() - 5) + "Builder.java";
-                try (var ps = createCode(builder)) {
+                try (var ps = openCode.apply(builder)) {
                     JteEngine.render("java/GenTableBuilder.jte", model, ps);
                 }
             }
