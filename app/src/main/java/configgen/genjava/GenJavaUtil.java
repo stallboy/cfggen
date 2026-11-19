@@ -64,7 +64,7 @@ public class GenJavaUtil {
     private static boolean isEnumAsPrimaryKey(TableSchema tableSchema) {
         if (tableSchema.entry() instanceof EEnum eEnum) {
             List<FieldSchema> pks = tableSchema.primaryKey().fieldSchemas();
-            return pks.size() == 1 && pks.get(0) == eEnum.fieldSchema();
+            return pks.size() == 1 && pks.getFirst() == eEnum.fieldSchema();
         }
         return false;
     }

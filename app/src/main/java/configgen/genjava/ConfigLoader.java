@@ -52,7 +52,7 @@ public final class ConfigLoader<K, T> {
     }
 
     public void index() {
-        origins.replaceAll((id, packs) -> List.copyOf(packs));
+        origins.replaceAll((_, packs) -> List.copyOf(packs));
         origins = Collections.unmodifiableMap(origins);
         rows = Collections.unmodifiableMap(rows);
         index.accept(rows);

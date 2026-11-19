@@ -59,9 +59,7 @@ public class Repl {
             }
             try {
                 String out = dispatch(line);
-                if (out != null) {
-                    System.out.println(out);
-                }
+                System.out.println(out);
             } catch (Exception ex) {
                 System.out.println("错误: " + ex.getMessage());
             }
