@@ -64,6 +64,15 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
             }
             return true;
         }
+
+        @Override
+        public int hashCode() {
+            int end = texts.size();
+            while (end > 0 && texts.get(end - 1) == null) {
+                end--;
+            }
+            return Objects.hash(description, texts.subList(0, end));
+        }
     }
 
     private @Nullable String nullableDescriptionName;
@@ -151,6 +160,11 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
         }
 
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nullableDescriptionName, fieldChainToIndex, pkToTexts);
     }
 
     public static Map<String, TranslationCatalog> loadMultiLang(Path path) {
