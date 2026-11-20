@@ -3,6 +3,7 @@ package configgen.util;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
@@ -14,8 +15,10 @@ import java.util.regex.Pattern;
 public final class DOMUtil {
     public static Element rootElement(File file) {
         try {
-            return DocumentBuilderFactory.newInstance()
-                    .newDocumentBuilder().parse(file)
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+            return factory.newDocumentBuilder().parse(file)
                     .getDocumentElement();
         } catch (SAXException | IOException | ParserConfigurationException e) {
             throw new RuntimeException(e);
