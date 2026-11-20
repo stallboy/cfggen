@@ -8,8 +8,10 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.util.Objects;
 
 public class FileUtil {
@@ -52,9 +54,20 @@ public class FileUtil {
 
     public static void writeReplacement(Path path, StagedFileWriter writer) throws IOException {
         Path target = path.toAbsolutePath();
+        if (Files.isSymbolicLink(target)) {
+            target = target.toRealPath();
+        }
         Path staged = Files.createTempFile(target.getParent(), "cfggen-", ".tmp");
         try {
             writer.write(staged);
+            PosixFileAttributeView attributes = Files.getFileAttributeView(target, PosixFileAttributeView.class);
+            if (attributes != null) {
+                try {
+                    Files.setPosixFilePermissions(staged, attributes.readAttributes().permissions());
+                } catch (NoSuchFileException ignored) {
+                    // 没有旧文件可继承权限。
+                }
+            }
             moveReplacing(staged, target);
         } finally {
             Files.deleteIfExists(staged);
