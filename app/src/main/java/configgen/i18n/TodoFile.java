@@ -155,13 +155,13 @@ public record TodoFile(List<Line> todo,
 
                 var texts = record.texts();
                 Integer fieldIndex = finder.getFieldChainToIndex().get(fieldChain);
-                if (fieldIndex == null || fieldIndex >= texts.size()) {
+                if (fieldIndex == null) {
                     Logger.log("Field chain %s not found in table %s, skipping row %d",
                             fieldChain, table, i + 1);
                     continue;
                 }
 
-                var oldText = texts.get(fieldIndex);
+                var oldText = fieldIndex < texts.size() ? texts.get(fieldIndex) : null;
                 if (oldText == null || !oldText.original().equals(original)) {
                     Logger.log("Field chain %s with original %s not found in record with pk %s in table %s, skipping row %d",
                             fieldChain, original, pk, table, i + 1);

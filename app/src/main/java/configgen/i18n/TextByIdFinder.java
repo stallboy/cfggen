@@ -28,51 +28,6 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
      */
     public record OneRecord(@Nullable String description,
                             List<@Nullable OneText> texts) {
-
-        @Override
-        public boolean equals(@Nullable Object obj) {
-            if (!(obj instanceof OneRecord(String otherDescription, var otherTexts))) {
-                return false;
-            }
-            if (!Objects.equals(description, otherDescription)) {
-                return false;
-            }
-            // 可能一个里面有多余的null
-            // <a,null,b>要跟<a,null,b,null>相等
-            if (texts.size() == otherTexts.size()) {
-                return texts.equals(otherTexts);
-            }
-
-            List<@Nullable OneText> larger;
-            List<@Nullable OneText> smaller;
-            if (texts.size() < otherTexts.size()) {
-                smaller = texts;
-                larger = otherTexts;
-            } else {
-                smaller = otherTexts;
-                larger = texts;
-            }
-
-            if (!larger.subList(0, smaller.size()).equals(smaller)) {
-                return false;
-            }
-
-            for (int i = smaller.size(); i < larger.size(); i++) {
-                if (larger.get(i) != null) {
-                    return false; // larger有多余的非null
-                }
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int end = texts.size();
-            while (end > 0 && texts.get(end - 1) == null) {
-                end--;
-            }
-            return Objects.hash(description, texts.subList(0, end));
-        }
     }
 
     private @Nullable String nullableDescriptionName;
@@ -331,6 +286,10 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
                 texts.add(ot);
             }
 
+            // 和提取时一致，只保留到最后一个有文本的列。
+            while (!texts.isEmpty() && texts.getLast() == null) {
+                texts.removeLast();
+            }
             textFinder.pkToTexts.put(pkStr, new OneRecord(description, texts));
         }
 
