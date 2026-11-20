@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static configgen.value.CfgValue.*;
 
@@ -133,18 +134,15 @@ public class ValueInspector implements AutoCloseable {
     }
 
     public void searchInt(Set<Integer> integers) {
+        Set<Long> queries = integers.stream().map(Integer::longValue).collect(Collectors.toSet());
         ForeachValue.searchCfgValue((primitiveValue, table, pk, fieldChain) -> {
-            long val = 0;
-            boolean match = false;
-            if (primitiveValue instanceof VInt v) {
-                val = v.value();
-                match = integers.contains((int) val);
-            } else if (primitiveValue instanceof VLong v) {
-                val = v.value();
-                match = integers.contains((int) val);
-            }
-            if (match) {
-                println("%s[%s], %s, %d", table, pk.packStr(), String.join(".", fieldChain), val);
+            Long value = switch (primitiveValue) {
+                case VInt v -> (long) v.value();
+                case VLong v -> v.value();
+                default -> null;
+            };
+            if (value != null && queries.contains(value)) {
+                println("%s[%s], %s, %d", table, pk.packStr(), String.join(".", fieldChain), value);
             }
         }, cfgValue);
     }
