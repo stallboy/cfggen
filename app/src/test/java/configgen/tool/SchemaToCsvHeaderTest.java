@@ -12,6 +12,22 @@ import static org.junit.jupiter.api.Assertions.*;
 class SchemaToCsvHeaderTest {
 
     @Test
+    void writesColumnModeHeaderAsOneFieldPerRow() {
+        CfgSchema schema = CfgReader.parse("""
+                table t[id] {
+                    id:int; // ID
+                    name:str; // 名称
+                }
+                """);
+        schema.resolve().checkErrors();
+        SchemaToCsvHeader header = new SchemaToCsvHeader();
+        header.flattenFields(requireNonNull(schema.findTable("t")).fields());
+
+        assertEquals(List.of(List.of("ID", "id"), List.of("名称", "name")),
+                SchemaToCsvTool.headerRows(header, true));
+    }
+
+    @Test
     void testPrimitiveField() {
         // id:int -> ["id"]
         CfgSchema cfgSchema = CfgReader.parse("table t[id] { id:int; }");

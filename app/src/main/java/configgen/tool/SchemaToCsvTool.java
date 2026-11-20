@@ -10,6 +10,7 @@ import configgen.util.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -50,10 +51,7 @@ public class SchemaToCsvTool extends Tool {
             SchemaToCsvHeader headerGen = new SchemaToCsvHeader();
             headerGen.flattenFields(table.fields());
 
-            List<List<String>> rows = List.of(
-                headerGen.getCommentRow(),
-                headerGen.getNameRow()
-            );
+            List<List<String>> rows = headerRows(headerGen, table.isColumnMode());
             try {
                 CSVUtil.writeToFile(csvPath.toFile(), rows);
                 Logger.log("Generated: %s", csvPath);
@@ -61,5 +59,17 @@ public class SchemaToCsvTool extends Tool {
                 Logger.log("Failed to write %s: %s", csvPath, e.getMessage());
             }
         }
+    }
+    static List<List<String>> headerRows(SchemaToCsvHeader header, boolean columnMode) {
+        List<String> comments = header.getCommentRow();
+        List<String> names = header.getNameRow();
+        if (!columnMode) {
+            return List.of(comments, names);
+        }
+        List<List<String>> rows = new ArrayList<>(names.size());
+        for (int i = 0; i < names.size(); i++) {
+            rows.add(List.of(comments.get(i), names.get(i)));
+        }
+        return rows;
     }
 }
