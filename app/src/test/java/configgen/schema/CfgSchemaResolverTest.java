@@ -637,6 +637,26 @@ class CfgSchemaResolverTest {
     }
 
     @Test
+    void reportsMissingForeignKeyTargetFields() {
+        CfgSchema cfg = CfgReader.parse("""
+                table source[id] {
+                    id:int;
+                    main:int ->target;
+                    alias:int ->target[missingAlias];
+                }
+                table target[missingId] {
+                    [missingAlias];
+                    id:int;
+                }
+                """);
+
+        assertEquals(List.of(
+                new KeyNotFound("target", "missingId"),
+                new KeyNotFound("target", "missingAlias")
+        ), cfg.resolve().errs());
+    }
+
+    @Test
     public void KeyNotFound_localKey() {
         String str = """
                 table t1[id] {

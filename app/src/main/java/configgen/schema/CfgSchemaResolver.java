@@ -445,9 +445,7 @@ public final class CfgSchemaResolver {
                 obj.add(field);
             }
         }
-        if (ok) {
-            key.setFieldSchemas(obj);
-        }
+        key.setFieldSchemas(ok ? obj : null);
         return ok;
     }
 
@@ -588,13 +586,12 @@ public final class CfgSchemaResolver {
             case RefKey.RefUniq refUniq -> {
                 KeySchema remoteKey = refUniq.key();
                 KeySchema uk = refTableSchema.findUniqueKey(remoteKey);
-                if (uk != null) {
-                    remoteKey.setFieldSchemas(uk.fieldSchemas());
-                    checkLocalAndRemoteTypeMatch(foreignKey, localKey, remoteKey);
-
-                } else {
+                if (uk == null) {
                     errs.addErr(new RefTableKeyNotUniq(ctx(), foreignKey.name(),
                             refTable, refUniq.key().fields()));
+                } else if (uk.isResolved()) {
+                    remoteKey.setFieldSchemas(uk.fieldSchemas());
+                    checkLocalAndRemoteTypeMatch(foreignKey, localKey, remoteKey);
                 }
             }
 
@@ -627,6 +624,9 @@ public final class CfgSchemaResolver {
 
 
     private void checkLocalAndRemoteTypeMatch(ForeignKeySchema foreignKey, KeySchema localKey, KeySchema remoteKey) {
+        if (!remoteKey.isResolved()) {
+            return;
+        }
         List<FieldSchema> localFields = localKey.fieldSchemas();
         List<FieldSchema> remoteFields = remoteKey.fieldSchemas();
 
