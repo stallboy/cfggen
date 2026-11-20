@@ -1,5 +1,6 @@
 export class Stream {
-    private static readonly decoder = new TextDecoder();
+    // Each length-prefixed string may begin with a literal U+FEFF.
+    private static readonly decoder = new TextDecoder("utf-8", {ignoreBOM: true});
     private view: DataView;
     private offset: number;
     private littleEndian: boolean;

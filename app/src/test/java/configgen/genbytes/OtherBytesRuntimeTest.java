@@ -37,9 +37,13 @@ class OtherBytesRuntimeTest {
         new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context);
         Files.writeString(project.resolve("consumer.ts"), """
                 import {Config} from './Config';
-                import {ConfigPackage, LoadErrors} from './ConfigUtil';
+                import {ConfigPackage, LoadErrors, Stream} from './ConfigUtil';
 
                 export function check(bytes: ArrayBuffer): void {
+                    const literal = new ArrayBuffer(8);
+                    new Uint8Array(literal).set([4, 0, 0, 0, 0xef, 0xbb, 0xbf, 65]);
+                    const value = new Stream(literal).ReadString();
+                    if (value !== "\uFEFFA") throw new Error("lost leading U+FEFF in a pool string");
                     Config.Processor.ProcessPackage(ConfigPackage.Read(bytes), new LoadErrors());
                     const user: Config.User | undefined = Config.User.Get(1);
                     const name: string | undefined = user?.Name;
