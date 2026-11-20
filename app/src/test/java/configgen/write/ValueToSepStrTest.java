@@ -16,6 +16,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class ValueToSepStrTest {
 
     @Test
+    void escapedElementsRoundTripThroughTheListParser() {
+        FieldSchema field = new FieldSchema("list", new FieldType.FList(FieldType.Primitive.STRING),
+                new FieldFormat.Sep(';'), Metadata.of());
+        Source source = Source.of();
+        List<String> raw = List.of("a;b", "a\"b", "");
+        var values = raw.stream().<CfgValue.SimpleValue>map(value -> new CfgValue.VString(value, source)).toList();
+        String serialized = ValueToSepStr.toSepStr(new CfgValue.VList(values, source), field);
+        assertEquals(raw, configgen.util.ListParser.parseList(serialized, ';'));
+    }
+
+    @Test
     void testToSepStrVList() {
         // Field: list<int> (sep=',')
         FieldSchema field = new FieldSchema("list",

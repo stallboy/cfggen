@@ -3,6 +3,7 @@ package configgen.write;
 import configgen.schema.FieldFormat.Sep;
 import configgen.schema.FieldSchema;
 import configgen.schema.FieldType.FList;
+import configgen.util.ListParser;
 import configgen.value.CfgValue;
 import configgen.value.CfgValue.*;
 
@@ -24,7 +25,7 @@ public class ValueToSepStr {
         }
 
         String sepStr = String.valueOf(sep);
-        return vList.valueList().stream().map(ValueToSepStr::toStr)
+        return vList.valueList().stream().map(value -> ListParser.formatElement(toStr(value), sep))
                 .collect(Collectors.joining(sepStr));
     }
 
@@ -35,7 +36,7 @@ public class ValueToSepStr {
 
         String sepStr = String.valueOf(sep);
         // 结构体中的所有字段必须是基本类型（primitive）
-        return vStruct.values().stream().map(v -> ((PrimitiveValue) v).toStr())
+        return vStruct.values().stream().map(v -> ListParser.formatElement(((PrimitiveValue) v).toStr(), sep))
                 .collect(Collectors.joining(sepStr));
     }
 

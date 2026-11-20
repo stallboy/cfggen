@@ -12,6 +12,13 @@ public class ListParser {
 
     private static final char quote = '"';
 
+    public static String formatElement(String value, char separator) {
+        if (value.isEmpty() || value.indexOf(separator) >= 0 || value.indexOf(quote) >= 0) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
+
     public static List<String> parseList(String str, char separator) {
         ListState state = ListState.START;
         ArrayList<String> list = new ArrayList<>(8);
