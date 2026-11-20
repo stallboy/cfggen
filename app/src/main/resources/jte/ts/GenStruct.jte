@@ -34,7 +34,7 @@
         !{String n = field.name();}
         private _${n}!: ${t};
         @if(!field.comment().isEmpty())
-            /* ${StringUtil.removeLineSep(field.comment())} */
+            /* ${StringUtil.removeLineSep(field.comment()).replace("*/", "* /")} */
         @endif
         get ${model.upper1(n)}(): ${t} { return this._${n}; }
     @endfor

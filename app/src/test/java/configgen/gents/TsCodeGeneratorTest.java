@@ -69,7 +69,7 @@ class TsCodeGeneratorTest {
                 }
                 """;
         String csv = """
-                用户ID,名字
+                用户ID,embedded */ marker
                 id,name
                 1,Alice
                 """;
@@ -80,7 +80,9 @@ class TsCodeGeneratorTest {
 
         Path configTs = outDir.resolve("Config.ts");
         assertTrue(Files.exists(configTs), "应生成Config.ts");
-        assertTrue(Files.readString(configTs).contains("return \"()\";"), "空结构应输出空括号");
+        String source = Files.readString(configTs);
+        assertTrue(source.contains("return \"()\";"), "空结构应输出空括号");
+        assertTrue(source.contains("/* embedded * / marker */"), source);
         assertTrue(Files.exists(outDir.resolve("ConfigUtil.ts")), "应生成ConfigUtil.ts");
     }
 }
