@@ -97,15 +97,15 @@ public class ValueInspector implements AutoCloseable {
             println("Usage: int <num1> [num2]...");
             return;
         }
-        Set<Integer> integers = new HashSet<>();
+        Set<Long> integers = new HashSet<>();
         for (String s : params) {
             try {
-                integers.add(Integer.decode(s.trim()));
+                integers.add(Long.decode(s.trim()));
             } catch (NumberFormatException e) {
                 println("'%s' is not a valid integer, ignored.", s);
             }
         }
-        if (!integers.isEmpty()) searchInt(integers);
+        if (!integers.isEmpty()) searchLongs(integers);
     }
 
     private void handleStrSearch(List<String> params) {
@@ -135,6 +135,10 @@ public class ValueInspector implements AutoCloseable {
 
     public void searchInt(Set<Integer> integers) {
         Set<Long> queries = integers.stream().map(Integer::longValue).collect(Collectors.toSet());
+        searchLongs(queries);
+    }
+
+    private void searchLongs(Set<Long> queries) {
         ForeachValue.searchCfgValue((primitiveValue, table, pk, fieldChain) -> {
             Long value = switch (primitiveValue) {
                 case VInt v -> (long) v.value();
@@ -236,7 +240,7 @@ public class ValueInspector implements AutoCloseable {
 
     public static List<String> help() {
         return List.of(
-                "int <num> [num]...      : Search for integers (supports hex 0x)",
+                "int <num> [num]...      : Search for signed 64-bit integers (supports hex 0x)",
                 "str <substring>         : Search for strings containing substring",
                 "ref <table[key]> [skip] : Search references to a .key",
                 "sl  [name]              : List matching schema names",
