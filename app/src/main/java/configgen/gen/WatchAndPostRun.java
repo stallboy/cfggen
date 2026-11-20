@@ -292,8 +292,14 @@ public enum WatchAndPostRun {
                             "post run output: {0}", line));
                     }
                     if (process.waitFor(10, TimeUnit.SECONDS)) {
-                        Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunOk",
-                            "post run ok!"));
+                        int exitCode = process.exitValue();
+                        if (exitCode == 0) {
+                            Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunOk",
+                                "post run ok!"));
+                        } else {
+                            Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunExitCode",
+                                "post run failed (exit code {0}): {1}", exitCode, postRun));
+                        }
                     } else {
                         Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunTimeout",
                             "post run timeout"));
