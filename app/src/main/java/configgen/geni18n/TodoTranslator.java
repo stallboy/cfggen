@@ -50,7 +50,12 @@ public class TodoTranslator extends Tool {
         termCfgFile = parameter.get("term", null);
         aiCfgFile = parameter.get("ai", "ai.json");
         promptJteFile = parameter.get("prompt", null);
-        batch = Integer.parseInt(parameter.get("batch", "10"));
+        String batchArg = parameter.get("batch", "10");
+        try {
+            batch = Integer.parseInt(batchArg);
+        } catch (NumberFormatException e) {
+            throw new CliException("batch must be a positive integer");
+        }
         if (batch <= 0) {
             throw new CliException("batch must be a positive integer");
         }
