@@ -132,6 +132,10 @@ public class SchemaToTs {
             }
 
             case InterfaceSchema interfaceSchema -> {
+                if (interfaceSchema.impls().isEmpty()) {
+                    println("export type %s = never;", structName);
+                    break;
+                }
                 println("export type %s = ", structName);
                 int i = 0;
                 int size_1 = interfaceSchema.impls().size() - 1;
@@ -164,9 +168,13 @@ public class SchemaToTs {
         fieldNames.remove(tableKey);
 
 
+        List<CfgValue.VStruct> valueList = table.valueList();
+        if (valueList.isEmpty()) {
+            println("export type %s = never;", structName);
+            return;
+        }
         println("export type %s = ", structName);
         int idx = 0;
-        List<CfgValue.VStruct> valueList = table.valueList();
         int size_1 = valueList.size() - 1;
         for (CfgValue.VStruct record : valueList) {
             CfgValue.Value fv = ValueUtil.extractFieldValue(record, java.util.Objects.requireNonNull(tableKey));
