@@ -59,6 +59,29 @@ class OtherBytesRuntimeTest {
         run(project, List.of("node", "test.cjs"));
     }
 
+    @Test
+    void goConsumerMatchesNamedEntryByItsOriginalSpelling() throws Exception {
+        Context context = TestCtx.newContext(root, """
+                table ability[id] (enum='name') { id:int; name:str; }
+                """, Map.of("ability", "id,name\nid,name\n1,fireBall\n2,IceSpike\n"));
+        Path project = Files.createDirectory(root.resolve("project"));
+        new GoCodeGenerator(new ParameterParser("go,dir:" + project)).generate(context);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + project)).generate(context);
+        Files.writeString(project.resolve("go.mod"), "module fixture\n\ngo 1.22\n");
+        Files.writeString(project.resolve("config/named_entry_test.go"), """
+                package config
+                import ("os"; "testing")
+                func TestNamedEntries(t *testing.T) {
+                    file, err := os.Open("../base.bytes"); if err != nil { t.Fatal(err) }; defer file.Close()
+                    Init(file)
+                    if GetAbilityMgr().GetFireBall().Id() != 1 || GetAbilityMgr().GetIceSpike().Id() != 2 {
+                        t.Fatal("named entry getters must use the source spelling")
+                    }
+                }
+                """);
+        run(project, List.of("go", "test", "./..."));
+    }
+
     @ParameterizedTest
     @CsvSource({"ts,false", "ts,true", "go,false", "go,true"})
     void readsPackagesWithSeparatedLanguages(String language, boolean server) throws Exception {

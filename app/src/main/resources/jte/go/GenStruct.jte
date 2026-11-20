@@ -258,7 +258,7 @@ var (
             @if (table.entry() instanceof EntryType.EntryBase entry && vTable.enumNames() != null)
             switch v.${lower1(entry.field())} {
             @for (String enumName : vTable.requireEnumNames())
-            case "${upper1(enumName)}":
+            case "${enumName}":
                 ${StringUtil.lower1(enumName)} = *v
             @endfor
             }
