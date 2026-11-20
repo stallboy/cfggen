@@ -130,7 +130,7 @@ public class HeadRows {
 
         @Override
         public ParseBoolResult parseBool(@Nullable String str) {
-            if (java.util.Objects.requireNonNull(str).isEmpty()) {
+            if (str == null || str.isEmpty()) {
                 return ParseBoolResult.FALSE;
             }
             return str.equals("0") || str.equalsIgnoreCase("false") ? ParseBoolResult.FALSE : ParseBoolResult.TRUE;

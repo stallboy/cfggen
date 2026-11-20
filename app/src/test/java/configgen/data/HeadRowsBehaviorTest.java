@@ -201,6 +201,7 @@ class HeadRowsBehaviorTest {
         // When & Then: 验证 null 和空字符串的处理
         assertEquals(HeadRow.ParseBoolResult.FALSE, defaultHeadRow.parseBool(null), "null 应该解析为 FALSE");
         assertEquals(HeadRow.ParseBoolResult.FALSE, defaultHeadRow.parseBool(""), "空字符串应该解析为 FALSE");
+        assertEquals(HeadRow.ParseBoolResult.FALSE, HeadRows.A4.parseBool(null));
     }
 
     @Test
