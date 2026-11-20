@@ -18,7 +18,12 @@ public class DCells {
     }
 
     public static List<DCell> parseList(DCell cell, char separator) {
-        return ListParser.parseList(cell.value(), separator).stream().map(cell::createSub).collect(Collectors.toList());
+        return parseList(cell, separator, false);
+    }
+
+    static List<DCell> parseList(DCell cell, char separator, boolean skipImplicitEmpty) {
+        return ListParser.parseList(cell.value(), separator, skipImplicitEmpty).stream()
+                .map(cell::createSub).collect(Collectors.toList());
     }
 
     public static boolean isFunc(DCell cell) {

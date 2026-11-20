@@ -1,5 +1,6 @@
 package configgen.write;
 
+import com.alibaba.fastjson2.JSONObject;
 import configgen.Resources;
 import configgen.ctx.Context;
 import configgen.data.CfgData.DTable;
@@ -145,6 +146,32 @@ class VTableStorageTest {
         });
         assertTrue(workbookPackage.isClosed());
         assertArrayEquals(original, Files.readAllBytes(source));
+    }
+
+    @Test
+    void sepTextListRoundTripsThroughCsvWriteAndReload() throws IOException {
+        Resources.addTempFileFromText("config.cfg", tempDir,
+                "table t[id] { id:int; values:list<str> (sep=';'); }");
+        Path source = tempDir.resolve("t.csv");
+        CSVUtil.writeToFile(source.toFile(), List.of(List.of("ID", "Values"),
+                List.of("id", "values"), List.of("1", ";legacy;;")));
+        Context context = new Context(tempDir);
+        CfgValue initial = context.makeValue();
+        assertEquals(List.of("legacy"), firstStringList(initial));
+
+        List<String> expected = List.of("", "a;b", "a\"b", "a\rb", "");
+        String json = JSONObject.of("id", 1, "values", expected).toJSONString();
+        var result = AddOrUpdateService.addOrUpdateRecord(context, initial, "t", json);
+
+        assertEquals(AddOrUpdateService.AddOrUpdateErrorCode.UpdateOK, result.errorCode());
+        assertEquals(expected,
+                firstStringList(new Context(tempDir).makeValue()));
+    }
+
+    private static List<String> firstStringList(CfgValue value) {
+        var record = requireNonNull(value.getTable("t")).primaryKeyMap().values().iterator().next();
+        return ((VList) record.values().get(1)).valueList().stream()
+                .map(item -> ((CfgValue.VString) item).value()).toList();
     }
 
     @Test

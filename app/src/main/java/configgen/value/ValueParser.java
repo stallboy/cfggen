@@ -378,7 +378,7 @@ public class ValueParser {
         FieldType.FMap subType = (FieldType.FMap) subField.type();
         FieldType.FMap type = (FieldType.FMap) field.type();
 
-        List<CellsWithRowIndex> blocks = parseToBlocks(cells, field, parseContext, false);
+        List<CellsWithRowIndex> blocks = parseToBlocks(cells, field, parseContext, false, false);
         if (blocks == null) {
             return null;
         }
@@ -389,7 +389,7 @@ public class ValueParser {
         int vc = parseContext.pack ? 1 : Span.simpleTypeSpan(type.value());
         int itemSpan = kc + vc;
 
-        forEachItem(blocks, itemSpan, field, parseContext, (itemCells, rowIndex) -> {
+        forEachItem(blocks, itemSpan, field, parseContext, false, (itemCells, rowIndex) -> {
             List<DCell> keyCells = itemCells.subList(0, kc);
             List<DCell> valueCells = itemCells.subList(kc, itemSpan);
 
@@ -420,14 +420,17 @@ public class ValueParser {
         FieldType.FList subType = (FieldType.FList) subField.type();
         FieldType.FList type = (FieldType.FList) field.type();
 
-        List<CellsWithRowIndex> blocks = parseToBlocks(cells, field, parseContext, true);
+        // sep 文本列表允许显式引号表示空元素，旧数据中的裸空位仍跳过。
+        boolean keepQuotedEmpty = !parseContext.pack && field.fmt() instanceof FieldFormat.Sep &&
+                (type.item() == FieldType.Primitive.STRING || type.item() == FieldType.Primitive.TEXT);
+        List<CellsWithRowIndex> blocks = parseToBlocks(cells, field, parseContext, true, keepQuotedEmpty);
         if (blocks == null) {
             return null;
         }
 
         List<SimpleValue> valueList = new ArrayList<>();
         int itemSpan = parseContext.pack ? 1 : Span.simpleTypeSpan(type.item());
-        forEachItem(blocks, itemSpan, field, parseContext, (itemCells, rowIndex) -> {
+        forEachItem(blocks, itemSpan, field, parseContext, keepQuotedEmpty, (itemCells, rowIndex) -> {
             SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
                     new ParseContext(parseContext.nameable, parseContext.pack, false, rowIndex),
                     field);
@@ -443,7 +446,7 @@ public class ValueParser {
     // allowSep 区分 list（支持 sep fmt）和 map（不支持，sep fmt 走默认分支）。
     // pack 解包失败时记录 ParsePackErr 并返回 null。
     private @Nullable List<CellsWithRowIndex> parseToBlocks(List<DCell> cells, FieldSchema field,
-                                                  ParseContext parseContext, boolean allowSep) {
+                                                  ParseContext parseContext, boolean allowSep, boolean skipImplicitEmpty) {
         List<DCell> parsed = null;
         List<CellsWithRowIndex> blocks = null;
         if (parseContext.pack) {
@@ -464,7 +467,7 @@ public class ValueParser {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
             cell.setModePackOrSep();
-            parsed = DCells.parseList(cell, sep);
+            parsed = DCells.parseList(cell, sep, skipImplicitEmpty);
 
         } else {
             require(cells.size() == Span.fieldSpan(field));
@@ -480,7 +483,7 @@ public class ValueParser {
     // 按 itemSpan 遍历所有 block 的 cells，逐个提取 item：
     // 不足 itemSpan 时记录 FieldCellSpanNotEnough 并跳过，全为空的 item 忽略，其余交给 itemHandler。
     private void forEachItem(List<CellsWithRowIndex> blocks, int itemSpan, FieldSchema field,
-                             ParseContext parseContext, BiConsumer<List<DCell>, Integer> itemHandler) {
+                             ParseContext parseContext, boolean keepEmptyItems, BiConsumer<List<DCell>, Integer> itemHandler) {
         for (CellsWithRowIndex block : blocks) {
             List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
@@ -492,7 +495,7 @@ public class ValueParser {
                 }
                 List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
                 // 可部分为空，全为空则忽略
-                if (isCellNotAllEmpty(itemCells)) {
+                if (keepEmptyItems || isCellNotAllEmpty(itemCells)) {
                     itemHandler.accept(itemCells, block.rowIndex);
                 }
             }

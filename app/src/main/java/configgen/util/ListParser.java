@@ -14,12 +14,19 @@ public class ListParser {
 
     public static String formatElement(String value, char separator) {
         if (value.isEmpty() || value.indexOf(separator) >= 0 || value.indexOf(quote) >= 0) {
+            if (separator == quote) {
+                throw new IllegalArgumentException("Cannot escape a sep element when the separator is a double quote");
+            }
             return "\"" + value.replace("\"", "\"\"") + "\"";
         }
         return value;
     }
 
     public static List<String> parseList(String str, char separator) {
+        return parseList(str, separator, false);
+    }
+
+    public static List<String> parseList(String str, char separator, boolean skipImplicitEmpty) {
         ListState state = ListState.START;
         ArrayList<String> list = new ArrayList<>(8);
         StringBuilder field = new StringBuilder(128);
@@ -30,7 +37,9 @@ public class ListParser {
             switch (state) {
                 case START:
                     if (c == separator) {
-                        list.add("");
+                        if (!skipImplicitEmpty) {
+                            list.add("");
+                        }
                     } else if (c == quote) {
                         field.setLength(0);
                         state = ListState.QUOTE;
@@ -74,6 +83,11 @@ public class ListParser {
         }
 
         switch (state) {
+            case QUOTE:
+                if (!skipImplicitEmpty || !field.isEmpty()) {
+                    list.add(field.toString());
+                }
+                break;
             case START: //注意这里和CSVParser的不同，这里最后一个分隔符后面如果没有符号，就不算
                 break;
             default:
