@@ -4,6 +4,7 @@ import configgen.Resources;
 import configgen.ctx.Context;
 import configgen.data.CfgData.DTable;
 import configgen.util.Logger;
+import configgen.util.CSVUtil;
 import configgen.value.CfgValue;
 import configgen.value.ValueUtil;
 import org.junit.jupiter.api.AfterAll;
@@ -42,6 +43,20 @@ class VTableStorageTest {
     @AfterAll
     static void setDefaultLogger() {
         Logger.setPrinter(Logger.Printer.outPrinter);
+    }
+
+    @Test
+    void deletingRecordPreservesUnmappedColumn() throws IOException {
+        Resources.addTempFileFromText("config.cfg", tempDir, "table t[id] { id:int; }");
+        Path source = tempDir.resolve("t.csv");
+        Files.writeString(source, "ignored,ID\n,id\ncomment,1\nkeep,2\n");
+        Context context = new Context(tempDir);
+
+        var result = DeleteService.deleteRecord(context, context.makeValue(), "t", "1");
+
+        assertEquals(DeleteService.DeleteErrorCode.OK, result.errorCode());
+        assertEquals(List.of("comment", ""), CSVUtil.read(source).get(2).getFields());
+        assertEquals(List.of("keep", "2"), CSVUtil.read(source).get(3).getFields());
     }
 
     @Test

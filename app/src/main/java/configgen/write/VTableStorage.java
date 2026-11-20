@@ -54,7 +54,7 @@ public class VTableStorage {
         RecordLoc loc = findRecordLoc(oldRecord);
         DRawSheet sheet = dTable.getSheetByRowId(loc.rowId());
         try (TableFile file = openTableFile(context, sheet, ((TableSchema) oldRecord.schema()).isColumnMode())) {
-            file.emptyRows(loc.startRow(), loc.rowCount(), null);
+            file.emptyRows(loc.startRow(), loc.rowCount(), sheet.fieldIndices());
             file.saveAndClose();
         }
         return sheet;
