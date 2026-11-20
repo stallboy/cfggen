@@ -9,7 +9,7 @@ import configgen.i18n.*;
 import configgen.util.FileUtil;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
-import configgen.value.TextValue;
+import org.jspecify.annotations.Nullable;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -61,19 +61,19 @@ public final class I18nByIdGenerator extends Generator {
             for (var e : translationBundle.langMap().entrySet()) {
                 String lang = e.getKey();
                 TranslationCatalog catalog = e.getValue();
-                TextValue.setTranslated(cfgValue, catalog);
-                generateForValueWithLog(cfgValue, lang, checkWrite, outputDir, backupDir);
+                generateForValueWithLog(cfgValue, catalog, lang, checkWrite, outputDir, backupDir);
             }
 
         } else {
             // -i18nfile 对应的outputDir是单一语言的目录
             String lang = outputDir.getFileName().toString();
             Path langsDir = java.util.Objects.requireNonNull(outputDir.getParent());
-            generateForValueWithLog(cfgValue, lang, checkWrite, langsDir, backupDir);
+            generateForValueWithLog(cfgValue, null, lang, checkWrite, langsDir, backupDir);
         }
     }
 
     private static void generateForValueWithLog(CfgValue cfgValue,
+                                                @Nullable TranslationCatalog catalog,
                                                 String lang,
                                                 boolean checkWrite,
                                                 Path langsDir,
@@ -83,17 +83,15 @@ public final class I18nByIdGenerator extends Generator {
         try (PrintStream verboseStream = new PrintStream("log_" + lang + ".txt");
              Logger.PrinterScope ignored = Logger.printerScope(
                      Logger.Printer.ofSeq(Logger.getPrinter(), Logger.Printer.of(verboseStream)))) {
-            generateForValue(cfgValue, lang, checkWrite, langsDir, backupDir);
+            generateForValue(LangText.extract(cfgValue, catalog), lang, checkWrite, langsDir, backupDir);
         }
     }
 
-    private static void generateForValue(CfgValue cfgValue,
+    private static void generateForValue(LangText extracted,
                                          String lang,
                                          boolean checkWrite,
                                          Path langsDir,
                                          Path backupDir) throws IOException {
-        LangText extracted = LangText.extract(cfgValue);
-
         // 我们用的这个fastexcel lib同样内容写入xlsx，文件会不同，
         // xlsx里面的core.xml里有dcterms:created，是每次创建时时间，所以每次生成文件内容都不同
         // 而我们又希望内容不同时才提交svn，所以需要如下逻辑，内容比较

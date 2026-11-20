@@ -1,6 +1,7 @@
 package configgen.geni18n;
 
 import configgen.i18n.I18nUtils;
+import configgen.i18n.TranslationCatalog;
 import configgen.i18n.TranslationCatalog.TextFinder;
 import configgen.i18n.TextByIdFinder;
 import configgen.schema.HasText;
@@ -10,6 +11,7 @@ import configgen.value.ForeachValue;
 import configgen.value.ValueUtil;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
+import org.jspecify.annotations.Nullable;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -167,20 +169,25 @@ public class LangText extends LinkedHashMap<String, LangText.ModuleText> {
     }
 
     public static LangText extract(CfgValue cfgValue) {
+        return extract(cfgValue, null);
+    }
+
+    public static LangText extract(CfgValue cfgValue, @Nullable TranslationCatalog catalog) {
         Map<String, TextFinder> tableMap = new LinkedHashMap<>(16);
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
             if (HasText.hasText(vTable.schema())) {
                 TextByIdFinder finder = new TextByIdFinder();
                 finder.setNullableDescriptionName(vTable.schema().meta().getStr("lang", null));
+                TextFinder translations = catalog == null ? null : catalog.getTextFinder(vTable.name());
                 for (Map.Entry<CfgValue.Value, CfgValue.VStruct> e : vTable.primaryKeyMap().entrySet()) {
                     CfgValue.Value pk = e.getKey();
                     String pkStr = pk.packStr();
                     CfgValue.VStruct vStruct = e.getValue();
-                    String description = finder.getNullableDescriptionName() != null ?
-                            ValueUtil.extractFieldValueStr(vStruct, finder.getNullableDescriptionName()) : null;
+                    String description = describe(vStruct, finder.getNullableDescriptionName(), pkStr, catalog, translations);
 
                     OneRecord record = new OneRecord(description, new ArrayList<>(finder.getFieldChainToIndex().size()));
-                    ForeachValue.foreachValue(new TextValueVisitor(finder, record), vStruct, pk, List.of());
+                    ForeachValue.foreachValue(new TextValueVisitor(finder, record, pkStr, catalog != null, translations),
+                            vStruct, pk, List.of());
                     if (!record.texts().isEmpty()) {
                         finder.getPkToTexts().put(pkStr, record);
                     }
@@ -198,21 +205,48 @@ public class LangText extends LinkedHashMap<String, LangText.ModuleText> {
         return LangText.ofFinder(tableMap);
     }
 
+    private static @Nullable String describe(CfgValue.VStruct struct, @Nullable String field,
+                                             String pk, @Nullable TranslationCatalog catalog,
+                                             @Nullable TextFinder translations) {
+        if (field == null) {
+            return null;
+        }
+        if (catalog != null && ValueUtil.extractFieldValue(struct, field) instanceof CfgValue.VText text) {
+            String translated = lookup(translations, pk, List.of(field), text.original());
+            return translated.isEmpty() ? text.original() : translated;
+        }
+        return ValueUtil.extractFieldValueStr(struct, field);
+    }
+
+    private static String lookup(@Nullable TextFinder finder, String pk, List<String> fieldChain, String original) {
+        return finder == null ? "" : Objects.requireNonNullElse(finder.findText(pk, fieldChain, original), "");
+    }
+
     private static class TextValueVisitor extends ForeachValue.ValueVisitorForPrimitive {
 
         private final TextByIdFinder finder;
         private final OneRecord record;
 
-        public TextValueVisitor(TextByIdFinder finder, OneRecord record) {
+        private final String pk;
+        private final boolean useCatalog;
+        private final @Nullable TextFinder translations;
+
+        public TextValueVisitor(TextByIdFinder finder, OneRecord record, String pk,
+                                boolean useCatalog, @Nullable TextFinder translations) {
             this.finder = finder;
             this.record = record;
+            this.pk = pk;
+            this.useCatalog = useCatalog;
+            this.translations = translations;
         }
 
         @Override
         public void visitPrimitive(CfgValue.PrimitiveValue primitiveValue, CfgValue.Value pk, List<String> fieldChain) {
             if (primitiveValue instanceof CfgValue.VText vText) {
                 String original = vText.original().trim();
-                String translated = vText.translated();
+                String translated = useCatalog
+                        ? lookup(translations, this.pk, fieldChain, vText.original())
+                        : vText.translated();
                 if (original.isEmpty() && translated.isEmpty()) {
                     return;
                 }
