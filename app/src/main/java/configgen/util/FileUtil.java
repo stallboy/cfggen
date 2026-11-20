@@ -6,8 +6,10 @@ import configgen.gen.Generator;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
 public class FileUtil {
@@ -33,18 +35,37 @@ public class FileUtil {
     }
 
     public static void moveOneFile(Path from, Path to) {
-        File toFile = to.toFile();
-        if (toFile.exists() && toFile.isFile()) {
-            if (!toFile.delete()) {
-                throw new RuntimeException("delete " + toFile + " failed");
-            }
+        if (!Files.isRegularFile(from)) {
+            return;
         }
+        try {
+            moveReplacing(from, to);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to replace " + to + " with " + from, e);
+        }
+    }
 
-        File fromFile = from.toFile();
-        if (fromFile.exists() && fromFile.isFile()) {
-            if (!fromFile.renameTo(toFile)) {
-                throw new RuntimeException("rename %s to %s failed".formatted(from, to));
-            }
+    @FunctionalInterface
+    public interface StagedFileWriter {
+        void write(Path stagingFile) throws IOException;
+    }
+
+    public static void writeReplacement(Path path, StagedFileWriter writer) throws IOException {
+        Path target = path.toAbsolutePath();
+        Path staged = Files.createTempFile(target.getParent(), "cfggen-", ".tmp");
+        try {
+            writer.write(staged);
+            moveReplacing(staged, target);
+        } finally {
+            Files.deleteIfExists(staged);
+        }
+    }
+
+    private static void moveReplacing(Path source, Path target) throws IOException {
+        try {
+            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 

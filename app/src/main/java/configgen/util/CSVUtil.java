@@ -119,9 +119,11 @@ public class CSVUtil {
 
 
     public static void writeToFile(File file, List<List<String>> rows) throws IOException {
-        try (BomUtf8Writer w = new BomUtf8Writer(file.toPath())) {
-            write(w, rows);
-        }
+        FileUtil.writeReplacement(file.toPath(), staged -> {
+            try (BomUtf8Writer writer = new BomUtf8Writer(staged)) {
+                write(writer, rows);
+            }
+        });
     }
 
     public static String escapeCsv(@Nullable String value) {
