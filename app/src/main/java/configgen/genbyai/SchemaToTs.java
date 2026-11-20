@@ -149,7 +149,7 @@ public class SchemaToTs {
     }
 
     private String comment(String raw) {
-        return raw.isEmpty() ? "" : " /* %s */".formatted(raw);
+        return raw.isEmpty() ? "" : " /* %s */".formatted(raw.replace("*/", "* /"));
     }
 
     private void generateUnionTypeByValues(String structName, Nameable nameable, @Nullable String tableKey) {
