@@ -93,7 +93,7 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
         var txt = line.texts.get(idx);
         // normalize 只在查找i18n时本着尽量找到的原则,对original做normalize.
         String normalized = I18nUtils.normalize(original);
-        if (txt != null && txt.original.equals(normalized)) {
+        if (txt != null && txt.original.equals(normalized) && !txt.translated.isEmpty()) {
             return txt.translated;
         } else {
             return null;

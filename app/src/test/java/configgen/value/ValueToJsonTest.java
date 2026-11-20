@@ -17,6 +17,22 @@ import static configgen.value.Values.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValueToJsonTest {
+    @Test
+    void textRevertsToTheOriginalAfterACatalogMiss() {
+        VText text = new VText("原文", configgen.data.Source.of());
+        text.setTranslated("translation");
+        assertEquals("translation", text.value());
+
+        text.setTranslated(null);
+        assertEquals("原文", text.value());
+
+        text.setTranslated("another translation");
+        text.setTranslated("");
+        assertEquals("原文", text.value());
+        assertEquals("原文", new ValueToJson().toJson(text));
+    }
+
+
 
 
     private final ValueToJson valueToJson = new ValueToJson();

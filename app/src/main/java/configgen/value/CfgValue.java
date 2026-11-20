@@ -448,7 +448,6 @@ public record CfgValue(CfgSchema schema,
     public static final class VText implements StringValue {
         private final String original;
         private final Source source;
-        private String value;
         private String translated;
 
         public VText(String original, Source source) {
@@ -456,19 +455,11 @@ public record CfgValue(CfgSchema schema,
             Objects.requireNonNull(source);
             this.original = original;
             this.source = source;
-            this.value = original;
             this.translated = "";
         }
 
         public void setTranslated(@Nullable String translated) {
-            if (translated == null) {
-                this.translated = "";
-            } else {
-                this.translated = translated;
-                if (!translated.isEmpty()) {
-                    this.value = translated;
-                }
-            }
+            this.translated = Objects.requireNonNullElse(translated, "");
         }
 
         public String original() {
@@ -480,7 +471,7 @@ public record CfgValue(CfgSchema schema,
         }
 
         public String value() {
-            return value;
+            return translated.isEmpty() ? original : translated;
         }
 
         public String translated() {
@@ -492,12 +483,12 @@ public record CfgValue(CfgSchema schema,
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VText vText = (VText) o;
-            return Objects.equals(value, vText.value);
+            return value().equals(vText.value());
         }
 
         @Override
         public int hashCode() {
-            return value.hashCode();
+            return value().hashCode();
         }
     }
 
