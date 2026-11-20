@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -62,6 +64,22 @@ class ReplTest {
         assertTrue(out.contains("schema [表名子串]"), "intro 应含各命令自己声明的 usage");
         assertTrue(out.contains("get <表> <键>"));
         assertTrue(out.contains("q 退出"), "intro 末尾应附 q 退出");
+    }
+
+    @Test
+    void getPassesTheEntireStringKeyToTheInspector() throws IOException {
+        class StringKeyMgr {
+            public final Map<String, Object> user_All = Map.of(
+                    " sword, magic ", new Object(), "", new Object());
+        }
+        SchemaInterface schema = new SchemaInterface();
+        schema.addImp("user", new SchemaBean(true));
+        var printer = new CodeDataPrinter(new CodeDataInspector(new StringKeyMgr(), schema));
+
+        String out = capture("get user  sword, magic \nget user \nget user\nquit\n", printer::loop);
+
+        assertEquals(2, out.lines().filter("> user{}"::equals).count(), out);
+        assertTrue(out.contains("用法：get <表> <键>"), out);
     }
 
     @Test

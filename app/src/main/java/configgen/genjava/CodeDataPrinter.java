@@ -211,7 +211,7 @@ public class CodeDataPrinter {
      */
     public void registerCommands(Repl repl) {
         repl.command("schema", "schema [表名子串]", args -> schema(args.length > 0 ? args[0] : ""))
-                .command("get", "get <表> <键>", args -> args.length < 2 ? "用法：get <表> <键>" : get(args[0], args[1]))
+                .commandWithLiteralTail("get", "get <表> <键>", args -> args.length < 2 ? "用法：get <表> <键>" : get(args[0], args[1]))
                 .command("query", "query <记录子串> [表名子串]", args -> args.length < 1 ? "用法：query <记录子串> [表名子串]"
                         : query(args[0], args.length > 1 ? args[1] : ""));
     }
