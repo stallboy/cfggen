@@ -36,6 +36,7 @@ class TsCodeGeneratorTest {
     @Test
     void generatesConfigAndRuntimeSources() throws IOException {
         String cfgStr = """
+                struct EmptyValue {}
                 table user[id] {
                     id:int;
                     name:str;
@@ -53,6 +54,7 @@ class TsCodeGeneratorTest {
 
         Path configTs = outDir.resolve("Config.ts");
         assertTrue(Files.exists(configTs), "应生成Config.ts");
+        assertTrue(Files.readString(configTs).contains("return \"()\";"), "空结构应输出空括号");
         assertTrue(Files.exists(outDir.resolve("ConfigUtil.ts")), "应生成ConfigUtil.ts");
     }
 }

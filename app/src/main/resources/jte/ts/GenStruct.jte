@@ -55,7 +55,11 @@
     @endfor
 
     toString() : string {
-        return "(" + ${model.toStrings(model.structural.fields())} + ")";
+        @if(model.structural.fields().isEmpty())
+            return "()";
+        @else
+            return "(" + ${model.toStrings(model.structural.fields())} + ")";
+        @endif
     }
 
     <%--table static Get,All,Initialize,Resolve--%>
