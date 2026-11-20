@@ -12,6 +12,7 @@ import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -88,6 +89,7 @@ public class LangText extends LinkedHashMap<String, LangText.ModuleText> {
     }
 
     public void save(Path wroteDir, LangStat stat) throws IOException {
+        Files.createDirectories(wroteDir);
         for (var e : entrySet()) {
             String moduleFn = e.getKey() + ".xlsx";
             File dst = wroteDir.resolve(moduleFn).toFile();

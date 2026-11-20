@@ -45,7 +45,7 @@ public final class I18nByIdGenerator extends Generator {
 
     public I18nByIdGenerator(Parameter parameter) {
         super(parameter);
-        outputDir = Path.of(parameter.get("dir", "../i18n/en"));
+        outputDir = Path.of(parameter.get("dir", "../i18n/en")).toAbsolutePath().normalize();
         backupDir = Path.of(parameter.get("backup", "../backup"));
         checkWrite = parameter.has("checkWrite");
     }
