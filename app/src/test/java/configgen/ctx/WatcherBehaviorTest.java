@@ -45,6 +45,21 @@ class WatcherBehaviorTest {
     }
 
     @Test
+    void canRetryAfterRegistrationFails() throws IOException, InterruptedException {
+        Path root = tempDir.resolve("data");
+        Watcher watcher = new Watcher(root, null);
+        assertThrows(java.io.UncheckedIOException.class, watcher::start);
+
+        Files.createDirectory(root);
+        watcher.start();
+        try {
+            Files.writeString(root.resolve("records.csv"), "id");
+            awaitEventDetected(watcher);
+        } finally {
+            watcher.stop();
+        }
+    }
+
     void shouldDetectFileCreatedImmediatelyAfterStart() throws IOException, InterruptedException {
         // start()在调用线程内同步完成目录注册，返回后立即创建的文件也必须被捕获（回归：注册竞态）
         Watcher watcher = new Watcher(tempDir, null);
