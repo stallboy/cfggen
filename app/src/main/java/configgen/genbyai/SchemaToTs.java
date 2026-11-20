@@ -73,10 +73,12 @@ public class SchemaToTs {
             }
         }
 
+        // Root declarations make the output a module. Its named namespaces must be exported too.
+        String namespaceKeyword = namespaces.containsKey("") ? "export namespace" : "namespace";
         for (Map.Entry<String, Map<String, Struct>> ns : namespaces.entrySet()) {
             String nsName = ns.getKey();
             if (!nsName.isEmpty()) {
-                println("namespace %s {", nsName);
+                println("%s %s {", namespaceKeyword, nsName);
             }
             Map<String, Struct> structMap = ns.getValue();
             for (Map.Entry<String, Struct> e : structMap.entrySet()) {

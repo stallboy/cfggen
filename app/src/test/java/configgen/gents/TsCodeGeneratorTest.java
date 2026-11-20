@@ -46,6 +46,20 @@ class TsCodeGeneratorTest {
     }
 
     @Test
+    void exportsNamedNamespacesAlongsideRootDefinitions() throws IOException {
+        Context context = TestCtx.newContext(tempDir, """
+                struct shared.Detail (pack) { label:str; }
+                table user[id] { id:int; detail:shared.Detail; }
+                """, Map.of("user", "id,detail\nid,detail\n1,Alice\n"));
+        Path outDir = tempDir.resolve("schemaout");
+        new TsSchemaGenerator(new ParameterParser("tsschema,table:user,dst:" + outDir)).generate(context);
+
+        String source = Files.readString(outDir.resolve("user.ts"));
+        assertTrue(source.contains("detail: shared.Detail;"), source);
+        assertTrue(source.contains("export namespace shared {"), source);
+    }
+
+    @Test
     void generatesConfigAndRuntimeSources() throws IOException {
         String cfgStr = """
                 struct EmptyValue {}
