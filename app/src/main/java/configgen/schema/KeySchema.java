@@ -41,7 +41,11 @@ public class KeySchema {
         return java.util.Objects.requireNonNull(fieldSchemas);
     }
 
-    void setFieldSchemas(List<FieldSchema> fieldSchemas) {
+    boolean isResolved() {
+        return fieldSchemas != null;
+    }
+
+    void setFieldSchemas(@Nullable List<FieldSchema> fieldSchemas) {
         this.fieldSchemas = fieldSchemas;
     }
 

@@ -657,6 +657,20 @@ class CfgSchemaResolverTest {
     }
 
     @Test
+    void validatesMapKeysAfterResolvingReferencedFieldTypes() {
+        CfgSchema cfg = CfgReader.parse("""
+                table source[id] {
+                    id:int;
+                    entries:map<Key,int> (pack);
+                }
+                struct Key { mode:Mode; }
+                enum Mode { Simple; }
+                """);
+
+        assertTrue(cfg.resolve().errs().isEmpty());
+    }
+
+    @Test
     void reportsOnlyMismatchedComponentsOfForeignKey() {
         CfgSchema cfg = CfgReader.parse("""
                 table source[id] {

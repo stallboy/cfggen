@@ -32,6 +32,7 @@ public final class CfgSchemaResolver {
         step0_setImplInterfaceAndCheckTableName();
         step0_checkNameConflict();
         step1_resolveAllFields();
+        resolve_structural(this::checkMapKeys);
         step2_resolveEachNameable();
         step3_resolveAllForeignKeys();
         step4_checkAllChainedSepFmt();
@@ -232,7 +233,6 @@ public final class CfgSchemaResolver {
                         if (resolvedKey != key || resolvedValue != value) {
                             structural.updateFieldType(field.name(), new FMap(resolvedKey, resolvedValue));
                         }
-                        checkMapKey(resolvedKey, field);
                     }
                     case Primitive ignored -> {
                     }
@@ -472,7 +472,7 @@ public final class CfgSchemaResolver {
             }
         } else {
             for (FieldSchema field : fields) {
-                if (checkErrTypeAsKey(field.type())) {
+                if (!KeySchema.isPrimitiveKey(field.type())) {
                     errKeyTypeNotSupport(field.name(), field.type().toString());
                 }
             }
@@ -503,10 +503,6 @@ public final class CfgSchemaResolver {
     }
 
 
-    private boolean checkErrTypeAsKey(FieldType type) {
-        return !(type == BOOL || type == INT || type == LONG || type == STRING);
-    }
-
     private void errKeyTypeNotSupport(String field, String errType) {
         errs.addErr(new KeyTypeNotSupport(ctx(), field, errType));
     }
@@ -515,29 +511,16 @@ public final class CfgSchemaResolver {
         errs.addErr(new PrimaryKeyNotEnumOrIntWhenEnum(ctx(), field, errType, enumField));
     }
 
-    private void checkMapKey(SimpleType keyType, FieldSchema field) {
-        boolean err;
-        switch (keyType) {
-            case Primitive primitive -> {
-                err = checkErrTypeAsKey(primitive);
-            }
-            case StructRef structRef -> {
-                if (structRef.obj() == null) {
-                    // TypeStructNotFound 已在 resolve 时记录，这里不再重复
-                    err = true;
-                } else {
-                    switch (structRef.resolvedObj()) {
-                        case InterfaceSchema ignored -> {
-                            err = true;
-                        }
-                        case StructSchema structSchema -> {
-                            err = structSchema.fields().stream().anyMatch(f -> checkErrTypeAsKey(f.type()));
-                        }
-                    }
-                }
+    private void checkMapKeys(Structural structural) {
+        for (FieldSchema field : structural.fields()) {
+            if (field.type() instanceof FMap map) {
+                checkMapKey(map.key(), field);
             }
         }
-        if (err) {
+    }
+
+    private void checkMapKey(SimpleType keyType, FieldSchema field) {
+        if (!KeySchema.isKeyType(keyType)) {
             errKeyTypeNotSupport(field.name(), keyType.toString());
         }
     }
