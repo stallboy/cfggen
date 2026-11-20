@@ -259,7 +259,7 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
     }
 
     private static String getTableName(String moduleName, String sheetName) {
-        if (sheetName.contains(".")) {
+        if (sheetName.contains(".") || moduleName.equals("_top")) {
             return sheetName;
         } else {
             return moduleName + "." + sheetName;
