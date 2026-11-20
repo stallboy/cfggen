@@ -175,6 +175,22 @@ class ValueJsonParserTest {
     }
 
     @Test
+    void rejectsDuplicateMapKeysAtTheSecondKey() {
+        TableSchema test = requireNonNull(cfg.findTable("tm"));
+        CfgValueErrs errs = CfgValueErrs.of();
+        var value = fromJson(test, errs, """
+                {"id":1,"mapIntStr":[{"key":42,"value":"one"},{"key":42,"value":"two"}]}
+                """);
+
+        var error = assertInstanceOf(CfgValueErrs.MapKeyDuplicated.class, errs.errs().getFirst());
+        assertEquals(1, errs.errs().size());
+        assertEquals(List.of("mapIntStr", "[k1]"),
+                assertInstanceOf(configgen.data.Source.DFile.class, error.source()).path());
+        var map = assertInstanceOf(VMap.class, ValueUtil.extractFieldValue(value, "mapIntStr"));
+        assertEquals(Map.of(ofInt(42), ofStr("one")), map.valueMap());
+    }
+
+    @Test
     void fromJson_VStruct() {
         TableSchema ts = requireNonNull(cfg.findTable("ts"));
         StructSchema attr = requireNonNull((StructSchema) cfg.findFieldable("attr"));

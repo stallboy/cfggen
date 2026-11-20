@@ -315,8 +315,8 @@ public class ValueJsonParser {
                 Map<SimpleValue, Boolean> entryEmbeds = null;
                 Set<SimpleValue> foldedEntries = null;
                 Map<SimpleValue, String> entryNotes = null;
-                int i = 0;
-                for (Object itemObj : jsonArray) {
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    Object itemObj = jsonArray.get(i);
                     JSONObject entry = null;
                     switch (itemObj) {
                         case JSONObject jsonObject -> {
@@ -342,7 +342,10 @@ public class ValueJsonParser {
                         if (keyObj != null && valueObj != null) {
                             SimpleValue key = parseSimpleType(fMap.key(), keyObj, ks, fieldSchema);
                             SimpleValue value = parseSimpleType(fMap.value(), valueObj, vs, fieldSchema);
-                            vMap.valueMap().put(key, value);
+                            if (vMap.valueMap().putIfAbsent(key, value) != null) {
+                                errs.addErr(new MapKeyDuplicated(ks, source.inStruct(), fieldSchema.name()));
+                                continue;
+                            }
 
                             // cfgeditor会在$entry上写$embed_value表示value字段的嵌入状态，透传保存
                             if (entry.get("$embed_value") instanceof Boolean entryEmbed) {
@@ -369,7 +372,6 @@ public class ValueJsonParser {
                             }
                         }
                     }
-                    i++;
                 }
                 vMap.setEntryEmbeds(entryEmbeds);
                 vMap.setFoldedEntries(foldedEntries);
