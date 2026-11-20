@@ -33,6 +33,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
 
         TreeMap<String, CfgData.DTable> dTableMap = new TreeMap<>(cfgData.tables());
         CfgSchema alignedCfg = CfgSchema.of();
+        cfgSchema.fileEndComments().forEach(alignedCfg::setFileEndComment);
         for (Nameable item : cfgSchema.items()) {
             switch (item) {
                 case Fieldable fieldable -> alignedCfg.add(fieldable.copy());

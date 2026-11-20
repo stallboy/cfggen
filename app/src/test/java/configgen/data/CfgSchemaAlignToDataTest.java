@@ -56,6 +56,19 @@ class CfgSchemaAlignToDataTest {
     }
 
     @Test
+    void align_preservesFileEndComments() {
+        CfgSchema schema = CfgSchema.of();
+        schema.setFileEndComment("", "// root");
+        schema.setFileEndComment("items", "// items");
+        CfgData data = new CfgData(java.util.Map.of(), new CfgDataStat());
+
+        CfgSchema aligned = new CfgSchemaAlignToData(HeadRows.A2_Default).align(schema, data, CfgSchemaErrs.of());
+
+        assertEquals(schema.fileEndComments(), aligned.fileEndComments());
+        assertNotSame(schema.fileEndComments(), aligned.fileEndComments());
+    }
+
+    @Test
     void align_addRemoveField_typeKeep() {
         String str = """
                 table rank[RankID] {
