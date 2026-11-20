@@ -217,8 +217,7 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
         }
 
         // 合并_todo_[lang].xlsx文件
-        Path langsDir = java.util.Objects.requireNonNull(langDir.getParent());
-        File todoFile = langsDir.resolve(todoFilename).toFile();
+        File todoFile = langDir.resolveSibling(todoFilename).toFile();
         if (todoFile.exists()) {
             TodoFile.readAndMergeIntoCatalog(todoFile, catalog);
         }
