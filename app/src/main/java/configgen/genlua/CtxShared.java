@@ -33,7 +33,7 @@ class CtxShared {
         private final String name;
 
         CompositeValueStr(int i) {
-            name = String.format("A[%d]", i);
+            name = "A[" + i + "]";
         }
 
         void setValueStr(String value) {

@@ -27,6 +27,28 @@ class ValueInspectToolTest {
     }
 
     @Test
+    void searchesFullWidthIntegersAndWritesAsciiNumbers() throws Exception {
+        Context ctx = context();
+        Path output = tempDir.resolve("result.txt");
+        Locale saved = Locale.getDefault(Locale.Category.FORMAT);
+        try {
+            Locale.setDefault(Locale.Category.FORMAT, Locale.forLanguageTag("ar-EG"));
+            new ValueInspectTool(new ParameterParser("search,to=" + output
+                    + ",q=\u3000INT\u20031 0x100000001 -9223372036854775808 9223372036854775807 010\u3000"))
+                    .generate(ctx);
+            assertEquals("""
+                    t[7], n, 4294967297
+                    t[8], id, 8
+                    t[8], n, -9223372036854775808
+                    t[9], n, 9223372036854775807
+                    """.strip().lines().toList(),
+                    Files.readString(output).substring(1).lines().toList());
+        } finally {
+            Locale.setDefault(Locale.Category.FORMAT, saved);
+        }
+    }
+
+    @Test
     void blankQueryRunsInteractivelyWithoutClosingHostInput() throws Exception {
         Context ctx = context();
         Path output = tempDir.resolve("interactive.txt");

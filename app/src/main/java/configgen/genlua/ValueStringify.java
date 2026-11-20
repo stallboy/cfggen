@@ -196,9 +196,9 @@ class ValueStringify {
                 res.append(ctx.aCtx().getListMapPrefixStr());
                 int idx = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> e : value.valueMap().entrySet()) {
-                    java.util.Objects.requireNonNull(key).addValue(e.getKey(), subChain(fieldChain, String.format("%dk", idx)));
+                    java.util.Objects.requireNonNull(key).addValue(e.getKey(), subChain(fieldChain, idx + "k"));
                     res.append(" = ");
-                    java.util.Objects.requireNonNull(notKey).addValue(e.getValue(), subChain(fieldChain, String.format("%dv", idx)));
+                    java.util.Objects.requireNonNull(notKey).addValue(e.getValue(), subChain(fieldChain, idx + "v"));
                     idx++;
                     if (idx != sz) {
                         res.append(", ");

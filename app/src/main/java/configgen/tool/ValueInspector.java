@@ -51,7 +51,7 @@ public class ValueInspector implements AutoCloseable {
     // --- 打印辅助逻辑 ---
 
     private void println(String fmt, @Nullable Object... args) {
-        String str = (args.length == 0) ? fmt : String.format(fmt, args);
+        String str = (args.length == 0) ? fmt : String.format(Locale.ROOT, fmt, args);
         if (fileWriter != null) {
             fileWriter.write(str + System.lineSeparator());
         } else {

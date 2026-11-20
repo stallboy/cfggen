@@ -13,6 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -101,6 +102,24 @@ class LuaCodeGeneratorTest {
 
         String content = Files.readString(outDir.resolve("cfg/t.lua"));
         assertTrue(content.contains("mk(1, R({2, 3}), R({ready = 4}))"));
+    }
+
+    @Test
+    void sharedTableIndicesUseAsciiDigitsUnderArabicLocale() throws IOException {
+        Context ctx = TestCtx.newContext(tempDir,
+                "table t[id] { id:int; items:list<int> (sep='|'); }",
+                Map.of("t", "id,items\nid,items\n1,2|3\n2,2|3\n"));
+        Path outDir = tempDir.resolve("shared");
+        Locale saved = Locale.getDefault(Locale.Category.FORMAT);
+        try {
+            Locale.setDefault(Locale.Category.FORMAT, Locale.forLanguageTag("ar-EG"));
+            new LuaCodeGenerator(new ParameterParser("lua,shared,dir:" + outDir)).generate(ctx);
+            String content = Files.readString(outDir.resolve("cfg/t.lua"));
+            assertTrue(content.contains("A[1]"), content);
+            assertFalse(content.contains("A[١]"), content);
+        } finally {
+            Locale.setDefault(Locale.Category.FORMAT, saved);
+        }
     }
 
     @Test
