@@ -47,9 +47,7 @@ public class Watcher {
         }
         WatchService ws;
         try {
-            ws = FileSystems.getDefault().newWatchService();
-            keys.clear();
-            recursiveSupport = registerRoot(ws);
+            ws = openAndRegister();
         } catch (IOException e) {
             throw new UncheckedIOException("Watcher register failed for " + rootDir, e);
         }
@@ -61,6 +59,22 @@ public class Watcher {
                 Logger.log("Watcher stopped by %s", e.toString());
             }
         });
+    }
+
+    private WatchService openAndRegister() throws IOException {
+        WatchService service = rootDir.getFileSystem().newWatchService();
+        try {
+            keys.clear();
+            recursiveSupport = registerRoot(service);
+            return service;
+        } catch (IOException | RuntimeException | Error error) {
+            try {
+                service.close();
+            } catch (IOException closeError) {
+                error.addSuppressed(closeError);
+            }
+            throw error;
+        }
     }
 
     // watchService.take()不响应interrupt（JDK已知限制），必须close让take()抛ClosedWatchServiceException才能退出。

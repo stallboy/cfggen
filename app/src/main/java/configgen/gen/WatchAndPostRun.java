@@ -90,6 +90,9 @@ public enum WatchAndPostRun {
             }
             return;
         }
+        if (waitSecondsAfterWatchEvt == 0) {
+            return;
+        }
         if (waitSecondsAfterWatchEvt < 0) {
             Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherWaitSecondsInvalid",
                 "watcher waitSecondsAfterWatchEvt < 0, ignore start"));
@@ -98,15 +101,21 @@ public enum WatchAndPostRun {
         if (coordinator.state() == null) {
             coordinator.setInitial(context);
         }
-        started = true;
-        consecutiveAutoFixReloads = 0;
-
         DirectoryStructure ss = context.sourceStructure();
-        watcher = new Watcher(ss.getRootDir(), ss.getExplicitDir());
-        waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt * 1000);
-        // watcher先启动：start内同步完成目录注册，注册失败即抛，不会留下已启动的waitWatcher无人停止
-        watcher.start();
-        waitWatcher.start();
+        Watcher newWatcher = new Watcher(ss.getRootDir(), ss.getExplicitDir());
+        WaitWatcher newWaitWatcher = new WaitWatcher(newWatcher, this::reloadData,
+                Math.multiplyExact(waitSecondsAfterWatchEvt, 1000));
+        newWatcher.start();
+        try {
+            newWaitWatcher.start();
+        } catch (RuntimeException | Error e) {
+            newWatcher.stop();
+            throw e;
+        }
+        watcher = newWatcher;
+        waitWatcher = newWaitWatcher;
+        consecutiveAutoFixReloads = 0;
+        started = true;
 
         Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherStarted",
             "file change watcher started"));
