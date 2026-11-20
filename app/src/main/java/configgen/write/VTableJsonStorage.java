@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.DirectoryStructure;
 import configgen.data.DataUtil;
+import configgen.data.Source.DFile;
 import configgen.util.FileNameUtil;
 import configgen.util.CachedFiles;
 import configgen.value.CfgValue.VStruct;
@@ -31,36 +32,48 @@ public class VTableJsonStorage {
                                          Path dataDir,
                                          DirectoryStructure directoryStructure,
                                          CachedFiles cachedFiles) throws IOException {
-        validateId(id);
-        var existingDirRelativePath = directoryStructure.getJsonTableDir(table);
-        Path jsonDirRelPath = existingDirRelativePath != null
-                ? existingDirRelativePath
-                : resolveJsonDirRelativePath(table, dataDir);
-        Path relativePath = jsonDirRelPath.resolve(id + ".json");
-
-        Path recordPath = dataDir.resolve(relativePath);
-        byte[] json = ValueToJson.toJsonStr(record).getBytes(StandardCharsets.UTF_8);
-        cachedFiles.writeFileReplacement(recordPath, json);
+        Path relativePath = recordPath(table, id, dataDir, directoryStructure);
+        writeRecord(record, dataDir.resolve(relativePath), cachedFiles);
         return relativePath;
     }
 
+    static Path saveEditedRecord(VStruct record, @Nullable VStruct oldRecord, String table, String id,
+                                 Path dataDir, DirectoryStructure directoryStructure,
+                                 CachedFiles cachedFiles) throws IOException {
+        Path relativePath = oldRecord == null
+                ? recordPath(table, id, dataDir, directoryStructure)
+                : sourcePath(oldRecord);
+        Path target = dataDir.resolve(relativePath);
+        if (oldRecord == null && Files.exists(target, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("JSON record file already exists: " + target);
+        }
+        writeRecord(record, target, cachedFiles);
+        return relativePath;
+    }
 
-    /**
-     * @return relative path of the record file
-     */
-    public static Path deleteRecord(String table,
-                                    String id,
-                                    Path dataDir,
-                                    DirectoryStructure directoryStructure) throws IOException {
+    static Path deleteRecord(VStruct record, Path dataDir) throws IOException {
+        Path relativePath = sourcePath(record);
+        Files.delete(dataDir.resolve(relativePath));
+        return relativePath;
+    }
+
+    private static Path sourcePath(VStruct record) {
+        return Path.of(((DFile) record.source()).fileName());
+    }
+
+    private static Path recordPath(String table, String id, Path dataDir,
+                                   DirectoryStructure directoryStructure) throws IOException {
         validateId(id);
         var existingDirRelativePath = directoryStructure.getJsonTableDir(table);
         Path jsonDirRelPath = existingDirRelativePath != null
                 ? existingDirRelativePath
                 : resolveJsonDirRelativePath(table, dataDir);
-        Path relativePath = jsonDirRelPath.resolve(id + ".json");
-        Path recordPath = dataDir.resolve(relativePath);
-        Files.delete(recordPath);
-        return relativePath;
+        return jsonDirRelPath.resolve(id + ".json");
+    }
+
+    private static void writeRecord(VStruct record, Path path, CachedFiles cachedFiles) throws IOException {
+        byte[] json = ValueToJson.toJsonStr(record).getBytes(StandardCharsets.UTF_8);
+        cachedFiles.writeFileReplacement(path, json);
     }
 
     /// 校验记录 id 不包含路径分隔符和 ".."，防止写到表目录之外。

@@ -57,7 +57,8 @@ public class AddOrUpdateService {
         CfgValue.Value pkValue = ValueUtil.extractPrimaryKeyValue(thisValue, tableSchema);
         String id = pkValue.packStr();
 
-        AddOrUpdateErrorCode code = vTable.primaryKeyMap().containsKey(pkValue) ?
+        CfgValue.VStruct oldRecord = vTable.primaryKeyMap().get(pkValue);
+        AddOrUpdateErrorCode code = oldRecord != null ?
                 AddOrUpdateErrorCode.UpdateOK : AddOrUpdateErrorCode.AddOK;
 
 
@@ -65,12 +66,12 @@ public class AddOrUpdateService {
             NewCfgValueResult nr;
 
             if (vTable.schema().isJson()) {
-                Path relatveiJsonPath = VTableJsonStorage.addOrUpdateRecord(thisValue, tableName, id,
+                Path relativeJsonPath = VTableJsonStorage.saveEditedRecord(thisValue, oldRecord, tableName, id,
                         context.rootDir(), context.sourceStructure(), context.outputFiles());
 
-                nr = ValueUpdater.updateByJsonFileAddOrUpdate(context, cfgValue, vTable, relatveiJsonPath);
+                nr = ValueUpdater.updateByJsonFileAddOrUpdate(context, cfgValue, vTable, relativeJsonPath);
 
-                context.sourceStructure().addJsonFile(tableName, relatveiJsonPath);
+                context.sourceStructure().addJsonFile(tableName, relativeJsonPath);
 
             } else {
                 DTable dTable = context.cfgData().getDTable(tableName);

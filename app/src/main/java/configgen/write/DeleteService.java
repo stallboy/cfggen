@@ -60,8 +60,7 @@ public class DeleteService {
             NewCfgValueResult nr;
             if (vTable.schema().isJson()) {
                 var directoryStructure = context.sourceStructure();
-                Path tableDir = context.sourceStructure().getJsonTableDir(tableName);
-                Path relativeJsonPath = VTableJsonStorage.deleteRecord(tableName, recordId, context.rootDir(), directoryStructure);
+                Path relativeJsonPath = VTableJsonStorage.deleteRecord(old, context.rootDir());
                 nr = ValueUpdater.updateByJsonFileDelete(context, cfgValue, vTable, java.util.Objects.requireNonNull(pkValue), recordId);
                 context.sourceStructure().removeJsonFile(tableName, relativeJsonPath);
 

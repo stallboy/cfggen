@@ -35,6 +35,26 @@ class VTableJsonStorageTest {
     }
 
     @Test
+    void editsAndDeletesRecordAtItsOriginalFilename() throws IOException {
+        Files.writeString(tempDir.resolve("config.cfg"), "table t[id] (json) { id:int; score:int; }");
+        Path record = Files.createDirectory(tempDir.resolve("_t")).resolve("custom.json");
+        Files.writeString(record, "{\"id\":1,\"score\":10}");
+        var context = new Context(tempDir);
+
+        var update = AddOrUpdateService.addOrUpdateRecord(
+                context, context.makeValue(), "t", "{\"id\":1,\"score\":20}");
+        assertEquals(AddOrUpdateService.AddOrUpdateErrorCode.UpdateOK, update.errorCode());
+        assertFalse(Files.exists(record.resolveSibling("1.json")));
+        var reloaded = new Context(tempDir).makeValue();
+        var score = (configgen.value.CfgValue.VInt) reloaded.getTable("t").valueList().getFirst().values().get(1);
+        assertEquals(20, score.value());
+
+        var deletion = DeleteService.deleteRecord(context, context.makeValue(), "t", "1");
+        assertEquals(DeleteService.DeleteErrorCode.OK, deletion.errorCode());
+        assertFalse(Files.exists(record));
+    }
+
+    @Test
     @EnabledOnOs(OS.WINDOWS)
     void failedJsonReplacementLeavesOldRecordAndRemovesStagingFile() throws IOException {
         Files.writeString(tempDir.resolve("config.cfg"), "table t[id] { id:int; }");
