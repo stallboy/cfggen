@@ -110,7 +110,7 @@ public abstract class AbstractExcelTableFile implements TableFile {
      *
      * @param startLine 起始行/列号（从0开始）
      * @param count    要清空的行/列数
-     * @param fieldIndices 如果为null表示第一行/列全部清空，如果不为null表示第一行/列只清空指定indices下的数据
+     * @param fieldIndices 为null时清空整个范围，否则每行/列只清空指定字段
      */
     @Override
     public void emptyRows(int startLine, int count, @Nullable List<Integer> fieldIndices) {
@@ -125,7 +125,7 @@ public abstract class AbstractExcelTableFile implements TableFile {
 
         // 清空指定范围内的行/列
         for (int i = startLine; i < Math.min(startLine + count, lastLineNum + 1); i++) {
-            if (i == startLine && fieldIndices != null) {
+            if (fieldIndices != null) {
                 // 只清空指定 indices下的数据
                 for (int cellIndex : fieldIndices) {
                     blankCell(i, cellIndex);

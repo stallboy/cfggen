@@ -16,7 +16,7 @@ public interface TableFile extends AutoCloseable {
      *
      * @param startRow 起始行号（从0开始）
      * @param count    要清空的行数
-     * @param fieldIndices 如果为null表示第一行全部清空，如果不为null表示第一行只清空指定indices下的数据
+     * @param fieldIndices 为null时清空整个范围，否则每行只清空指定字段
      */
     void emptyRows(int startRow, int count, @Nullable List<Integer> fieldIndices);
 

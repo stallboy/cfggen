@@ -15,6 +15,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -61,6 +63,64 @@ class VTableStorageTest {
         assertEquals(DeleteService.DeleteErrorCode.OK, result.errorCode());
         assertEquals(List.of("comment", ""), CSVUtil.read(source).get(2).getFields());
         assertEquals(List.of("keep", "2"), CSVUtil.read(source).get(3).getFields());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+    void deletingExcelBlockPreservesUnmappedCellsOnEveryLine(boolean xlsx, boolean columnMode) throws IOException {
+        String metadata = columnMode ? " (columnMode)" : "";
+        Resources.addTempFileFromText("config.cfg", tempDir,
+                "table t[id]" + metadata + " { id:int; values:list<int> (block=1); }");
+        Path source = tempDir.resolve(xlsx ? "t.xlsx" : "t.xls");
+        String[][] data = {
+                {"ID", "Notes", "Values"},
+                {"id", "", "values"},
+                {"1", "first", "10"},
+                {"", "continuation", "11"},
+                {"2", "next", "20"}
+        };
+        try (var workbook = WorkbookFactory.create(xlsx);
+             var output = Files.newOutputStream(source)) {
+            var sheet = workbook.createSheet("t");
+            for (int line = 0; line < data.length; line++) {
+                for (int field = 0; field < data[line].length; field++) {
+                    int row = columnMode ? field : line;
+                    int col = columnMode ? line : field;
+                    var physicalRow = sheet.getRow(row);
+                    if (physicalRow == null) {
+                        physicalRow = sheet.createRow(row);
+                    }
+                    physicalRow.createCell(col).setCellValue(data[line][field]);
+                }
+            }
+            workbook.write(output);
+        }
+
+        if (xlsx) {
+            Context context = new Context(tempDir);
+            var result = DeleteService.deleteRecord(context, context.makeValue(), "t", "1");
+            assertEquals(DeleteService.DeleteErrorCode.OK, result.errorCode());
+            assertEquals(1, requireNonNull(new Context(tempDir).makeValue().getTable("t")).primaryKeyMap().size());
+        } else {
+            // Context's default FastExcel reader only supports OOXML.
+            try (TableFile file = columnMode
+                    ? new ColumnModeExcelTableFile(source, "t", 2)
+                    : new ExcelTableFile(source, "t", 2)) {
+                file.emptyRows(2, 2, List.of(0, 2));
+                file.saveAndClose();
+            }
+        }
+
+        try (var workbook = WorkbookFactory.create(source.toFile(), null, true)) {
+            Sheet sheet = workbook.getSheet("t");
+            for (int line : List.of(2, 3)) {
+                assertEquals(line == 2 ? "first" : "continuation",
+                        sheet.getRow(columnMode ? 1 : line).getCell(columnMode ? line : 1).getStringCellValue());
+                assertEquals(CellType.BLANK,
+                        sheet.getRow(columnMode ? 2 : line).getCell(columnMode ? line : 2).getCellType());
+            }
+            assertEquals("20", sheet.getRow(columnMode ? 2 : 4).getCell(columnMode ? 4 : 2).getStringCellValue());
+        }
     }
 
     @Test
@@ -155,11 +215,12 @@ class VTableStorageTest {
 
         // 文件物理行无残留：block=1 下每个 spawn 占一行（wave header 行含 spawn1），
         // 故非空数据行数应 == spawn 总数；若清空行数算少了，残留旧行会使该数变大。
-        List<String> lines = Files.readAllLines(tempDir.resolve("t.csv"));
-        long nonEmptyDataLines = lines.stream()
-                .skip(2)  // 跳过 headRow=2
-                .filter(l -> !l.replace(",", "").trim().isEmpty())
+        var rows = CSVUtil.read(tempDir.resolve("t.csv"));
+        long nonEmptyDataLines = rows.stream()
+                .skip(2)
+                .filter(row -> List.of(0, 1, 2, 4, 5).stream().anyMatch(i -> !row.getField(i).isEmpty()))
                 .count();
+        assertEquals(5, rows.stream().skip(2).filter(row -> row.getField(3).equals("1")).count());
         long expected = Arrays.stream(expectedSpawns).sum();
         assertEquals(expected, nonEmptyDataLines, "physical data line count (residue check)");
     }
