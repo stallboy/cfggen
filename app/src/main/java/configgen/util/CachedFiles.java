@@ -133,6 +133,16 @@ public class CachedFiles {
         }
 
         if (Files.isDirectory(file.toPath(), LinkOption.NOFOLLOW_LINKS)) {
+            // Windows 目录联接即使指定 NOFOLLOW_LINKS 也可能报告为目录。
+            try {
+                Path parent = key.getParent();
+                if (parent != null && !file.toPath().toRealPath().equals(parent.toRealPath().resolve(key.getFileName()))) {
+                    return;
+                }
+            } catch (IOException e) {
+                Logger.log("skip cleanup: " + key + ": " + e.getMessage());
+                return;
+            }
             File[] files = file.listFiles();
             if (files != null) {
                 for (File f : files) {
