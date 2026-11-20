@@ -1,5 +1,6 @@
 package configgen.genbyai;
 
+import com.alibaba.fastjson2.JSON;
 import org.jspecify.annotations.Nullable;
 
 import configgen.schema.*;
@@ -182,7 +183,10 @@ public class SchemaToTs {
             String v;
             switch (fv) {
                 case CfgValue.StringValue stringValue -> {
-                    v = "'%s'".formatted(stringValue.value());
+                    v = JSON.toJSONString(stringValue.value());
+                }
+                case CfgValue.VBool vBool -> {
+                    v = String.valueOf(vBool.value());
                 }
                 case CfgValue.VFloat vFloat -> {
                     v = String.valueOf(vFloat.value());
