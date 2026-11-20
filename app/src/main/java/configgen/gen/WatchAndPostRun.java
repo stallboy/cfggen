@@ -203,7 +203,7 @@ public enum WatchAndPostRun {
             return null;
         }
 
-        Context loaded = new Context(current.contextCfg(), discovered);
+        Context loaded = current.reloadFrom(discovered);
         if (!loaded.lastLoadDidAutoFix()) {
             consecutiveAutoFixReloads = 0;
             return loaded;

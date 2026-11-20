@@ -185,6 +185,10 @@ public class Context {
         }
     }
 
+    public Context reloadFrom(DirectoryStructure structure) {
+        return new Context(contextCfg, structure, fixedSchema ? cfgSchema : null);
+    }
+
     public ContextCfg contextCfg() {
         return contextCfg;
     }

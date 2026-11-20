@@ -1,6 +1,7 @@
 package configgen.ctx;
 
 import configgen.Resources;
+import configgen.schema.cfg.CfgReader;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
 import org.junit.jupiter.api.AfterAll;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static java.util.Objects.requireNonNull;
@@ -27,6 +29,21 @@ class ContextTest {
         Logger.setPrinter(Logger.Printer.outPrinter);
     }
 
+
+    @Test
+    void reloadKeepsTheResolvedSharedSchemaForSparseData() throws Exception {
+        var schema = CfgReader.parse("table user[id] { id:int; } table other[id] { id:int; }");
+        schema.resolve().checkErrors();
+        var context = new Context(Context.ContextCfg.of(tempDir), schema);
+        Files.writeString(tempDir.resolve("user.csv"), "ID\nid\n1\n");
+
+        Context reloaded = context.reloadFrom(context.sourceStructure().reload());
+
+        assertTrue(reloaded.isFixedSchema());
+        assertSame(schema, reloaded.cfgSchema());
+        assertEquals(1, requireNonNull(reloaded.makeValue().getTable("user")).valueList().size());
+        assertFalse(Files.exists(tempDir.resolve("config.cfg")));
+    }
 
     @Test
     void shouldCreateCfgValueFromValidConfigDirectory() {
