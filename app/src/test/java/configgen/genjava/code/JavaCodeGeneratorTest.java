@@ -36,6 +36,12 @@ class JavaCodeGeneratorTest {
     Path tempDir;
 
     @Test
+    void rejectsNonPositiveSchemaChunkSizesExceptUnlimited() {
+        assertThrows(CliException.class, () -> new JavaCodeGenerator(new ParameterParser("java,schemaNumPerFile:0")));
+        assertThrows(CliException.class, () -> new JavaCodeGenerator(new ParameterParser("java,schemaNumPerFile:-2")));
+    }
+
+    @Test
     void reusingGeneratorDropsBuildersWhenSelectionFileIsRemoved() throws Exception {
         var context = TestCtx.newContext(tempDir, "table item[id] { id:int; }",
                 Map.of("item", "id\nid\n1\n"));

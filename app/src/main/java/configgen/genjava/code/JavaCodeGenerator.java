@@ -80,6 +80,9 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         buildersFilename = parameter.get("builders", null);
         configgenDir = parameter.get("configgenDir", null);
         schemaNumPerFile = Integer.parseInt(parameter.get("schemaNumPerFile", "100"));
+        if (schemaNumPerFile != -1 && schemaNumPerFile <= 0) {
+            throw new CliException("schemaNumPerFile must be -1 or a positive integer");
+        }
         beautifulName = parameter.has("beautifulName");
         prefix = parameter.get("prefix", "");
         // 非法前缀（如 1a、my-c）会静默产出编不过的代码，这里直接报错，同 ParameterParser 对布尔取值的严格解析
