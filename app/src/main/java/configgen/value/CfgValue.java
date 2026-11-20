@@ -459,6 +459,7 @@ public record CfgValue(CfgSchema schema,
         }
 
         public void setTranslated(@Nullable String translated) {
+            //noinspection DataFlowIssue
             this.translated = Objects.requireNonNullElse(translated, "");
         }
 

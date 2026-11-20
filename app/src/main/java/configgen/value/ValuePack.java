@@ -24,13 +24,13 @@ public class ValuePack {
         return packStr(value, false);
     }
 
-    private static final Collector<CharSequence, ?, String> parenthesesJoin =
+    private static final Collector<@Nullable CharSequence, ?, String> PARENTHESES_JOIN =
             Collectors.joining(",", "(", ")");
-    private static final Collector<CharSequence, ?, String> join =
+    private static final Collector<@Nullable CharSequence, ?, String> JOIN =
             Collectors.joining(",");
 
     private static Collector<CharSequence, ?, String> getJoin(boolean hasParenthesesAround) {
-        return hasParenthesesAround ? parenthesesJoin : join;
+        return hasParenthesesAround ? PARENTHESES_JOIN : JOIN;
     }
 
     private static String packStr(Value value, boolean hasParenthesesAround) {
@@ -52,7 +52,7 @@ public class ValuePack {
 
             case VInterface vInterface -> vInterface.child().schema().lastName() + vInterface.child().values().stream()
                     .map(v -> packStr(v, true))
-                    .collect(parenthesesJoin);
+                    .collect(PARENTHESES_JOIN);
         };
     }
 

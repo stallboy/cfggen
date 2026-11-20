@@ -139,13 +139,12 @@ public class VTableCreator {
                 boolean[] seen = requireSourceOrder ? null : new boolean[valueList.size()];
                 for (VStruct vStruct : valueList) {
                     Value v = vStruct.values().get(fieldIdx);
-                    if (v instanceof VInt vInt) {
-                        int val = vInt.value();
+                    if (v instanceof VInt(int val, Source source)) {
                         boolean valid = seen == null ? val == nextExpected
                                 : val >= 0 && val < seen.length && !seen[val];
                         if (!valid) {
                             errs.addErr(new CfgValueErrs.SeqValueNotContinuous(
-                                    vInt.source(), tableSchema.name(), field.name(), val));
+                                    source, tableSchema.name(), field.name(), val));
                         } else if (seen != null) {
                             seen[val] = true;
                         }
@@ -162,7 +161,6 @@ public class VTableCreator {
         for (VStruct value : valueList) {
             Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
             VStruct old = keyMap.put(keyValue, value);
-            //noinspection ConstantValue
             if (old != null) {
                 errs.addErr(new CfgValueErrs.PrimaryOrUniqueKeyDuplicated(keyValue, tableSchema.name(), key.fields()));
             }

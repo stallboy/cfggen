@@ -140,7 +140,7 @@ public class EntryRecordCollector {
             if (collectAll) {
                 // ROOT 或 enum 类型：收集所有记录
                 entryRecords.add(new EntryRecord(e.getKey().packStr(), record));
-            } else if (entryFieldName != null) {
+            } else {
                 // EEntry 类型：检查 entry 字段是否有值
                 CfgValue.Value entryFieldValue = ValueUtil.extractFieldValue(record, entryFieldName);
                 if (entryFieldValue instanceof CfgValue.VString entry && !entry.value().isEmpty()) {

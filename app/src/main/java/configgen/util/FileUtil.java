@@ -63,6 +63,7 @@ public class FileUtil {
         try {
             writer.write(staged);
             PosixFileAttributeView attributes = Files.getFileAttributeView(target, PosixFileAttributeView.class);
+            //noinspection ConstantValue
             if (attributes != null) {
                 try {
                     Files.setPosixFilePermissions(staged, attributes.readAttributes().permissions());
@@ -161,11 +162,9 @@ public class FileUtil {
     private static File findSourceFile(String fallbackPath) {
         try {
             // 获取 Generator.class 所在的物理位置 (可能是 JAR 包路径，也可能是 target/classes 目录)
-            Path codePath = Path.of(Generator.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-
             // 如果是在 IDE 中运行，通常在 project/target/classes
             // 我们需要向上找，直到找到包含 src 的目录
-            Path current = codePath;
+            Path current = Path.of(Generator.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             while (current != null) {
                 Path candidate = current.resolve(fallbackPath);
                 if (Files.exists(candidate)) {

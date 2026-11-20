@@ -190,28 +190,34 @@ public class ValueRefInCollector {
             throw new IllegalArgumentException("targetRecord schema must be a TableSchema, but got: " + structural.getClass());
         }
 
-        if (refKey instanceof RefKey.RefPrimary) {
-            // RefPrimary: 使用 ValueUtil.extractPrimaryKeyValue
-            return ValueUtil.extractPrimaryKeyValue(targetRecord, tableSchema);
-        } else if (refKey instanceof RefKey.RefUniq refUniq) {
-            // RefUniq: 使用 findFieldIndices + extractKeyValue
-            KeySchema uniqKey = tableSchema.findUniqueKey(refUniq.keyNames());
-            int[] indices = FindFieldIndex.findFieldIndices(tableSchema, java.util.Objects.requireNonNull(uniqKey));
-            return ValueUtil.extractKeyValue(targetRecord, indices);
-        } else if (refKey instanceof RefKey.RefList refList) {
-            // RefList: 使用 findFieldIndices + extractKeyValue
-            // RefList 的 keyNames 指向被引用表的键（可能是主键或唯一键）
-            KeySchema refKeySchema;
-            if (tableSchema.primaryKey().fields().equals(refList.keyNames())) {
-                refKeySchema = tableSchema.primaryKey();
-            } else {
-                refKeySchema = tableSchema.findUniqueKey(refList.keyNames());
-                if (refKeySchema == null) {
-                    throw new IllegalArgumentException("RefList key not found: " + refList.keyNames());
-                }
+        switch (refKey) {
+            case RefKey.RefPrimary _ -> {
+                // RefPrimary: 使用 ValueUtil.extractPrimaryKeyValue
+                return ValueUtil.extractPrimaryKeyValue(targetRecord, tableSchema);
             }
-            int[] indices = FindFieldIndex.findFieldIndices(tableSchema, refKeySchema);
-            return ValueUtil.extractKeyValue(targetRecord, indices);
+            case RefKey.RefUniq refUniq -> {
+                // RefUniq: 使用 findFieldIndices + extractKeyValue
+                KeySchema uniqKey = tableSchema.findUniqueKey(refUniq.keyNames());
+                int[] indices = FindFieldIndex.findFieldIndices(tableSchema, java.util.Objects.requireNonNull(uniqKey));
+                return ValueUtil.extractKeyValue(targetRecord, indices);
+            }
+            case RefKey.RefList refList -> {
+                // RefList: 使用 findFieldIndices + extractKeyValue
+                // RefList 的 keyNames 指向被引用表的键（可能是主键或唯一键）
+                KeySchema refKeySchema;
+                if (tableSchema.primaryKey().fields().equals(refList.keyNames())) {
+                    refKeySchema = tableSchema.primaryKey();
+                } else {
+                    refKeySchema = tableSchema.findUniqueKey(refList.keyNames());
+                    if (refKeySchema == null) {
+                        throw new IllegalArgumentException("RefList key not found: " + refList.keyNames());
+                    }
+                }
+                int[] indices = FindFieldIndex.findFieldIndices(tableSchema, refKeySchema);
+                return ValueUtil.extractKeyValue(targetRecord, indices);
+            }
+            default -> {
+            }
         }
 
         throw new IllegalArgumentException("Unknown RefKey type: " + refKey.getClass());

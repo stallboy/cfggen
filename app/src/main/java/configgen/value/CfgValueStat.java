@@ -23,7 +23,7 @@ public class CfgValueStat implements Stat {
     }
 
     private synchronized void addLastModified(String table, String id, long time) {
-        lastModifiedMap.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(id, time);
+        lastModifiedMap.computeIfAbsent(table, _ -> new LinkedHashMap<>()).put(id, time);
     }
 
     private synchronized void removeLastModified(String table, String id) {

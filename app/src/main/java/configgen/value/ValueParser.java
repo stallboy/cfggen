@@ -131,7 +131,7 @@ public class ValueParser {
 
                 int expected = isPack ? 1 : Span.span(impl);
                 if (parsed.size() - 1 < expected) {
-                    errs.addErr(new CfgValueErrs.InternalError(parsed.getFirst().toString() + " impl span not enough"));
+                    errs.addErr(new CfgValueErrs.InternalError(parsed.getFirst() + " impl span not enough"));
                     return null;
                 }
                 implCells = parsed.subList(1, expected + 1);
@@ -401,7 +401,6 @@ public class ValueParser {
 
             if (key != null && value != null) {
                 SimpleValue old = valueMap.put(key, value);
-                //noinspection ConstantValue
                 if (old != null) {
                     errs.addErr(new CfgValueErrs.MapKeyDuplicated(
                             Source.of(keyCells), parseContext.nameable, field.name()));
@@ -537,7 +536,7 @@ public class ValueParser {
         StringBuilder err = new StringBuilder();
         if (currentCells != null) {
             for (DCell c : currentCells) {
-                err.append(c.toString());
+                err.append(c);
                 err.append("\n");
             }
         }

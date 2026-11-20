@@ -119,7 +119,7 @@ public class VTableBlockParser implements BlockParser {
      */
     private static Map<Integer, BlockFieldInfo> collectBlockAncestors(Structural structural) {
         Map<Integer, BlockFieldInfo> result = new HashMap<>();
-        BlockAncestorWalker.walk(structural, (parent, field, startCol, outerAncestors) ->
+        BlockAncestorWalker.walk(structural, (_, field, startCol, outerAncestors) ->
                 result.put(startCol, new BlockFieldInfo(outerAncestors, field.name())));
         return result;
     }

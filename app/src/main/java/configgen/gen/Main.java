@@ -169,7 +169,7 @@ public final class Main {
                     String language = nextArg(args, paramType, ++i);
                     Locale locale = Locale.of(language);
                     if (!LocaleUtil.isSupported(locale)) {
-                        System.err.println("Specified Locale is not supported: " + locale.toString());
+                        System.err.println("Specified Locale is not supported: " + locale);
                         return 1;
                     }
                     LocaleUtil.setLocale(locale);

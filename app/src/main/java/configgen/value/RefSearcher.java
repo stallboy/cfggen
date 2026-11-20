@@ -99,7 +99,7 @@ public final class RefSearcher {
     }
 
     private static void addValueTable(Map<Value, Set<String>> res, Value value, String tableName) {
-        Set<String> tables = res.computeIfAbsent(value, k -> new LinkedHashSet<>());
+        Set<String> tables = res.computeIfAbsent(value, _ -> new LinkedHashSet<>());
         tables.add(tableName);
     }
 

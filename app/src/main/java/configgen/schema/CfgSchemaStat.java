@@ -128,9 +128,9 @@ public class CfgSchemaStat implements Stat {
                 case AutoOrPack.PACK -> fPackCount++;
                 case Sep ignored -> {
                     fSepCount++;
-                    if (field.type() instanceof FList flist) {
+                    if (field.type() instanceof FList(SimpleType item)) {
                         fSepListCount++;
-                        if (flist.item() instanceof StructRef) {
+                        if (item instanceof StructRef) {
 //                            System.out.println(field);
                             fSepListStructCount++;
                         }
