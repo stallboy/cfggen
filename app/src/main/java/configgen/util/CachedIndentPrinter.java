@@ -40,16 +40,10 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
 
     }
 
-    private static final CacheConfig DEFAULT_CACHE_CONFIG = new CacheConfig(
-            new StringBuilder(1024 * 2048),
-            new StringBuilder(512 * 1024),
-            new StringBuilder(128)
-    );
-
     private final CachedFiles cachedFiles;
 
     public CachedIndentPrinter(Path path, String encoding, CachedFiles cachedFiles) {
-        this(path, encoding, DEFAULT_CACHE_CONFIG, cachedFiles);
+        this(path, encoding, CacheConfig.of(4096), cachedFiles);
     }
 
     public CachedIndentPrinter(Path path, String encoding, CacheConfig cacheConfig, CachedFiles cachedFiles) {
