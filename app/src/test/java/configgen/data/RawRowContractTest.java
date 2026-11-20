@@ -74,6 +74,30 @@ class RawRowContractTest {
     }
 
     @Test
+    void poiPreservesPhysicalRowNumbersAndEvaluatesFormulas() throws Exception {
+        Path file = root.resolve("calculated.xlsx");
+        try (var workbook = new XSSFWorkbook()) {
+            var sheet = workbook.createSheet("calculated");
+            sheet.createRow(0).createCell(0).setCellValue("result");
+            sheet.createRow(1).createCell(0).setCellValue("result");
+            sheet.createRow(4).createCell(0).setCellFormula("1+2");
+            try (var out = Files.newOutputStream(file)) {
+                workbook.write(out);
+            }
+        }
+
+        var read = ReadByPoi.INSTANCE.readExcels(file, file.getFileName(), null);
+        var table = CfgData.DTable.of("calculated", new ArrayList<>(List.of(read.sheets().getFirst().sheet())));
+        HeadParser.parse(table, read.stat());
+        CellParser.parse(table, read.stat(), 2);
+
+        assertEquals(1, table.rows().size());
+        var value = table.rows().getFirst().getFirst();
+        assertEquals("3", value.value());
+        assertEquals(5, value.displayRow());
+    }
+
+    @Test
     void fastExcelReadsTheCachedValueOfAFormulaCell() throws Exception {
         Path file = root.resolve("calculated.xlsx");
         try (var workbook = new XSSFWorkbook()) {

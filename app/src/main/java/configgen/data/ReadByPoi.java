@@ -9,6 +9,7 @@ import org.apache.poi.ss.usermodel.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.apache.poi.ss.usermodel.CellType.FORMULA;
@@ -51,8 +52,12 @@ public enum ReadByPoi implements ExcelReader {
                         rows.add(CfgData.EMPTY_RAW_ROW);
                     }
 
-                    rows.add(new DRawPoiExcelRow(row, formatter, evaluator));
+                    // Evaluate and copy values before closing the workbook.
+                    String[] cells = new String[Math.max(0, row.getLastCellNum())];
+                    Arrays.fill(cells, "");
+                    rows.add(new DRawPoiExcelRow(cells));
                     for (org.apache.poi.ss.usermodel.Cell cell : row) {
+                        cells[cell.getColumnIndex()] = formatCell(cell, formatter, evaluator);
                         switch (cell.getCellType()) {
                             case NUMERIC -> {
                                 stat.cellNumberCount++;
@@ -87,47 +92,43 @@ public enum ReadByPoi implements ExcelReader {
     }
 
 
-    record DRawPoiExcelRow(org.apache.poi.ss.usermodel.Row row,
-                           DataFormatter formatter,
-                           FormulaEvaluator evaluator) implements CfgData.DRawRow {
+    private static String formatCell(Cell cell, DataFormatter formatter, FormulaEvaluator evaluator) {
+        try {
+            return formatter.formatCellValue(cell, evaluator).trim();
+        } catch (Throwable e) {
+            String res;
+            try {
+                res = cell.getStringCellValue();
+            } catch (Throwable e1) {
+                try {
+                    res = cell.getNumericCellValue() + "";
+                } catch (Throwable e2) {
+                    try {
+                        res = cell.getBooleanCellValue() + "";
+                    } catch (Throwable e3) {
+                        res = "";
+                    }
+                }
+            }
+
+            Logger.log("format cell failed: [%s] row %d col %d type %s formula %s use %s",
+                    cell.getSheet().getSheetName(), cell.getRowIndex(), cell.getColumnIndex(), cell.getCellType(),
+                    cell.getCellType() == FORMULA ? cell.getCellFormula() : "",
+                    res);
+
+            return res;
+        }
+    }
+
+    record DRawPoiExcelRow(String[] cells) implements CfgData.DRawRow {
         @Override
         public String cell(int c) {
-
-            Cell cell = row.getCell(c);
-            if (cell != null) {
-                try {
-                    return formatter.formatCellValue(cell, evaluator).trim();
-                } catch (Throwable e) {
-                    String res;
-                    try {
-                        res = cell.getStringCellValue();
-                    } catch (Throwable e1) {
-                        try {
-                            res = cell.getNumericCellValue() + "";
-                        } catch (Throwable e2) {
-                            try {
-                                res = cell.getBooleanCellValue() + "";
-                            } catch (Throwable e3) {
-                                res = "";
-                            }
-                        }
-                    }
-
-                    Logger.log("format cell failed: [%s] row %d col %d type %s formula %s use %s",
-                            row.getSheet().getSheetName(), row.getRowNum(), c, cell.getCellType(),
-                            cell.getCellType() == FORMULA ? cell.getCellFormula() : "",
-                            res);
-
-                    return res;
-                }
-            } else {
-                return "";
-            }
+            return c < cells.length ? cells[c] : "";
         }
 
         @Override
         public int count() {
-            return row.getLastCellNum();
+            return cells.length;
         }
     }
 }
