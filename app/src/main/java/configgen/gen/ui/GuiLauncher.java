@@ -426,6 +426,7 @@ public class GuiLauncher {
             return;
         }
 
+        String[] args = buildCommandLineArgs().toArray(String[]::new);
         runButton.setEnabled(false);
         outputArea.setText("");
 
@@ -434,7 +435,7 @@ public class GuiLauncher {
         SwingWorker<Integer, String> worker = new SwingWorker<>() {
             @Override
             protected Integer doInBackground() {
-                return Main.runWithCatch(buildCommandLineArgs().toArray(new String[0]));
+                return Main.runWithCatch(args);
             }
 
             @Override
