@@ -210,6 +210,20 @@ class ValueJsonParserTest {
     }
 
     @Test
+    void invalidIntegerMapKeysDoNotShadowValidZeroKeys() {
+        TableSchema test = requireNonNull(cfg.findTable("tm"));
+        CfgValueErrs errs = CfgValueErrs.of();
+        var value = fromJson(test, errs, """
+                {"id":1,"mapIntStr":[{"key":0.5,"value":"invalid"},{"key":0,"value":"zero"}]}
+                """);
+
+        assertEquals(1, errs.errs().size());
+        assertInstanceOf(CfgValueErrs.JsonValueNotMatchType.class, errs.errs().getFirst());
+        var map = assertInstanceOf(VMap.class, ValueUtil.extractFieldValue(value, "mapIntStr"));
+        assertEquals(Map.of(ofInt(0), ofStr("zero")), map.valueMap());
+    }
+
+    @Test
     void fromJson_VStruct() {
         TableSchema ts = requireNonNull(cfg.findTable("ts"));
         StructSchema attr = requireNonNull((StructSchema) cfg.findFieldable("attr"));

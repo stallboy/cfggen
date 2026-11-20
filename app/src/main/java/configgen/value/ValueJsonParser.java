@@ -341,8 +341,13 @@ public class ValueJsonParser {
                         }
 
                         if (keyObj != null && valueObj != null) {
+                            int errorsBeforeKey = errs.errs().size();
                             SimpleValue key = parseSimpleType(fMap.key(), keyObj, ks, fieldSchema);
+                            boolean validKey = errs.errs().size() == errorsBeforeKey;
                             SimpleValue value = parseSimpleType(fMap.value(), valueObj, vs, fieldSchema);
+                            if (!validKey) {
+                                continue;
+                            }
                             if (vMap.valueMap().putIfAbsent(key, value) != null) {
                                 errs.addErr(new MapKeyDuplicated(ks, source.inStruct(), fieldSchema.name()));
                                 continue;
