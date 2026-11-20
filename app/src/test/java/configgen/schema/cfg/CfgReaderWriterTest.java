@@ -2,6 +2,8 @@ package configgen.schema.cfg;
 
 import configgen.Resources;
 import configgen.schema.CfgSchema;
+import configgen.schema.CfgSchemas;
+import configgen.util.CachedFiles;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -57,6 +59,21 @@ class CfgReaderWriterTest {
         CfgSchema commentOnly = CfgReader.INSTANCE.readToSchema(source, "nested.");
         assertEquals("// Comment-only module\n",
                 CfgWriter.stringify(CfgUtil.separate(commentOnly).get("nested")));
+    }
+
+    @Test
+    void writesCommentOnlyModuleToDirectoryWhenRootFileHasSameCodeName(@TempDir Path dir)
+            throws IOException {
+        Path root = dir.resolve("config.cfg");
+        Files.writeString(root, "//Root notes\n");
+        Path module = Files.createDirectory(dir.resolve("config_模块")).resolve("config.cfg");
+        Files.writeString(module, "//Module notes\n");
+
+        CfgSchema schema = CfgSchemas.readFromRoot(root);
+        CfgSchemas.writeToDir(root, schema, new CachedFiles());
+
+        assertEquals("// Root notes\n", Files.readString(root));
+        assertEquals("// Module notes\n", Files.readString(module));
     }
 
     @Test

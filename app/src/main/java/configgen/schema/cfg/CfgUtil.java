@@ -61,7 +61,7 @@ public class CfgUtil {
         }
 
         try (Stream<Path> subPaths = Files.list(cur)) {
-            for (Path path : subPaths.toList()) {
+            for (Path path : subPaths.filter(Files::isDirectory).toList()) {
                 String fn = path.getFileName().toString();
                 String codeName = FileNameUtil.getCodeName(fn);
                 if (codeName != null && codeName.equals(name)) {
