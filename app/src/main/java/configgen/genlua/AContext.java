@@ -45,7 +45,7 @@ class AContext {
 
         if (rForOldShared) {
             listMapPrefixStr = "R({";
-            listMapPostfixStr = "}";
+            listMapPostfixStr = "})";
         } else {
             listMapPrefixStr = "{";
             listMapPostfixStr = "}";
