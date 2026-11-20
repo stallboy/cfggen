@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -37,6 +38,38 @@ class JsonGeneratorTest {
     @AfterAll
     static void setDefaultLogger() {
         Logger.setPrinter(Logger.Printer.outPrinter);
+    }
+
+    @Test
+    void reexportRemovesOnlyRecordsFromPreviousExports() throws IOException {
+        String schema = "table item[id] { id:int; score:int; }";
+        String headers = "ID,Score\nid,score\n";
+        Path out = tempDir;
+        var generator = new JsonGenerator(new ParameterParser("json,tables:item,dst:" + out));
+        Path tableDir = Files.createDirectory(out.resolve("_item"));
+        Path manual = tableDir.resolve("manual.json");
+        Files.writeString(manual, "{\"id\":99}");
+        generator.generate(TestCtx.newContext(tempDir, schema, Map.of("item", headers + "1,10\n2,20\n")));
+
+        generator.generate(TestCtx.newContext(tempDir, schema, Map.of("item", headers + "1,11\n")));
+        assertEquals(11, JSON.parseObject(Files.readString(tableDir.resolve("1.json"))).getIntValue("score"));
+        assertFalse(Files.exists(tableDir.resolve("2.json")));
+
+        generator.generate(TestCtx.newContext(tempDir, schema, Map.of("item", headers)));
+        assertFalse(Files.exists(tableDir.resolve("1.json")));
+        assertEquals("{\"id\":99}", Files.readString(manual));
+    }
+
+    @Test
+    void exportingIntoSourceDirectoryKeepsOriginalJsonFilename() throws IOException {
+        Path tableDir = Files.createDirectory(tempDir.resolve("_item"));
+        Path original = tableDir.resolve("custom.json");
+        Files.writeString(original, "{\"id\":1}");
+        Context context = TestCtx.newContext(tempDir, "table item[id] (json) { id:int; }", Map.of());
+        new JsonGenerator(new ParameterParser("json,tables:item,dst:" + tempDir)).generate(context);
+        try (var files = Files.list(tableDir)) {
+            assertEquals(List.of(original), files.toList());
+        }
     }
 
     @Test

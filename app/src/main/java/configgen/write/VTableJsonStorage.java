@@ -64,14 +64,15 @@ public class VTableJsonStorage {
     private static Path recordPath(String table, String id, Path dataDir,
                                    DirectoryStructure directoryStructure) throws IOException {
         validateId(id);
-        var existingDirRelativePath = directoryStructure.getJsonTableDir(table);
-        Path jsonDirRelPath = existingDirRelativePath != null
-                ? existingDirRelativePath
-                : resolveJsonDirRelativePath(table, dataDir);
-        return jsonDirRelPath.resolve(id + ".json");
+        return relativeTableDirectory(table, dataDir, directoryStructure).resolve(id + ".json");
     }
 
-    private static void writeRecord(VStruct record, Path path, CachedFiles cachedFiles) throws IOException {
+    public static Path relativeTableDirectory(String table, Path dataDir, DirectoryStructure directoryStructure) {
+        Path existingDir = directoryStructure.getJsonTableDir(table);
+        return existingDir != null ? existingDir : resolveJsonDirRelativePath(table, dataDir);
+    }
+
+    public static void writeRecord(VStruct record, Path path, CachedFiles cachedFiles) throws IOException {
         byte[] json = ValueToJson.toJsonStr(record).getBytes(StandardCharsets.UTF_8);
         cachedFiles.writeFileReplacement(path, json);
     }
