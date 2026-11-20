@@ -430,6 +430,7 @@ public class DirectoryStructure implements JsonTableFiles {
     public synchronized JsonFileInfo addJsonFile(String tableName, Path relativeJsonPath) {
         Map<String, JsonFileList> tmp = copyJsonFiles(tableName);
         JsonFileList list = tmp.computeIfAbsent(tableName, (String j) -> new JsonFileList());
+        list.tableDirRelativePath = relativeJsonPath.getParent();
         Path path = rootDir.resolve(relativeJsonPath).toAbsolutePath().normalize();
         JsonFileInfo jf = JsonFileInfo.of(path, relativeJsonPath);
         list.addFile(jf);
@@ -489,63 +490,22 @@ public class DirectoryStructure implements JsonTableFiles {
     public boolean lastModifiedEquals(DirectoryStructure other) {
         Objects.requireNonNull(other);
 
-        if (cfgFiles.size() != other.cfgFiles.size()) {
+        Map<String, JsonFileList> currentJson = jsonFiles;
+        Map<String, JsonFileList> otherJson = other.jsonFiles;
+        if (!cfgFiles.equals(other.cfgFiles)
+                || !excelFiles.equals(other.excelFiles)
+                || !currentJson.keySet().equals(otherJson.keySet())) {
             return false;
         }
 
-        if (excelFiles.size() != other.excelFiles.size()) {
-            return false;
-        }
-
-        Map<String, JsonFileList> tmp1 = jsonFiles;
-        Map<String, JsonFileList> tmp2 = other.jsonFiles;
-        if (tmp1.size() != tmp2.size()) {
-            return false;
-        }
-
-        for (Map.Entry<String, JsonFileList> e : tmp1.entrySet()) {
-            JsonFileList t2 = tmp2.get(e.getKey());
-            if (t2 == null) {
-                return false;
-            }
-            List<JsonFileInfo> j1 = e.getValue().list;
-            List<JsonFileInfo> j2 = t2.list;
-
-            if (j2.size() != j1.size()) {
-                return false;
-            }
-            for (int i = 0, sz = j1.size(); i < sz; i++) {
-                JsonFileInfo jf1 = j1.get(i);
-                JsonFileInfo jf2 = j2.get(i);
-
-                if (jf2.lastModified() != jf1.lastModified()) {
-                    return false;
-                }
-            }
-        }
-
-        for (Map.Entry<String, CfgFileInfo> e : cfgFiles.entrySet()) {
-            CfgFileInfo f2 = other.cfgFiles.get(e.getKey());
-            if (f2 == null) {
-                return false;
-            }
-            CfgFileInfo f1 = e.getValue();
-            if (f2.lastModified() != f1.lastModified()) {
+        for (Map.Entry<String, JsonFileList> entry : currentJson.entrySet()) {
+            JsonFileList current = entry.getValue();
+            JsonFileList compared = otherJson.get(entry.getKey());
+            if (!Objects.equals(current.tableDirRelativePath, compared.tableDirRelativePath)
+                    || !current.map.equals(compared.map)) {
                 return false;
             }
         }
-
-        for (Map.Entry<String, ExcelFileInfo> e : excelFiles.entrySet()) {
-            ExcelFileInfo f2 = other.excelFiles.get(e.getKey());
-            if (f2 == null) {
-                return false;
-            }
-            ExcelFileInfo f1 = e.getValue();
-            if (f2.lastModified() != f1.lastModified()) {
-                return false;
-            }
-        }
-
         return true;
     }
 }

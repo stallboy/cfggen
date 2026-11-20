@@ -15,6 +15,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Collection;
 import java.util.Map;
 
@@ -237,6 +238,31 @@ class DirectoryStructureBehaviorTest {
 
         // Then: 应该返回 false
         assertFalse(areEqual, "不同目录结构的最后修改时间应该不相等");
+    }
+
+    @Test
+    void detectsRenamedJsonFileWithTheSameModificationTime() throws IOException {
+        Path directory = Files.createDirectory(tempDir.resolve("_user"));
+        Path original = Files.writeString(directory.resolve("1.json"), "{}");
+        FileTime modified = Files.getLastModifiedTime(original);
+        DirectoryStructure before = new DirectoryStructure(tempDir);
+
+        Path renamed = Files.move(original, directory.resolve("2.json"));
+        Files.setLastModifiedTime(renamed, modified);
+
+        assertFalse(before.lastModifiedEquals(before.reload()));
+    }
+
+    @Test
+    void incrementalJsonRegistrationMatchesFullScanForNewTableDirectory() throws IOException {
+        DirectoryStructure before = new DirectoryStructure(tempDir);
+        Path directory = Files.createDirectory(tempDir.resolve("_user"));
+        Files.writeString(directory.resolve("1.json"), "{}");
+
+        before.addJsonFile("user", Path.of("_user/1.json"));
+
+        assertEquals(Path.of("_user"), before.getJsonTableDir("user"));
+        assertTrue(before.lastModifiedEquals(before.reload()));
     }
 
     @Test
