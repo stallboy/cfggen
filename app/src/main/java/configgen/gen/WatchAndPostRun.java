@@ -51,8 +51,10 @@ public enum WatchAndPostRun {
      * 写成功后锁内统一刷新所有订阅者快照，任一server的修改对其他server立即可见。
      */
     private final StateCoordinator<Context> coordinator = new StateCoordinator<>();
-    private @Nullable Watcher watcher;
+    private volatile @Nullable Watcher watcher;
     private @Nullable WaitWatcher waitWatcher;
+    // 在 coordinator 的编辑锁内读写，和文件 reload 一起防抖。
+    private boolean editPendingPostRun;
     // autoFix写回config.cfg会再触发watch→reload，若对齐不稳定会形成写-触发循环，需要上限保护。
     private final AtomicInteger consecutiveAutoFixReloads = new AtomicInteger();
     private static final int MAX_CONSECUTIVE_AUTO_FIX_RELOADS = 3;
@@ -72,7 +74,16 @@ public enum WatchAndPostRun {
      * 随后统一刷新所有注册快照，保证同进程所有server立刻看到新值。
      */
     public <T> T runEdit(Function<Context, T> edit) {
-        return coordinator.runEdit(edit);
+        return coordinator.runEdit(ctx -> {
+            long revision = ctx.editRevision();
+            T result = edit.apply(ctx);
+            Watcher activeWatcher = watcher;
+            if (activeWatcher != null && !postRunBats.isEmpty() && ctx.editRevision() != revision) {
+                editPendingPostRun = true;
+                activeWatcher.signalChange();
+            }
+            return result;
+        });
     }
 
     /**
@@ -168,14 +179,17 @@ public enum WatchAndPostRun {
      */
     private void reloadData() {
         try {
+            Context previous = coordinator.state();
             if (!coordinator.reloadState(this::loadChangedContext)) {
                 if (consecutiveAutoFixReloads.get() >= MAX_CONSECUTIVE_AUTO_FIX_RELOADS) {
                     stopWatch();
                 }
                 return;
             }
-            Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.ReloadContextOk",
-                "reload context ok"));
+            if (coordinator.state() != previous) {
+                Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.ReloadContextOk",
+                    "reload context ok"));
+            }
 
             for (PostRunBat bat : postRunBats) {
                 tryPostRun(bat);
@@ -195,6 +209,11 @@ public enum WatchAndPostRun {
         DirectoryStructure source = current.sourceStructure();
         DirectoryStructure discovered = source.reload();
         if (discovered.lastModifiedEquals(source)) {
+            if (editPendingPostRun) {
+                // 写回已更新内存和文件时间戳，脚本可以直接使用当前上下文。
+                editPendingPostRun = false;
+                return current;
+            }
             Logger.verbose(LocaleUtil.getLocaleString("WatchAndPostRun.LastModifiedNotChanged",
                     "lastModified not change"));
             return null;
@@ -203,11 +222,13 @@ public enum WatchAndPostRun {
         Context loaded = current.reloadFrom(discovered);
         if (!loaded.lastLoadDidAutoFix()) {
             consecutiveAutoFixReloads.set(0);
+            editPendingPostRun = false;
             return loaded;
         }
 
         int reloads = consecutiveAutoFixReloads.incrementAndGet();
         if (reloads < MAX_CONSECUTIVE_AUTO_FIX_RELOADS) {
+            editPendingPostRun = false;
             return loaded;
         }
         Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.AutoFixLoopDetected",

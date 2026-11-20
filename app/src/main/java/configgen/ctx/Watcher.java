@@ -115,7 +115,7 @@ public class Watcher {
         return eventVersion.get();
     }
 
-    private void trigger() {
+    public void signalChange() {
         lastEvtMillis = System.currentTimeMillis();
         eventVersion.incrementAndGet();
     }
@@ -170,7 +170,7 @@ public class Watcher {
                 if (kind == OVERFLOW) {
                     // 事件队列溢出说明有事件丢失（如git checkout一次性改几十个文件），必须触发一次全量reload自愈，
                     // 静默丢弃会导致溢出期间的变更若再无后续事件就永远丢失
-                    trigger();
+                    signalChange();
                     continue;
                 }
 
@@ -206,14 +206,14 @@ public class Watcher {
                 if (kind == ENTRY_DELETE) {
                     // 移走整个目录时，可能只收到目录本身的删除事件。
                     if (couldBeDataDirectory(relativePath)) {
-                        trigger();
+                        signalChange();
                     } else {
                         handleFileEvent(relativePath);
                     }
                 } else {
                     // 对于创建和修改事件，可以检查文件属性
                     if (Files.isDirectory(fullPath)) {
-                        trigger();
+                        signalChange();
                     } else if (Files.isRegularFile(fullPath)) {
                         handleFileEvent(relativePath);
                     }
@@ -299,7 +299,7 @@ public class Watcher {
         }
 
         Logger.verbose("Triggering watcher for file: " + relativePath);
-        trigger();
+        signalChange();
     }
 
 }

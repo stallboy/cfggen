@@ -298,6 +298,12 @@ public class Context {
         return cfgValue;
     }
 
+    private long editRevision;
+
+    public synchronized long editRevision() {
+        return editRevision;
+    }
+
     // 与 makeValue 共用 this 锁：二者都读写 lastCfgValue/lastCfgValueTag/lastCfgValueAllowErr，
     // 编辑器 handler 线程调 updateDataAndValue、reload 线程调 makeValue，必须互斥。
     // 增量校验不会重新解析未编辑的表。严格调用须重新校验整份配置。
@@ -306,5 +312,6 @@ public class Context {
         this.lastCfgValue = cfgValue;
         this.lastCfgValueTag = null;
         this.lastCfgValueAllowErr = true;
+        editRevision++;
     }
 }
