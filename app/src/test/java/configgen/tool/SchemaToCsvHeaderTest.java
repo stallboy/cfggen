@@ -1,9 +1,17 @@
 package configgen.tool;
 
+import configgen.ctx.Context;
+import configgen.data.CfgData.DField;
+import configgen.gen.ParameterParser;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
+import configgen.util.CSVUtil;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -12,19 +20,30 @@ import static org.junit.jupiter.api.Assertions.*;
 class SchemaToCsvHeaderTest {
 
     @Test
-    void writesColumnModeHeaderAsOneFieldPerRow() {
-        CfgSchema schema = CfgReader.parse("""
-                table t[id] {
+    void writesBothLayoutsAndReadsThemThroughTheNormalDataPath(@TempDir Path dir) throws IOException {
+        Files.writeString(dir.resolve("config.cfg"), """
+                struct Range { min:int; max:int; }
+                table horizontal[id] {
                     id:int; // ID
-                    name:str; // 名称
+                    bounds:Range; // 范围
+                }
+                table vertical[id] (columnMode) {
+                    id:int; // ID
+                    bounds:Range; // 范围
                 }
                 """);
-        schema.resolve().checkErrors();
-        SchemaToCsvHeader header = new SchemaToCsvHeader();
-        header.flattenFields(requireNonNull(schema.findTable("t")).fields());
+        new SchemaToCsvTool(new ParameterParser("schematocsv,datadir=" + dir)).call();
 
-        assertEquals(List.of(List.of("ID", "id"), List.of("名称", "name")),
-                SchemaToCsvTool.headerRows(header, true));
+        assertEquals(List.of(List.of("ID", "范围", ""), List.of("id", "bounds._min", "_max")),
+                CSVUtil.readAndNormalize(dir.resolve("horizontal.csv"), "UTF-8"));
+        assertEquals(List.of(List.of("ID", "id"), List.of("范围", "bounds._min"), List.of("", "_max")),
+                CSVUtil.readAndNormalize(dir.resolve("vertical.csv"), "UTF-8"));
+
+        Context ctx = new Context(dir);
+        for (String table : List.of("horizontal", "vertical")) {
+            assertEquals(List.of("id", "bounds", "_max"), requireNonNull(ctx.cfgData().getDTable(table))
+                    .fields().stream().map(DField::name).toList());
+        }
     }
 
     @Test
