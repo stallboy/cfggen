@@ -125,6 +125,10 @@ public class ValueInspector implements AutoCloseable {
         List<String> nullableUniqKeys = null;
         int idx = refTable.indexOf('[');
         if (idx != -1) {
+            if (idx == 0 || !refTable.endsWith("]") || idx == refTable.length() - 2) {
+                println("Usage: ref <refTable[key]> [ignoredTable1]...");
+                return;
+            }
             String keysPart = refTable.substring(idx + 1, refTable.length() - 1);
             refTable = refTable.substring(0, idx);
             nullableUniqKeys = Arrays.asList(keysPart.split("\\s*,\\s*"));
