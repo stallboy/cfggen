@@ -14,11 +14,14 @@ import configgen.util.Logger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public enum WatchAndPostRun {
@@ -51,8 +54,7 @@ public enum WatchAndPostRun {
     private @Nullable Watcher watcher;
     private @Nullable WaitWatcher waitWatcher;
     // autoFix写回config.cfg会再触发watch→reload，若对齐不稳定会形成写-触发循环，需要上限保护。
-    // 读写跨线程（reloadData在watcher线程、startWatch的重置在主线程），volatile 保证重置可见
-    private volatile int consecutiveAutoFixReloads = 0;
+    private final AtomicInteger consecutiveAutoFixReloads = new AtomicInteger();
     private static final int MAX_CONSECUTIVE_AUTO_FIX_RELOADS = 3;
     // bat里先跑-generator再跑外部进程，外部进程不关stdout时readLine会永久阻塞，join必须有界
     private static final long POST_RUN_JOIN_TIMEOUT_MILLIS = 10 * 60 * 1000;
@@ -105,6 +107,7 @@ public enum WatchAndPostRun {
         Watcher newWatcher = new Watcher(ss.getRootDir(), ss.getExplicitDir());
         WaitWatcher newWaitWatcher = new WaitWatcher(newWatcher, this::reloadData,
                 Math.multiplyExact(waitSecondsAfterWatchEvt, 1000));
+        consecutiveAutoFixReloads.set(0);
         newWatcher.start();
         try {
             newWaitWatcher.start();
@@ -114,7 +117,6 @@ public enum WatchAndPostRun {
         }
         watcher = newWatcher;
         waitWatcher = newWaitWatcher;
-        consecutiveAutoFixReloads = 0;
         started = true;
 
         Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherStarted",
@@ -141,10 +143,6 @@ public enum WatchAndPostRun {
      * @param batchFile .bat 或 .sh 文件
      */
     public void registerPostRunBat(String batchFile) {
-        if (batchFile == null) {
-            return;
-        }
-
         for (PostRunBat ob : postRunBats) {
             if (ob.batFile.equals(batchFile)) {
                 Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.BatchFileAlreadyRegistered",
@@ -162,9 +160,6 @@ public enum WatchAndPostRun {
      * @param callback 回调函数
      */
     public void registerPostRunCallback(PostRunCallback callback) {
-        if (callback == null) {
-            return;
-        }
         coordinator.addRefresher(callback::onNewContextLoaded);
     }
 
@@ -174,7 +169,7 @@ public enum WatchAndPostRun {
     private void reloadData() {
         try {
             if (!coordinator.reloadState(this::loadChangedContext)) {
-                if (consecutiveAutoFixReloads >= MAX_CONSECUTIVE_AUTO_FIX_RELOADS) {
+                if (consecutiveAutoFixReloads.get() >= MAX_CONSECUTIVE_AUTO_FIX_RELOADS) {
                     stopWatch();
                 }
                 return;
@@ -189,7 +184,9 @@ public enum WatchAndPostRun {
             Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.ReloadContextIgnored",
                 "reload context ignored: {0}", e.toString()));
             if (Logger.verboseLevel() > 0) {
-                e.printStackTrace();
+                StringWriter stackTrace = new StringWriter();
+                e.printStackTrace(new PrintWriter(stackTrace));
+                Logger.log(stackTrace.toString().stripTrailing());
             }
         }
     }
@@ -205,17 +202,17 @@ public enum WatchAndPostRun {
 
         Context loaded = current.reloadFrom(discovered);
         if (!loaded.lastLoadDidAutoFix()) {
-            consecutiveAutoFixReloads = 0;
+            consecutiveAutoFixReloads.set(0);
             return loaded;
         }
 
-        consecutiveAutoFixReloads++;
-        if (consecutiveAutoFixReloads < MAX_CONSECUTIVE_AUTO_FIX_RELOADS) {
+        int reloads = consecutiveAutoFixReloads.incrementAndGet();
+        if (reloads < MAX_CONSECUTIVE_AUTO_FIX_RELOADS) {
             return loaded;
         }
         Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.AutoFixLoopDetected",
                 "reload触发autoFix写回config.cfg已连续{0}次，疑似对齐不稳定导致写-触发循环，停止watch（保留当前内存状态）",
-                consecutiveAutoFixReloads));
+                reloads));
         return null;
     }
 
