@@ -7,7 +7,9 @@ import configgen.gen.Generator;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -75,6 +77,9 @@ public class FileUtil {
     }
 
     private static void moveReplacing(Path source, Path target) throws IOException {
+        if (Files.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) {
+            throw new FileSystemException(target.toString(), null, "Cannot replace a directory with a file");
+        }
         try {
             Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } catch (AtomicMoveNotSupportedException e) {
