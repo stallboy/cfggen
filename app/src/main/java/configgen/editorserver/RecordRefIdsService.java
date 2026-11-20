@@ -136,6 +136,8 @@ public class RecordRefIdsService {
 
         // 然后算 refOut的链接
         var refOutFrontier = Map.of(thisObjId, vRecord);
+        Set<RefId> visitedOut = new HashSet<>();
+        visitedOut.add(thisObjId);
         int curOutDepth = 1;
         while (!refOutFrontier.isEmpty() && curOutDepth <= outDepth && result.size() < maxRefIds) {
             Map<RefId, VStruct> newRefOutFrontier = new LinkedHashMap<>();
@@ -147,13 +149,14 @@ public class RecordRefIdsService {
             }
 
             if (!newRefOutFrontier.isEmpty()) {
-                for (RefId refId : result.keySet()) {
-                    newRefOutFrontier.remove(refId);
-                }
+                // 入向已展示的节点仍可能通向新的出向节点。
+                newRefOutFrontier.keySet().removeIf(refId -> !visitedOut.add(refId));
 
                 for (Map.Entry<RefId, VStruct> ro : newRefOutFrontier.entrySet()) {
                     RefId refId = ro.getKey();
-                    result.put(refId, new RecordRefId(refId.table(), refId.id(), getBriefTitle(ro.getValue()), curOutDepth));
+                    if (!result.containsKey(refId)) {
+                        result.put(refId, new RecordRefId(refId.table(), refId.id(), getBriefTitle(ro.getValue()), curOutDepth));
+                    }
                     if (result.size() >= maxRefIds) {
                         break;
                     }
