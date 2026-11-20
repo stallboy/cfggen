@@ -147,6 +147,16 @@ class CodeDataInspectorTest {
     }
 
     @Test
+    void getMap_rejectsInvalidBooleanInsteadOfMatchingFalse() {
+        class BoolMgr {
+            public final Map<Boolean, User> test_user_All = Map.of(false, new User(1, "false row"));
+        }
+        CodeDataInspector inspector = new CodeDataInspector(new BoolMgr(), buildSchema());
+        assertEquals("false row", ((Str) requireNonNull(memberValue(inspector.getJson("test.user", "false"), "name"))).value());
+        assertInstanceOf(Str.class, memberValue(inspector.getJson("test.user", "unknown"), "error"));
+    }
+
+    @Test
     void getMap_missingTable_returnsError() {
         CodeDataInspector ins = new CodeDataInspector(buildMgr(), buildSchema());
         JsonValue v = ins.getJson("nope", "1");

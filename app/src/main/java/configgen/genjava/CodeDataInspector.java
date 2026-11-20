@@ -292,7 +292,13 @@ public class CodeDataInspector {
             return Double.parseDouble(s);
         }
         if (keyClass == Boolean.class || keyClass == boolean.class) {
-            return Boolean.parseBoolean(s);
+            if ("true".equalsIgnoreCase(s)) {
+                return true;
+            }
+            if ("false".equalsIgnoreCase(s)) {
+                return false;
+            }
+            throw new IllegalArgumentException("Invalid boolean key: " + s);
         }
         return null;
     }
