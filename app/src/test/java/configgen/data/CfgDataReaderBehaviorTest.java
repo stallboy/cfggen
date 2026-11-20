@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,28 +47,20 @@ class CfgDataReaderBehaviorTest {
         String[] testFiles = {"rank.csv", "ai行为.xlsx"};
 
         // When: 并发读取
-        ExecutorService executor = Executors.newFixedThreadPool(testFiles.length);
-        List<CompletableFuture<CfgData>> futures = new ArrayList<>();
+        List<CfgData> results;
+        try (ExecutorService executor = Executors.newFixedThreadPool(testFiles.length)) {
+            List<CompletableFuture<CfgData>> futures = new ArrayList<>();
+            for (String fileName : testFiles) {
+                Path inputDir = Files.createTempDirectory(tempDir, "input");
+                futures.add(CompletableFuture.supplyAsync(() -> readFile(fileName, inputDir), executor));
+            }
 
-        for (String fileName : testFiles) {
-            CompletableFuture<CfgData> future = CompletableFuture.supplyAsync(() -> {
-                return readFile(fileName, tempDir);
-            }, executor);
-            futures.add(future);
+            CompletableFuture<Void> allFutures = CompletableFuture.allOf(
+                    futures.toArray(CompletableFuture<?>[]::new));
+            results = allFutures.thenApply(v -> futures.stream()
+                    .map(CompletableFuture::join)
+                    .toList()).get(30, TimeUnit.SECONDS);
         }
-
-        // Then: 验证数据完整性和无竞争条件
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(
-            futures.toArray(new CompletableFuture[0])
-        );
-
-        List<CfgData> results = allFutures.thenApply(v ->
-            futures.stream()
-                .map(CompletableFuture::join)
-                .toList()
-        ).get(30, TimeUnit.SECONDS);
-
-        executor.shutdown();
 
         // 验证每个文件都正确读取
         assertEquals(2, results.size());
@@ -148,9 +141,8 @@ class CfgDataReaderBehaviorTest {
     }
 
     @Test
-    void shouldProcessFilesWithDifferentEncodings() {
-        // Given: 不同编码的文件
-        String fn = "rank.csv"; // 假设使用GBK编码
+    void utf8BomOverridesTheDefaultGbkEncoding() {
+        String fn = "rank.csv"; // UTF-8 with BOM
 
         // When: 使用正确编码读取
         CfgData cfgData = readFile(fn, tempDir);
