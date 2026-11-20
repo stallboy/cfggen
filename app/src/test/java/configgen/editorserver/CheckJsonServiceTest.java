@@ -13,13 +13,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import static configgen.editorserver.CheckJsonService.CheckJsonResultCode.ParseJsonError;
 import static configgen.editorserver.CheckJsonService.CheckJsonResultCode.ok;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CheckJsonServiceTest {
+    @Test
+    void decodesEachQueryComponentExactlyOnce() {
+        URI uri = URI.create("/record?id=A%26B%2BC%3DD%25%32%30&table=items&refs");
+        assertEquals(Map.of("id", "A&B+C=D%20", "table", "items", "refs", ""),
+                EditorServer.queryToMap(uri));
+    }
+
     private static CfgValue cfgValue() {
         CfgSchema schema = CfgReader.parse("table t[id] { id:long; note:str; }");
         schema.resolve().checkErrors();

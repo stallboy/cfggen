@@ -15,6 +15,7 @@ import configgen.value.CfgValue;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -136,7 +137,7 @@ public class EditorServer extends GeneratorWithTag {
             return;
         }
 
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        Map<String, String> query = queryToMap(exchange.getRequestURI());
         String key = query.get("key");
 
         byte[] bytes = exchange.getRequestBody().readAllBytes();
@@ -148,7 +149,7 @@ public class EditorServer extends GeneratorWithTag {
     }
 
     private void handleSearch(HttpExchange exchange) throws IOException {
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        Map<String, String> query = queryToMap(exchange.getRequestURI());
         String q = query.get("q");
         String maxStr = query.get("max");
 
@@ -171,7 +172,7 @@ public class EditorServer extends GeneratorWithTag {
 
 
     private void handleRecordRefIds(HttpExchange exchange) throws IOException {
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        Map<String, String> query = queryToMap(exchange.getRequestURI());
         String table = query.get("table");
         String id = query.get("id");
         String inStr = query.get("in");
@@ -189,7 +190,7 @@ public class EditorServer extends GeneratorWithTag {
     }
 
     private void handleRecord(HttpExchange exchange) throws IOException {
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        Map<String, String> query = queryToMap(exchange.getRequestURI());
         String table = query.get("table");
         String id = query.get("id");
         String depthStr = query.get("depth");
@@ -227,7 +228,7 @@ public class EditorServer extends GeneratorWithTag {
             return;
         }
 
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        Map<String, String> query = queryToMap(exchange.getRequestURI());
         String table = query.get("table");
 
         byte[] bytes = exchange.getRequestBody().readAllBytes();
@@ -243,7 +244,7 @@ public class EditorServer extends GeneratorWithTag {
             return;
         }
 
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        Map<String, String> query = queryToMap(exchange.getRequestURI());
         String table = query.get("table");
         String id = query.get("id");
 
@@ -263,7 +264,7 @@ public class EditorServer extends GeneratorWithTag {
 
 
     private void handlePrompt(HttpExchange exchange) throws IOException {
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        Map<String, String> query = queryToMap(exchange.getRequestURI());
         String table = query.get("table");
         State st = state;
         PromptService.PromptResult result = PromptService.gen(st.context(), st.cfgValue(), table);
@@ -275,7 +276,7 @@ public class EditorServer extends GeneratorWithTag {
         if (!checkPostMethod(exchange)) {
             return;
         }
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        Map<String, String> query = queryToMap(exchange.getRequestURI());
         String table = query.get("table");
         byte[] bytes = exchange.getRequestBody().readAllBytes();
         String raw = new String(bytes, StandardCharsets.UTF_8);
@@ -398,7 +399,8 @@ public class EditorServer extends GeneratorWithTag {
         out.close();
     }
 
-    private static Map<String, String> queryToMap(@Nullable String query) {
+    static Map<String, String> queryToMap(URI uri) {
+        String query = uri.getRawQuery();
         Map<String, String> result = new HashMap<>();
         if (query != null) {
             for (String param : query.split("&")) {
