@@ -53,11 +53,19 @@ public enum ReadByPoi implements ExcelReader {
                     }
 
                     // Evaluate and copy values before closing the workbook.
-                    String[] cells = new String[Math.max(0, row.getLastCellNum())];
-                    Arrays.fill(cells, "");
-                    rows.add(new DRawPoiExcelRow(cells));
+                    int width = Math.max(0, row.getLastCellNum());
+                    int cellCount = row.getPhysicalNumberOfCells();
+                    // POI iterates cells in column order. Keep a compact index for wide, sparse rows.
+                    int[] columns = width > 4 * cellCount ? new int[cellCount] : null;
+                    String[] cells = new String[columns == null ? width : cellCount];
+                    int next = 0;
                     for (org.apache.poi.ss.usermodel.Cell cell : row) {
-                        cells[cell.getColumnIndex()] = formatCell(cell, formatter, evaluator);
+                        int index = cell.getColumnIndex();
+                        if (columns != null) {
+                            columns[next] = index;
+                            index = next++;
+                        }
+                        cells[index] = formatCell(cell, formatter, evaluator);
                         switch (cell.getCellType()) {
                             case NUMERIC -> {
                                 stat.cellNumberCount++;
@@ -79,6 +87,7 @@ public enum ReadByPoi implements ExcelReader {
                             }
                         }
                     }
+                    rows.add(new DRawPoiExcelRow(width, columns, cells));
                 }
                 OneSheet oneSheet = new OneSheet(ti.tableName(),
                         new CfgData.DRawSheet(relativePath.toString(), sheetName, ti.index(), rows, new ArrayList<>()));
@@ -120,15 +129,12 @@ public enum ReadByPoi implements ExcelReader {
         }
     }
 
-    record DRawPoiExcelRow(String[] cells) implements CfgData.DRawRow {
+    private record DRawPoiExcelRow(int count, int @Nullable [] columns, String[] cells)
+            implements CfgData.DRawRow {
         @Override
         public String cell(int c) {
-            return c < cells.length ? cells[c] : "";
-        }
-
-        @Override
-        public int count() {
-            return cells.length;
+            int index = columns == null ? c : Arrays.binarySearch(columns, c);
+            return index >= 0 && index < cells.length && cells[index] != null ? cells[index] : "";
         }
     }
 }

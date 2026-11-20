@@ -1,5 +1,6 @@
 package configgen.data;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -95,6 +96,33 @@ class RawRowContractTest {
         var value = table.rows().getFirst().getFirst();
         assertEquals("3", value.value());
         assertEquals(5, value.displayRow());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void poiPreservesSparseColumnsAndFormulaResults(boolean xlsx) throws Exception {
+        Path file = root.resolve(xlsx ? "sparse.xlsx" : "sparse.xls");
+        int lastColumn = xlsx ? 16383 : 255;
+        try (var workbook = xlsx ? new XSSFWorkbook() : new HSSFWorkbook()) {
+            var row = workbook.createSheet("sparse").createRow(0);
+            row.createCell(lastColumn).setCellFormula("A1+2");
+            row.createCell(0).setCellValue(1);
+            row.createCell(2);
+            try (var out = Files.newOutputStream(file)) {
+                workbook.write(out);
+            }
+        }
+
+        var read = ReadByPoi.INSTANCE.readExcels(file, file.getFileName(), null);
+        var row = read.sheets().getFirst().sheet().rows().getFirst();
+        assertEquals(lastColumn + 1, row.count());
+        assertEquals("1", row.cell(0));
+        assertEquals("", row.cell(1));
+        assertEquals("", row.cell(2));
+        assertEquals("", row.cell(lastColumn - 1));
+        assertEquals("3", row.cell(lastColumn));
+        assertEquals("", row.cell(lastColumn + 1));
+        assertEquals(1, read.stat().cellFormulaCount);
     }
 
     @Test
