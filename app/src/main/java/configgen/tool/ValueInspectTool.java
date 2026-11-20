@@ -8,7 +8,6 @@ import configgen.gen.Parameter;
 import configgen.value.CfgValue;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 public class ValueInspectTool extends GeneratorWithTag {
@@ -20,16 +19,7 @@ public class ValueInspectTool extends GeneratorWithTag {
         searchTo = parameter.get("to", null);
         String q = parameter.get("q", null);
 
-        if (q != null) {
-            String[] split = q.trim().split("\\s+");
-            if (split.length > 0) {
-                query = Arrays.stream(split).toList();
-            } else {
-                query = null;
-            }
-        } else {
-            query = null;
-        }
+        query = q == null || q.isBlank() ? null : List.of(q.trim().split("\\s+"));
 
         parameter.extra(ValueInspector.help());
     }
