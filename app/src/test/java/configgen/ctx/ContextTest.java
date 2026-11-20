@@ -1,9 +1,12 @@
 package configgen.ctx;
 
 import configgen.Resources;
+import configgen.TestCtx;
 import configgen.schema.cfg.CfgReader;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
+import configgen.value.CfgValueException;
+import configgen.write.AddOrUpdateService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,11 +14,27 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ContextTest {
+
+    @Test
+    void strictValidationStillChecksOtherTablesAfterAnEdit(@TempDir Path data) {
+        var context = TestCtx.newContext(data, """
+                table broken[id] { id:int; score:int; }
+                table valid[id] { id:int; score:int; }
+                """, Map.of(
+                "broken", "ID,Score\nid,score\n1,oops\n",
+                "valid", "ID,Score\nid,score\n1,5\n"));
+        var edit = AddOrUpdateService.addOrUpdateRecord(
+                context, context.makeValue(null, true), "valid", "{\"id\":1,\"score\":7}");
+        assertEquals(AddOrUpdateService.AddOrUpdateErrorCode.UpdateOK, edit.errorCode());
+        assertTrue(edit.errorMessages().isEmpty());
+        assertThrows(CfgValueException.class, () -> context.makeValue(null, false));
+    }
 
     private @TempDir Path tempDir;
 

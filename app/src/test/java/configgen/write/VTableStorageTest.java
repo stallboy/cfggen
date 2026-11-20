@@ -224,7 +224,7 @@ class VTableStorageTest {
             VTableStorage.addOrUpdateRecord(ctx, vTable, dTable, pk, record);
 
             ValueUpdater.NewCfgValueResult nr = ValueUpdater.updateByReloadTableData(ctx, cfgValue, vTable);
-            ctx.updateDataAndValue(nr.newCfgData(), nr.newCfgValue(), !nr.errStrList().isEmpty());
+            ctx.updateDataAndValue(nr.newCfgData(), nr.newCfgValue());
             cfgValue = nr.newCfgValue();
             vTable = requireNonNull(cfgValue.getTable("t"));
             dTable = requireNonNull(ctx.cfgData().getDTable("t"));

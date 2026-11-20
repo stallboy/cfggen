@@ -300,12 +300,11 @@ public class Context {
 
     // 与 makeValue 共用 this 锁：二者都读写 lastCfgValue/lastCfgValueTag/lastCfgValueAllowErr，
     // 编辑器 handler 线程调 updateDataAndValue、reload 线程调 makeValue，必须互斥。
-    // cfgValueMayHaveErr：编辑器写入产生的值走的是 allowErr=true 的宽松校验（错误仅进 errStrList 返回前端），
-    // 带错时必须按 allowErr=true 缓存，否则会被 makeValue(tag) 的严格路径复用、跳过 checkErrors。
-    public synchronized void updateDataAndValue(CfgData cfgData, CfgValue cfgValue, boolean cfgValueMayHaveErr) {
+    // 增量校验不会重新解析未编辑的表。严格调用须重新校验整份配置。
+    public synchronized void updateDataAndValue(CfgData cfgData, CfgValue cfgValue) {
         this.cfgData = cfgData;
         this.lastCfgValue = cfgValue;
         this.lastCfgValueTag = null;
-        this.lastCfgValueAllowErr = cfgValueMayHaveErr;
+        this.lastCfgValueAllowErr = true;
     }
 }
