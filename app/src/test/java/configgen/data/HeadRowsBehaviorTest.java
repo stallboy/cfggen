@@ -3,6 +3,8 @@ package configgen.data;
 import configgen.schema.FieldType;
 import org.junit.jupiter.api.Test;
 
+import java.util.Locale;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -99,6 +101,17 @@ class HeadRowsBehaviorTest {
         assertEquals(FieldType.Primitive.STRING, a4HeadRow.parseType("STRING"), "STRING 应该解析为 STRING 类型");
         assertEquals(FieldType.Primitive.STRING, a4HeadRow.parseType("SLICEBYTE"), "SLICEBYTE 应该解析为 STRING 类型");
         assertEquals(FieldType.Primitive.STRING, a4HeadRow.parseType("HASHID"), "HASHID 应该解析为 STRING 类型");
+    }
+
+    @Test
+    void parsesTypeNamesIndependentlyOfDefaultLocale() {
+        Locale original = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            assertEquals(FieldType.Primitive.INT, HeadRows.A4.parseType("int"));
+        } finally {
+            Locale.setDefault(original);
+        }
     }
 
     @Test

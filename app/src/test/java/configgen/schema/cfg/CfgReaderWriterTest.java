@@ -6,6 +6,7 @@ import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,6 +36,27 @@ class CfgReaderWriterTest {
         }
 
         assertEquals(cfg1, cfg2);
+    }
+
+    @Test
+    void cfgTypesAndNumbersRoundTripUnderNonDefaultLocales() {
+        Locale previous = Locale.getDefault();
+        Locale display = Locale.getDefault(Locale.Category.DISPLAY);
+        Locale format = Locale.getDefault(Locale.Category.FORMAT);
+        try {
+            for (String locale : new String[]{"tr-TR", "ar-EG"}) {
+                Locale.setDefault(Locale.forLanguageTag(locale));
+                CfgSchema schema = CfgReader.parse("""
+                        struct Item { id:int; costs:list<float> (fix=3); }
+                        enum Status { Initial=1; }
+                        """);
+                assertEquals(schema, CfgReader.parse(CfgWriter.stringify(schema)));
+            }
+        } finally {
+            Locale.setDefault(previous);
+            Locale.setDefault(Locale.Category.DISPLAY, display);
+            Locale.setDefault(Locale.Category.FORMAT, format);
+        }
     }
 
     @Test

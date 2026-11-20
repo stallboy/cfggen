@@ -222,7 +222,7 @@ public class ValueJsonParser {
                     case String str -> {
                         sv = str;
                         if (fieldSchema.isLowercase()) {
-                            sv = sv.toLowerCase();
+                            sv = sv.toLowerCase(Locale.ROOT);
                         }
                     }
                     case null, default -> {
@@ -237,7 +237,7 @@ public class ValueJsonParser {
                     case String str -> {
                         sv = str;
                         if (fieldSchema.isLowercase()) {
-                            sv = sv.toLowerCase();
+                            sv = sv.toLowerCase(Locale.ROOT);
                         }
                     }
                     case null, default -> {

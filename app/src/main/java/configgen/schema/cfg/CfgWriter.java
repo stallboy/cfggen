@@ -4,6 +4,7 @@ import configgen.schema.*;
 import configgen.schema.CommentData;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -228,7 +229,7 @@ public class CfgWriter {
         if (args.length == 0) {
             destination.append(fmt);
         } else {
-            destination.append(String.format(fmt, args));
+            destination.append(String.format(Locale.ROOT, fmt, args));
         }
 
         println();
@@ -264,16 +265,16 @@ public class CfgWriter {
                 return Objects.requireNonNullElse(s, "str");
             }
             case Primitive primitive -> {
-                return primitive.name().toLowerCase();
+                return primitive.name().toLowerCase(Locale.ROOT);
             }
             case StructRef structRef -> {
                 return structRef.name();
             }
             case FList fList -> {
-                return String.format("list<%s>", typeStr(fList.item(), f));
+                return String.format(Locale.ROOT, "list<%s>", typeStr(fList.item(), f));
             }
             case FMap fMap -> {
-                return String.format("map<%s,%s>", simpleTypeStr(fMap.key()), typeStr(fMap.value(), f));
+                return String.format(Locale.ROOT, "map<%s,%s>", simpleTypeStr(fMap.key()), typeStr(fMap.value(), f));
             }
         }
     }
@@ -281,7 +282,7 @@ public class CfgWriter {
     public static String simpleTypeStr(SimpleType t) {
         return switch (t) {
             case Primitive.STRING -> "str";
-            case Primitive primitive -> primitive.name().toLowerCase();
+            case Primitive primitive -> primitive.name().toLowerCase(Locale.ROOT);
             case StructRef structRef -> structRef.name();
         };
     }
@@ -289,11 +290,11 @@ public class CfgWriter {
     public static String typeStrWithFullName(FieldType t) {
         return switch (t) {
             case Primitive.STRING -> "str";
-            case Primitive primitive -> primitive.name().toLowerCase();
+            case Primitive primitive -> primitive.name().toLowerCase(Locale.ROOT);
             case StructRef structRef -> structRef.resolvedObj().fullName();
-            case FList fList -> String.format("list<%s>", typeStrWithFullName(fList.item()));
+            case FList fList -> String.format(Locale.ROOT, "list<%s>", typeStrWithFullName(fList.item()));
             case FMap fMap ->
-                    String.format("map<%s,%s>", typeStrWithFullName(fMap.key()), typeStrWithFullName(fMap.value()));
+                    String.format(Locale.ROOT, "map<%s,%s>", typeStrWithFullName(fMap.key()), typeStrWithFullName(fMap.value()));
         };
     }
 
@@ -309,7 +310,7 @@ public class CfgWriter {
 
 
     static String keyStr(KeySchema key) {
-        return String.format("[%s]", String.join(",", key.fields()));
+        return String.format(Locale.ROOT, "[%s]", String.join(",", key.fields()));
     }
 
     static void foreignToMeta(ForeignKeySchema fk, Metadata meta) {
@@ -326,9 +327,9 @@ public class CfgWriter {
 
     static String foreignStr(ForeignKeySchema fk) {
         return switch (fk.refKey()) {
-            case RefKey.RefPrimary ignored -> String.format(" ->%s", fk.refTable());
-            case RefKey.RefUniq refUniq -> String.format(" ->%s%s", fk.refTable(), keyStr(refUniq.key()));
-            case RefKey.RefList refList -> String.format(" =>%s%s", fk.refTable(), keyStr(refList.key()));
+            case RefKey.RefPrimary ignored -> String.format(Locale.ROOT, " ->%s", fk.refTable());
+            case RefKey.RefUniq refUniq -> String.format(Locale.ROOT, " ->%s%s", fk.refTable(), keyStr(refUniq.key()));
+            case RefKey.RefList refList -> String.format(Locale.ROOT, " =>%s%s", fk.refTable(), keyStr(refList.key()));
         };
     }
 
@@ -353,7 +354,7 @@ public class CfgWriter {
             }
         }
         List<String> list = m.data().entrySet().stream().map(CfgWriter::metaEntryStr).collect(Collectors.toList());
-        return String.format(" (%s)", String.join(", ", list));
+        return String.format(Locale.ROOT, " (%s)", String.join(", ", list));
     }
 
     private static String metaEntryStr(Map.Entry<String, MetaValue> entry) {
@@ -361,8 +362,8 @@ public class CfgWriter {
         return switch (entry.getValue()) {
             case MetaTag.TAG -> k;
             case MetaFloat metaFloat -> k + "=" + Float.toString(metaFloat.value());
-            case MetaInt metaInt -> String.format("%s=%d", k, metaInt.value());
-            case MetaStr metaStr -> String.format("%s='%s'", k, metaStr.value());
+            case MetaInt metaInt -> String.format(Locale.ROOT, "%s=%d", k, metaInt.value());
+            case MetaStr metaStr -> String.format(Locale.ROOT, "%s='%s'", k, metaStr.value());
             case MetaEnumValues ignored -> "";  // enumValues 不会写出
             case MetaComment ignored -> "";     // comment 不会通过 metadataStr 写出
         };

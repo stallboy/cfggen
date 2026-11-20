@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public enum CfgReader {
@@ -405,7 +406,7 @@ public enum CfgReader {
     private SimpleType readTypeEle(Type_eleContext ctx) {
         TerminalNode tBase = ctx.TBASE();
         if (tBase != null) {
-            String text = tBase.getText().toUpperCase();
+            String text = tBase.getText().toUpperCase(Locale.ROOT);
             if (text.equals("STR"))
                 return Primitive.STRING;
             return Primitive.valueOf(text);

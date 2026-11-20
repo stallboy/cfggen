@@ -42,7 +42,7 @@ public class TextByValueFinder implements TranslationCatalog.TextFinder {
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langFilePath -> {
                 String langName = langFilePath.getFileName().toString();
-                if (langName.toLowerCase().endsWith(".csv")) {
+                if (langName.toLowerCase(Locale.ROOT).endsWith(".csv")) {
                     langName = langName.substring(0, langName.length() - 4);
                     langMap.put(langName, loadOneLang(langFilePath));
                 }

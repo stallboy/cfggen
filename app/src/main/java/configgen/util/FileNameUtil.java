@@ -2,6 +2,8 @@ package configgen.util;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.Locale;
+
 /**
  * 数据文件命名约定的解析：从带中文后缀/后缀名的文件名提取code名。
  * 原在 data.DataUtil，因 schema.cfg 等上游包也需要而移到 util（解 schema→data 依赖环）。
@@ -27,7 +29,7 @@ public class FileNameUtil {
         // 有没有汉字
         int hanIdx = findFirstHanIndex(fileName);
         if (hanIdx == -1) {
-            return fileName.toLowerCase(); // 所有的文件名都小写，但最后尊重cfg文件里的大小写
+            return fileName.toLowerCase(Locale.ROOT); // 所有的文件名都小写，但最后尊重cfg文件里的大小写
         }
 
         // 只要汉字前的，不包括_
@@ -35,7 +37,7 @@ public class FileNameUtil {
         if (fileName.charAt(hanIdx - 1) == '_') {
             end = hanIdx - 1;
         }
-        return fileName.substring(0, end).toLowerCase();
+        return fileName.substring(0, end).toLowerCase(Locale.ROOT);
     }
 
     public static boolean isFirstNotAzChar(String name) {

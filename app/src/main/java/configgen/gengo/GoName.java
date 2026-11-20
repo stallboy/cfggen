@@ -1,5 +1,7 @@
 package configgen.gengo;
 
+import java.util.Locale;
+
 import configgen.naming.GenNaming;
 import configgen.schema.Nameable;
 import configgen.util.StringUtil;
@@ -23,7 +25,7 @@ public class GoName {
         StringBuilder _filePath = new StringBuilder();
         StringBuilder _className = new StringBuilder();
         for (int i = 0; i < seps.length; i++) {
-            _filePath.append(seps[i].toLowerCase());
+            _filePath.append(seps[i].toLowerCase(Locale.ROOT));
             if (i < seps.length - 1)
                 _filePath.append('_');
 

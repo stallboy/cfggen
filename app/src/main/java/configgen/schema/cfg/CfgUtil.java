@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -109,7 +110,7 @@ public class CfgUtil {
                         continue;
                     }
 
-                    String lastDir = path.getFileName().toString().toLowerCase();
+                    String lastDir = path.getFileName().toString().toLowerCase(Locale.ROOT);
                     String subPkgName = FileNameUtil.getCodeName(lastDir);
                     if (subPkgName == null) {
                         continue;

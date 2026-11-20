@@ -7,6 +7,7 @@ import configgen.util.FileNameUtil;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import static configgen.data.DataUtil.FileFmt.*;
 
@@ -30,7 +31,7 @@ public class DataUtil {
         String ext = "";
         int i = fileName.lastIndexOf('.');
         if (i >= 0) {
-            ext = fileName.substring(i + 1).toLowerCase();
+            ext = fileName.substring(i + 1).toLowerCase(Locale.ROOT);
         }
 
         return switch (ext) {

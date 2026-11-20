@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static configgen.genjava.JsonValue.*;
@@ -85,7 +86,7 @@ public class CodeDataInspector {
     public JsonValue queryJson(@Nullable String recordMatch, @Nullable String tableMatch) {
         final int perTableCap = 50;
         final int totalCap = 200;
-        String needle = recordMatch == null ? "" : recordMatch.toLowerCase();
+        String needle = recordMatch == null ? "" : recordMatch.toLowerCase(Locale.ROOT);
 
         List<JsonValue> records = new ArrayList<>();
         int totalShown = 0;
@@ -191,7 +192,7 @@ public class CodeDataInspector {
         if (match == null || match.isEmpty()) {
             return true;
         }
-        return name.toLowerCase().contains(match.toLowerCase());
+        return name.toLowerCase(Locale.ROOT).contains(match.toLowerCase(Locale.ROOT));
     }
 
     // ==================== 取记录 ====================
@@ -321,7 +322,7 @@ public class CodeDataInspector {
     private static boolean flatContains(JsonValue v, String lowerNeedle) {
         StringBuilder sb = new StringBuilder();
         appendFlat(v, sb);
-        return sb.toString().toLowerCase().contains(lowerNeedle);
+        return sb.toString().toLowerCase(Locale.ROOT).contains(lowerNeedle);
     }
 
     /** 对领域无关的 {@link JsonValue} 拍平：只收集叶子值/键/类型名，与 {@link #valueToJson} 共用同一棵翻译树。 */

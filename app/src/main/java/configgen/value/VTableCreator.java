@@ -107,7 +107,7 @@ public class VTableCreator {
                         errs.addErr(new CfgValueErrs.EnumEmpty(vStr.source(), tableSchema.name()));
                     }
                 } else {
-                    boolean add = names.add(e.toUpperCase());
+                    boolean add = names.add(e.toUpperCase(Locale.ROOT));
                     if (!add) {
                         errs.addErr(new CfgValueErrs.EntryDuplicated(vStr.source(), tableSchema.name()));
                     } else {

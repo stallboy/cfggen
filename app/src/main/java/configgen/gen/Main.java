@@ -163,7 +163,7 @@ public final class Main {
 
 
         for (int i = 0; i < args.length; ++i) {
-            String paramType = args[i].toLowerCase();
+            String paramType = args[i].toLowerCase(Locale.ROOT);
             switch (paramType) {
                 case "-locale" -> {
                     String language = nextArg(args, paramType, ++i);

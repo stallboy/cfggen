@@ -78,7 +78,7 @@ public class ValueInspector implements AutoCloseable {
 
     public void search(String func, List<String> params) {
         // 统一小写处理，增加容错性
-        String cmd = func.toLowerCase();
+        String cmd = func.toLowerCase(Locale.ROOT);
 
         switch (cmd) {
             case "int" -> handleIntSearch(params);
@@ -217,7 +217,7 @@ public class ValueInspector implements AutoCloseable {
                 }
 
                 String[] parts = line.split("\\s+");
-                String func = parts[0].toLowerCase();
+                String func = parts[0].toLowerCase(Locale.ROOT);
 
                 if (func.equals("q") || func.equals("exit")) break;
                 if (func.equals("h") || func.equals("help")) {

@@ -4,6 +4,7 @@ import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 
+import java.util.Locale;
 import java.util.List;
 
 public class Name {
@@ -33,23 +34,23 @@ public class Name {
     static String fullName(AContext aCtx, Nameable nameable) {
         switch (nameable) {
             case InterfaceSchema ignored -> {
-                return "Beans." + nameable.name().toLowerCase();
+                return "Beans." + nameable.name().toLowerCase(Locale.ROOT);
             }
             case StructSchema ignored -> {
                 return "Beans." + String.join(".", GenNaming.classNameSegments(nameable).stream()
-                        .map(String::toLowerCase).toList());
+                        .map(segment -> segment.toLowerCase(Locale.ROOT)).toList());
             }
             case TableSchema table -> {
-                return aCtx.getPkgPrefixStr() + table.name().toLowerCase();
+                return aCtx.getPkgPrefixStr() + table.name().toLowerCase(Locale.ROOT);
             }
         }
     }
 
     static String tablePath(String tableName) {
-        return tableName.replace('.', '/').toLowerCase() + ".lua";
+        return tableName.replace('.', '/').toLowerCase(Locale.ROOT) + ".lua";
     }
 
     static String tableExtraPath(String tableName, int extraIndex) {
-        return tableName.replace('.', '/').toLowerCase() + "_" + extraIndex + ".lua";
+        return tableName.replace('.', '/').toLowerCase(Locale.ROOT) + "_" + extraIndex + ".lua";
     }
 }

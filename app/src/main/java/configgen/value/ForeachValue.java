@@ -130,8 +130,8 @@ public class ForeachValue {
                 visitor.visitVMap(vMap, pk, fieldChain);
                 int i = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> entry : vMap.valueMap().entrySet()) {
-                    foreachValue(visitor, entry.getKey(), pk, subChain(fieldChain, String.format("%dk", i)));
-                    foreachValue(visitor, entry.getValue(), pk, subChain(fieldChain, String.format("%dv", i)));
+                    foreachValue(visitor, entry.getKey(), pk, subChain(fieldChain, i + "k"));
+                    foreachValue(visitor, entry.getValue(), pk, subChain(fieldChain, i + "v"));
                     i++;
                 }
             }

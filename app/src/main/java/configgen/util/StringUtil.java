@@ -1,16 +1,18 @@
 package configgen.util;
 
+import java.util.Locale;
+
 import org.jetbrains.annotations.Contract;
 
 import org.jspecify.annotations.Nullable;
 
 public class StringUtil {
     public static String upper1(String value) {
-        return value.substring(0, 1).toUpperCase() + value.substring(1);
+        return value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
     }
 
     public static String lower1(String value) {
-        return value.substring(0, 1).toLowerCase() + value.substring(1);
+        return value.substring(0, 1).toLowerCase(Locale.ROOT) + value.substring(1);
     }
 
     public static String removeLineSep(String value) {

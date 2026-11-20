@@ -179,8 +179,8 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
         try (Stream<Path> plist = Files.list(langDir)) {
             List<Path> xlsxFiles = plist.filter(Files::isRegularFile)
                     .filter(filePath -> {
-                        String fileName = filePath.getFileName().toString().toLowerCase();
-                        return fileName.endsWith(".xlsx") && !fileName.equals(todoFilename);
+                        String fileName = filePath.getFileName().toString().toLowerCase(Locale.ROOT);
+                        return fileName.endsWith(".xlsx") && !fileName.equalsIgnoreCase(todoFilename);
                     })
                     .toList();
             try (ExecutorService executor = Executors.newWorkStealingPool()) {
@@ -212,7 +212,7 @@ public class TextByIdFinder implements TranslationCatalog.TextFinder {
     }
 
     public static Map<String, TextByIdFinder> loadOneFile(Path filePath) {
-        String fileName = filePath.getFileName().toString().toLowerCase();
+        String fileName = filePath.getFileName().toString().toLowerCase(Locale.ROOT);
         if (!fileName.endsWith(".xlsx")) {
             throw new IllegalArgumentException("file %s is not .xlsx".formatted(
                     filePath.toAbsolutePath().normalize().toString()));

@@ -289,7 +289,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
         }
 
         String nam = name.substring(0, name.length() - 1);
-        String listName = String.format("%sList", nam);
+        String listName = nam + "List";
         FieldSchema listField = curFields.get(listName);
         if (listField != null
                 && listField.type() instanceof FieldType.FList(
@@ -299,7 +299,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
 
             boolean ok = true;
             for (int i = 2; i <= count; i++) {
-                if (!headers.get(index + i - 1).name().equals(String.format("%s%d", nam, i))) {
+                if (!headers.get(index + i - 1).name().equals(nam + i)) {
                     ok = false;
                     break;
                 }
@@ -318,7 +318,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
             return null;
         }
         String nam2 = name2.substring(0, name2.length() - 1);
-        String mapName = String.format("%s2%sMap", nam, nam2);
+        String mapName = nam + "2" + nam2 + "Map";
         FieldSchema mapField = curFields.get(mapName);
         if (mapField != null
                 && mapField.type() instanceof FieldType.FMap(FieldType.SimpleType key, FieldType.SimpleType value)
@@ -328,12 +328,12 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
 
             boolean ok = true;
             for (int i = 2; i <= count; i++) {
-                if (!headers.get(index + (i - 1) * 2).name().equals(String.format("%s%d", nam, i))) {
+                if (!headers.get(index + (i - 1) * 2).name().equals(nam + i)) {
                     ok = false;
                     break;
                 }
 
-                if (!headers.get(index + (i - 1) * 2 + 1).name().equals(String.format("%s%d", nam2, i))) {
+                if (!headers.get(index + (i - 1) * 2 + 1).name().equals(nam2 + i)) {
                     ok = false;
                     break;
                 }

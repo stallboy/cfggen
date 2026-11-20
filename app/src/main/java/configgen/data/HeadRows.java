@@ -4,6 +4,8 @@ import org.jspecify.annotations.Nullable;
 
 import configgen.schema.FieldType;
 
+import java.util.Locale;
+
 public class HeadRows {
 
     public static HeadRow getById(String name) {
@@ -47,7 +49,7 @@ public class HeadRows {
             if (str == null || str.isEmpty()) {
                 return ParseBoolResult.FALSE;
             }
-            switch (str.toLowerCase()) {
+            switch (str.toLowerCase(Locale.ROOT)) {
                 case "1", "true" -> {
                     return ParseBoolResult.TRUE;
                 }
@@ -101,7 +103,7 @@ public class HeadRows {
 
         @Override
         public @Nullable FieldType parseType(String type) {
-            switch (type.toUpperCase()) {
+            switch (type.toUpperCase(Locale.ROOT)) {
                 case "INT", "SHORT", "BYTE" -> {
                     return FieldType.Primitive.INT;
                 }

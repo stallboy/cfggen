@@ -156,7 +156,7 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
         if (args.length > 0) {
             tmp.setLength(0);
             prefix(tmp, fmt);
-            to.append(String.format(tmp.toString(), args));
+            to.append(String.format(java.util.Locale.ROOT, tmp.toString(), args));
         } else {
             prefix(to, fmt);
         }

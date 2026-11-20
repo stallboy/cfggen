@@ -4,6 +4,7 @@ import configgen.schema.InterfaceSchema;
 import configgen.schema.Nameable;
 import configgen.schema.StructSchema;
 
+import java.util.Locale;
 import java.util.Arrays;
 
 public class NameableName {
@@ -27,11 +28,11 @@ public class NameableName {
         String topPkg = cfg.codeTopPkg();
         String name;
         if (nullableInterface != null) {
-            name = nullableInterface.name().toLowerCase() + "." + nameable.name();
+            name = nullableInterface.name().toLowerCase(Locale.ROOT) + "." + nameable.name();
         } else if (cfg.isSealedInterface() && nameable instanceof InterfaceSchema sInterface) { //java要求：sealed interface需要跟impl在同一个package下
             String[] split = sInterface.name().split("\\.");
             String interfaceName = split[split.length - 1];
-            name = sInterface.name().toLowerCase() + "." + interfaceName;
+            name = sInterface.name().toLowerCase(Locale.ROOT) + "." + interfaceName;
         } else {
             name = nameable.name();
         }

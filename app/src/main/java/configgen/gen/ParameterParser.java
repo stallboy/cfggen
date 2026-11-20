@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
 import configgen.util.ArgParser;
 
 import java.util.Map;
+import java.util.Locale;
 
 public class ParameterParser implements Parameter {
     private final String arg;
@@ -23,13 +24,13 @@ public class ParameterParser implements Parameter {
     @Override
     @Contract("_, !null, _ -> !null")
     public @Nullable String get(String key, @Nullable String def, @Nullable String messageId) {
-        String v = params.remove(key.toLowerCase());
+        String v = params.remove(key.toLowerCase(Locale.ROOT));
         return v != null ? v : def;
     }
 
     @Override
     public boolean has(String key, @Nullable String messageId) {
-        String lowered = key.toLowerCase();
+        String lowered = key.toLowerCase(Locale.ROOT);
         if (!params.containsKey(lowered)) {
             return false;
         }

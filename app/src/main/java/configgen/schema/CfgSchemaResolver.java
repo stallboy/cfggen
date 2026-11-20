@@ -67,7 +67,7 @@ public final class CfgSchemaResolver {
                 if (tableSchema.meta().hasEnumValues()) {
                     continue;
                 }
-                if (!tableSchema.name().equals(tableSchema.name().toLowerCase())) {
+                if (!tableSchema.name().equals(tableSchema.name().toLowerCase(Locale.ROOT))) {
                     errs.addErr(new TableNameNotLowerCase(tableSchema.name()));
                 }
             }
@@ -109,7 +109,7 @@ public final class CfgSchemaResolver {
                             errs.addErr(new InterfaceImplNameConflict(interfaceSchema.name(), impl.name()));
                         }
                         // 同理，同一interface内impl之间名也不能忽略大小写相同，否则也会互相覆盖
-                        String first = implLowerToName.putIfAbsent(impl.name().toLowerCase(), impl.name());
+                        String first = implLowerToName.putIfAbsent(impl.name().toLowerCase(Locale.ROOT), impl.name());
                         //noinspection ConstantValue
                         if (first != null) {
                             errs.addErr(new ImplNameConflict(interfaceSchema.name(), first, impl.name()));

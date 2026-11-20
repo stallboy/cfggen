@@ -301,13 +301,13 @@ public class ValueParser {
                     }
                     case STRING -> {
                         if (fieldSchema.isLowercase()) {
-                            str = str.toLowerCase();
+                            str = str.toLowerCase(Locale.ROOT);
                         }
                         return new VString(str, cell);
                     }
                     case TEXT -> {
                         if (fieldSchema.isLowercase()) {
-                            str = str.toLowerCase();
+                            str = str.toLowerCase(Locale.ROOT);
                         }
                         return new VText(str, cell);
                     }

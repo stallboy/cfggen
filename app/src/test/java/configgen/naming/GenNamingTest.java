@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -63,6 +64,19 @@ class GenNamingTest {
         assertEquals("find_by_name_id", GenNaming.uniqueKeyGetByNameSnake(COMPOSITE_KEY));
         assertEquals("find_by_name_id", GenNaming.uniqueKeyGetByNameSnake(List.of("name", "id")));
         assertEquals("_name_id_map", GenNaming.uniqueKeyMapNameSnake(COMPOSITE_KEY));
+    }
+
+    @Test
+    void generatedIdentifiersUseLocaleIndependentCasing() {
+        Locale original = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            assertEquals("RefItem", GenNaming.refFieldName(fk("item", new RefKey.RefPrimary(false))));
+            var upperInitial = new KeySchema(List.of("Index"));
+            assertEquals("find_by_index", GenNaming.uniqueKeyGetByNameSnake(upperInitial));
+        } finally {
+            Locale.setDefault(original);
+        }
     }
 
     @Test

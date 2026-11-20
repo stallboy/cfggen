@@ -34,9 +34,9 @@ public class ArgParser {
             int c = (c1 == -1) ? c2 : (c2 == -1 || c1 < c2) ? c1 : c2;
 
             if (c == -1) {
-                map.put(s.trim().toLowerCase(), null);
+                map.put(s.trim().toLowerCase(Locale.ROOT), null);
             } else {
-                map.put(s.substring(0, c).trim().toLowerCase(), s.substring(c + 1).trim());
+                map.put(s.substring(0, c).trim().toLowerCase(Locale.ROOT), s.substring(c + 1).trim());
             }
         }
         return map;

@@ -7,6 +7,7 @@ import configgen.naming.GenNaming;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 
+import java.util.Locale;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -19,7 +20,7 @@ public class Name {
      * （GenStructuralClass 里 interface impl 的 type()）必须用同一个方法，保证一致。
      */
     public static String enumFieldName(GenCfg cfg, String enumName) {
-        return cfg.beautifulName() ? StringUtil.toScreamingSnakeCase(enumName) : enumName.toUpperCase();
+        return cfg.beautifulName() ? StringUtil.toScreamingSnakeCase(enumName) : enumName.toUpperCase(Locale.ROOT);
     }
 
     /**

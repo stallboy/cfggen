@@ -7,6 +7,7 @@ import configgen.data.Source;
 import configgen.value.CfgValue.VStruct;
 
 import java.nio.file.Path;
+import java.util.Locale;
 
 /**
  * 表格文件定位工具类
@@ -57,7 +58,7 @@ public class TableFileLocator {
         Path filePath = dataDir.resolve(fileName);
 
         // 根据文件扩展名判断文件类型
-        String toLowerFileName = fileName.toLowerCase();
+        String toLowerFileName = fileName.toLowerCase(Locale.ROOT);
         if (toLowerFileName.endsWith(".xlsx") || toLowerFileName.endsWith(".xls")) {
             try {
                 if (isColumnMode) {
