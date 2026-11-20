@@ -106,23 +106,7 @@ public class CSVUtil {
             }
 
             for (int c = 0; c < row.size(); c++) {
-                String cell = row.get(c);
-                boolean enclose = false;
-                if (cell.contains("\"")) {
-                    cell = cell.replace("\"", "\"\"");
-                    enclose = true;
-                } else if (cell.contains("\r\n") || cell.contains(",")) {
-                    enclose = true;
-                } else if (cell.contains("\r") || cell.contains("\n")) { //这个是为了兼容excel，不是rfc4180的要求
-                    enclose = true;
-                }
-
-                if (enclose) {
-                    cell = "\"" + cell + "\"";
-                }
-
-
-                sb.append(cell);
+                sb.append(escapeCsv(row.get(c)));
                 if (c != row.size() - 1) {
                     sb.append(",");
                 } else {
@@ -145,7 +129,7 @@ public class CSVUtil {
             return "";
         }
         // 如果包含逗号、双引号或换行符，用双引号包裹，并且双引号转义为两个双引号
-        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
             return "\"" + value.replace("\"", "\"\"") + "\"";
         }
         return value;
