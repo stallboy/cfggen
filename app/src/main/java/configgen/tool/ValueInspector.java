@@ -213,13 +213,12 @@ public class ValueInspector implements AutoCloseable {
                 String line = br.readLine();
                 if (line == null) break; // 处理 Ctrl+D
 
-                line = line.trim();
-                if (line.isEmpty()) {
+                List<String> parts = splitQuery(line);
+                if (parts.isEmpty()) {
                     continue; // 解决回车 unknown 的关键：直接跳过空行
                 }
 
-                String[] parts = line.split("\\s+");
-                String func = parts[0].toLowerCase(Locale.ROOT);
+                String func = parts.getFirst().toLowerCase(Locale.ROOT);
 
                 if (func.equals("q") || func.equals("exit")) break;
                 if (func.equals("h") || func.equals("help")) {
@@ -227,11 +226,16 @@ public class ValueInspector implements AutoCloseable {
                     continue;
                 }
 
-                search(func, Arrays.asList(parts).subList(1, parts.length));
+                search(func, parts.subList(1, parts.size()));
             }
         } catch (IOException e) {
             Logger.log("Read error: " + e.getMessage());
         }
+    }
+
+    static List<String> splitQuery(String query) {
+        String stripped = query.strip();
+        return stripped.isEmpty() ? List.of() : List.of(stripped.split("\\p{javaWhitespace}+"));
     }
 
     private void printHelp() {

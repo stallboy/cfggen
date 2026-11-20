@@ -12,14 +12,14 @@ import java.util.List;
 
 public class ValueInspectTool extends GeneratorWithTag {
     private final @Nullable String searchTo;
-    private final @Nullable List<String> query;
+    private final List<String> query;
 
     public ValueInspectTool(Parameter parameter) {
         super(parameter);
         searchTo = parameter.get("to", null);
         String q = parameter.get("q", null);
 
-        query = q == null || q.isBlank() ? null : List.of(q.trim().split("\\s+"));
+        query = q == null ? List.of() : ValueInspector.splitQuery(q);
 
         parameter.extra(ValueInspector.help());
     }
@@ -28,7 +28,7 @@ public class ValueInspectTool extends GeneratorWithTag {
     public void generate(Context ctx) throws IOException {
         CfgValue value = ctx.makeValue(tag);
         try (ValueInspector searcher = new ValueInspector(value, searchTo)) {
-            if (query == null) {
+            if (query.isEmpty()) {
                 searcher.loop();
             } else {
                 searcher.search(query.getFirst(), query.subList(1, query.size()));
