@@ -11,6 +11,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,10 +24,13 @@ class MultiLanguagePackageTest {
         Path data = Files.createDirectories(root.resolve("data"));
         Path languages = Files.createDirectories(root.resolve("languages"));
         Files.writeString(languages.resolve("en.csv"), "t,你好,hello\n");
+        Files.writeString(languages.resolve("zh_cn.csv"), "t,你好,不应覆盖原文\n");
         var ctx = TestCtx.newLangSwitchContext(data, "table t[id] { id:int; text:text; }",
                 Map.of("t", "id,text\nid,text\n1,你好\n"), languages, "zh_cn");
+        assertEquals(List.of("zh_cn", "en"), ctx.nullableTranslationBundle().languages());
         Path out = root.resolve("out");
         new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + out)).generate(ctx);
+        assertFalse(Files.exists(out.resolve("base_zh_cn.bytes")));
         var base = ConfigPackage.read(out.resolve("base.bytes"));
         var english = ConfigPackage.read(out.resolve("base_en.bytes"));
         assertFalse(base.blockNames().contains("text/en"));

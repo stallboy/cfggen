@@ -18,6 +18,9 @@ public record TranslationBundle(Map<String, TranslationCatalog> langMap,
     public TranslationBundle {
         Objects.requireNonNull(langMap);
         Objects.requireNonNull(defaultLang);
+        Map<String, TranslationCatalog> translations = new LinkedHashMap<>(langMap);
+        translations.remove(defaultLang);
+        langMap = Collections.unmodifiableMap(translations);
     }
 
     public List<String> languages() {
