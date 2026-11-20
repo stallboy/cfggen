@@ -124,7 +124,7 @@ public class ValueRefCollector {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices());
                         VStruct refRecord = foreignKeyValueMap.get(localValue);
                         if (refRecord != null) {
-                            addRef(refIdToRecordMap, fieldRefs, fk, refName, localValue.packStr(), refRecord);
+                            addRef(refIdToRecordMap, fieldRefs, fk, refName, refRecord);
                         }
                     }
                     case FieldType.FList ignored -> {
@@ -132,7 +132,7 @@ public class ValueRefCollector {
                         for (SimpleValue item : localList.valueList()) {
                             VStruct refRecord = foreignKeyValueMap.get(item);
                             if (refRecord != null) {
-                                addRef(refIdToRecordMap, fieldRefs, fk, refName, item.packStr(), refRecord);
+                                addRef(refIdToRecordMap, fieldRefs, fk, refName, refRecord);
                             }
                         }
                     }
@@ -141,7 +141,7 @@ public class ValueRefCollector {
                         for (SimpleValue val : localMap.valueMap().values()) {
                             VStruct refRecord = foreignKeyValueMap.get(val);
                             if (refRecord != null) {
-                                addRef(refIdToRecordMap, fieldRefs, fk, refName, val.packStr(), refRecord);
+                                addRef(refIdToRecordMap, fieldRefs, fk, refName, refRecord);
                             }
                         }
                     }
@@ -151,7 +151,8 @@ public class ValueRefCollector {
         return fieldRefs;
     }
 
-    private static void addRef(Map<RefId, VStruct> refIdToRecordMap, List<FieldRef> fieldRefs, ForeignKeySchema fk, String refName, String id, VStruct refRecord) {
+    private static void addRef(Map<RefId, VStruct> refIdToRecordMap, List<FieldRef> fieldRefs, ForeignKeySchema fk, String refName, VStruct refRecord) {
+        String id = ValueUtil.extractPrimaryKeyValue(refRecord, fk.refTableSchema()).packStr();
         String table = fk.refTableNormalized();
         RefId refId = new RefId(table, id);
         refIdToRecordMap.put(refId, refRecord);

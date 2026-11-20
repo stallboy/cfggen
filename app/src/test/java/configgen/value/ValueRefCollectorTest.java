@@ -59,6 +59,33 @@ class ValueRefCollectorTest {
 
 
     @Test
+    void uniqueKeyReferenceUsesTargetPrimaryKeyAsRecordId() {
+        Resources.addTempFileFromText("config.cfg", tempDir, """
+                table item[id] {
+                    [code];
+                    id:int;
+                    code:str;
+                }
+                table source[id] {
+                    id:int;
+                    itemCode:str ->item[code];
+                }
+                """);
+        Resources.addTempFileFromText("item.csv", tempDir, "ID,Code\nid,code\n7,sword\n");
+        Resources.addTempFileFromText("source.csv", tempDir, "ID,Code\nid,itemCode\n1,sword\n");
+
+        CfgValue data = new Context(tempDir).makeValue();
+        var source = requireNonNull(data.getTable("source")).valueList().getFirst();
+        var item = requireNonNull(data.getTable("item")).valueList().getFirst();
+        List<ValueRefCollector.FieldRef> fieldRefs = new ArrayList<>();
+        Map<ValueRefCollector.RefId, CfgValue.VStruct> targets = new LinkedHashMap<>();
+        new ValueRefCollector(data, targets, fieldRefs).collect(source, List.of());
+
+        assertEquals(Map.of(new ValueRefCollector.RefId("item", "7"), item), targets);
+        assertEquals("7", fieldRefs.getFirst().toId());
+    }
+
+    @Test
     void collectRef_inSubStruct() {
         String cfgStr = """
                 struct s {
