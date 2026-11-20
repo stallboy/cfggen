@@ -7,6 +7,10 @@ import configgen.util.Logger;
 import configgen.util.CSVUtil;
 import configgen.value.CfgValue;
 import configgen.value.ValueUtil;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,7 +27,7 @@ import static configgen.value.CfgValue.VList;
 import static configgen.value.CfgValue.VStruct;
 import static configgen.value.CfgValue.VTable;
 import static configgen.value.CfgValue.Value;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 验证 addOrUpdateRecord 对嵌套 block 表的幂等性：同一份 record 反复写回 + reload，
@@ -57,6 +61,30 @@ class VTableStorageTest {
         assertEquals(DeleteService.DeleteErrorCode.OK, result.errorCode());
         assertEquals(List.of("comment", ""), CSVUtil.read(source).get(2).getFields());
         assertEquals(List.of("keep", "2"), CSVUtil.read(source).get(3).getFields());
+    }
+
+    @Test
+    void failedExcelEditClosesWorkbookWithoutChangingFile() throws IOException {
+        Path source = tempDir.resolve("t.xlsx");
+        try (var workbook = new XSSFWorkbook();
+             var output = Files.newOutputStream(source)) {
+            workbook.createSheet("t").createRow(2).createCell(0).setCellValue("old");
+            workbook.write(output);
+        }
+        byte[] original = Files.readAllBytes(source);
+
+        var file = new ExcelTableFile(source, "t", 2);
+        var workbookPackage = ((XSSFWorkbook) file.workbook).getPackage();
+        assertThrows(IllegalArgumentException.class, () -> {
+            try (file) {
+                file.emptyRows(2, 1, null);
+                RecordBlock block = new RecordBlock(1);
+                block.setCell(0, 0, "x".repeat(32768));
+                file.insertRecordBlock(2, 1, new RecordBlock.RecordBlockTransformed(block, List.of(0)));
+            }
+        });
+        assertTrue(workbookPackage.isClosed());
+        assertArrayEquals(original, Files.readAllBytes(source));
     }
 
     @Test

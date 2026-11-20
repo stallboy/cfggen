@@ -51,19 +51,21 @@ public abstract class AbstractExcelTableFile implements TableFile {
             throw new IllegalArgumentException("Excel file does not exist: " + filePath);
         }
 
-        // 获取或创建工作表
-        this.sheet = workbook.getSheet(sheetName);
-        if (this.sheet == null) {
+        try {
+            this.sheet = workbook.getSheet(sheetName);
+            if (this.sheet == null) {
+                throw new IllegalArgumentException("Sheet does not exist: " + sheetName + " in " + filePath);
+            }
+            this.formatter = new DataFormatter();
+            this.evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+        } catch (RuntimeException | Error failure) {
             try {
                 workbook.close();
-            } catch (IOException e) {
-                Logger.log("Failed to close workbook: " + e.getMessage());
+            } catch (IOException | RuntimeException closeFailure) {
+                failure.addSuppressed(closeFailure);
             }
-            throw new IllegalArgumentException("Sheet does not exist: " + sheetName + " in " + filePath);
+            throw failure;
         }
-
-        this.formatter = new DataFormatter();
-        this.evaluator = workbook.getCreationHelper().createFormulaEvaluator();
     }
 
 
