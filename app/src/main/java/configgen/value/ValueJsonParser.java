@@ -6,6 +6,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONReader;
 import configgen.data.Source;
 import configgen.schema.*;
 
@@ -42,7 +43,7 @@ public class ValueJsonParser {
 
     public VStruct fromJson(String jsonStr, DFile source) {
         try {
-            JSONObject jsonObject = JSON.parseObject(jsonStr);
+            JSONObject jsonObject = JSON.parseObject(jsonStr, JSONReader.Feature.UseBigDecimalForDoubles);
             if (jsonObject != null) {
                 return parseStructural(tableSchema, jsonObject, source);
             } else {

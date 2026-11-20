@@ -175,11 +175,30 @@ class ValueJsonParserTest {
     }
 
     @Test
+    void validatesIntegerExponentNotationWithoutRounding() {
+        TableSchema test = requireNonNull(cfg.findTable("test"));
+        CfgValueErrs errs = CfgValueErrs.of();
+        fromJson(test, errs, """
+                {"id":1e-1000,"long1":9.223372036854775808e18}
+                """);
+
+        assertEquals(2, errs.errs().size());
+        for (var err : errs.errs()) {
+            assertInstanceOf(CfgValueErrs.JsonValueNotMatchType.class, err);
+        }
+        var accepted = fromJson(test, """
+                {"id":1e3,"long1":9.223372036854775807e18}
+                """);
+        assertEquals(ofInt(1000), accepted.values().getFirst());
+        assertEquals(ofLong(Long.MAX_VALUE), ValueUtil.extractFieldValue(accepted, "long1"));
+    }
+
+    @Test
     void rejectsDuplicateMapKeysAtTheSecondKey() {
         TableSchema test = requireNonNull(cfg.findTable("tm"));
         CfgValueErrs errs = CfgValueErrs.of();
         var value = fromJson(test, errs, """
-                {"id":1,"mapIntStr":[{"key":42,"value":"one"},{"key":42,"value":"two"}]}
+                {"id":1,"mapIntStr":[{"key":42,"value":"one"},{"key":4.2e1,"value":"two"}]}
                 """);
 
         var error = assertInstanceOf(CfgValueErrs.MapKeyDuplicated.class, errs.errs().getFirst());
