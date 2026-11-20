@@ -30,10 +30,10 @@ public class WriteRecordTool {
         // 统一编辑临界区：与reload换代、其他写操作（含同进程EditorServer的写接口）互斥；
         // 编辑完成后锁内统一刷新所有server的内存快照（本server的cfgValueWithContext由回调重建，无需手动update）
         return WatchAndPostRun.INSTANCE.runEdit(ctx -> {
-            CfgMcpServer.CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
+            var value = CfgMcpServer.getInstance().makeValue(ctx);
 
             AddOrUpdateService.AddOrUpdateRecordResult ar =
-                    AddOrUpdateService.addOrUpdateRecord(vc.context(), vc.cfgValue(), tableName, recordJsonStr);
+                    AddOrUpdateService.addOrUpdateRecord(ctx, value, tableName, recordJsonStr);
 
             return new AddOrUpdateRecordResult(ar.errorCode(), tableName, ar.recordId(), ar.errorMessages());
         });
@@ -51,10 +51,10 @@ public class WriteRecordTool {
                                            @McpToolParam(name = "recordId", description = "record id", required = true)
                                                         String recordId) {
         return WatchAndPostRun.INSTANCE.runEdit(ctx -> {
-            CfgMcpServer.CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
+            var value = CfgMcpServer.getInstance().makeValue(ctx);
 
             DeleteService.DeleteRecordResult dr =
-                    DeleteService.deleteRecord(vc.context(), vc.cfgValue(), tableName, recordId);
+                    DeleteService.deleteRecord(ctx, value, tableName, recordId);
 
             return new DeleteRecordResult(dr.errorCode(), tableName, recordId, dr.errorMessages());
         });

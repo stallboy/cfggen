@@ -68,6 +68,23 @@ public final class StateCoordinator<T> {
     }
 
     /**
+     * 从当前状态读取并构建下一代。重读源文件和安装快照须与写入共用临界区。
+     * 无变化时由 loader 返回 null。
+     */
+    public boolean reloadState(Function<T, @Nullable T> loader) {
+        synchronized (editLock) {
+            T current = java.util.Objects.requireNonNull(state);
+            T loaded = loader.apply(current);
+            if (loaded == null) {
+                return false;
+            }
+            state = loaded;
+            refreshAll();
+            return true;
+        }
+    }
+
+    /**
      * 编辑写操作的统一临界区：与 {@link #installState}、其他 { @link #runEdit } 互斥。
      * 编辑（写文件 + 就地更新状态）完成后统一刷新所有订阅者快照。编辑抛异常则直接传播、不刷新（状态未变）。
      */

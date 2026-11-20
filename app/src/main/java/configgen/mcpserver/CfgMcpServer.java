@@ -73,8 +73,12 @@ public class CfgMcpServer extends GeneratorWithTag {
     private void initFromCtx(Context newContext) {
         // 可以包含tag，这样更灵活，方便查看filter过后的数据
         // 此时所有的修改指令将返回错误 serverNotEditable
-        CfgValue cfgValue = newContext.makeValue(tag, true);
+        CfgValue cfgValue = makeValue(newContext);
         cfgValueWithContext = new CfgValueWithContext(cfgValue, newContext);
+    }
+
+    CfgValue makeValue(Context context) {
+        return context.makeValue(tag, true);
     }
 
     public CfgValueWithContext cfgValueWithContext() {

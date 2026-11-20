@@ -50,6 +50,42 @@ class StateCoordinatorTest {
     }
 
     @Test
+    void reloadReadsAndInstallsWhileEditsAreExcluded() throws InterruptedException {
+        var coordinator = new StateCoordinator<>("old");
+        var loading = new CountDownLatch(1);
+        var finishLoading = new CountDownLatch(1);
+        var editing = new CountDownLatch(1);
+        var editedState = new java.util.concurrent.atomic.AtomicReference<String>();
+
+        Thread reload = Thread.startVirtualThread(() -> coordinator.reloadState(old -> {
+            loading.countDown();
+            try {
+                if (!finishLoading.await(5, TimeUnit.SECONDS)) {
+                    throw new AssertionError("loader was not released");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(e);
+            }
+            return old + "-reloaded";
+        }));
+        assertTrue(loading.await(5, TimeUnit.SECONDS));
+        Thread editor = Thread.startVirtualThread(() -> coordinator.runEdit(current -> {
+            editedState.set(current);
+            editing.countDown();
+            return null;
+        }));
+        try {
+            assertFalse(editing.await(100, TimeUnit.MILLISECONDS));
+        } finally {
+            finishLoading.countDown();
+        }
+        assertTrue(reload.join(java.time.Duration.ofSeconds(5)));
+        assertTrue(editor.join(java.time.Duration.ofSeconds(5)));
+        assertEquals("old-reloaded", editedState.get());
+    }
+
+    @Test
     void setInitialDoesNotRefreshSubscribers() {
         StateCoordinator<String> c = new StateCoordinator<>();
         List<String> seen = new ArrayList<>();

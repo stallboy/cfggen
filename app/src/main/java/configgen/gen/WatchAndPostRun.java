@@ -172,29 +172,13 @@ public enum WatchAndPostRun {
      * 这是在virtual thread里执行的
      */
     private void reloadData() {
-        Context cur = java.util.Objects.requireNonNull(coordinator.state());
-        DirectoryStructure newStructure = cur.sourceStructure().reload();
-        if (newStructure.lastModifiedEquals(cur.sourceStructure())) {
-            Logger.verbose(LocaleUtil.getLocaleString("WatchAndPostRun.LastModifiedNotChanged",
-                "lastModified not change"));
-            return;
-        }
         try {
-            Context newContext = new Context(cur.contextCfg(), newStructure);
-            if (newContext.lastLoadDidAutoFix()) {
-                consecutiveAutoFixReloads++;
+            if (!coordinator.reloadState(this::loadChangedContext)) {
                 if (consecutiveAutoFixReloads >= MAX_CONSECUTIVE_AUTO_FIX_RELOADS) {
-                    Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.AutoFixLoopDetected",
-                        "reload触发autoFix写回config.cfg已连续{0}次，疑似对齐不稳定导致写-触发循环，停止watch（保留当前内存状态）",
-                        consecutiveAutoFixReloads));
                     stopWatch();
-                    return;
                 }
-            } else {
-                consecutiveAutoFixReloads = 0;
+                return;
             }
-            // 换代安装+快照刷新在editLock内，与编辑写操作互斥：写handler基于旧数据算出的新值不会覆盖这一代
-            coordinator.installState(newContext);
             Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.ReloadContextOk",
                 "reload context ok"));
 
@@ -208,6 +192,31 @@ public enum WatchAndPostRun {
                 e.printStackTrace();
             }
         }
+    }
+
+    private @Nullable Context loadChangedContext(Context current) {
+        DirectoryStructure source = current.sourceStructure();
+        DirectoryStructure discovered = source.reload();
+        if (discovered.lastModifiedEquals(source)) {
+            Logger.verbose(LocaleUtil.getLocaleString("WatchAndPostRun.LastModifiedNotChanged",
+                    "lastModified not change"));
+            return null;
+        }
+
+        Context loaded = new Context(current.contextCfg(), discovered);
+        if (!loaded.lastLoadDidAutoFix()) {
+            consecutiveAutoFixReloads = 0;
+            return loaded;
+        }
+
+        consecutiveAutoFixReloads++;
+        if (consecutiveAutoFixReloads < MAX_CONSECUTIVE_AUTO_FIX_RELOADS) {
+            return loaded;
+        }
+        Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.AutoFixLoopDetected",
+                "reload触发autoFix写回config.cfg已连续{0}次，疑似对齐不稳定导致写-触发循环，停止watch（保留当前内存状态）",
+                consecutiveAutoFixReloads));
+        return null;
     }
 
     private void tryPostRun(PostRunBat bat) {

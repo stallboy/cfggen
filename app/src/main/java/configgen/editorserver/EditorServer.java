@@ -258,10 +258,7 @@ public class EditorServer extends GeneratorWithTag {
      * 编辑完成后由统一刷新重建State。所有写接口必须经此进入，不得自行取快照。
      */
     private RecordEditResult editRecord(BiFunction<Context, CfgValue, RecordEditService.ResultWithNewCfgValue> editCall) {
-        return WatchAndPostRun.INSTANCE.runEdit(ctx -> {
-            State st = state; // editLock内，快照必为当前代
-            return editCall.apply(st.context(), st.cfgValue()).result();
-        });
+        return WatchAndPostRun.INSTANCE.runEdit(ctx -> editCall.apply(ctx, ctx.makeValue(tag, true)).result());
     }
 
 
