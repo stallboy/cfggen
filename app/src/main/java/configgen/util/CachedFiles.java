@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
@@ -19,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class CachedFiles {
     // 表生成并发：writeFile/keepFile 会被多个工作线程同时调用，必须用并发安全 Set
-    private final Set<String> filename_set = ConcurrentHashMap.newKeySet();
+    private final Set<Path> keptPaths = ConcurrentHashMap.newKeySet();
 
     // finalizeRun 会迭代这两个列表，登记与清理可能来自不同线程，必须用并发安全容器
     private final List<File> deleteFiles = new CopyOnWriteArrayList<>();
@@ -46,7 +47,7 @@ public class CachedFiles {
                 doRemoveFile(dir, true));
         deleteFiles.clear();
         deleteKeepMetaWithSuffixFiles.clear();
-        filename_set.clear();
+        keptPaths.clear();
     }
 
     public void writeFile(Path path, byte[] data) throws IOException {
@@ -76,7 +77,7 @@ public class CachedFiles {
     }
 
     public void keepFile(Path path) {
-        filename_set.add(fileKey(path));
+        keptPaths.add(fileKey(path));
     }
 
     private static void mkDirs(File file) {
@@ -90,8 +91,8 @@ public class CachedFiles {
         }
     }
 
-    private static String fileKey(Path path) {
-        return path.toAbsolutePath().normalize().toString().toLowerCase();
+    private static Path fileKey(Path path) {
+        return path.toAbsolutePath().normalize();
     }
 
     private static String normalizePath(Path path) {
@@ -107,18 +108,18 @@ public class CachedFiles {
     }
 
     private void doRemoveFile(File file, boolean keepMeta) {
-        String key = fileKey(file.toPath());
-        boolean keep = filename_set.contains(key);
+        Path key = fileKey(file.toPath());
+        boolean keep = keptPaths.contains(key);
         if (keep) {
             return;
         }
 
         if (keepMeta) {
-            String noMetaKey = findNoMetaKey(key);
+            Path noMetaKey = findNoMetaKey(key);
             if (noMetaKey != null) {
-                keep = filename_set.contains(noMetaKey);
-                if (!keep && new File(noMetaKey).isDirectory()) {
-                    for (String f : filename_set) {
+                keep = keptPaths.contains(noMetaKey);
+                if (!keep && Files.isDirectory(noMetaKey, LinkOption.NOFOLLOW_LINKS)) {
+                    for (Path f : keptPaths) {
                         if (f.startsWith(noMetaKey)) {
                             keep = true;
                             break;
@@ -132,7 +133,7 @@ public class CachedFiles {
             return;
         }
 
-        if (file.isDirectory()) {
+        if (Files.isDirectory(file.toPath(), LinkOption.NOFOLLOW_LINKS)) {
             File[] files = file.listFiles();
             if (files != null) {
                 for (File f : files) {
@@ -148,10 +149,15 @@ public class CachedFiles {
         }
     }
 
-    private static @Nullable String findNoMetaKey(String key) {
+    private static @Nullable Path findNoMetaKey(Path key) {
+        Path name = key.getFileName();
+        if (name == null) {
+            return null;
+        }
+        String filename = name.toString();
         for (String metaSuffix : metaSuffixSet) {
-            if (key.endsWith(metaSuffix)) {
-                return key.substring(0, key.length() - metaSuffix.length());
+            if (filename.endsWith(metaSuffix) && filename.length() > metaSuffix.length()) {
+                return key.resolveSibling(filename.substring(0, filename.length() - metaSuffix.length()));
             }
         }
         return null;
