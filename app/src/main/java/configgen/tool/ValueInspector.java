@@ -206,8 +206,9 @@ public class ValueInspector implements AutoCloseable {
 
     public void loop() {
         printHelp();
-        // 使用 try-with-resources 自动关闭输入流
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
+        // 标准输入由宿主持有，后续命令可能继续使用。
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+        try {
             while (true) {
                 System.out.print("input>");
                 String line = br.readLine();
