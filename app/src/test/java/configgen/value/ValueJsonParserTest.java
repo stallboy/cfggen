@@ -153,6 +153,28 @@ class ValueJsonParserTest {
 
 
     @Test
+    void rejectsOutOfRangeAndNonIntegralIntegers() {
+        TableSchema test = requireNonNull(cfg.findTable("test"));
+        CfgValueErrs errs = CfgValueErrs.of();
+        fromJson(test, errs, """
+                {"id":2147483648,"long1":9223372036854775808}
+                """);
+        fromJson(test, errs, """
+                {"id":1.5,"long1":-1.5}
+                """);
+
+        assertEquals(4, errs.errs().size());
+        for (var err : errs.errs()) {
+            assertInstanceOf(CfgValueErrs.JsonValueNotMatchType.class, err);
+        }
+        var accepted = fromJson(test, """
+                {"id":-2147483648,"long1":9223372036854775807}
+                """);
+        assertEquals(ofInt(Integer.MIN_VALUE), accepted.values().getFirst());
+        assertEquals(ofLong(Long.MAX_VALUE), ValueUtil.extractFieldValue(accepted, "long1"));
+    }
+
+    @Test
     void fromJson_VStruct() {
         TableSchema ts = requireNonNull(cfg.findTable("ts"));
         StructSchema attr = requireNonNull((StructSchema) cfg.findFieldable("attr"));

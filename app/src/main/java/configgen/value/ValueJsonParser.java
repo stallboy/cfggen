@@ -9,6 +9,7 @@ import com.alibaba.fastjson2.JSONObject;
 import configgen.data.Source;
 import configgen.schema.*;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static configgen.data.Source.*;
@@ -175,6 +176,16 @@ public class ValueJsonParser {
         }
     }
 
+    private static long parseInteger(@Nullable Object obj) {
+        return switch (obj) {
+            case Integer value -> value.longValue();
+            case Long value -> value;
+            case BigDecimal value -> value.longValueExact();
+            case Number value -> new BigDecimal(value.toString()).longValueExact();
+            case null, default -> throw new NumberFormatException("Expected a JSON number");
+        };
+    }
+
     private SimpleValue parseSimpleType(SimpleType type, @Nullable Object obj, DFile source, FieldSchema fieldSchema) {
         switch (type) {
             case BOOL -> {
@@ -182,25 +193,19 @@ public class ValueJsonParser {
             }
             case INT -> {
                 int iv = 0;
-                switch (obj) {
-                    case Number num -> {
-                        iv = num.intValue();
-                    }
-                    case null, default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.INT));
-                    }
+                try {
+                    iv = Math.toIntExact(parseInteger(obj));
+                } catch (ArithmeticException | NumberFormatException e) {
+                    errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.INT));
                 }
                 return new VInt(iv, source);
             }
             case LONG -> {
                 long lv = 0;
-                switch (obj) {
-                    case Number num -> {
-                        lv = num.longValue();
-                    }
-                    case null, default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.LONG));
-                    }
+                try {
+                    lv = parseInteger(obj);
+                } catch (ArithmeticException | NumberFormatException e) {
+                    errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.LONG));
                 }
                 return new VLong(lv, source);
             }
