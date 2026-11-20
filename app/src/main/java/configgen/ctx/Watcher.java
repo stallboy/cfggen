@@ -278,7 +278,9 @@ public class Watcher {
                 if (!isTableDirForJson(dirName)) {
                     return;
                 }
-                if (explicitDir != null && !explicitDir.jsonFileDirs().contains(dirName)) {
+                if (explicitDir != null && explicitDir.jsonFileDirs().stream()
+                        .map(rootDir.getFileSystem()::getPath)
+                        .noneMatch(dir -> dir.normalize().equals(parent))) {
                     return;
                 }
             }

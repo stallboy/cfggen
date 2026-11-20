@@ -75,6 +75,20 @@ class WatcherBehaviorTest {
     }
 
     @Test
+    void detectsJsonEditsInExplicitNestedDirectory() throws IOException, InterruptedException {
+        Path table = Files.createDirectories(tempDir.resolve("data/_user"));
+        var explicit = new ExplicitDir(java.util.Map.of(), java.util.Set.of(), java.util.Set.of("data/_user"));
+        Watcher watcher = new Watcher(tempDir, explicit);
+        watcher.start();
+        try {
+            Files.writeString(table.resolve("1.json"), "{}");
+            awaitEventDetected(watcher);
+        } finally {
+            watcher.stop();
+        }
+    }
+
+    @Test
     void detectsJsonTableDirectoryMovedOutOfRoot() throws IOException, InterruptedException {
         Path root = Files.createDirectory(tempDir.resolve("data"));
         Path table = Files.createDirectory(root.resolve("_user"));
