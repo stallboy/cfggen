@@ -5,12 +5,12 @@ import org.jspecify.annotations.Nullable;
 import configgen.ctx.DirectoryStructure;
 import configgen.data.DataUtil;
 import configgen.util.FileNameUtil;
-import configgen.util.CachedFileOutputStream;
 import configgen.util.CachedFiles;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueToJson;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -39,11 +39,9 @@ public class VTableJsonStorage {
         Path relativePath = jsonDirRelPath.resolve(id + ".json");
 
         Path recordPath = dataDir.resolve(relativePath);
-        try (var writer = CachedFileOutputStream.createUtf8Writer(recordPath, cachedFiles)) {
-            String jsonString = ValueToJson.toJsonStr(record);
-            writer.write(jsonString);
-            return relativePath;
-        }
+        byte[] json = ValueToJson.toJsonStr(record).getBytes(StandardCharsets.UTF_8);
+        cachedFiles.writeFile(recordPath, json);
+        return relativePath;
     }
 
 
