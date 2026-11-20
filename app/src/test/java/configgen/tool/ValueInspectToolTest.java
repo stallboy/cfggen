@@ -47,4 +47,38 @@ class ValueInspectToolTest {
             System.setIn(saved);
         }
     }
+
+    @Test
+    void closesOutputAfterAnUnexpectedInteractiveFailure() throws Exception {
+        Context ctx = context();
+        Path output = tempDir.resolve("failed.txt");
+        InputStream saved = System.in;
+        byte[] command = "int 7\n".getBytes(StandardCharsets.UTF_8);
+        InputStream input = new InputStream() {
+            private boolean sent;
+
+            @Override
+            public int read(byte[] bytes, int offset, int length) {
+                if (sent) {
+                    throw new IllegalStateException("input failed");
+                }
+                System.arraycopy(command, 0, bytes, offset, command.length);
+                sent = true;
+                return command.length;
+            }
+
+            @Override
+            public int read() {
+                throw new AssertionError("Expected a buffered read");
+            }
+        };
+        try {
+            System.setIn(input);
+            assertThrows(IllegalStateException.class,
+                    () -> new ValueInspectTool(new ParameterParser("search,to=" + output)).generate(ctx));
+            assertEquals("\uFEFFt[7], id, 7" + System.lineSeparator(), Files.readString(output));
+        } finally {
+            System.setIn(saved);
+        }
+    }
 }
