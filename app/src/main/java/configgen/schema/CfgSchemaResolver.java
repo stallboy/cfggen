@@ -635,11 +635,11 @@ public final class CfgSchemaResolver {
             return;
         }
 
-        boolean ok = true;
         int len = localFields.size();
         for (int i = 0; i < len; i++) {
             FieldSchema local = localFields.get(i);
             FieldSchema remote = remoteFields.get(i);
+            boolean ok = true;
 
             switch (local.type()) {
                 case ContainerType containerType -> {

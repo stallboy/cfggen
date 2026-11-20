@@ -657,6 +657,25 @@ class CfgSchemaResolverTest {
     }
 
     @Test
+    void reportsOnlyMismatchedComponentsOfForeignKey() {
+        CfgSchema cfg = CfgReader.parse("""
+                table source[id] {
+                    id:int;
+                    code:int;
+                    ->target:[id,code] ->target;
+                }
+                table target[id,code] {
+                    id:str;
+                    code:int;
+                }
+                """);
+
+        assertEquals(List.of(
+                new RefLocalKeyRemoteKeyTypeNotMatch("source", "target", "INT", "STRING")
+        ), cfg.resolve().errs());
+    }
+
+    @Test
     public void KeyNotFound_localKey() {
         String str = """
                 table t1[id] {
