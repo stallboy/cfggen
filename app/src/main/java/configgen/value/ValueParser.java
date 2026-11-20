@@ -292,7 +292,13 @@ public class ValueParser {
                     case FLOAT -> {
                         float v = 0f;
                         try {
-                            v = str.isEmpty() ? 0f : Float.parseFloat(str);
+                            if (!str.isEmpty()) {
+                                float parsed = Float.parseFloat(str);
+                                if (!Float.isFinite(parsed)) {
+                                    throw new NumberFormatException("Non-finite float");
+                                }
+                                v = parsed;
+                            }
                         } catch (Exception e) {
                             errs.addErr(new CfgValueErrs.NotMatchFieldType(cell,
                                     parseContext.nameable, fieldSchema.name(), type));

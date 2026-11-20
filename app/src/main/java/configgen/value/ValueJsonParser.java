@@ -211,16 +211,14 @@ public class ValueJsonParser {
                 return new VLong(lv, source);
             }
             case FLOAT -> {
-                float fv = 0;
-                switch (obj) {
-                    case Number num -> {
-                        fv = num.floatValue();
-                    }
-                    case null, default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.FLOAT));
+                if (obj instanceof Number num) {
+                    float value = num.floatValue();
+                    if (Float.isFinite(value)) {
+                        return new VFloat(value, source);
                     }
                 }
-                return new VFloat(fv, source);
+                errs.addErr(new JsonValueNotMatchType(source, String.valueOf(obj), EType.FLOAT));
+                return new VFloat(0f, source);
             }
             case STRING -> {
                 String sv = "";

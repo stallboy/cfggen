@@ -2,14 +2,19 @@ package configgen.value;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import configgen.TestCtx;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
 import configgen.util.Logger;
+import configgen.write.AddOrUpdateService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -79,6 +84,15 @@ class ValueJsonParserTest {
                 """;
         cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
+    }
+
+    @Test
+    void rejectsOverflowBeforeWritingJson(@TempDir Path data) {
+        var context = TestCtx.newContext(data, "table t[id] (json) { id:int; score:float; }", Map.of());
+        var result = AddOrUpdateService.addOrUpdateRecord(
+                context, context.makeValue(), "t", "{\"id\":1,\"score\":1e40}");
+        assertEquals(AddOrUpdateService.AddOrUpdateErrorCode.RecordParseError, result.errorCode());
+        assertFalse(Files.exists(data.resolve("_t/1.json")));
     }
 
     @Test

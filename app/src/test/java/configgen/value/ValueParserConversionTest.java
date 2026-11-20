@@ -37,6 +37,13 @@ class ValueParserConversionTest {
 
 
     @Test
+    void rejectsNonFiniteFloatsInTables() {
+        var context = TestCtx.newContext(tempDir, "table t[id] { id:int; score:float; }",
+                Map.of("t", "ID,Score\nid,score\n1,1e40\n2,NaN\n3,-Infinity\n"));
+        assertThrows(CfgValueException.class, context::makeValue);
+    }
+
+    @Test
     void convertsCsvIntegersFloatsAndBooleans() {
         var context = TestCtx.newContext(tempDir, """
                 table sample[id] { id:int; count:int; price:float; active:bool; }
