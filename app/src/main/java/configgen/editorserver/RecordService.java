@@ -217,7 +217,7 @@ public class RecordService {
         Map<RefId, BriefRecord> result = new LinkedHashMap<>();
         int curDepth = startDepth;
 
-        while (curDepth <= depth) {
+        while (!frontier.isEmpty() && curDepth <= depth) {
             Map<RefId, VStruct> newFrontier = new LinkedHashMap<>();
 
             for (Map.Entry<RefId, VStruct> e : frontier.entrySet()) {
@@ -230,12 +230,12 @@ public class RecordService {
 
                 result.put(refId, vStructToBriefRecord(refId, record, fieldRefs, curDepth));
 
-                if (result.size() > maxObjs) {
+                if (result.size() >= maxObjs) {
                     break;
                 }
             }
 
-            if (result.size() > maxObjs) {
+            if (result.size() >= maxObjs) {
                 break;
             }
 

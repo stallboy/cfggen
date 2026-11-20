@@ -105,7 +105,7 @@ public class RecordRefIdsService {
         var refInFrontier = Map.of(thisObjId, new ForeachVStruct.Context(vTable, pkValue, vRecord));
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
         int curInDepth = 1;
-        while (curInDepth <= inDepth) {
+        while (!refInFrontier.isEmpty() && curInDepth <= inDepth && result.size() < maxRefIds) {
             Map<RefId, ForeachVStruct.Context> newRefInFrontier = new LinkedHashMap<>();
             for (Map.Entry<RefId, ForeachVStruct.Context> e : refInFrontier.entrySet()) {
                 VTable vt = e.getValue().fromVTable();
@@ -121,13 +121,13 @@ public class RecordRefIdsService {
                 for (Map.Entry<RefId, ForeachVStruct.Context> ri : newRefInFrontier.entrySet()) {
                     RefId refId = ri.getKey();
                     result.put(refId, new RecordRefId(refId.table(), refId.id(), getBriefTitle(ri.getValue().recordValue()), -curInDepth));
-                    if (result.size() > maxRefIds) {
+                    if (result.size() >= maxRefIds) {
                         break;
                     }
                 }
             }
 
-            if (result.size() > maxRefIds) {
+            if (result.size() >= maxRefIds) {
                 break;
             }
             refInFrontier = newRefInFrontier;
@@ -137,7 +137,7 @@ public class RecordRefIdsService {
         // 然后算 refOut的链接
         var refOutFrontier = Map.of(thisObjId, vRecord);
         int curOutDepth = 1;
-        while (curOutDepth <= outDepth) {
+        while (!refOutFrontier.isEmpty() && curOutDepth <= outDepth && result.size() < maxRefIds) {
             Map<RefId, VStruct> newRefOutFrontier = new LinkedHashMap<>();
 
             for (Map.Entry<RefId, VStruct> e : refOutFrontier.entrySet()) {
@@ -154,12 +154,12 @@ public class RecordRefIdsService {
                 for (Map.Entry<RefId, VStruct> ro : newRefOutFrontier.entrySet()) {
                     RefId refId = ro.getKey();
                     result.put(refId, new RecordRefId(refId.table(), refId.id(), getBriefTitle(ro.getValue()), curOutDepth));
-                    if (result.size() > maxRefIds) {
+                    if (result.size() >= maxRefIds) {
                         break;
                     }
                 }
 
-                if (result.size() > maxRefIds) {
+                if (result.size() >= maxRefIds) {
                     break;
                 }
             }
