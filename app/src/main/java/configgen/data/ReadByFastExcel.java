@@ -70,7 +70,7 @@ public enum ReadByFastExcel implements ExcelReader {
                 throw new IllegalStateException("raw rows out of order");
             }
             while (result.size() < rawRowIdx) {
-                result.add(EMPTY_ROW);
+                result.add(CfgData.EMPTY_RAW_ROW);
             }
             result.add(new DRawExcelRow(r));
         }
@@ -119,15 +119,4 @@ public enum ReadByFastExcel implements ExcelReader {
         }
     }
 
-    static final CfgData.DRawRow EMPTY_ROW = new CfgData.DRawRow() {
-        @Override
-        public String cell(int c) {
-            return "";
-        }
-
-        @Override
-        public int count() {
-            return 0;
-        }
-    };
 }

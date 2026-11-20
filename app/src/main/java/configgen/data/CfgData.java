@@ -222,6 +222,18 @@ public record CfgData(Map<String, DTable> tables,
         }
     }
 
+    static final DRawRow EMPTY_RAW_ROW = new DRawRow() {
+        @Override
+        public String cell(int c) {
+            return "";
+        }
+
+        @Override
+        public int count() {
+            return 0;
+        }
+    };
+
     public interface DRawRow {
         String cell(int c);
 

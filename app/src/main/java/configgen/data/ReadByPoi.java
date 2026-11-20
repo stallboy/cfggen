@@ -47,6 +47,10 @@ public enum ReadByPoi implements ExcelReader {
                 stat.sheetCount++;
                 List<CfgData.DRawRow> rows = new ArrayList<>(sheet.getLastRowNum() + 1);
                 for (org.apache.poi.ss.usermodel.Row row : sheet) {
+                    while (rows.size() < row.getRowNum()) {
+                        rows.add(CfgData.EMPTY_RAW_ROW);
+                    }
+
                     rows.add(new DRawPoiExcelRow(row, formatter, evaluator));
                     for (org.apache.poi.ss.usermodel.Cell cell : row) {
                         switch (cell.getCellType()) {
