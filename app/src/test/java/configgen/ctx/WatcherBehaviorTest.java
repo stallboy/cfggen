@@ -61,6 +61,20 @@ class WatcherBehaviorTest {
     }
 
     @Test
+    void detectsRootSchemaChangeWithExplicitDataDirectories() throws IOException, InterruptedException {
+        Path schema = Files.writeString(tempDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME), "");
+        var explicit = new ExplicitDir(java.util.Map.of(), java.util.Set.of("data"), java.util.Set.of());
+        Watcher watcher = new Watcher(tempDir, explicit);
+        watcher.start();
+        try {
+            Files.writeString(schema, "table user[id] { id:int; }");
+            awaitEventDetected(watcher);
+        } finally {
+            watcher.stop();
+        }
+    }
+
+    @Test
     void detectsJsonTableDirectoryMovedOutOfRoot() throws IOException, InterruptedException {
         Path root = Files.createDirectory(tempDir.resolve("data"));
         Path table = Files.createDirectory(root.resolve("_user"));

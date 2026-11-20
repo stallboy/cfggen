@@ -261,7 +261,8 @@ public class Watcher {
 
         switch (fmt) {
             case CSV, EXCEL, CFG -> {
-                if (explicitDir != null) {
+                if (explicitDir != null
+                        && !relativePath.equals(rootDir.getFileSystem().getPath(DirectoryStructure.ROOT_CONFIG_FILENAME))) {
                     Path topDir = relativePath.getName(0);
                     String dirName = topDir.getFileName().toString();
                     if (!explicitDir.excelFileDirs().contains(dirName)) {
