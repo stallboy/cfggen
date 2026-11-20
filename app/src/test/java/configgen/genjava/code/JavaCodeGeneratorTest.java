@@ -1,6 +1,7 @@
 package configgen.genjava.code;
 
 import configgen.JavaTestClasspath;
+import configgen.TestCtx;
 
 import configgen.ctx.Context;
 import configgen.gen.CliException;
@@ -24,6 +25,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import javax.tools.ToolProvider;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,6 +34,24 @@ class JavaCodeGeneratorTest {
 
     @TempDir
     Path tempDir;
+
+    @Test
+    void reusingGeneratorDropsBuildersWhenSelectionFileIsRemoved() throws Exception {
+        var context = TestCtx.newContext(tempDir, "table item[id] { id:int; }",
+                Map.of("item", "id\nid\n1\n"));
+        var output = tempDir.resolve("output");
+        var selection = Files.writeString(tempDir.resolve("selection.txt"), "item\n");
+        var generator = new JavaCodeGenerator(new ParameterParser("java,dir:" + output + ",builders:" + selection));
+        var builder = output.resolve("config/ItemBuilder.java");
+
+        generator.generate(context);
+        context.outputFiles().finalizeRun();
+        assertTrue(Files.isRegularFile(builder));
+        Files.delete(selection);
+        generator.generate(context);
+        context.outputFiles().finalizeRun();
+        assertFalse(Files.exists(builder));
+    }
 
     @Test
     void jspecifyIsOptInAndUsesPackageDefaults() throws IOException {

@@ -39,10 +39,8 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private final @Nullable String configgenDir; // 新增：configgen genjava 源文件复制目录
     private final boolean beautifulName; // 美化由 snake_case schema 名派生的标识符（类名/getter 转 PascalCase、enum 常量转 SCREAMING_SNAKE_CASE），默认 false 保持老行为
     private final String prefix; // 生成类名的前缀，同 csharp 的 prefix，默认为空
-    private @Nullable Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
 
-    private final Set<String> generatedPackagePaths = ConcurrentHashMap.newKeySet();
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
 
@@ -102,8 +100,14 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         CfgData cfgData = ctx.cfgData();
         Path dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
         CachedFiles outputFiles = ctx.outputFiles();
-        Function<String, CachedIndentPrinter> openCode = filename -> createCode(filename, dstDir, outputFiles);
-        generatedPackagePaths.clear();
+        Set<String> generatedPackagePaths = ConcurrentHashMap.newKeySet();
+        Function<String, CachedIndentPrinter> openCode = filename -> {
+            if (jspecify) {
+                int slash = filename.lastIndexOf('/');
+                generatedPackagePaths.add(slash < 0 ? "" : filename.substring(0, slash));
+            }
+            return mainCc.get().printer(dstDir.resolve(filename), encoding, outputFiles);
+        };
 
         // 一次生成的固定配置：不可变、随调用链显式传递，替代原先散落在 Name/TypeStr/NameableName 的
         // static 字段（并发生成时会互相踩踏）
@@ -114,9 +118,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         List<NameableName> tableDataNames = new ArrayList<>();
         List<String> setAllRefsInMgrLoader = new ArrayList<>();
 
-        if (buildersFilename != null) {
-            readNeedBuilderTables(buildersFilename);
-        }
+        Set<String> needBuilderTables = buildersFilename == null ? Set.of() : readNeedBuilderTables(buildersFilename);
         // struct/interface 类与 table 类各自生成独立文件，互不依赖；并发渲染。
         // tableDataNames / setAllRefs 顺序敏感——故每个 table 任务用独立 local 列表，渲染后按原序合并，保证字节级一致。
         List<Callable<@Nullable Void>> structTasks = new ArrayList<>();
@@ -149,7 +151,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             tableTasks.add(() -> {
                 List<NameableName> localDataNames = new ArrayList<>();
                 List<String> localSetAllRefs = new ArrayList<>();
-                generateTableClass(cfg, vt, cfgData, openCode, localDataNames, localSetAllRefs);
+                generateTableClass(cfg, vt, cfgData, openCode, needBuilderTables.contains(vt.name()), localDataNames, localSetAllRefs);
                 return new TableRefs(localDataNames, localSetAllRefs);
             });
         }
@@ -204,17 +206,16 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private record TableRefs(List<NameableName> dataNames, List<String> setAllRefs) {
     }
 
-    private void readNeedBuilderTables(String filename) {
+    private static Set<String> readNeedBuilderTables(String filename) {
         Path fn = Path.of(filename).normalize();
         if (Files.exists(fn)) {
             try {
-                needBuilderTables = new HashSet<>();
-                List<String> lines = Files.readAllLines(fn, StandardCharsets.UTF_8);
-                needBuilderTables.addAll(lines);
+                return new HashSet<>(Files.readAllLines(fn, StandardCharsets.UTF_8));
             } catch (IOException e) {
-                Logger.log("读文件异常, 忽略此文件", fn.toAbsolutePath());
+                Logger.log("读文件异常, 忽略此文件: %s", fn.toAbsolutePath());
             }
         }
+        return Set.of();
     }
 
     /**
@@ -291,14 +292,6 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         return "@NullMarked\npackage " + packageName + ";\n\nimport org.jspecify.annotations.NullMarked;\n";
     }
 
-    private CachedIndentPrinter createCode(String fn, Path dstDir, CachedFiles outputFiles) {
-        if (jspecify) {
-            int slash = fn.lastIndexOf('/');
-            generatedPackagePaths.add(slash < 0 ? "" : fn.substring(0, slash));
-        }
-        return mainCc.get().printer(dstDir.resolve(fn), encoding, outputFiles);
-    }
-
     private void generateStructClass(GenCfg cfg, StructSchema struct, Function<String, CachedIndentPrinter> openCode) {
         NameableName name = new NameableName(cfg, struct);
         try (var ps = openCode.apply(name.path)) {
@@ -319,7 +312,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
     private void generateTableClass(GenCfg cfg, VTable vTable, CfgData cfgData,
                                     Function<String, CachedIndentPrinter> openCode,
-                                    List<NameableName> tableDataNames, List<String> setAllRefsInMgrLoader) {
+                                    boolean isTableNeedBuilder, List<NameableName> tableDataNames, List<String> setAllRefsInMgrLoader) {
         boolean isNeedReadData = true;
         String dataPostfix = "";
         TableSchema schema = vTable.schema();
@@ -355,7 +348,6 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         if (isNeedReadData) {
             NameableName name = new NameableName(cfg, schema, dataPostfix);
             tableDataNames.add(name);
-            boolean isTableNeedBuilder = needBuilderTables != null && needBuilderTables.contains(vTable.name());
             StructuralClassModel model = new StructuralClassModel(cfg, schema, name, isTableNeedBuilder, sourceComment);
             try (var ps = openCode.apply(name.path)) {
                 JteEngine.render("java/GenStructuralClass.jte", model, ps);
