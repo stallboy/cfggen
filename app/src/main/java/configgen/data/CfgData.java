@@ -194,7 +194,7 @@ public record CfgData(Map<String, DTable> tables,
      * @param relativeFilePath     文件名，支持csv和excel. relative path of root data dir
      * @param sheetName    当文件时csv时，为空
      * @param index        支持多个csv或sheet组成一个逻辑的table，此时index用于数据排序
-     * @param rows         原始每个格子里的数据
+     * @param rows         可变的原始行列表，包含行号间的空行，CellParser 解析后清空
      * @param fieldIndices csv或sheet中第二行是程序用名，做为field跟schema对应，可以为空，用于策划注释。
      *                     fieldIndices用于把field给挑选出来。
      */

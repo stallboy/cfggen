@@ -54,6 +54,26 @@ class RawRowContractTest {
     }
 
     @Test
+    void fastExcelReturnsAnEmptyTableForAnEmptySheet() throws Exception {
+        Path file = root.resolve("empty.xlsx");
+        try (var workbook = new XSSFWorkbook()) {
+            workbook.createSheet("empty");
+            try (var out = Files.newOutputStream(file)) {
+                workbook.write(out);
+            }
+        }
+
+        var reader = new CfgDataReader(HeadRows.A2_Default, new ReadCsv("UTF-8"), ReadByFastExcel.INSTANCE);
+        var data = reader.readCfgData(List.of(new ExcelFileInfo(0, file, file.getFileName(),
+                DataUtil.FileFmt.EXCEL, null)), null, configgen.schema.CfgSchemaErrs.of());
+        var table = data.tables().get("empty");
+
+        assertNotNull(table);
+        assertTrue(table.rows().isEmpty());
+        assertEquals(1, data.stat().emptyTableCount());
+    }
+
+    @Test
     void fastExcelReadsTheCachedValueOfAFormulaCell() throws Exception {
         Path file = root.resolve("calculated.xlsx");
         try (var workbook = new XSSFWorkbook()) {
