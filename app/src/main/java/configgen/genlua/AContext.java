@@ -16,6 +16,7 @@ class AContext {
     private final boolean shared;
     private final boolean packBool;
     private final boolean noStr; //只用于测试
+    private final boolean rForOldShared;
 
     private final String emptyTableStr;
     private final String listMapPrefixStr;
@@ -36,6 +37,7 @@ class AContext {
         this.shared = shared;
         this.packBool = packBool;
         this.noStr = noStr;
+        this.rForOldShared = rForOldShared;
 
         if (shareEmptyTable) {
             emptyTableStr = "E";
@@ -80,6 +82,10 @@ class AContext {
 
     boolean isNoStr() {
         return noStr;
+    }
+
+    boolean wrapsOldSharedValues() {
+        return rForOldShared;
     }
 
 

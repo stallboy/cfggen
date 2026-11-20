@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import static configgen.value.CfgValue.CompositeValue;
+import static configgen.value.CfgValue.VList;
+import static configgen.value.CfgValue.VMap;
 
 
 /**
@@ -70,7 +72,16 @@ class CtxShared {
         // 生成value的字符串
         for (Map.Entry<CompositeValue, CompositeValueStr> entry : sharedCompositeValues.entrySet()) {
             StringBuilder sb = new StringBuilder();
-            new ValueStringify(sb, ctx, null, null).addValue(entry.getKey(), List.of());
+            CompositeValue value = entry.getKey();
+            // ValueStringify already wraps lists and maps in legacy mode.
+            boolean wrap = aContext.wrapsOldSharedValues() && !(value instanceof VList || value instanceof VMap);
+            if (wrap) {
+                sb.append("R(");
+            }
+            new ValueStringify(sb, ctx, null, null).addValue(value, List.of());
+            if (wrap) {
+                sb.append(')');
+            }
             entry.getValue().setValueStr(sb.toString());
         }
     }

@@ -123,6 +123,26 @@ class LuaCodeGeneratorTest {
     }
 
     @Test
+    void wrapsDeduplicatedContainersOnlyOnceInLegacyMode() throws IOException {
+        Context ctx = TestCtx.newContext(tempDir, """
+                table t[id] (shared) { id:int; items:list<int> (sep='|'); flags:map<str,int> (pack); }
+                """, Map.of("t", """
+                id,items,flags
+                id,items,flags
+                1,2|3,"ready,4"
+                2,2|3,"ready,4"
+                """));
+        Path outDir = tempDir.resolve("oldshared");
+        new LuaCodeGenerator(new ParameterParser("lua,shared,rForOldShared,dir:" + outDir)).generate(ctx);
+
+        String content = Files.readString(outDir.resolve("cfg/t.lua"));
+        assertTrue(content.contains(" = R({2, 3})"), content);
+        assertTrue(content.contains(" = R({ready = 4})"), content);
+        assertTrue(content.contains("mk(1, A["), content);
+        assertFalse(content.contains("R(R("), content);
+    }
+
+    @Test
     void generate_supportFilesCreated() throws IOException {
         String cfgStr = """
                 table t[id] {
