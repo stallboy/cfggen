@@ -51,29 +51,28 @@ public class CachedFiles {
     }
 
     public void writeFile(Path path, byte[] data) throws IOException {
+        writeChangedFile(path, data, target -> Files.write(target, data, StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING));
+    }
+
+    public void writeFileReplacement(Path path, byte[] data) throws IOException {
+        writeChangedFile(path, data, target -> FileUtil.writeReplacement(target, staged -> Files.write(staged, data)));
+    }
+
+    private void writeChangedFile(Path path, byte[] data, FileUtil.StagedFileWriter writer) throws IOException {
         keepFile(path);
-        if (!path.toFile().exists()) {
+        File file = path.toFile();
+        if (!file.exists()) {
             Logger.log("create file: " + path);
             mkDirs(java.util.Objects.requireNonNull(path.getParent()).toFile());
-            Files.write(path, data, StandardOpenOption.CREATE,
-                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-            return;
-        }
-
-        // 大小不同则内容必然变化，直接写入，避免读取整个旧文件做逐字节比较
-        if (path.toFile().length() != data.length) {
+        } else {
+            // 大小不同时无需读取旧内容。
+            if (file.length() == data.length && Arrays.equals(Files.readAllBytes(path), data)) {
+                return;
+            }
             Logger.log("modify file: " + path);
-            Files.write(path, data, StandardOpenOption.CREATE,
-                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-            return;
         }
-
-        byte[] buf = Files.readAllBytes(path);
-        if (!Arrays.equals(buf, data)) {
-            Logger.log("modify file: " + path);
-            Files.write(path, data, StandardOpenOption.CREATE,
-                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-        }
+        writer.write(path);
     }
 
     public void keepFile(Path path) {

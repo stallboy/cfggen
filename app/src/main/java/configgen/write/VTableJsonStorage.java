@@ -40,7 +40,7 @@ public class VTableJsonStorage {
 
         Path recordPath = dataDir.resolve(relativePath);
         byte[] json = ValueToJson.toJsonStr(record).getBytes(StandardCharsets.UTF_8);
-        cachedFiles.writeFile(recordPath, json);
+        cachedFiles.writeFileReplacement(recordPath, json);
         return relativePath;
     }
 

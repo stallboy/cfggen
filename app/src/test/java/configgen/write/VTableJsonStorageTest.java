@@ -1,14 +1,21 @@
 package configgen.write;
 
+import com.sun.nio.file.ExtendedOpenOption;
+import configgen.ctx.Context;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,6 +32,34 @@ class VTableJsonStorageTest {
     @AfterAll
     static void setDefaultLogger() {
         Logger.setPrinter(Logger.Printer.outPrinter);
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    void failedJsonReplacementLeavesOldRecordAndRemovesStagingFile() throws IOException {
+        Files.writeString(tempDir.resolve("config.cfg"), "table t[id] { id:int; }");
+        Files.writeString(tempDir.resolve("t.csv"), "ID\nid\n1\n");
+        var context = new Context(tempDir);
+        var table = context.makeValue().getTable("t");
+        assertNotNull(table);
+        var record = table.primaryKeyMap().values().iterator().next();
+        Path dir = Files.createDirectory(tempDir.resolve("_target"));
+        Path target = dir.resolve("1.json");
+        String old = "{\"id\":1,\"$note\":\"original\"}";
+        Files.writeString(target, old);
+
+        // Permit in-place writes while preventing removal or replacement of the path.
+        try (var channel = FileChannel.open(target, StandardOpenOption.READ, ExtendedOpenOption.NOSHARE_DELETE)) {
+            assertThrows(IOException.class, () -> VTableJsonStorage.addOrUpdateRecord(
+                    record, "target", "1", tempDir, context.sourceStructure(), context.outputFiles()));
+            assertEquals(old, Files.readString(target));
+        }
+        try (var paths = Files.list(dir)) {
+            assertEquals(List.of(target), paths.toList());
+        }
+        assertEquals(Path.of("_target", "1.json"), VTableJsonStorage.addOrUpdateRecord(
+                record, "target", "1", tempDir, context.sourceStructure(), context.outputFiles()));
+        assertNotEquals(old, Files.readString(target));
     }
 
     @Test
