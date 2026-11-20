@@ -36,7 +36,7 @@ public class NoteEditService {
                                  Notes notes) {
     }
 
-    private final Map<String, String> noteMap;
+    private Map<String, String> noteMap;
     private final Path noteCsvPath;
 
     public NoteEditService(Path noteCsvPath) {
@@ -54,8 +54,8 @@ public class NoteEditService {
         }
     }
 
-    private void writeNoteMap() throws IOException {
-        List<List<String>> list = noteMap.entrySet().stream().map(e -> List.of(e.getKey(), e.getValue())).toList();
+    private void writeNoteMap(Map<String, String> updated) throws IOException {
+        List<List<String>> list = updated.entrySet().stream().map(e -> List.of(e.getKey(), e.getValue())).toList();
         CSVUtil.writeToFile(noteCsvPath.toFile(), list);
     }
 
@@ -69,16 +69,19 @@ public class NoteEditService {
         }
 
         try {
+            Map<String, String> updated = new LinkedHashMap<>(noteMap);
             ResultCode code;
             if (note.isEmpty()) {
-                String old = noteMap.remove(key);
-                code = old != null ? ResultCode.deleteOk : ResultCode.keyNotFoundOnDelete;
+                if (updated.remove(key) == null) {
+                    return new NoteEditResult(ResultCode.keyNotFoundOnDelete, getNotes());
+                }
+                code = ResultCode.deleteOk;
             } else {
-                String old = noteMap.put(key, note);
-                //noinspection ConstantValue
+                String old = updated.put(key, note);
                 code = old != null ? ResultCode.updateOk : ResultCode.addOk;
             }
-            writeNoteMap();
+            writeNoteMap(updated);
+            noteMap = updated;
             return new NoteEditResult(code, getNotes());
         } catch (Exception e) {
             return new NoteEditResult(ResultCode.storeErr, getNotes());
