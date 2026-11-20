@@ -34,56 +34,39 @@ public class VTableStorage {
 
         CfgValue.VStruct oldRecord = vTable.primaryKeyMap().get(pkValue);
 
-        TableFile tableFile;
-        int startRow;
-        int rowCount;
-        DRawSheet sheet;
-        if (oldRecord != null) {
-            // 更新操作：从oldRecord获取文件位置，然后删除旧记录
-            RecordLoc loc = findRecordLoc(context, oldRecord);
-            tableFile = loc.tableFile();
-            startRow = loc.startRow;
-            rowCount = loc.rowCount;
-            sheet = dTable.getSheetByRowId(loc.rowId);
-            tableFile.emptyRows(startRow, rowCount, sheet.fieldIndices());
+        RecordLoc loc = oldRecord == null ? null : findRecordLoc(oldRecord);
+        DRawSheet sheet = loc == null ? TableFileLocator.getSheetFromDTable(dTable) : dTable.getSheetByRowId(loc.rowId);
+        RecordBlockTransformed transformed = new RecordBlockTransformed(block, sheet.fieldIndices());
 
-        } else {
-            // 新增操作：从dTable获取文件位置
-            sheet = TableFileLocator.getSheetFromDTable(dTable);
-            boolean isColumnMode = vTable.schema().isColumnMode();
-            tableFile = TableFileLocator.createTableFile(sheet.relativeFilePath(), sheet.sheetName(), context, isColumnMode);
-            startRow = -1; // 放到最后
-            rowCount = 0; // 不预留空行
+        try (TableFile file = openTableFile(context, sheet, vTable.schema().isColumnMode())) {
+            if (loc != null) {
+                file.emptyRows(loc.startRow(), loc.rowCount(), sheet.fieldIndices());
+            }
+            file.insertRecordBlock(loc == null ? -1 : loc.startRow(), loc == null ? 0 : loc.rowCount(), transformed);
+            file.saveAndClose();
         }
-
-        tableFile.insertRecordBlock(startRow, rowCount, new RecordBlockTransformed(block, sheet.fieldIndices()));
-        tableFile.saveAndClose();
-
         return sheet;
     }
-
 
     public static DRawSheet deleteRecord(Context context,
                                          DTable dTable,
                                          VStruct oldRecord) {
-
-        RecordLoc loc = findRecordLoc(context, oldRecord);
-        loc.tableFile.emptyRows(loc.startRow, loc.rowCount, null);
-        loc.tableFile.saveAndClose();
-        return dTable.getSheetByRowId(loc.rowId);
+        RecordLoc loc = findRecordLoc(oldRecord);
+        DRawSheet sheet = dTable.getSheetByRowId(loc.rowId());
+        try (TableFile file = openTableFile(context, sheet, ((TableSchema) oldRecord.schema()).isColumnMode())) {
+            file.emptyRows(loc.startRow(), loc.rowCount(), null);
+            file.saveAndClose();
+        }
+        return sheet;
     }
 
+    private static TableFile openTableFile(Context context, DRawSheet sheet, boolean columnMode) {
+        return TableFileLocator.createTableFile(sheet.relativeFilePath(), sheet.sheetName(), context, columnMode);
+    }
 
-    private static RecordLoc findRecordLoc(Context context,
-                                           VStruct oldRecord) {
-
+    private static RecordLoc findRecordLoc(VStruct oldRecord) {
         DRowId rowId = TableFileLocator.getLocFromRecord(oldRecord);
-        int startRow = rowId.row();
-        int rowCount = computePhysicalRowCount(oldRecord);
-
-        boolean isColumnMode = ((TableSchema) oldRecord.schema()).isColumnMode();
-        TableFile tableFile = TableFileLocator.createTableFile(rowId.fileName(), rowId.sheetName(), context, isColumnMode);
-        return new RecordLoc(tableFile, rowId, startRow, rowCount);
+        return new RecordLoc(rowId, rowId.row(), computePhysicalRowCount(oldRecord));
     }
 
     /**
@@ -153,8 +136,7 @@ public class VTableStorage {
     }
 
 
-    private record RecordLoc(TableFile tableFile,
-                             DRowId rowId,
+    private record RecordLoc(DRowId rowId,
                              int startRow,
                              int rowCount) {
     }

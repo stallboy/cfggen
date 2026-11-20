@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * TableFile接口用于表示表格文件（Excel或CSV），提供写入操作
  */
-public interface TableFile {
+public interface TableFile extends AutoCloseable {
 
     /**
      * 清空指定行范围的数据
@@ -32,5 +32,9 @@ public interface TableFile {
      * 保存文件并关闭
      */
     void saveAndClose();
+
+    @Override
+    default void close() {
+    }
 
 }

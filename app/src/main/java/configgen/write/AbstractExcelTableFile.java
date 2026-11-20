@@ -2,17 +2,15 @@ package configgen.write;
 
 import org.jspecify.annotations.Nullable;
 
+import configgen.util.FileUtil;
 import configgen.util.Logger;
 import configgen.write.RecordBlock.RecordBlockTransformed;
 import org.apache.poi.ss.usermodel.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 /**
@@ -28,6 +26,7 @@ public abstract class AbstractExcelTableFile implements TableFile {
     protected final DataFormatter formatter;
     protected final FormulaEvaluator evaluator;
     protected final int headRow;
+    private boolean closed;
 
     /**
      * 构造函数，打开指定的Excel文件和工作表
@@ -43,8 +42,8 @@ public abstract class AbstractExcelTableFile implements TableFile {
         this.headRow = headRow;
 
         if (java.nio.file.Files.exists(filePath)) {
-            try {
-                this.workbook = WorkbookFactory.create(filePath.toFile(), null, false);
+            try (InputStream input = Files.newInputStream(filePath)) {
+                this.workbook = WorkbookFactory.create(input);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to open Excel file: " + filePath, e);
             }
@@ -78,43 +77,27 @@ public abstract class AbstractExcelTableFile implements TableFile {
      */
     @Override
     public void saveAndClose() {
-        // 1. 确定临时文件路径
-        File originalFile = filePath.toFile();
-        File tempFile = new File(filePath + ".tmp");
-
         try {
-            // 2. 显式写入临时文件 (这是真正保存数据的时刻)
-            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-                workbook.write(fos);
-            }
+            FileUtil.writeReplacement(filePath, staged -> {
+                try (var output = Files.newOutputStream(staged)) {
+                    workbook.write(output);
+                }
+            });
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save to temp file", e);
+            throw new RuntimeException("Failed to save Excel file: " + filePath, e);
         } finally {
-            // 3. 关闭 Workbook
-            // 目的：主要是为了释放对 originalFile 的文件锁
-            // 技巧：为了防止 close() 再次尝试写回原文件导致冲突，
+            close();
+        }
+    }
+
+    @Override
+    public void close() {
+        if (!closed) {
+            closed = true;
             try {
                 workbook.close();
             } catch (IOException e) {
                 Logger.log("Failed to close workbook: " + e.getMessage());
-            }
-        }
-
-        // 4. 用临时文件覆盖源文件（优先原子移动，避免移动失败时原文件已丢失）
-        if (tempFile.exists()) {
-            try {
-                Files.move(tempFile.toPath(), originalFile.toPath(),
-                        StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException e) {
-                // 文件系统不支持原子移动时降级为普通移动
-                try {
-                    Files.move(tempFile.toPath(), originalFile.toPath(),
-                            StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException ex) {
-                    throw new RuntimeException("无法移动临时文件到原文件: " + originalFile, ex);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("无法移动临时文件到原文件: " + originalFile, e);
             }
         }
     }
