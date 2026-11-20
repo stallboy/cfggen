@@ -72,11 +72,11 @@ public class SchemaToTs {
             }
         }
 
-        int nsCount = namespaces.size();
-        int nsIdx = 0;
         for (Map.Entry<String, Map<String, Struct>> ns : namespaces.entrySet()) {
             String nsName = ns.getKey();
-            println("namespace %s {", nsName);
+            if (!nsName.isEmpty()) {
+                println("namespace %s {", nsName);
+            }
             Map<String, Struct> structMap = ns.getValue();
             for (Map.Entry<String, Struct> e : structMap.entrySet()) {
                 String structName = e.getKey();
@@ -88,15 +88,12 @@ public class SchemaToTs {
                 }
             }
 
-            nsIdx++;
-            if (nsIdx < nsCount) {
+            if (!nsName.isEmpty()) {
                 println("}");
-            } else {
-                sb.append("}");
             }
         }
 
-        return sb.toString();
+        return sb.toString().stripTrailing();
     }
 
     private void addStruct(String name, Nameable struct, @Nullable String tableKey) {
@@ -217,7 +214,7 @@ public class SchemaToTs {
         RefName rn = refNames.get(field);
         if (rn != null) {
             String refName;
-            if (rn.namespace.equals(structural.namespace())) {
+            if (rn.namespace.isEmpty() || rn.namespace.equals(structural.namespace())) {
                 refName = rn.lastName;
             } else {
                 refName = rn.namespace + "." + rn.lastName;

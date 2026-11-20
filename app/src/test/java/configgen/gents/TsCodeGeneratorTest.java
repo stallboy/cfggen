@@ -3,6 +3,7 @@ package configgen.gents;
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
+import configgen.genbyai.TsSchemaGenerator;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,6 +32,17 @@ class TsCodeGeneratorTest {
     @AfterAll
     static void setDefaultLogger() {
         Logger.setPrinter(Logger.Printer.outPrinter);
+    }
+
+    @Test
+    void exportsRootDefinitionsWithoutAnAnonymousNamespace() throws IOException {
+        Context context = TestCtx.newContext(tempDir, """
+                table user[id] { id:int; name:str; }
+                """, Map.of("user", "id,name\nid,name\n1,Alice\n"));
+        Path outDir = tempDir.resolve("schemaout");
+        new TsSchemaGenerator(new ParameterParser("tsschema,table:user,dst:" + outDir)).generate(context);
+
+        assertTrue(Files.readString(outDir.resolve("user.ts")).startsWith("export interface user {"));
     }
 
     @Test
