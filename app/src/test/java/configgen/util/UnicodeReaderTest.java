@@ -33,4 +33,19 @@ class UnicodeReaderTest {
         assertEquals('t', buffer[3]);
         reader.close();
     }
+
+    @Test
+    void detectsBomWhenInputReturnsOnlyOneBytePerRead() throws IOException {
+        byte[] bytes = "\uFEFF字".getBytes(StandardCharsets.UTF_8);
+        ByteArrayInputStream input = new ByteArrayInputStream(bytes) {
+            @Override
+            public synchronized int read(byte[] buffer, int offset, int length) {
+                return super.read(buffer, offset, Math.min(length, 1));
+            }
+        };
+        try (UnicodeReader reader = new UnicodeReader(input, StandardCharsets.UTF_16BE)) {
+            assertEquals('字', reader.read());
+            assertEquals(-1, reader.read());
+        }
+    }
 }

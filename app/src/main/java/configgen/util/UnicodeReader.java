@@ -36,10 +36,10 @@ public class UnicodeReader extends Reader {
         // back to the stream; only BOM bytes are skipped.
         Charset encoding;
         byte[] bom = new byte[BOM_SIZE];
-        int n, unread;
+        int unread;
 
         PushbackInputStream pushbackStream = new PushbackInputStream(in, BOM_SIZE);
-        n = pushbackStream.read(bom, 0, bom.length);
+        int n = pushbackStream.readNBytes(bom, 0, bom.length);
 
         if (n > 3 && (bom[0] == (byte) 0x00) && (bom[1] == (byte) 0x00)
                 && (bom[2] == (byte) 0xFE) && (bom[3] == (byte) 0xFF)) {
@@ -66,8 +66,7 @@ public class UnicodeReader extends Reader {
         }
         if (unread > 0) {
             pushbackStream.unread(bom, (n - unread), unread);
-        } else if (unread < -1) {
-            pushbackStream.unread(bom, 0, 0);
+
         }
 
         // Use given encoding
