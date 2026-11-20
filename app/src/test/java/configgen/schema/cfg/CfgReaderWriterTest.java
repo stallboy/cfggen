@@ -6,6 +6,11 @@ import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,6 +41,22 @@ class CfgReaderWriterTest {
         }
 
         assertEquals(cfg1, cfg2);
+    }
+
+    @Test
+    void preservesFileEndCommentsWhenSeparatingModules(@TempDir Path dir) throws IOException {
+        Path source = dir.resolve("nested.cfg");
+        Files.writeString(source, "struct Item { id:int; }\n// End of nested module\n");
+        CfgSchema schema = CfgReader.INSTANCE.readToSchema(source, "nested.");
+
+        assertEquals("End of nested module", schema.getFileEndComment("nested"));
+        CfgSchema nested = CfgUtil.separate(schema).get("nested");
+        assertTrue(CfgWriter.stringify(nested).endsWith("// End of nested module\n"));
+
+        Files.writeString(source, "// Comment-only module\n");
+        CfgSchema commentOnly = CfgReader.INSTANCE.readToSchema(source, "nested.");
+        assertEquals("// Comment-only module\n",
+                CfgWriter.stringify(CfgUtil.separate(commentOnly).get("nested")));
     }
 
     @Test

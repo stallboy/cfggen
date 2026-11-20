@@ -31,15 +31,9 @@ public class CfgUtil {
             cfg.items().add(item);
         }
 
-        // 传递 fileEndComments 到分离后的 CfgSchema
-        for (Map.Entry<String, CfgSchema> entry : cfgMap.entrySet()) {
-            String ns = entry.getKey();
-            CfgSchema cfg = entry.getValue();
-            String fileEndComment = root.getFileEndComment(ns);
-            if (!fileEndComment.isEmpty()) {
-                // 分离后的 CfgSchema 使用空字符串作为 key（单文件场景）
-                cfg.setFileEndComment("", fileEndComment);
-            }
+        for (Map.Entry<String, String> entry : root.fileEndComments().entrySet()) {
+            CfgSchema module = cfgMap.computeIfAbsent(entry.getKey(), ignored -> CfgSchema.of());
+            module.setFileEndComment("", entry.getValue());
         }
 
         return cfgMap;

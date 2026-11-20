@@ -95,7 +95,8 @@ public enum CfgReader {
         // 读取并存储文件末尾注释
         String fileEndComment = CommentUtil.readSuffixComment(schema.suffix_comment());
         if (!fileEndComment.isEmpty()) {
-            destination.setFileEndComment(pkgNameDot, fileEndComment);
+            String namespace = pkgNameDot.isEmpty() ? "" : pkgNameDot.substring(0, pkgNameDot.length() - 1);
+            destination.setFileEndComment(namespace, fileEndComment);
         }
         return destination;
     }
