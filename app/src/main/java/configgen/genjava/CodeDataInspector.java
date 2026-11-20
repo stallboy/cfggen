@@ -218,6 +218,9 @@ public class CodeDataInspector {
             return null;
         }
         Object sampleKey = map.keySet().iterator().next();
+        if (sampleKey instanceof String) {
+            return map.containsKey(keyStr) ? map.get(keyStr) : map.get(keyStr.trim());
+        }
         Object key;
         try {
             key = buildKey(sampleKey.getClass(), keyStr);
@@ -227,13 +230,11 @@ public class CodeDataInspector {
         if (key == null) {
             return null;
         }
-        @SuppressWarnings("unchecked")
-        Map<Object, ?> raw = (Map<Object, ?>) map;
-        return raw.get(key);
+        return map.get(key);
     }
 
     /**
-     * 按位置式 key 构造：单值（无逗号）的原始/字符串 key 直接转换，绕开反射构造器；
+     * 按位置式 key 构造：单值（无逗号）的原始类型 key 直接转换，绕开反射构造器；
      * 复合 "3,5" 或单字段 record 走反射构造器按形参强转；枚举走 valueOf。
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -244,7 +245,7 @@ public class CodeDataInspector {
                 return single;
             }
         }
-        String[] parts = keyStr.split(",");
+        String[] parts = keyStr.split(",", -1);
         for (int i = 0; i < parts.length; i++) {
             parts[i] = parts[i].trim();
         }

@@ -136,11 +136,14 @@ class CodeDataInspectorTest {
 
         StrMgr m = new StrMgr();
         m.test_str_All.put("alice", new User(1, "alice"));
+        m.test_str_All.put(" sword,magic ", new User(2, "comma and whitespace"));
 
         CodeDataInspector ins = new CodeDataInspector(m, root);
         JsonValue v = ins.getJson("test.str", "alice");
         assertInstanceOf(Obj.class, v);
         assertEquals("alice", ((Str) Objects.requireNonNull(memberValue(v, "name"))).value());
+        JsonValue literal = ins.getJson("test.str", " sword,magic ");
+        assertEquals("comma and whitespace", ((Str) requireNonNull(memberValue(literal, "name"))).value());
     }
 
     @Test
