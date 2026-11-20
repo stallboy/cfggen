@@ -2,6 +2,7 @@ package configgen.geni18n;
 
 import org.jspecify.annotations.Nullable;
 
+import configgen.gen.CliException;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.genbyai.AICfg;
@@ -50,6 +51,9 @@ public class TodoTranslator extends Tool {
         aiCfgFile = parameter.get("ai", "ai.json");
         promptJteFile = parameter.get("prompt", null);
         batch = Integer.parseInt(parameter.get("batch", "10"));
+        if (batch <= 0) {
+            throw new CliException("batch must be a positive integer");
+        }
     }
 
     @Override
@@ -158,10 +162,10 @@ public class TodoTranslator extends Tool {
 
         // 2. 按maxBatchSize拆分
         List<List<TableOriginal>> batches = new ArrayList<>();
-        for (int i = 0; i < allItems.size(); i += maxBatchSize) {
-            int end = Math.min(i + maxBatchSize, allItems.size());
-            List<TableOriginal> batch = allItems.subList(i, end);
-            batches.add(batch);
+        for (int i = 0; i < allItems.size(); ) {
+            int end = i + Math.min(maxBatchSize, allItems.size() - i);
+            batches.add(allItems.subList(i, end));
+            i = end;
         }
 
         Logger.log("allItems = %d, split to %d parts", allItems.size(), batches.size());
