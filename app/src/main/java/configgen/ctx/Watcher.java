@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static configgen.data.DataUtil.*;
+import static configgen.util.FileNameUtil.getCodeName;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 /**
@@ -203,8 +204,12 @@ public class Watcher {
                 }
 
                 if (kind == ENTRY_DELETE) {
-                    // 对于删除事件，文件已不存在，只能通过路径判断
-                    handleFileEvent(relativePath);
+                    // 移走整个目录时，可能只收到目录本身的删除事件。
+                    if (couldBeDataDirectory(relativePath)) {
+                        trigger();
+                    } else {
+                        handleFileEvent(relativePath);
+                    }
                 } else {
                     // 对于创建和修改事件，可以检查文件属性
                     if (Files.isDirectory(fullPath)) {
@@ -223,6 +228,23 @@ public class Watcher {
                 }
             }
         }
+    }
+
+    private boolean couldBeDataDirectory(Path relativePath) {
+        if (isFileIgnored(relativePath)) {
+            return false;
+        }
+        String name = relativePath.getFileName().toString();
+        if (explicitDir == null) {
+            return isTableDirForJson(name) || getCodeName(name) != null;
+        }
+        String topDir = relativePath.getName(0).toString();
+        return (explicitDir.excelFileDirs().contains(topDir)
+                    && getCodeName(name) != null)
+                || explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map().containsKey(relativePath.toString())
+                || explicitDir.jsonFileDirs().stream()
+                        .map(rootDir.getFileSystem()::getPath)
+                        .anyMatch(dir -> dir.normalize().startsWith(relativePath));
     }
 
     private void handleFileEvent(Path relativePath) {

@@ -60,6 +60,24 @@ class WatcherBehaviorTest {
         }
     }
 
+    @Test
+    void detectsJsonTableDirectoryMovedOutOfRoot() throws IOException, InterruptedException {
+        Path root = Files.createDirectory(tempDir.resolve("data"));
+        Path table = Files.createDirectory(root.resolve("_user"));
+        Files.writeString(table.resolve("1.json"), "{}");
+        DirectoryStructure before = new DirectoryStructure(root);
+        Watcher watcher = new Watcher(root, null);
+        watcher.start();
+        try {
+            Files.move(table, tempDir.resolve("_user"));
+            awaitEventDetected(watcher);
+            assertFalse(before.lastModifiedEquals(before.reload()));
+        } finally {
+            watcher.stop();
+        }
+    }
+
+    @Test
     void shouldDetectFileCreatedImmediatelyAfterStart() throws IOException, InterruptedException {
         // start()在调用线程内同步完成目录注册，返回后立即创建的文件也必须被捕获（回归：注册竞态）
         Watcher watcher = new Watcher(tempDir, null);
