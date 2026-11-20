@@ -164,8 +164,9 @@ public class CachedFiles {
             return null;
         }
         String filename = name.toString();
+        String lowerFilename = filename.toLowerCase(Locale.ROOT);
         for (String metaSuffix : metaSuffixSet) {
-            if (filename.endsWith(metaSuffix) && filename.length() > metaSuffix.length()) {
+            if (lowerFilename.endsWith(metaSuffix) && filename.length() > metaSuffix.length()) {
                 return key.resolveSibling(filename.substring(0, filename.length() - metaSuffix.length()));
             }
         }

@@ -17,6 +17,29 @@ class CachedFilesTest {
     Path tempDir;
 
     @Test
+    void keepsMetadataWithLegacySuffixCasingAndMatchesWholePathSegments() throws Exception {
+        Path root = Files.createDirectory(tempDir.resolve("root"));
+        Path asset = Files.createDirectory(root.resolve("Asset"));
+        Path similar = Files.createDirectory(root.resolve("AssetExtra"));
+        Path directoryMetadata = Files.createFile(root.resolve("Asset.META"));
+        Path orphanMetadata = Files.createFile(root.resolve("Ass.meta"));
+        Files.createDirectory(root.resolve("Ass"));
+        Path generated = Files.createFile(asset.resolve("data.lua"));
+        Path generatedMetadata = Files.createFile(asset.resolve("data.lua.UID"));
+        Path similarlyNamed = Files.createFile(similar.resolve("data.lua"));
+
+        CachedFiles files = new CachedFiles();
+        files.keepFile(generated);
+        files.keepFile(similarlyNamed);
+        files.keepMetaAndDeleteOtherFiles(root.toFile());
+        files.finalizeRun();
+
+        assertTrue(Files.exists(directoryMetadata));
+        assertTrue(Files.exists(generatedMetadata));
+        assertFalse(Files.exists(orphanMetadata));
+    }
+
+    @Test
     @EnabledOnOs(OS.WINDOWS)
     void doesNotTraverseDirectoryJunctionDuringCleanup() throws Exception {
         Path root = Files.createDirectory(tempDir.resolve("root"));
