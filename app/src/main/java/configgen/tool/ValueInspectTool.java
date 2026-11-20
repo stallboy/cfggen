@@ -37,14 +37,12 @@ public class ValueInspectTool extends GeneratorWithTag {
     @Override
     public void generate(Context ctx) throws IOException {
         CfgValue value = ctx.makeValue(tag);
-        ValueInspector searcher = new ValueInspector(value, searchTo);
-
-        if (query == null) {
-            searcher.loop();
-        } else {
-            searcher.search(query.getFirst(), query.subList(1, query.size()));
-
+        try (ValueInspector searcher = new ValueInspector(value, searchTo)) {
+            if (query == null) {
+                searcher.loop();
+            } else {
+                searcher.search(query.getFirst(), query.subList(1, query.size()));
+            }
         }
-        searcher.close();
     }
 }
