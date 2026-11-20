@@ -71,8 +71,13 @@ public class FileUtil {
                 }
             }
             moveReplacing(staged, target);
-        } finally {
-            Files.deleteIfExists(staged);
+        } catch (IOException | RuntimeException | Error failure) {
+            try {
+                Files.deleteIfExists(staged);
+            } catch (IOException | RuntimeException cleanupFailure) {
+                failure.addSuppressed(cleanupFailure);
+            }
+            throw failure;
         }
     }
 
