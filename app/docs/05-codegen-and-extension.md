@@ -38,7 +38,7 @@ gen 层消费 `CfgValue`，用模板渲染成各语言的代码与数据文件�
 
    生成文件按实际类型用法输出 `using`。项目启用 .NET SDK 的 `ImplicitUsings` 时，可传 `-gen cs,implicitUsings` 省略由 SDK 提供的 `System`、`System.Collections.Generic`、`System.IO`、`System.Linq`；非隐式命名空间仍显式保留。`Loader.cs` 按既有规则只在不存在时复制，已有项目切换参数时需要先更新这份运行库。
 3. 每个 struct / interface / table → 建 `Model` → `JteEngine.render("cs/GenXxx.jte", model, ps)` 写到独立文件，**单阶段并发**。
-4. 生成前用 `CachedFiles.prepareOutputDirectory(dstDir, ".meta", ".uid")` 登记输出目录，批次成功后统一清理过期文件并保留仍在使用的资源元数据。
+4. 批次成功后统一清理过期文件，保留仍在使用的 `.meta` 和 `.uid` 资源元数据。
 
 两个关键并发手法（所有 `gen*` 通用）：
 
@@ -71,7 +71,9 @@ gen 层消费 `CfgValue`，用模板渲染成各语言的代码与数据文件�
 
 Java、Go、C#、Lua 清理 `dir` 下的包目录。GDScript 和 JSON 导出清理各自的输出目录。TypeScript 可以直接写项目根目录上的固定文件，因此不登记清理目录。
 
-登记发生在写入前。空目录由生成器自动创建 `.cfggen-output`。已有产物的目录需要同名普通文件，空文件即可。升级时可改用空目录，或者确认旧目录内只包含 cfggen 管理的文件后，手动创建 marker。同一批生成共享登记，全部成功后才删除未登记的旧文件。
+生成器调用 `prepareOutputDirectory()` 登记要清理的目录。空目录或只含本批次新建文件的目录会自动创建 `.cfggen-output`。包含其他文件的目录需要同名普通标记文件。同一批次多次登记同一个目录时会合并元数据后缀，全部生成成功后才清理旧文件。
+
+同一进程内，命令行生成和 watch 后运行任务串行执行。后运行任务从内嵌生成到脚本退出都占用同一个执行时段。共享同一清理目录的生成器应放在同一批次，例如在同一条命令中传入多个 `-gen`，使清理能保留这一批次的全部输出。
 
 ## 并发生成（设计原理）
 

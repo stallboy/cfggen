@@ -1,7 +1,5 @@
 package configgen.gen;
 
-import configgen.util.CachedFiles;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.*;
@@ -60,9 +58,6 @@ public final class Main {
     }
 
     record NamedTool(String name, Tool tool) {
-    }
-
-    record NamedGenerator(String name, Generator gen) {
     }
 
     @SuppressWarnings("SpellCheckingInspection")
@@ -146,7 +141,7 @@ public final class Main {
         return sb.toString();
     }
 
-    private static int run(String[] args) {
+    private static int run(String[] args) throws IOException {
         boolean allowValueErr = false;
         String dataDir = null;
         String sharedSchema = null;
@@ -161,7 +156,7 @@ public final class Main {
         String langSwitchDefaultLang = "zh_cn";
 
         List<NamedTool> tools = new ArrayList<>();
-        List<NamedGenerator> generators = new ArrayList<>();
+        List<Generator> generators = new ArrayList<>();
 
 
         for (int i = 0; i < args.length; ++i) {
@@ -224,7 +219,7 @@ public final class Main {
                     if (generator == null) {
                         return help("-gen " + name + " UNKNOWN");
                     }
-                    generators.add(new NamedGenerator(name, generator));
+                    generators.add(generator);
                 }
                 default -> {
                     return help("unknown args " + args[i]);
@@ -269,22 +264,7 @@ public final class Main {
                 i18n, allowValueErr);
         Context context = sharedSchema == null ? new Context(contextCfg)
                 : new Context(contextCfg, configgen.schema.CfgSchemas.readFromRoot(Path.of(sharedSchema)));
-        // 登记为当前代：server类generator（无论是否开watch）的编辑写路径统一经WatchAndPostRun取当前代并互斥
-        WatchAndPostRun.INSTANCE.initContext(context);
-
-        CachedFiles outputs = new CachedFiles();
-        for (NamedGenerator ng : generators) {
-            Logger.verbose("-----generate %s", ng.gen.parameter.toString());
-            try {
-                ng.gen.generate(context, outputs);
-            } catch (IOException e) {
-                throw new RuntimeException("generate " + ng.name + " failed", e);
-            }
-            Logger.profile("generate " + ng.name);
-        }
-
-        // 清理生成目录中未登记的文件：每批生成使用独立登记
-        outputs.finalizeRun();
+        GenerationBatch.run(context, generators);
         Logger.profile("end");
         return 0;
     }

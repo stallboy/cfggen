@@ -86,15 +86,21 @@ class StateCoordinatorTest {
     }
 
     @Test
-    void setInitialDoesNotRefreshSubscribers() {
+    void initializesNewSubscribersFromTheCurrentState() {
         StateCoordinator<String> c = new StateCoordinator<>();
-        List<String> seen = new ArrayList<>();
-        c.addRefresher(seen::add);
+        List<String> first = new ArrayList<>();
+        List<String> second = new ArrayList<>();
 
-        c.setInitial("a");
+        c.addRefresher("initial", first::add);
+        c.installState("reloaded");
+        c.addRefresher("initial", second::add);
+        assertEquals("reloaded", c.state());
+        assertEquals(List.of("initial", "reloaded"), first);
+        assertEquals(List.of("reloaded"), second);
 
-        assertEquals("a", c.state());
-        assertEquals(List.of(), seen, "启动期登记不应触发刷新（此刻通常还没有可用的订阅者快照）");
+        c.runEdit(state -> null);
+        assertEquals(List.of("initial", "reloaded", "reloaded"), first);
+        assertEquals(List.of("reloaded", "reloaded"), second);
     }
 
     @Test

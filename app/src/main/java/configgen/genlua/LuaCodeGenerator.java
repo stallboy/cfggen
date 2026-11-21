@@ -14,7 +14,6 @@ import configgen.value.CfgValue;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +23,7 @@ import static configgen.value.CfgValue.VStruct;
 import static configgen.value.CfgValue.VTable;
 
 public class LuaCodeGenerator extends GeneratorWithTag {
-    private final String dir;
+    private final Path destination;
     private final String pkg;
     private final String encoding;
     private final boolean useEmmyLua;
@@ -37,7 +36,6 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
     private CfgValue cfgValue;
     private CfgSchema cfgSchema;
-    private Path dstDir;
     private boolean isLangSwitch;
     private CachedFiles outputFiles;
     // 一次生成的全局配置（原 AContext static 单例），generate() 入口构造，随 Ctx 链下传
@@ -61,8 +59,9 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
     public LuaCodeGenerator(Parameter parameter) {
         super(parameter);
-        dir = parameter.get("dir", ".");
+        String dir = parameter.get("dir", ".");
         pkg = parameter.get("pkg", "cfg");
+        destination = Path.of(dir).resolve(pkg.replace('.', '/')).toAbsolutePath().normalize();
         encoding = parameter.get("encoding", "UTF-8");
 
         useEmmyLua = parameter.has("emmylua");
@@ -86,8 +85,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
                 packBool, noStr, rForOldShared);
         isLangSwitch = aCtx.nullableLangSwitchSupport() != null;
 
-        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        outputs.prepareOutputDirectory(dstDir, ".meta", ".uid");
+        outputs.prepareOutputDirectory(destination, ".meta", ".uid");
         outputFiles = outputs;
 
         cfgValue = ctx.makeValue(tag);
@@ -148,7 +146,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     }
 
     private CachedIndentPrinter createCode(String fn) {
-        return mainCc.get().printer(dstDir.resolve(fn), encoding, outputFiles);
+        return mainCc.get().printer(destination.resolve(fn), encoding, outputFiles);
     }
 
     private void generateTablesParallel() {
@@ -480,7 +478,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
             // 不能用createCode，不能用主表的cache；用本线程独立的 extraCc，与主表 mainCc 缓冲区分开
             try (CachedIndentPrinter extraPs = extraCc.get().printer(
-                    dstDir.resolve(Name.tableExtraPath(vTable.name(), extraIdx + 1)), encoding, outputFiles)) {
+                    destination.resolve(Name.tableExtraPath(vTable.name(), extraIdx + 1)), encoding, outputFiles)) {
 
                 extraPs.println("local %s = require \"%s._cfgs\"", pkg, pkg);
                 if (HasSubFieldable.hasSubFieldable(table)) {

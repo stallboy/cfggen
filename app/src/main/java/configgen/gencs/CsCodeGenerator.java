@@ -1,7 +1,5 @@
 package configgen.gencs;
 
-import configgen.util.CachedFiles;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -16,7 +14,6 @@ import configgen.value.CfgValue;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +22,7 @@ import java.util.concurrent.Executors;
 import static configgen.value.CfgValue.VTable;
 
 public class CsCodeGenerator extends GeneratorWithTag {
-    private final String dir;
+    private final Path destination;
     public final String pkg;
     public final String encoding;
     public final String prefix;
@@ -33,7 +30,6 @@ public class CsCodeGenerator extends GeneratorWithTag {
     public final boolean unity;
     public final boolean implicitUsings;
 
-    private Path dstDir;
     private CachedFiles outputFiles;
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
@@ -41,8 +37,9 @@ public class CsCodeGenerator extends GeneratorWithTag {
 
     public CsCodeGenerator(Parameter parameter) {
         super(parameter);
-        dir = parameter.get("dir", "Config");
+        String dir = parameter.get("dir", "Config");
         pkg = parameter.get("pkg", "Config");
+        destination = Path.of(dir).resolve(pkg.replace('.', '/')).toAbsolutePath().normalize();
         encoding = parameter.get("encoding", "UTF-8");
         prefix = parameter.get("prefix", "D");
         // 非法前缀会静默产出编不过的代码，这里直接报错；C# 标识符片段：字母或_开头，后续字母/数字/_
@@ -65,8 +62,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         CfgValue cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
         CfgSchema cfgSchema = cfgValue.schema();
 
-        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        outputs.prepareOutputDirectory(dstDir, ".meta", ".uid");
+        outputs.prepareOutputDirectory(destination, ".meta", ".uid");
         outputFiles = outputs;
 
         var translationBundle = ctx.nullableTranslationBundle();
@@ -74,7 +70,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         // 普通和 Unity 模式共用 C#9 兼容的运行库。
         FileUtil.copyFileIfNotExist("/support/cs/Loader.cs",
                 "src/main/resources/support/cs/Loader.cs",
-                dstDir.resolve("Loader.cs"),
+                destination.resolve("Loader.cs"),
                 encoding, outputFiles, line -> {
                     if (implicitUsings && switch (line) {
                         case "using System;", "using System.Collections.Generic;", "using System.Linq;" -> true;
@@ -174,7 +170,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
 
 
     private CachedIndentPrinter createCode(String fn) {
-        return mainCc.get().printer(dstDir.resolve(fn), encoding, outputFiles);
+        return mainCc.get().printer(destination.resolve(fn), encoding, outputFiles);
     }
 
     private void generateModuleLoaders(CfgSchema cfgSchema, CfgValue cfgValue) {

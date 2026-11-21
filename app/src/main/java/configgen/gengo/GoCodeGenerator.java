@@ -1,7 +1,5 @@
 package configgen.gengo;
 
-import configgen.util.CachedFiles;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -15,19 +13,17 @@ import configgen.value.CfgValue;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class GoCodeGenerator extends GeneratorWithTag {
-    private final String dir;
+    private final Path destination;
     private final String pkg;
     // Go 规范强制源码 UTF-8，不支持配置其他编码（GBK 中文注释在 go build/gofmt 下是非法字节序列）
     private static final String ENCODING = "UTF-8";
     public final boolean serverText;
-    private Path dstDir;
     private CachedFiles outputFiles;
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
@@ -44,24 +40,24 @@ public class GoCodeGenerator extends GeneratorWithTag {
 
     public GoCodeGenerator(Parameter parameter) {
         super(parameter);
-        dir = parameter.get("dir", "config");
+        String dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
+        destination = Path.of(dir).resolve(pkg.replace('.', '/')).toAbsolutePath().normalize();
         serverText = parameter.has("serverText");
     }
 
     @Override
     public void generate(Context ctx, CachedFiles outputs) throws IOException {
-        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        outputs.prepareOutputDirectory(dstDir);
+        outputs.prepareOutputDirectory(destination);
         outputFiles = outputs;
         CfgValue cfgValue = ctx.makeValue(tag);
         CfgSchema cfgSchema = cfgValue.schema();
         reverseFields.clear();
         ForeachSchema.foreachStructural(owner -> {
             for (ForeignKeySchema fk : owner.foreignKeys()) {
-                if (fk.refKey() instanceof RefKey.RefList list) {
+                if (fk.refKey() instanceof RefKey.RefList(KeySchema key)) {
                     reverseFields.computeIfAbsent(fk.refTableSchema(), ignored -> new HashSet<>())
-                            .add(list.key().fields().getFirst());
+                            .add(key.fields().getFirst());
                 }
             }
         }, cfgSchema);
@@ -72,7 +68,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
         for (String fn : COPY_FILES) {
             FileUtil.copyFileIfNotExist("/support/go/" + fn,
                     "src/main/resources/support/go/" + fn,
-                    dstDir.resolve(fn),
+                    destination.resolve(fn),
                     ENCODING, outputFiles, line -> line.equals("package config") ? "package " + pkg : line);
         }
 
@@ -119,7 +115,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
     }
 
     private CachedIndentPrinter createCode(String fn) {
-        return mainCc.get().printer(dstDir.resolve(fn), ENCODING, outputFiles);
+        return mainCc.get().printer(destination.resolve(fn), ENCODING, outputFiles);
     }
 
     List<FieldSchema> reverseFields(TableSchema table) {

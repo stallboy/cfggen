@@ -13,34 +13,30 @@ import java.util.concurrent.ConcurrentHashMap;
 /** One generation batch's retained files and managed output directories. */
 public class CachedFiles {
     private static final String OUTPUT_MARKER = ".cfggen-output";
+    private static final Comparator<String> SUFFIX_ORDER =
+            Comparator.comparingInt(String::length).reversed().thenComparing(Comparator.naturalOrder());
 
     private final Set<Path> keptPaths = ConcurrentHashMap.newKeySet();
-    // Directory preparation and finalization run on the batch thread.
-    private final Map<Path, List<String>> directories = new LinkedHashMap<>();
+    private final Set<Path> createdPaths = ConcurrentHashMap.newKeySet();
+    private final Map<Path, Set<String>> directories = new LinkedHashMap<>();
 
-    /**
-     * Mark a new or empty directory, or verify the marker of an existing one.
-     * Call before writing any output under the directory.
-     */
-    public void prepareOutputDirectory(Path directory, String... metadataSuffixes) throws IOException {
+    /** Prepare a directory before a generator writes to it. */
+    public synchronized void prepareOutputDirectory(Path directory, String... metadataSuffixes) throws IOException {
         Path root = fileKey(directory);
-        List<String> suffixes = Arrays.stream(metadataSuffixes)
-                .map(suffix -> suffix.toLowerCase(Locale.ROOT))
-                .distinct()
-                .sorted(Comparator.comparingInt(String::length).reversed().thenComparing(Comparator.naturalOrder()))
-                .toList();
-
-        for (var entry : directories.entrySet()) {
-            Path registered = entry.getKey();
-            if (root.equals(registered)) {
-                if (!suffixes.equals(entry.getValue())) {
-                    throw new IOException("Conflicting output directory registration: " + root);
-                }
-            } else if (root.startsWith(registered) || registered.startsWith(root)) {
+        for (Path registered : directories.keySet()) {
+            if (!root.equals(registered) && (root.startsWith(registered) || registered.startsWith(root))) {
                 throw new IOException("Overlapping output directories: " + registered + " and " + root);
             }
         }
 
+        prepareMarker(root);
+        Set<String> suffixes = directories.computeIfAbsent(root, ignored -> new TreeSet<>(SUFFIX_ORDER));
+        for (String suffix : metadataSuffixes) {
+            suffixes.add(suffix.toLowerCase(Locale.ROOT));
+        }
+    }
+
+    private void prepareMarker(Path root) throws IOException {
         Path existing = root;
         while (Files.notExists(existing, LinkOption.NOFOLLOW_LINKS) && existing.getParent() != null) {
             existing = existing.getParent();
@@ -55,7 +51,8 @@ public class CachedFiles {
         Path marker = root.resolve(OUTPUT_MARKER);
         if (!Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS)) {
             try (var entries = Files.list(root)) {
-                if (entries.findAny().isPresent()) {
+                if (entries.anyMatch(entry -> !createdPaths.contains(entry)
+                        || !Files.isRegularFile(entry, LinkOption.NOFOLLOW_LINKS))) {
                     throw new IOException("Output directory is not empty and has no regular output marker: " + root
                             + " (expected " + OUTPUT_MARKER + ")");
                 }
@@ -63,7 +60,6 @@ public class CachedFiles {
             Files.createFile(marker);
         }
         keepFile(marker);
-        directories.put(root, suffixes);
     }
 
     private static boolean isDirectDirectory(Path path) throws IOException {
@@ -88,16 +84,29 @@ public class CachedFiles {
         }
         directories.clear();
         keptPaths.clear();
+        createdPaths.clear();
     }
 
     public void writeFile(Path path, byte[] data) throws IOException {
-        keepFile(path);
-        FileUtil.writeIfChanged(path, data);
+        writeFile(path, data, false);
     }
 
     public void writeFileReplacement(Path path, byte[] data) throws IOException {
-        keepFile(path);
-        FileUtil.replaceIfChanged(path, data);
+        writeFile(path, data, true);
+    }
+
+    private void writeFile(Path path, byte[] data, boolean replace) throws IOException {
+        Path key = fileKey(path);
+        keepFile(key);
+        boolean newFile = Files.notExists(key, LinkOption.NOFOLLOW_LINKS);
+        if (replace) {
+            FileUtil.replaceIfChanged(path, data);
+        } else {
+            FileUtil.writeIfChanged(path, data);
+        }
+        if (newFile) {
+            createdPaths.add(key);
+        }
     }
 
     public void keepFile(Path path) {
@@ -120,30 +129,17 @@ public class CachedFiles {
         return deleteOk;
     }
 
-    private void doRemoveFile(File file, Path root, List<String> metadataSuffixes) {
+    private void doRemoveFile(File file, Path root, Set<String> metadataSuffixes) {
         Path key = fileKey(file.toPath());
-        boolean keep = keptPaths.contains(key);
-        if (keep) {
+        if (keptPaths.contains(key)) {
             return;
         }
 
-        if (!metadataSuffixes.isEmpty()) {
-            Path noMetaKey = findNoMetaKey(key, metadataSuffixes);
-            if (noMetaKey != null) {
-                keep = keptPaths.contains(noMetaKey);
-                if (!keep && Files.isDirectory(noMetaKey, LinkOption.NOFOLLOW_LINKS)) {
-                    for (Path f : keptPaths) {
-                        if (f.startsWith(noMetaKey)) {
-                            keep = true;
-                            break;
-                        }
-                    }
-                }
+        if (!metadataSuffixes.isEmpty() && !key.equals(root)) {
+            Path asset = findNoMetaKey(key, metadataSuffixes);
+            if (asset != null && (keptPaths.contains(asset) || Files.isDirectory(asset, LinkOption.NOFOLLOW_LINKS))) {
+                return;
             }
-        }
-
-        if (keep) {
-            return;
         }
 
         if (Files.isDirectory(file.toPath(), LinkOption.NOFOLLOW_LINKS)) {
@@ -162,6 +158,10 @@ public class CachedFiles {
             }
             File[] files = file.listFiles();
             if (files != null) {
+                if (!metadataSuffixes.isEmpty()) {
+                    // Clean each asset before deciding whether its longer metadata filename should survive.
+                    Arrays.sort(files, Comparator.comparingInt(entry -> entry.getName().length()));
+                }
                 for (File f : files) {
                     doRemoveFile(f, root, metadataSuffixes);
                 }
@@ -175,7 +175,7 @@ public class CachedFiles {
         }
     }
 
-    private static @Nullable Path findNoMetaKey(Path key, List<String> metadataSuffixes) {
+    private static @Nullable Path findNoMetaKey(Path key, Set<String> metadataSuffixes) {
         Path name = key.getFileName();
         if (name == null) {
             return null;

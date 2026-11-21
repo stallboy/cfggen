@@ -31,31 +31,35 @@ public class JsonGenerator extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx, CachedFiles batchOutputs) throws IOException {
-        if (tables.isBlank()) {
-            return;
+        String[] tableNames = tables.isBlank() ? new String[0] : tables.split(";");
+        if (tableNames.length != 0) {
+            generateTables(ctx, tableNames, outputDirectory(ctx), batchOutputs);
         }
-        String[] tableNames = tables.split(";");
-        if (tableNames.length == 0) {
-            return;
-        }
-        if (tag != null) {
-            Logger.log("gen json with tag=%s, be careful!!!", tag);
-        }
-
-        exportTables(ctx, ctx.makeValue(tag), tableNames, Path.of(dst).toAbsolutePath().normalize(), batchOutputs);
     }
 
-    private record Export(String table, Map<Path, VStruct> records) {}
 
-    private static synchronized void exportTables(Context ctx, CfgValue cfgValue, String[] tableNames,
-                                                   Path destination, CachedFiles outputFiles) throws IOException {
-        Path outputDirectory = resolveOutputDirectory(destination);
+    private Path outputDirectory(Context ctx) throws IOException {
+        Path outputDirectory = resolveOutputDirectory(Path.of(dst).toAbsolutePath().normalize());
         Path dataDirectory = ctx.rootDir().toRealPath();
         if (outputDirectory.startsWith(dataDirectory) || dataDirectory.startsWith(outputDirectory)) {
             throw new IOException("JSON export directory " + outputDirectory + " overlaps the data directory "
                     + dataDirectory + ". Set dst outside the data directory.");
         }
+        return outputDirectory;
+    }
 
+    private void generateTables(Context ctx, String[] tableNames, Path destination,
+                                CachedFiles outputFiles) throws IOException {
+        if (tag != null) {
+            Logger.log("gen json with tag=%s, be careful!!!", tag);
+        }
+        exportTables(ctx.makeValue(tag), tableNames, destination, outputFiles);
+    }
+
+    private record Export(String table, Map<Path, VStruct> records) {}
+
+    private static synchronized void exportTables(CfgValue cfgValue, String[] tableNames, Path destination,
+                                                   CachedFiles outputFiles) throws IOException {
         Map<Path, Export> exports = new LinkedHashMap<>();
         for (String table : tableNames) {
             VTable vTable = cfgValue.getTable(table);
@@ -68,8 +72,7 @@ public class JsonGenerator extends GeneratorWithTag {
                 Logger.log("ignore gen json: table=%s has map!", table);
                 continue;
             }
-
-            Path directory = outputDirectory.resolve(outputTableDirectory(table));
+            Path directory = destination.resolve(outputTableDirectory(table));
             if (!resolveOutputDirectory(directory).equals(directory)) {
                 throw new IOException("JSON export table directory must not redirect to another path: " + directory);
             }
@@ -85,7 +88,7 @@ public class JsonGenerator extends GeneratorWithTag {
         if (exports.isEmpty()) {
             return;
         }
-        outputFiles.prepareOutputDirectory(outputDirectory);
+        outputFiles.prepareOutputDirectory(destination);
         for (Export export : exports.values()) {
             for (Map.Entry<Path, VStruct> entry : export.records().entrySet()) {
                 VTableJsonStorage.writeRecord(entry.getValue(), entry.getKey(), outputFiles);

@@ -16,7 +16,6 @@ import configgen.value.CfgValue;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -26,10 +25,9 @@ import java.util.concurrent.Executors;
 import static configgen.value.CfgValue.VTable;
 
 public class GdCodeGenerator extends GeneratorWithTag {
-    private final String dir;
+    private final Path destination;
     public final String prefix;
 
-    private Path dstDir;
     private CachedFiles outputFiles;
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
@@ -50,7 +48,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
 
     public GdCodeGenerator(Parameter parameter) {
         super(parameter);
-        dir = parameter.get("dir", "config");
+        destination = Path.of(parameter.get("dir", "config")).toAbsolutePath().normalize();
         prefix = parameter.get("prefix", "Data");
         // 非法前缀会静默产出编不过的代码，这里直接报错；GDScript 标识符片段：字母或_开头，后续字母/数字/_
         for (int i = 0; i < prefix.length(); i++) {
@@ -84,8 +82,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
                     + "; add (nogd) tag to these tables or filter with own:-nogd");
         }
 
-        dstDir = Paths.get(dir);
-        outputs.prepareOutputDirectory(dstDir, ".meta", ".uid");
+        outputs.prepareOutputDirectory(destination, ".meta", ".uid");
         outputFiles = outputs;
 
         isLangSwitch = ctx.nullableTranslationBundle() != null;
@@ -99,7 +96,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
         for (String fn : needCopyFiles) {
             FileUtil.copyFileIfNotExist("/support/gd/" + fn,
                     "src/main/resources/support/gd/" + fn,
-                    dstDir.resolve(fn),
+                    destination.resolve(fn),
                     ENCODING, outputFiles);
         }
 
@@ -170,6 +167,6 @@ public class GdCodeGenerator extends GeneratorWithTag {
 
 
     private CachedIndentPrinter createCode(String fn) {
-        return mainCc.get().printer(dstDir.resolve(fn), ENCODING, outputFiles);
+        return mainCc.get().printer(destination.resolve(fn), ENCODING, outputFiles);
     }
 }

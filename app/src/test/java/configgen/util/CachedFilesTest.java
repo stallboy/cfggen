@@ -21,7 +21,8 @@ class CachedFilesTest {
     void keepsMetadataWithLegacySuffixCasingAndMatchesWholePathSegments() throws Exception {
         Path root = Files.createDirectory(tempDir.resolve("root"));
         CachedFiles files = new CachedFiles();
-        files.prepareOutputDirectory(root, ".meta", ".uid", ".custom");
+        files.prepareOutputDirectory(root, ".meta", ".uid");
+        files.prepareOutputDirectory(root, ".custom");
         assertEquals(0, Files.size(root.resolve(".cfggen-output")));
         Path asset = Files.createDirectory(root.resolve("Asset"));
         Path similar = Files.createDirectory(root.resolve("AssetExtra"));
@@ -67,19 +68,24 @@ class CachedFilesTest {
     @Test
     void preservesNestedManagedDirectoriesAndRejectsOverlappingRegistrations() throws IOException {
         Path root = tempDir.resolve("root");
-        Path nested = root.resolve("nested");
+        Path group = root.resolve("group");
+        Path nested = group.resolve("nested");
         CachedFiles files = new CachedFiles();
-        files.prepareOutputDirectory(root);
+        files.prepareOutputDirectory(root, ".meta", ".uid");
         Path stale = Files.writeString(root.resolve("stale.txt"), "old");
         assertThrows(IOException.class, () -> files.prepareOutputDirectory(nested));
 
         CachedFiles nestedFiles = new CachedFiles();
         nestedFiles.prepareOutputDirectory(nested);
         Path nestedOutput = Files.writeString(nested.resolve("keep.go"), "nested");
+        Path groupMetadata = Files.writeString(root.resolve("group.meta"), "group GUID");
+        Path nestedMetadata = Files.writeString(group.resolve("nested.meta"), "nested GUID");
         files.finalizeRun();
 
         assertFalse(Files.exists(stale));
         assertEquals("nested", Files.readString(nestedOutput));
+        assertEquals("group GUID", Files.readString(groupMetadata));
+        assertEquals("nested GUID", Files.readString(nestedMetadata));
     }
 
     @Test

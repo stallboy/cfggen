@@ -75,7 +75,6 @@ public class EditorServer extends GeneratorWithTag {
     @Override
     public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
-        initFromCtx(ctx);
 
         System.setProperty("java.util.logging.SimpleFormatter.format",
                 "[%1$tF %1$tT] %5$s %n");
@@ -102,14 +101,17 @@ public class EditorServer extends GeneratorWithTag {
         handle("/recordDelete", this::handleRecordDelete);
 
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+        try {
+            WatchAndPostRun.INSTANCE.registerServer(ctx, this::initFromCtx);
+        } catch (IOException | RuntimeException | Error e) {
+            server.stop(0);
+            throw e;
+        }
         server.start();
         Logger.log("Server is started at " + listenAddress);
 
-        // 无论是否开启watch都注册：reload换代后与编辑写操作（含同进程McpServer的写）成功后，
-        // 都会经此刷新内存快照（见WatchAndPostRun/StateCoordinator）
-        WatchAndPostRun.INSTANCE.registerPostRunCallback(this::initFromCtx);
         if (waitSecondsAfterWatchEvt > 0) {
-            WatchAndPostRun.INSTANCE.startWatch(ctx, waitSecondsAfterWatchEvt);
+            WatchAndPostRun.INSTANCE.startWatch(waitSecondsAfterWatchEvt);
             if (postRun != null) {
                 WatchAndPostRun.INSTANCE.registerPostRunBat(postRun);
             }

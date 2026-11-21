@@ -51,10 +51,15 @@ public final class StateCoordinator<T> {
     }
 
     /**
-     * 启动期登记初始状态：不触发刷新（此刻通常还没有订阅者），也不与写路径竞争（server尚未开始监听）。
+     * 在编辑锁内初始化并登记订阅者。第一个订阅者提供初始状态，后续订阅者使用当前代。
      */
-    public void setInitial(T initial) {
-        state = initial;
+    public void addRefresher(T initial, Refresher<T> refresher) {
+        synchronized (editLock) {
+            T current = state == null ? initial : state;
+            refresher.refresh(current);
+            state = current;
+            refreshers.add(refresher);
+        }
     }
 
     /**

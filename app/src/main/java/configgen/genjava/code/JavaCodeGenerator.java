@@ -1,7 +1,5 @@
 package configgen.genjava.code;
 
-import configgen.util.CachedFiles;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -21,7 +19,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +29,7 @@ import java.util.function.Function;
 import static configgen.value.CfgValue.VTable;
 
 public class JavaCodeGenerator extends GeneratorWithTag {
-    private final String dir;
+    private final Path destination;
     private final String pkg;
     private final String encoding;
     private final boolean sealed;
@@ -74,8 +71,9 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
     public JavaCodeGenerator(Parameter parameter) {
         super(parameter);
-        dir = parameter.get("dir", "config");
+        String dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
+        destination = Path.of(dir).resolve(pkg.replace('.', '/')).toAbsolutePath().normalize();
         encoding = parameter.get("encoding", "UTF-8");
         sealed = !parameter.has("noSealed"); // 默认sealed
         jspecify = parameter.has("jspecify");
@@ -103,8 +101,8 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         CfgData cfgData = ctx.cfgData();
-        Path dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        outputFiles.prepareOutputDirectory(dstDir);
+        Path dstDir = destination;
+        outputFiles.prepareOutputDirectory(destination);
         Set<String> generatedPackagePaths = ConcurrentHashMap.newKeySet();
         Function<String, CachedIndentPrinter> openCode = filename -> {
             if (jspecify) {

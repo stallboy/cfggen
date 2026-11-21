@@ -1,7 +1,5 @@
 package configgen.gen;
 
-import configgen.util.CachedFiles;
-
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -20,7 +18,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,10 +28,6 @@ import java.util.function.Function;
 
 public enum WatchAndPostRun {
     INSTANCE;
-
-    public interface PostRunCallback {
-        void onNewContextLoaded(Context newContext);
-    }
 
     private static class PostRunBat {
         String batFile; // .bat 或 .sh 文件
@@ -60,15 +56,9 @@ public enum WatchAndPostRun {
     // autoFix写回config.cfg会再触发watch→reload，若对齐不稳定会形成写-触发循环，需要上限保护。
     private final AtomicInteger consecutiveAutoFixReloads = new AtomicInteger();
     private static final int MAX_CONSECUTIVE_AUTO_FIX_RELOADS = 3;
-    // bat里先跑-generator再跑外部进程，外部进程不关stdout时readLine会永久阻塞，join必须有界
+    // 从启动脚本起计时，不依赖 stdout 关闭。
+    private static final long POST_RUN_SCRIPT_TIMEOUT_MINUTES = 10;
     private static final long POST_RUN_JOIN_TIMEOUT_MILLIS = 10 * 60 * 1000;
-
-    /**
-     * Main在创建Context后、执行generators前登记当前代。之后所有编辑写操作都经 {@link #runEdit} 取当前代。
-     */
-    public void initContext(Context context) {
-        coordinator.setInitial(context);
-    }
 
     /**
      * 编辑写操作的统一临界区（EditorServer的record写接口、McpServer的WriteRecordTool都必须经此进入，不得自行取快照）：
@@ -90,19 +80,12 @@ public enum WatchAndPostRun {
 
     /**
      * 开始监听，多次调用，只有第一次起效，后面的忽略
-     * @param context 上下文
      * @param waitSecondsAfterWatchEvt  监听到文件变化后，等待多少秒再执行reloadData，避免频繁触发
      */
-    public synchronized void startWatch(Context context, int waitSecondsAfterWatchEvt) {
+    public synchronized void startWatch(int waitSecondsAfterWatchEvt) {
         if (started) {
-            if (coordinator.state() == context) {
-                // 正常场景：同一命令行下多个generator（如 server + mcpserver）共享同一个context和watcher
-                Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherAlreadyStarted",
-                    "file change watcher already started, shared"));
-            } else {
-                Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherAlreadyStartedByOtherContext",
-                    "file change watcher already started by ANOTHER context, this startWatch is IGNORED!"));
-            }
+            Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherAlreadyStarted",
+                "file change watcher already started, shared"));
             return;
         }
         if (waitSecondsAfterWatchEvt == 0) {
@@ -113,9 +96,7 @@ public enum WatchAndPostRun {
                 "watcher waitSecondsAfterWatchEvt < 0, ignore start"));
             return;
         }
-        if (coordinator.state() == null) {
-            coordinator.setInitial(context);
-        }
+        Context context = Objects.requireNonNull(coordinator.state());
         DirectoryStructure ss = context.sourceStructure();
         Watcher newWatcher = new Watcher(ss.getRootDir(), ss.getExplicitDir());
         WaitWatcher newWaitWatcher = new WaitWatcher(newWatcher, this::reloadData,
@@ -167,13 +148,17 @@ public enum WatchAndPostRun {
     }
 
     /**
-     * 要在主线程中做注册。
-     * server（EditorServer/CfgMcpServer）无论是否开启watch都应注册：除reload换代外，
-     * 编辑写操作成功后也会经此回调刷新内存快照。
-     * @param callback 回调函数
+     * 服务在开始监听前登记。即使未启用 watch，编辑成功后也需要刷新服务快照。
      */
-    public void registerPostRunCallback(PostRunCallback callback) {
-        coordinator.addRefresher(callback::onNewContextLoaded);
+    public synchronized void registerServer(Context context, StateCoordinator.Refresher<Context> refresher) throws IOException {
+        Context current = coordinator.state();
+        if (current != null && (!current.contextCfg().equals(context.contextCfg())
+                || current.isFixedSchema() != context.isFixedSchema()
+                || (current.isFixedSchema() && current.cfgSchema() != context.cfgSchema()))) {
+            throw new IOException("A server is already registered with a different configuration context: "
+                    + current.rootDir());
+        }
+        coordinator.addRefresher(context, refresher);
     }
 
     /**
@@ -261,64 +246,83 @@ public enum WatchAndPostRun {
         String postRun = bat.batFile;
         bat.thread = Thread.startVirtualThread(() -> {
             try {
-                String genPrefix = null;
-                if (postRun.endsWith(".bat")) {
-                    genPrefix = ":: -gen ";
-                } else if (postRun.endsWith(".sh")) {
-                    genPrefix = "# -gen ";
+                // 内嵌生成和它启动的外部脚本属于同一个串行任务。
+                synchronized (GenerationBatch.class) {
+                    executePostRun(postRun);
                 }
-                if (genPrefix != null) {
-                    Context runCtx = java.util.Objects.requireNonNull(coordinator.state());
-                    CachedFiles outputs = new CachedFiles();
-                    for (String line : Files.readAllLines(Path.of(postRun))) {
-                        if (line.startsWith(genPrefix)) {
-                            String parameter = line.substring(genPrefix.length());
-                            Generator generator = Generators.create(parameter);
-                            if (generator != null) {
-                                Logger.log("-gen " + parameter);
-                                generator.generate(runCtx, outputs);
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                    // bat内进程生成的清理收口：原先只登记目录、无人finalize，悬空靠外部bat子进程兜底；
-                    // 在外部进程启动前完成，删除的陈旧文件子进程会重生成
-                    outputs.finalizeRun();
-                }
-
-                Process process = new ProcessBuilder(postRun).redirectErrorStream(true).start();
-                try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunOutput",
-                            "post run output: {0}", line));
-                    }
-                    if (process.waitFor(10, TimeUnit.SECONDS)) {
-                        int exitCode = process.exitValue();
-                        if (exitCode == 0) {
-                            Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunOk",
-                                "post run ok!"));
-                        } else {
-                            Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunExitCode",
-                                "post run failed (exit code {0}): {1}", exitCode, postRun));
-                        }
-                    } else {
-                        Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunTimeout",
-                            "post run timeout"));
-                        process.destroy();
-                        if (!process.waitFor(5, TimeUnit.SECONDS)) {
-                            process.destroyForcibly();
-                        }
-                    }
-                }
-            } catch (IOException e) {
+            } catch (IOException | RuntimeException e) {
                 Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunErr",
                     "post run err: {0}", e.getMessage()));
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunInterrupted",
                     "post run interrupted: {0}", e.getMessage()));
             }
         });
+    }
+
+    private void executePostRun(String postRun) throws IOException, InterruptedException {
+        String genPrefix = null;
+        if (postRun.endsWith(".bat")) {
+            genPrefix = ":: -gen ";
+        } else if (postRun.endsWith(".sh")) {
+            genPrefix = "# -gen ";
+        }
+        if (genPrefix != null) {
+            Context runCtx = java.util.Objects.requireNonNull(coordinator.state());
+            List<Generator> generators = new ArrayList<>();
+            for (String line : Files.readAllLines(Path.of(postRun))) {
+                if (!line.startsWith(genPrefix)) {
+                    break;
+                }
+                String parameter = line.substring(genPrefix.length());
+                Generator generator = Generators.create(parameter);
+                if (generator != null) {
+                    Logger.log("-gen " + parameter);
+                    generators.add(generator);
+                }
+            }
+            GenerationBatch.run(runCtx, generators);
+        }
+
+        Process process = new ProcessBuilder(postRun).redirectErrorStream(true).start();
+        // 独立读取 stdout，避免脚本不关闭输出时一直占用生成入口。
+        Thread output = Thread.startVirtualThread(() -> logPostRunOutput(process));
+        try {
+            if (!process.waitFor(POST_RUN_SCRIPT_TIMEOUT_MINUTES, TimeUnit.MINUTES)) {
+                Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunTimeout", "post run timeout"));
+                process.destroy();
+                if (!process.waitFor(5, TimeUnit.SECONDS)) {
+                    process.destroyForcibly().waitFor();
+                }
+                return;
+            }
+
+            output.join(TimeUnit.SECONDS.toMillis(5));
+            int exitCode = process.exitValue();
+            if (exitCode == 0) {
+                Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunOk", "post run ok!"));
+            } else {
+                Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunExitCode",
+                    "post run failed (exit code {0}): {1}", exitCode, postRun));
+            }
+        } finally {
+            if (process.isAlive()) {
+                process.destroyForcibly().waitFor();
+            }
+        }
+    }
+
+    private static void logPostRunOutput(Process process) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunOutput",
+                    "post run output: {0}", line));
+            }
+        } catch (IOException e) {
+            Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunErr",
+                "post run err: {0}", e.getMessage()));
+        }
     }
 }

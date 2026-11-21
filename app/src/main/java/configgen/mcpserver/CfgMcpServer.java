@@ -54,11 +54,14 @@ public class CfgMcpServer extends GeneratorWithTag {
             Logger.log("CfgMcpServer instance already exists! ignore this");
             return;
         }
-        // 无论是否开启watch都注册：reload换代后与编辑写操作（含同进程EditorServer的写）成功后，
-        // 都会经此刷新内存快照（见WatchAndPostRun/StateCoordinator）
-        WatchAndPostRun.INSTANCE.registerPostRunCallback(this::initFromCtx);
+        try {
+            WatchAndPostRun.INSTANCE.registerServer(ctx, this::initFromCtx);
+        } catch (IOException | RuntimeException | Error e) {
+            INSTANCE.compareAndSet(this, null);
+            throw e;
+        }
         if (waitSecondsAfterWatchEvt > 0) {
-            WatchAndPostRun.INSTANCE.startWatch(ctx, waitSecondsAfterWatchEvt);
+            WatchAndPostRun.INSTANCE.startWatch(waitSecondsAfterWatchEvt);
             if (postRun != null) {
                 WatchAndPostRun.INSTANCE.registerPostRunBat(postRun);
             }
