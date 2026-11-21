@@ -31,14 +31,14 @@ gen 层消费 `CfgValue`，用模板渲染成各语言的代码与数据文件�
 
 ## 生成器做什么（以 `cs` 为例）
 
-`CsCodeGenerator`（见 `gencs/CsCodeGenerator.java`）是代表性实现，`generate(ctx)` 流程：
+`CsCodeGenerator`（见 `gencs/CsCodeGenerator.java`）是代表性实现，`generate(ctx, outputFiles)` 流程：
 
 1. `ctx.makeValue(tag)` 拿值（代码注释原话："这里只需要 schema，生成 value 只用于检验数据"——生成器顺带让值解析跑一遍校验，schema 从 `value.schema()` 取）。
 2. 拷贝统一的 `Loader.cs` 运行库，普通和 `unity` 模式均兼容 C# 9；包含有界输入、类型化错误收集和只读 Map，不再维护两份运行库。
 
    生成文件按实际类型用法输出 `using`。项目启用 .NET SDK 的 `ImplicitUsings` 时，可传 `-gen cs,implicitUsings` 省略由 SDK 提供的 `System`、`System.Collections.Generic`、`System.IO`、`System.Linq`；非隐式命名空间仍显式保留。`Loader.cs` 按既有规则只在不存在时复制，已有项目切换参数时需要先更新这份运行库。
 3. 每个 struct / interface / table → 建 `Model` → `JteEngine.render("cs/GenXxx.jte", model, ps)` 写到独立文件，**单阶段并发**。
-4. 收尾：`ModuleLoader`、`Text`（lang-switch 时）、`CachedFiles.keepMetaAndDeleteOtherFiles` 清理**本次没再生成的过期文件**（保留 `Loader.cs` 等 meta）。
+4. 生成前用 `CachedFiles.prepareOutputDirectory(dstDir, ".meta", ".uid")` 登记输出目录，批次成功后统一清理过期文件并保留仍在使用的资源元数据。
 
 两个关键并发手法（所有 `gen*` 通用）：
 
@@ -69,15 +69,9 @@ gen 层消费 `CfgValue`，用模板渲染成各语言的代码与数据文件�
 
 ### 收尾清理（过期文件删除）的目录语义差异
 
-cs 第 4 步的 `keepMetaAndDeleteOtherFiles` **不能**照搬给所有语言，差异源于 dstDir 的语义：
+Java、Go、C#、Lua 清理 `dir` 下的包目录。GDScript 和 JSON 导出清理各自的输出目录。TypeScript 可以直接写项目根目录上的固定文件，因此不登记清理目录。
 
-| 语言 | dstDir | 清理 |
-|---|---|---|
-| cs / lua | `dir.resolve(pkg路径)` —— 生成器**独占子目录** | `keepMetaAndDeleteOtherFiles` 安全 |
-| gd | `dir` 本身 | 同上，但依赖调用方显式传独占目录（如 example 的 `dir:config`） |
-| ts | `dir`，**默认 `.`（用户项目根）** | **不清理**：Config.ts 与 `main.ts`/`package.json` 等用户文件同目录，任何清理都会误删；且产物仅 Config.ts + ConfigUtil.ts 两个固定文件名，不存在陈旧堆积 |
-
-> ts 不清理是目录语义决定的刻意行为（`TsCodeGenerator.generate` 注释有同样说明），不是漏掉 cs 式的清理调用，勿"修复"。
+登记发生在写入前。空目录由生成器自动创建 `.cfggen-output`。已有产物的目录需要同名普通文件，空文件即可。升级时可改用空目录，或者确认旧目录内只包含 cfggen 管理的文件后，手动创建 marker。同一批生成共享登记，全部成功后才删除未登记的旧文件。
 
 ## 并发生成（设计原理）
 
@@ -91,7 +85,7 @@ cs 第 4 步的 `keepMetaAndDeleteOtherFiles` **不能**照搬给所有语言，
 
 1. 新建 `gen<lang>` 包，写 `XxxCodeGenerator extends Generator`（需要 tag 就继承 `GeneratorWithTag`）。
 2. **构造函数里声明参数**：`dir = parameter.get("dir", "...")` 等——只写这一遍，参数解析和 `-h` 文档都有了。
-3. `generate(ctx)`：`ctx.makeValue(tag)` → 建 `Model` → `JteEngine.render("lang/Xxx.jte", model, ps)`。并发渲染照抄 cs 的 `ThreadLocal` + `invokeAll` 套路。命名（外键引用字段名、唯一键 Map/GetBy 名等）一律委托 `naming.GenNaming`，禁止把命名 switch 复制进生成器——跨语言命名契约只有一份，历史上 gd 的 RefList 前缀曾因各写一份而漂移（提交 ccc2381c）。
+3. `generate(ctx, outputFiles)`：`ctx.makeValue(tag)` → 建 `Model` → `JteEngine.render("lang/Xxx.jte", model, ps)`。并发渲染照抄 cs 的 `ThreadLocal` + `invokeAll` 套路。命名（外键引用字段名、唯一键 Map/GetBy 名等）一律委托 `naming.GenNaming`，禁止把命名 switch 复制进生成器——跨语言命名契约只有一份，历史上 gd 的 RefList 前缀曾因各写一份而漂移（提交 ccc2381c）。
 4. 模板放 `src/main/resources/jte/lang/`。
 5. 在 `Main.registerAllProviders` 加一行 `Generators.addProvider("lang", XxxCodeGenerator::new)`。
 

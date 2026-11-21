@@ -1,5 +1,7 @@
 package configgen.gengd;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
@@ -27,9 +29,9 @@ class GdRuntimeTest {
         Files.writeString(texts.resolve("en.csv"), "item,你好,hello\n");
         Context context = TestCtx.newLangSwitchContext(source, "interface Choice { struct Known { } } table variant[id] { id:int; choice:Choice (pack); } table item[id] { id:int; name:str; desc:text; target:int ->target; } table target[id] { id:int; power:int; }",
                 Map.of("item", "id,name,desc,target\nid,name,desc,target\n1,Alice,你好,1\n2,Bob,你好,1\n", "target", "id,power\nid,power\n1,10\n", "variant", "id,choice\nid,choice\n1,Known()\n"), texts, "zh_cn");
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("initial"))).generate(context);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("initial"))).generate(context, new CachedFiles());
         Files.writeString(source.resolve("item.csv"), "id,name,desc,target\nid,name,desc,target\n1,Alice,你好,1\n");
-        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + root.resolve("pack"))).generate(new Context(context.contextCfg()));
+        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + root.resolve("pack"))).generate(new Context(context.contextCfg()), new CachedFiles());
         var initial = configgen.genjava.ConfigPackage.read(root.resolve("initial/base.bytes"));
         var blocks = new java.util.LinkedHashMap<String, byte[]>();
         for (String block : initial.blockNames()) {
@@ -53,7 +55,7 @@ class GdRuntimeTest {
             configgen.genbytes.PackageSerializer.write(output, full.metadata(), blocks);
         }
         Path project = Files.createDirectories(root.resolve("project"));
-        new GdCodeGenerator(new ParameterParser("gd,dir:" + project.resolve("config"))).generate(context);
+        new GdCodeGenerator(new ParameterParser("gd,dir:" + project.resolve("config"))).generate(context, new CachedFiles());
         Files.writeString(project.resolve("project.godot"), "config_version=5\n[application]\nconfig/name=\"Config Runtime Test\"\n");
         Files.writeString(project.resolve("test.gd"), """
                 extends SceneTree

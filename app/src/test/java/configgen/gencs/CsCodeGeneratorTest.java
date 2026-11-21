@@ -1,5 +1,7 @@
 package configgen.gencs;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.CliException;
@@ -52,14 +54,14 @@ class CsCodeGeneratorTest {
                 "td/damagetype", "id\nid\n1\n",
                 "td/hero", "id\nid\n1\n"));
         Path fullOutput = tempDir.resolve("full");
-        new CsCodeGenerator(new ParameterParser("cs,dir:" + fullOutput)).generate(ctx);
+        new CsCodeGenerator(new ParameterParser("cs,dir:" + fullOutput)).generate(ctx, new CachedFiles());
         String fullCode = Files.readString(fullOutput.resolve("Config/Td/Action/DApplyBuff.cs"));
         assertTrue(fullCode.contains("int EditorBuff {"));
         assertTrue(fullCode.contains("RefEditorBuff {"));
         assertTrue(fullCode.contains("string Note {"));
 
         Path filteredOutput = tempDir.resolve("filtered");
-        new CsCodeGenerator(new ParameterParser("cs,own:-editor,dir:" + filteredOutput)).generate(ctx);
+        new CsCodeGenerator(new ParameterParser("cs,own:-editor,dir:" + filteredOutput)).generate(ctx, new CachedFiles());
         String filteredCode = Files.readString(filteredOutput.resolve("Config/Td/Action/DApplyBuff.cs"));
 
         for (String field : java.util.List.of("Buff", "DamageType", "Hero")) {
@@ -97,7 +99,7 @@ class CsCodeGeneratorTest {
 
         Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("user", csv));
         Path outDir = tempDir.resolve("csout");
-        new CsCodeGenerator(new ParameterParser("cs,dir:" + outDir)).generate(ctx);
+        new CsCodeGenerator(new ParameterParser("cs,dir:" + outDir)).generate(ctx, new CachedFiles());
 
         Path configDir = outDir.resolve("Config");
         Path userCs = configDir.resolve("DUser.cs");

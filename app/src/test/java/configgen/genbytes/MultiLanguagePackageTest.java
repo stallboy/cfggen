@@ -1,5 +1,7 @@
 package configgen.genbytes;
 
+import configgen.util.CachedFiles;
+
 import configgen.JavaTestClasspath;
 
 import configgen.TestCtx;
@@ -29,14 +31,14 @@ class MultiLanguagePackageTest {
                 Map.of("t", "id,text\nid,text\n1,你好\n"), languages, "zh_cn");
         assertEquals(List.of("zh_cn", "en"), ctx.nullableTranslationBundle().languages());
         Path out = root.resolve("out");
-        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + out)).generate(ctx);
+        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + out)).generate(ctx, new CachedFiles());
         assertFalse(Files.exists(out.resolve("base_zh_cn.bytes")));
         var base = ConfigPackage.read(out.resolve("base.bytes"));
         var english = ConfigPackage.read(out.resolve("base_en.bytes"));
         assertFalse(base.blockNames().contains("text/en"));
         var combined = base.attach(english);
         Path generated = root.resolve("java");
-        new configgen.genjava.code.JavaCodeGenerator(new ParameterParser("java,pkg:generatedtext,dir:" + generated)).generate(ctx);
+        new configgen.genjava.code.JavaCodeGenerator(new ParameterParser("java,pkg:generatedtext,dir:" + generated)).generate(ctx, new CachedFiles());
         Path textSource = generated.resolve("generatedtext/Text.java");
         assertFalse(Files.readString(textSource).contains("readTextsInPool()"));
         Path classes = Files.createDirectories(root.resolve("text-classes"));

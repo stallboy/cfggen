@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import configgen.util.CachedFiles;
+
 import configgen.JavaTestClasspath;
 
 import configgen.JsonRecordFixture;
@@ -39,8 +41,8 @@ class SchemaReadConsistencyTest {
         Context context = fixture(multilingual);
         Path generated = root.resolve("generated");
         new JavaCodeGenerator(new ParameterParser("java,pkg:fixture,dir:" + generated
-                + ",schemaNumPerFile:" + schemaNumPerFile)).generate(context);
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("bytes"))).generate(context);
+                + ",schemaNumPerFile:" + schemaNumPerFile)).generate(context, new CachedFiles());
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("bytes"))).generate(context, new CachedFiles());
         Path classes = compile(generated);
         try (var loader = new URLClassLoader(new java.net.URL[]{classes.toUri().toURL()}, getClass().getClassLoader())) {
             Class<?> loading = loader.loadClass("fixture.ConfigMgrLoader");

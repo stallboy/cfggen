@@ -66,7 +66,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
 
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputs) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
 
@@ -85,7 +85,8 @@ public class GdCodeGenerator extends GeneratorWithTag {
         }
 
         dstDir = Paths.get(dir);
-        outputFiles = ctx.outputFiles();
+        outputs.prepareOutputDirectory(dstDir, ".meta", ".uid");
+        outputFiles = outputs;
 
         isLangSwitch = ctx.nullableTranslationBundle() != null;
         languageNames = isLangSwitch ? java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()).languages() : List.of();
@@ -137,8 +138,6 @@ public class GdCodeGenerator extends GeneratorWithTag {
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
             invokeAllAndWait(executor, tasks);
         }
-
-        outputFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
 
     private void generateInterface(InterfaceSchema sInterface) {

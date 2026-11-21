@@ -1,5 +1,7 @@
 package configgen.genbytes;
 
+import configgen.util.CachedFiles;
+
 import configgen.JavaTestClasspath;
 
 import configgen.TestCtx;
@@ -36,7 +38,7 @@ class DefaultLanguageRuntimeTest {
         var context = TestCtx.newContext(Files.createDirectories(root.resolve("data")),
                 "interface Choice { struct Known { } struct Other { } } interface Solo { struct Only { } } table key_test[id] { id:int; choice:Solo (pack); } table variant[id] { id:int; choice:Choice (pack); } table containers[id] { id:int; values:list<int> (pack); pairs:map<int,int> (pack); } table item[id] { id:int; name:str; desc:text; }",
                 Map.of("item", "id,name,desc\nid,name,desc\n1,Alice,你好\n", "key_test", "id,choice\nid,choice\n1,Only()\n", "variant", "id,choice\nid,choice\n1,Known()\n", "containers", "id,values,pairs\nid,values,pairs\n1,,\n"));
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context, new CachedFiles());
         var pack = ConfigPackage.read(root.resolve("base.bytes"));
         var metadata = new LinkedHashMap<>(pack.metadata());
         metadata.put("defaultLanguage", "zh_cn");
@@ -65,11 +67,11 @@ class DefaultLanguageRuntimeTest {
     void javaLoaderAndModBuilderUseDependencyDefaultLanguage() throws Exception {
         Context context = fixture();
         Path project = Files.createDirectories(root.resolve("java"));
-        new JavaCodeGenerator(new ParameterParser("java,dir:" + project + ",configgenDir:" + project)).generate(context);
+        new JavaCodeGenerator(new ParameterParser("java,dir:" + project + ",configgenDir:" + project)).generate(context, new CachedFiles());
         Path modData = Files.createDirectories(root.resolve("mod-data"));
         Files.writeString(modData.resolve("item.csv"), "id,name,desc\nid,name,desc\n2,Bob,new\n");
         new BytesGenerator(new ParameterParser("bytes,pack:mod,requires:base,deps:" + root.resolve("localized.bytes")
-                + ",dir:" + root.resolve("mod"))).generate(new Context(Context.ContextCfg.of(modData), context.cfgSchema()));
+                + ",dir:" + root.resolve("mod"))).generate(new Context(Context.ContextCfg.of(modData), context.cfgSchema()), new CachedFiles());
         Files.writeString(project.resolve("Check.java"), """
                 import config.*;
                 import configgen.genjava.*;
@@ -102,7 +104,7 @@ class DefaultLanguageRuntimeTest {
         Context context = fixture();
         Path project = Files.createDirectories(root.resolve(language));
         if (language.equals("ts")) {
-            new TsCodeGenerator(new ParameterParser("ts,dir:" + project)).generate(context);
+            new TsCodeGenerator(new ParameterParser("ts,dir:" + project)).generate(context, new CachedFiles());
             Path compiler = Path.of(System.getProperty("cfggen.tsc", "../cfgeditor/node_modules/typescript/bin/tsc")).toAbsolutePath();
             assertTrue(Files.isRegularFile(compiler), "Install cfgeditor dependencies or set -Dcfggen.tsc");
             run(project, List.of("node", compiler.toString(), "--target", "es2022", "--module", "commonjs", "--strict", "--skipLibCheck", "--outDir", "out", "Config.ts", "ConfigUtil.ts"));
@@ -130,7 +132,7 @@ class DefaultLanguageRuntimeTest {
                     """);
             run(project, List.of("node", "test.cjs"));
         } else {
-            new GoCodeGenerator(new ParameterParser("go,dir:" + project)).generate(context);
+            new GoCodeGenerator(new ParameterParser("go,dir:" + project)).generate(context, new CachedFiles());
             Files.writeString(project.resolve("go.mod"), "module fixture\n\ngo 1.22\n");
             Files.writeString(project.resolve("config/default_test.go"), """
                     package config
@@ -175,7 +177,7 @@ class DefaultLanguageRuntimeTest {
     void godotUsesPackageDefaultLanguage() throws Exception {
         Context context = fixture();
         Path project = Files.createDirectories(root.resolve("gd"));
-        new GdCodeGenerator(new ParameterParser("gd,dir:" + project.resolve("config"))).generate(context);
+        new GdCodeGenerator(new ParameterParser("gd,dir:" + project.resolve("config"))).generate(context, new CachedFiles());
         Files.writeString(project.resolve("project.godot"), "config_version=5\n[application]\nconfig/name=\"Default Language Test\"\n");
         Files.writeString(project.resolve("test.gd"), """
                 extends SceneTree

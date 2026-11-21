@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 
 import configgen.data.*;
 import configgen.i18n.*;
-import configgen.util.CachedFiles;
 import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.CfgSchemas;
@@ -72,9 +71,6 @@ public class Context {
     private final I18nState i18nState;
 
     private DirectoryStructure sourceStructure;
-
-    // 本代生成输出的登记册：generators 写文件/登记清理目录都经它，Main.run 末尾 finalizeRun
-    private final CachedFiles outputFiles = new CachedFiles();
 
     private final ExcelReader excelReader;
     private final ReadCsv csvReader;
@@ -174,7 +170,7 @@ public class Context {
             Logger.profile("schema aligned by data");
             // schema.printDiff(alignedSchema);
             CfgSchemas.writeToDir(rootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME),
-                    alignedSchema, outputFiles);
+                    alignedSchema);
             sourceStructure = sourceStructure.reload();
             Logger.profile("schema write");
             lastLoadDidAutoFix = true;
@@ -194,10 +190,6 @@ public class Context {
     }
 
     public boolean isFixedSchema() { return fixedSchema; }
-
-    public CachedFiles outputFiles() {
-        return outputFiles;
-    }
 
     public DirectoryStructure sourceStructure() {
         return sourceStructure;

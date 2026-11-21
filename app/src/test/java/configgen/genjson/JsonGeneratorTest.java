@@ -1,11 +1,14 @@
 package configgen.genjson;
 
+import configgen.util.CachedFiles;
+
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.Parameter;
 import configgen.gen.ParameterParser;
+import configgen.gengo.GoCodeGenerator;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,13 +52,13 @@ class JsonGeneratorTest {
         Path out = Files.createDirectory(tempDir.resolve("out"));
         var generator = new JsonGenerator(new ParameterParser("json,tables:item,dst:" + out));
         Path tableDir = out.resolve("_item");
-        generator.generate(TestCtx.newContext(data, schema, Map.of("item", headers + "1,10\n2,20\n")));
+        generateAndFinalize(generator, TestCtx.newContext(data, schema, Map.of("item", headers + "1,10\n2,20\n")));
         Path extra = tableDir.resolve("extra.txt");
         Files.writeString(extra, "obsolete");
 
         StringBuilder log = new StringBuilder();
         try (var ignored = Logger.printerScope((format, args) -> log.append(format.formatted(args)))) {
-            generator.generate(TestCtx.newContext(data, schema, Map.of("item", headers + "1,11\n")));
+            generateAndFinalize(generator, TestCtx.newContext(data, schema, Map.of("item", headers + "1,11\n")));
         }
         assertEquals(11, JSON.parseObject(Files.readString(tableDir.resolve("1.json"))).getIntValue("score"));
         assertFalse(Files.exists(tableDir.resolve("2.json")));
@@ -63,9 +66,9 @@ class JsonGeneratorTest {
         assertTrue(log.toString().contains("modify file:"));
         assertTrue(log.toString().contains("delete file:"));
 
-        generator.generate(TestCtx.newContext(data, schema, Map.of("item", headers)));
+        generateAndFinalize(generator, TestCtx.newContext(data, schema, Map.of("item", headers)));
         assertFalse(Files.exists(tableDir.resolve("1.json")));
-        assertTrue(Files.isRegularFile(out.resolve(".cfggen-json-export")));
+        assertTrue(Files.isRegularFile(out.resolve(".cfggen-output")));
         assertFalse(Files.exists(tableDir));
     }
 
@@ -75,12 +78,12 @@ class JsonGeneratorTest {
         Path out = tempDir.resolve("out");
         var generator = new JsonGenerator(new ParameterParser("json,tables:a_b;a.b,dst:" + out));
 
-        generator.generate(context);
+        generateAndFinalize(generator, context);
         assertTrue(Files.exists(out.resolve("_a_b/1.json")));
         assertTrue(Files.exists(out.resolve("a/_b/2.json")));
 
         Files.writeString(context.rootDir().resolve("a/b.csv"), "id\nid\n3\n");
-        generator.generate(new Context(context.rootDir()));
+        generateAndFinalize(generator, new Context(context.rootDir()));
         assertTrue(Files.exists(out.resolve("_a_b/1.json")));
         assertTrue(Files.exists(out.resolve("a/_b/3.json")));
         assertFalse(Files.exists(out.resolve("a/_b/2.json")));
@@ -91,18 +94,58 @@ class JsonGeneratorTest {
     void removesTablesOmittedFromTheNextExportToAMarkedDirectory() throws IOException {
         Context context = newContextWithQualifiedTable();
         Path out = tempDir.resolve("out");
-        new JsonGenerator(new ParameterParser("json,tables:a_b;a.b,dst:" + out)).generate(context);
+        generateAndFinalize(new JsonGenerator(new ParameterParser("json,tables:a_b;a.b,dst:" + out)), context);
         assertTrue(Files.exists(out.resolve("_a_b/1.json")));
         assertTrue(Files.exists(out.resolve("a/_b/2.json")));
         Files.writeString(out.resolve("extra.txt"), "obsolete");
 
-        new JsonGenerator(new ParameterParser("json,tables:a.b,dst:" + out)).generate(context);
+        generateAndFinalize(new JsonGenerator(new ParameterParser("json,tables:a.b,dst:" + out)), context);
 
         assertFalse(Files.exists(out.resolve("_a_b")));
         assertFalse(Files.exists(out.resolve("extra.txt")));
         assertTrue(Files.exists(out.resolve("a/_b/2.json")));
-        assertTrue(Files.isRegularFile(out.resolve(".cfggen-json-export")));
-        assertFalse(Files.exists(out.resolve("a/_b/.cfggen-json-export")));
+        assertTrue(Files.isRegularFile(out.resolve(".cfggen-output")));
+        assertFalse(Files.exists(out.resolve("a/_b/.cfggen-output")));
+    }
+
+    @Test
+    void preservesGoAndJsonOutputsInTheSameBatch() throws IOException {
+        Context context = TestCtx.newContext(dataDir(), "table item[id] { id:int; }",
+                Map.of("item", "id\nid\n1\n"));
+        Path project = tempDir.resolve("go-project");
+        Path output = project.resolve("config");
+        CachedFiles outputs = new CachedFiles();
+
+        new GoCodeGenerator(new ParameterParser("go,dir:" + project)).generate(context, outputs);
+        Path stale = Files.writeString(output.resolve("stale.go"), "old");
+        new JsonGenerator(new ParameterParser("json,tables:item,dst:" + output)).generate(context, outputs);
+        assertTrue(Files.isRegularFile(stale));
+
+        outputs.finalizeRun();
+
+        assertTrue(Files.isRegularFile(output.resolve("item.go")));
+        assertTrue(Files.isRegularFile(output.resolve("_item/1.json")));
+        assertFalse(Files.exists(stale));
+    }
+
+    @Test
+    void combinesJsonExportsToTheSameDirectoryInABatch() throws IOException {
+        Context context = newContextWithQualifiedTable();
+        Path output = tempDir.resolve("out");
+        CachedFiles outputs = new CachedFiles();
+
+        new JsonGenerator(new ParameterParser("json,tables:a_b,dst:" + output)).generate(context, outputs);
+        new JsonGenerator(new ParameterParser("json,tables:a.b,dst:" + output)).generate(context, outputs);
+        outputs.finalizeRun();
+
+        assertTrue(Files.isRegularFile(output.resolve("_a_b/1.json")));
+        assertTrue(Files.isRegularFile(output.resolve("a/_b/2.json")));
+    }
+
+    private static void generateAndFinalize(JsonGenerator generator, Context context) throws IOException {
+        CachedFiles outputs = new CachedFiles();
+        generator.generate(context, outputs);
+        outputs.finalizeRun();
     }
 
     @Test
@@ -114,23 +157,23 @@ class JsonGeneratorTest {
         Files.writeString(manual, "manual");
         var generator = new JsonGenerator(new ParameterParser("json,tables:item,dst:" + out));
 
-        IOException error = assertThrows(IOException.class, () -> generator.generate(context));
-        assertTrue(error.getMessage().contains("has no export marker"));
+        IOException error = assertThrows(IOException.class, () -> generator.generate(context, new CachedFiles()));
+        assertTrue(error.getMessage().contains("has no regular output marker"));
         assertEquals("manual", Files.readString(manual));
         assertFalse(Files.exists(out.resolve("_item")));
-        assertFalse(Files.exists(out.resolve(".cfggen-json-export")));
+        assertFalse(Files.exists(out.resolve(".cfggen-output")));
     }
 
     @Test
     void rejectsAFileBlockingAnOutputDirectoryBeforeWritingAnyTable() throws IOException {
         Context context = newContextWithQualifiedTable();
         Path out = Files.createDirectory(tempDir.resolve("out"));
-        Files.createFile(out.resolve(".cfggen-json-export"));
+        Files.createFile(out.resolve(".cfggen-output"));
         Path blocker = out.resolve("a");
         Files.writeString(blocker, "manual");
         var generator = new JsonGenerator(new ParameterParser("json,tables:a_b;a.b,dst:" + out));
 
-        IOException error = assertThrows(IOException.class, () -> generator.generate(context));
+        IOException error = assertThrows(IOException.class, () -> generator.generate(context, new CachedFiles()));
         assertTrue(error.getMessage().contains("occupied by a file"));
         assertTrue(error.getMessage().contains(blocker.toString()));
         assertEquals("manual", Files.readString(blocker));
@@ -159,7 +202,7 @@ class JsonGeneratorTest {
         String parameters = "json,tables:item,dst:" + tempDir;
         for (String suffix : List.of("", ",own:client")) {
             var generator = new JsonGenerator(new ParameterParser(parameters + suffix));
-            IOException error = assertThrows(IOException.class, () -> generator.generate(context));
+            IOException error = assertThrows(IOException.class, () -> generator.generate(context, new CachedFiles()));
             assertTrue(error.getMessage().contains("Set dst outside the data directory"));
         }
         assertEquals(contents, Files.readString(original));
@@ -174,7 +217,7 @@ class JsonGeneratorTest {
         Context context = TestCtx.newContext(data, "table item[id] { id:int; }", Map.of("item", "id\nid\n1\n"));
         Path destination = data.resolve("generated/json");
         var generator = new JsonGenerator(new ParameterParser("json,tables:item,dst:" + destination));
-        IOException error = assertThrows(IOException.class, () -> generator.generate(context));
+        IOException error = assertThrows(IOException.class, () -> generator.generate(context, new CachedFiles()));
         assertTrue(error.getMessage().contains("Set dst outside the data directory"));
         assertFalse(Files.exists(data.resolve("generated")));
     }
@@ -185,7 +228,7 @@ class JsonGeneratorTest {
         Context context = TestCtx.newContext(data, "table item[id] { id:int; }", Map.of("item", "id\nid\n1\n"));
         var generator = new JsonGenerator(new ParameterParser("json,tables:item,dst:" + tempDir));
 
-        assertThrows(IOException.class, () -> generator.generate(context));
+        assertThrows(IOException.class, () -> generator.generate(context, new CachedFiles()));
         assertFalse(Files.exists(data.resolve("1.json")));
     }
 
@@ -193,11 +236,11 @@ class JsonGeneratorTest {
     void rejectsMarkedOutputDirectoryContainingTheDataDirectory() throws IOException {
         Path output = Files.createDirectory(tempDir.resolve("_item"));
         Path data = Files.createDirectory(output.resolve("data"));
-        Files.createFile(output.resolve(".cfggen-json-export"));
+        Files.createFile(output.resolve(".cfggen-output"));
         Context context = TestCtx.newContext(data, "table item[id] { id:int; }", Map.of("item", "id\nid\n1\n"));
         var generator = new JsonGenerator(new ParameterParser("json,tables:item,dst:" + output));
 
-        IOException error = assertThrows(IOException.class, () -> generator.generate(context));
+        IOException error = assertThrows(IOException.class, () -> generator.generate(context, new CachedFiles()));
         assertTrue(error.getMessage().contains("overlaps the data directory"));
         assertTrue(Files.exists(data.resolve("item.csv")));
         assertFalse(Files.exists(output.resolve("_item")));
@@ -221,7 +264,7 @@ class JsonGeneratorTest {
 
         Context ctx = TestCtx.newContext(dataDir(), cfgStr, Map.of("user", csv));
         Path outDir = tempDir.resolve("data-out");
-        new JsonGenerator(new ParameterParser("json,tables:user,dst:" + outDir)).generate(ctx);
+        generateAndFinalize(new JsonGenerator(new ParameterParser("json,tables:user,dst:" + outDir)), ctx);
 
         Path recordJson = outDir.resolve("_user/1.json");
         assertTrue(Files.exists(recordJson), "应生成_user/1.json（每条记录一个文件）");

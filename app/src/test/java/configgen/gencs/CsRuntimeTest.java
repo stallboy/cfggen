@@ -1,5 +1,7 @@
 package configgen.gencs;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
@@ -42,8 +44,8 @@ class CsRuntimeTest {
                 "empty", "id,name\nid,name\n",
                 "location", "id,name\nid,name\n1,Home\n"));
         Path project = Files.createDirectory(root.resolve("project"));
-        new CsCodeGenerator(new ParameterParser("cs,dir:" + project + (implicitUsings ? ",implicitUsings" : ""))).generate(context);
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context);
+        new CsCodeGenerator(new ParameterParser("cs,dir:" + project + (implicitUsings ? ",implicitUsings" : ""))).generate(context, new CachedFiles());
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context, new CachedFiles());
 
         Files.writeString(project.resolve("runtime.csproj"), """
                 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>
@@ -77,8 +79,8 @@ class CsRuntimeTest {
             Path data = Files.createDirectories(root.resolve(language));
             Context ctx = TestCtx.newContext(data, "table message[id] { id:int; desc:text; }",
                     Map.of("message", "id,desc\nid,desc\n" + (base ? "1,甲\n" : "1,B\n2,C\n")));
-            if (base) new CsCodeGenerator(new ParameterParser("cs,dir:" + project + (unity ? ",unity" : ""))).generate(ctx);
-            new BytesGenerator(new ParameterParser("bytes,dir:" + data)).generate(ctx);
+            if (base) new CsCodeGenerator(new ParameterParser("cs,dir:" + project + (unity ? ",unity" : ""))).generate(ctx, new CachedFiles());
+            new BytesGenerator(new ParameterParser("bytes,dir:" + data)).generate(ctx, new CachedFiles());
             var pack = ConfigPackage.read(data.resolve("base.bytes"));
             var metadata = new java.util.LinkedHashMap<>(pack.metadata());
             metadata.put("defaultLanguage", language);
@@ -214,12 +216,12 @@ class CsRuntimeTest {
                 "rank", "id,name,multiplier\nid,name,multiplier\n10,Green,3\n",
                 "monster", "id,attack,rank,tags,desc\nid,attack,rank,tags,desc\n1,20,10,new,乙\n"), languages, "zh_cn");
         Path project = Files.createDirectories(root.resolve("project"));
-        new CsCodeGenerator(new ParameterParser("cs,dir:" + project + (unity ? ",unity" : "") + (server ? ",serverText" : "") + (implicitUsings ? ",implicitUsings" : ""))).generate(a);
+        new CsCodeGenerator(new ParameterParser("cs,dir:" + project + (unity ? ",unity" : "") + (server ? ",serverText" : "") + (implicitUsings ? ",implicitUsings" : ""))).generate(a, new CachedFiles());
         String processor = Files.readString(project.resolve("Config/Processor.cs"));
         assertEquals(1, processor.lines().filter(line -> line.contains("\"zh_cn\"")).count());
         assertFalse(processor.contains("params string[] languages"));
-        new BytesGenerator(new ParameterParser("bytes,dir:" + aDir)).generate(a);
-        new BytesGenerator(new ParameterParser("bytes,dir:" + bDir)).generate(b);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + aDir)).generate(a, new CachedFiles());
+        new BytesGenerator(new ParameterParser("bytes,dir:" + bDir)).generate(b, new CachedFiles());
         // Empty structs occupy zero bytes; encode two explicitly to exercise collection count bounds.
         for (Path directory : java.util.List.of(aDir, bDir)) {
             rewritePackage(directory, "base", blocks -> blocks.put(".hollow", buffer(new byte[12]).putInt(1).putInt(1).putInt(2).array()));
@@ -271,10 +273,10 @@ class CsRuntimeTest {
             for (int i = 0; i < 3; i++) duplicate.put(original, 4, 12);
             blocks.put(".other.pair", duplicate.array());
         });
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("basepack") + ",pack:base,langSeparated")).generate(a);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("basepack") + ",pack:base,langSeparated")).generate(a, new CachedFiles());
         Files.writeString(bDir.resolve("step.csv"), "id,name\nid,name\n3,three\n2,two\n");
         Context mod = new Context(b.contextCfg(), a.cfgSchema());
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("modpack") + ",pack:map,langSeparated,requires:base,deps:" + root.resolve("basepack/base.bytes"))).generate(mod);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("modpack") + ",pack:map,langSeparated,requires:base,deps:" + root.resolve("basepack/base.bytes"))).generate(mod, new CachedFiles());
         Files.writeString(project.resolve("runtime.csproj"), """
                 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>
                 <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>

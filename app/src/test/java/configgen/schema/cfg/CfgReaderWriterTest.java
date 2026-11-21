@@ -3,7 +3,6 @@ package configgen.schema.cfg;
 import configgen.Resources;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemas;
-import configgen.util.CachedFiles;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -70,7 +69,7 @@ class CfgReaderWriterTest {
         Files.writeString(module, "//Module notes\n");
 
         CfgSchema schema = CfgSchemas.readFromRoot(root);
-        CfgSchemas.writeToDir(root, schema, new CachedFiles());
+        CfgSchemas.writeToDir(root, schema);
 
         assertEquals("// Root notes\n", Files.readString(root));
         assertEquals("// Module notes\n", Files.readString(module));

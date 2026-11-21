@@ -6,6 +6,7 @@ import configgen.ctx.DirectoryStructure;
 import configgen.data.DataUtil;
 import configgen.data.Source.DFile;
 import configgen.util.FileNameUtil;
+import configgen.util.FileUtil;
 import configgen.util.CachedFiles;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueToJson;
@@ -30,16 +31,14 @@ public class VTableJsonStorage {
                                          String table,
                                          String id,
                                          Path dataDir,
-                                         DirectoryStructure directoryStructure,
-                                         CachedFiles cachedFiles) throws IOException {
+                                         DirectoryStructure directoryStructure) throws IOException {
         Path relativePath = recordPath(table, id, dataDir, directoryStructure);
-        writeRecord(record, dataDir.resolve(relativePath), cachedFiles);
+        FileUtil.replaceIfChanged(dataDir.resolve(relativePath), recordBytes(record));
         return relativePath;
     }
 
     static Path saveEditedRecord(VStruct record, @Nullable VStruct oldRecord, String table, String id,
-                                 Path dataDir, DirectoryStructure directoryStructure,
-                                 CachedFiles cachedFiles) throws IOException {
+                                 Path dataDir, DirectoryStructure directoryStructure) throws IOException {
         Path relativePath = oldRecord == null
                 ? recordPath(table, id, dataDir, directoryStructure)
                 : sourcePath(oldRecord);
@@ -47,7 +46,7 @@ public class VTableJsonStorage {
         if (oldRecord == null && Files.exists(target, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
             throw new IOException("JSON record file already exists: " + target);
         }
-        writeRecord(record, target, cachedFiles);
+        FileUtil.replaceIfChanged(target, recordBytes(record));
         return relativePath;
     }
 
@@ -73,8 +72,11 @@ public class VTableJsonStorage {
     }
 
     public static void writeRecord(VStruct record, Path path, CachedFiles cachedFiles) throws IOException {
-        byte[] json = ValueToJson.toJsonStr(record).getBytes(StandardCharsets.UTF_8);
-        cachedFiles.writeFileReplacement(path, json);
+        cachedFiles.writeFileReplacement(path, recordBytes(record));
+    }
+
+    private static byte[] recordBytes(VStruct record) {
+        return ValueToJson.toJsonStr(record).getBytes(StandardCharsets.UTF_8);
     }
 
     /// 根据表名和数据目录，解析 JSON 表目录的相对路径。

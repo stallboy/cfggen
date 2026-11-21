@@ -3,7 +3,7 @@ package configgen.schema;
 import configgen.schema.cfg.CfgReader;
 import configgen.schema.cfg.CfgUtil;
 import configgen.schema.cfg.CfgWriter;
-import configgen.util.CachedFiles;
+import configgen.util.FileUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -57,21 +57,21 @@ public class CfgSchemas {
         return destination;
     }
 
-    public static void writeToDir(Path destination, CfgSchema root, CachedFiles cachedFiles) {
+    public static void writeToDir(Path destination, CfgSchema root) {
         Path absoluteDst = destination.toAbsolutePath().normalize();
         Map<String, CfgSchema> modules = CfgUtil.separate(root);
         for (Map.Entry<String, CfgSchema> entry : modules.entrySet()) {
             String ns = entry.getKey();
             CfgSchema cfg = entry.getValue();
             Path dst = CfgUtil.getCfgFilePathByNamespace(ns, absoluteDst);
-            writeToOneFile(dst, cfg, cachedFiles);
+            writeToOneFile(dst, cfg);
         }
     }
 
-    private static void writeToOneFile(Path dst, CfgSchema cfg, CachedFiles cachedFiles) {
+    private static void writeToOneFile(Path dst, CfgSchema cfg) {
         String content = CfgWriter.stringify(cfg, true, false);
         try {
-            cachedFiles.writeFile(dst, content.getBytes(StandardCharsets.UTF_8));
+            FileUtil.writeIfChanged(dst, content.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

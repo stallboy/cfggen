@@ -1,5 +1,7 @@
 package configgen.genbytes;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
@@ -66,7 +68,7 @@ class BytesGeneratorTest {
         Context context = TestCtx.newLangSwitchContext(data, CFG, java.util.Map.of("user", CSV), languages, "zh_cn");
         Path output = tempDir.resolve("packages");
         for (String name : java.util.List.of("base", "demo-mod")) {
-            new BytesGenerator(new ParameterParser("bytes,pack:" + name + ",langSeparated,dir:" + output)).generate(context);
+            new BytesGenerator(new ParameterParser("bytes,pack:" + name + ",langSeparated,dir:" + output)).generate(context, new CachedFiles());
         }
         try (var files = java.nio.file.Files.list(output)) {
             assertEquals(java.util.Set.of("base.bytes", "base_en.bytes", "demo-mod.bytes", "demo-mod_en.bytes"),
@@ -90,7 +92,7 @@ class BytesGeneratorTest {
     void defaultOutputIsVersionedBasePackageAndDefaultInspectorReadsIt() throws IOException {
         Path output = tempDir.resolve("default");
         Context context = TestCtx.newContext(tempDir, CFG, java.util.Map.of("user", CSV));
-        new BytesGenerator(new ParameterParser("bytes,dir:" + output)).generate(context);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + output)).generate(context, new CachedFiles());
         Path file = output.resolve("base.bytes");
         var pack = ConfigPackage.read(file);
         assertEquals("base", pack.name());
@@ -102,7 +104,7 @@ class BytesGeneratorTest {
     void roundtrip_withSchema_textReadFromLangTextPool() throws IOException {
         Path outDir = tempDir.resolve("out_schema");
         Context ctx = TestCtx.newContext(tempDir, CFG, java.util.Map.of("user", CSV));
-        new BytesGenerator(new ParameterParser("bytes,dir:" + outDir)).generate(ctx);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + outDir)).generate(ctx, new CachedFiles());
 
         var pack = ConfigPackage.read(outDir.resolve("base.bytes"));
         ConfigInput in = pack.block("schema");
@@ -132,7 +134,7 @@ class BytesGeneratorTest {
     void roundtrip_namedBlocksRetainPackageLocalPools() throws IOException {
         Path output = tempDir.resolve("blocks");
         Context ctx = TestCtx.newContext(tempDir, CFG, java.util.Map.of("user", CSV));
-        new BytesGenerator(new ParameterParser("bytes,dir:" + output + ",pack:base")).generate(ctx);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + output + ",pack:base")).generate(ctx, new CachedFiles());
         var pack = ConfigPackage.read(output.resolve("base.bytes"));
         assertEquals("base", pack.name());
         org.junit.jupiter.api.Assertions.assertTrue(pack.blockNames().contains("schema"));
@@ -146,7 +148,7 @@ class BytesGeneratorTest {
     void tableNamedSchemaDoesNotCollideWithSchemaBlock() throws IOException {
         var ctx = TestCtx.newContext(tempDir, "table schema[id] { id:int; }",
                 java.util.Map.of("schema", "id\nid\n7\n"));
-        new BytesGenerator(new ParameterParser("bytes,dir:" + tempDir.resolve("schema"))).generate(ctx);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + tempDir.resolve("schema"))).generate(ctx, new CachedFiles());
         var pack = ConfigPackage.read(tempDir.resolve("schema/base.bytes"));
         assertEquals(java.util.Set.of("schema", "strings", "text/default", ".schema"), pack.blockNames());
         var table = pack.block(".schema");

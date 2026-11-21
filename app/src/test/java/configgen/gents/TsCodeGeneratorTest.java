@@ -1,5 +1,7 @@
 package configgen.gents;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
@@ -40,7 +42,7 @@ class TsCodeGeneratorTest {
                 table user[id] { id:int; name:str; }
                 """, Map.of("user", "id,name\nid,name\n1,Alice\n"));
         Path outDir = tempDir.resolve("schemaout");
-        new TsSchemaGenerator(new ParameterParser("tsschema,table:user,dst:" + outDir)).generate(context);
+        new TsSchemaGenerator(new ParameterParser("tsschema,table:user,dst:" + outDir)).generate(context, new CachedFiles());
 
         assertTrue(Files.readString(outDir.resolve("user.ts")).startsWith("export interface user {"));
     }
@@ -52,7 +54,7 @@ class TsCodeGeneratorTest {
                 table user[id] { id:int; detail:shared.Detail; }
                 """, Map.of("user", "id,detail\nid,detail\n1,Alice\n"));
         Path outDir = tempDir.resolve("schemaout");
-        new TsSchemaGenerator(new ParameterParser("tsschema,table:user,dst:" + outDir)).generate(context);
+        new TsSchemaGenerator(new ParameterParser("tsschema,table:user,dst:" + outDir)).generate(context, new CachedFiles());
 
         String source = Files.readString(outDir.resolve("user.ts"));
         assertTrue(source.contains("detail: shared.Detail;"), source);
@@ -76,7 +78,7 @@ class TsCodeGeneratorTest {
 
         Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("user", csv));
         Path outDir = tempDir.resolve("tsout");
-        new TsCodeGenerator(new ParameterParser("ts,dir:" + outDir)).generate(ctx);
+        new TsCodeGenerator(new ParameterParser("ts,dir:" + outDir)).generate(ctx, new CachedFiles());
 
         Path configTs = outDir.resolve("Config.ts");
         assertTrue(Files.exists(configTs), "应生成Config.ts");

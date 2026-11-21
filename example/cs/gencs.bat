@@ -8,6 +8,8 @@ if not exist "%CFGGEN_JAR%" (
     exit /b 1
 )
 
+call "%~dp0..\require_output_marker.bat" "Config" || exit /b 1
+
 if exist "Config\Loader.cs" del /q "Config\Loader.cs"
 rem Build dependencies need a plain package; runtime packages keep the XOR example.
 java --sun-misc-unsafe-memory-access=allow -jar "%CFGGEN_JAR%" -datadir ../config -gen cs,prefix:D,dir:.,encoding:UTF-8,implicitUsings -gen bytes,dir:obj/base-pack -gen bytes,cipher:xyz

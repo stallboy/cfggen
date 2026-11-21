@@ -1,5 +1,7 @@
 package configgen.genbyai;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -39,7 +41,7 @@ public class ByAIGenerator extends Generator {
 
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         if (retryTimes <= 0) {
             throw new RuntimeException("retry must > 0");
         }
@@ -134,7 +136,7 @@ public class ByAIGenerator extends Generator {
                     try {
                         if (tableSchema.isJson()) {
                             VTableJsonStorage.addOrUpdateRecord(record, tableSchema.name(), id,
-                                    context.rootDir(), context.sourceStructure(), context.outputFiles());
+                                    context.rootDir(), context.sourceStructure());
                         } else {
                             CfgData.DTable dTable = context.cfgData().getDTable(table);
                             VTableStorage.addOrUpdateRecord(context, vTable, java.util.Objects.requireNonNull(dTable), pkValue, record);

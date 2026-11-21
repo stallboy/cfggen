@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import configgen.util.CachedFiles;
+
 import configgen.JavaTestClasspath;
 import configgen.TestCtx;
 
@@ -50,13 +52,27 @@ class JavaCodeGeneratorTest {
         var generator = new JavaCodeGenerator(new ParameterParser("java,dir:" + output + ",builders:" + selection));
         var builder = output.resolve("config/ItemBuilder.java");
 
-        generator.generate(context);
-        context.outputFiles().finalizeRun();
+        generateAndFinalize(generator, context);
         assertTrue(Files.isRegularFile(builder));
         Files.delete(selection);
-        generator.generate(context);
-        context.outputFiles().finalizeRun();
+        generateAndFinalize(generator, context);
         assertFalse(Files.exists(builder));
+    }
+
+    @Test
+    void rejectsNonEmptyUnmarkedPackageBeforeWritingGeneratedCode() throws IOException {
+        Context context = TestCtx.newContext(tempDir, "table item[id] { id:int; }",
+                Map.of("item", "id\nid\n1\n"));
+        Path output = tempDir.resolve("output");
+        Path packageDir = Files.createDirectories(output.resolve("config"));
+        Path manual = Files.writeString(packageDir.resolve("Item.java"), "handwritten");
+        var generator = new JavaCodeGenerator(new ParameterParser("java,dir:" + output));
+
+        assertThrows(IOException.class, () -> generateAndFinalize(generator, context));
+
+        assertEquals("handwritten", Files.readString(manual));
+        assertFalse(Files.exists(packageDir.resolve("ConfigMgr.java")));
+        assertFalse(Files.exists(packageDir.resolve(".cfggen-output")));
     }
 
     @Test
@@ -72,8 +88,7 @@ class JavaCodeGeneratorTest {
         Path support = output.resolve("configgen/genjava");
         Path table = root.resolve("Target.java");
 
-        new JavaCodeGenerator(new ParameterParser(args)).generate(context);
-        context.outputFiles().finalizeRun();
+        generateAndFinalize(new JavaCodeGenerator(new ParameterParser(args)), context);
         String plainTable = Files.readString(table);
         String plainLoader = Files.readString(support.resolve("ConfigLoader.java"));
         assertFalse(plainTable.contains("jspecify"));
@@ -84,8 +99,7 @@ class JavaCodeGeneratorTest {
         assertFalse(Files.exists(root.resolve("package-info.java")));
         assertFalse(Files.exists(support.resolve("package-info.java")));
 
-        new JavaCodeGenerator(new ParameterParser(args + ",jspecify")).generate(context);
-        context.outputFiles().finalizeRun();
+        generateAndFinalize(new JavaCodeGenerator(new ParameterParser(args + ",jspecify")), context);
         assertEquals("""
                 @NullMarked
                 package config.choice;
@@ -104,13 +118,18 @@ class JavaCodeGeneratorTest {
         assertFalse(Files.readString(root.resolve("ConfigMgrLoader.java")).contains("annotations.Nullable"));
         assertFalse(Files.readString(root.resolve("TargetBuilder.java")).contains("annotations.Nullable"));
 
-        new JavaCodeGenerator(new ParameterParser(args + ",jspecify:false")).generate(context);
-        context.outputFiles().finalizeRun();
+        generateAndFinalize(new JavaCodeGenerator(new ParameterParser(args + ",jspecify:false")), context);
         assertEquals(plainTable, Files.readString(table));
         assertEquals(plainLoader, Files.readString(support.resolve("ConfigLoader.java")));
         assertFalse(Files.exists(root.resolve("package-info.java")));
         assertFalse(Files.exists(root.resolve("choice/package-info.java")));
         assertFalse(Files.exists(support.resolve("package-info.java")));
+    }
+
+    private static void generateAndFinalize(JavaCodeGenerator generator, Context context) throws IOException {
+        CachedFiles outputs = new CachedFiles();
+        generator.generate(context, outputs);
+        outputs.finalizeRun();
     }
 
     @ParameterizedTest
@@ -132,7 +151,7 @@ class JavaCodeGeneratorTest {
                 "state", "id,name,power\nid,name,power\n1,LoadValueErrs,2\n", "flag", "id,name\nid,name\n1,On\n",
                 "empty", "id,name\nid,name\n1,\n"));
         Path generated = tempDir.resolve("generated");
-        new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",pkg:config,schemaNumPerFile:" + schemaNumPerFile)).generate(context);
+        new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",pkg:config,schemaNumPerFile:" + schemaNumPerFile)).generate(context, new CachedFiles());
         try (var loader = compileGenerated(generated)) {
             var schemaClass = loader.loadClass("config.ConfigCodeSchema");
             var codeSchema = (configgen.genjava.SchemaInterface) schemaClass.getMethod("getCodeSchema").invoke(null);
@@ -534,7 +553,7 @@ class JavaCodeGeneratorTest {
                 outputDir.getAbsolutePath(), pkg, extraParams);
         Parameter parameter = new ParameterParser(parameterStr);
         JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
-        javaCodeGenerator.generate(ctx);
+        javaCodeGenerator.generate(ctx, new CachedFiles());
         return outputDir;
     }
 }

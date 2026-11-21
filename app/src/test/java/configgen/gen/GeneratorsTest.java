@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import configgen.util.CachedFiles;
+
 import configgen.gengo.GoCodeGenerator;
 import configgen.util.Logger;
 import org.jspecify.annotations.NullMarked;
@@ -48,7 +50,7 @@ class GeneratorsTest {
         // Given: 注册一个生成器提供者
         Generators.addProvider("test", parameter -> new Generator(parameter) {
             @Override
-            public void generate(configgen.ctx.Context context) {}
+            public void generate(configgen.ctx.Context context, CachedFiles outputs) {}
         });
 
         // When: 创建生成器
@@ -74,7 +76,7 @@ class GeneratorsTest {
     void shouldReturnTheRegisteredProvidersResult() {
         Generator expected = new Generator(new ParameterParser("identity")) {
             @Override
-            public void generate(configgen.ctx.Context context) {}
+            public void generate(configgen.ctx.Context context, CachedFiles outputs) {}
         };
         var calls = new java.util.concurrent.atomic.AtomicInteger();
         Generators.addProvider("identity", parameter -> {
@@ -93,7 +95,7 @@ class GeneratorsTest {
             seen.add(parameter.get("mode", "default"));
             return new Generator(parameter) {
                 @Override
-                public void generate(configgen.ctx.Context context) {}
+                public void generate(configgen.ctx.Context context, CachedFiles outputs) {}
             };
         });
 

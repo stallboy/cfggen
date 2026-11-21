@@ -1,5 +1,7 @@
 package configgen.genbytes;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
@@ -33,8 +35,8 @@ class OtherBytesRuntimeTest {
                 """, Map.of("user", "id,name\nid,name\n1,Alice\n",
                 "ability", "id,name\nid,name\n1,Fireball\n2,IceSpike\n"));
         Path project = Files.createDirectory(root.resolve("project"));
-        new TsCodeGenerator(new ParameterParser("ts,dir:" + project)).generate(context);
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context);
+        new TsCodeGenerator(new ParameterParser("ts,dir:" + project)).generate(context, new CachedFiles());
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root)).generate(context, new CachedFiles());
         Files.writeString(project.resolve("consumer.ts"), """
                 import {Config} from './Config';
                 import {ConfigPackage, LoadErrors, Stream} from './ConfigUtil';
@@ -69,8 +71,8 @@ class OtherBytesRuntimeTest {
                 table ability[id] (enum='name') { id:int; name:str; }
                 """, Map.of("ability", "id,name\nid,name\n1,fireBall\n2,IceSpike\n"));
         Path project = Files.createDirectory(root.resolve("project"));
-        new GoCodeGenerator(new ParameterParser("go,dir:" + project)).generate(context);
-        new BytesGenerator(new ParameterParser("bytes,dir:" + project)).generate(context);
+        new GoCodeGenerator(new ParameterParser("go,dir:" + project)).generate(context, new CachedFiles());
+        new BytesGenerator(new ParameterParser("bytes,dir:" + project)).generate(context, new CachedFiles());
         Files.writeString(project.resolve("go.mod"), "module fixture\n\ngo 1.22\n");
         Files.writeString(project.resolve("config/named_entry_test.go"), """
                 package config
@@ -94,13 +96,13 @@ class OtherBytesRuntimeTest {
         Files.writeString(texts.resolve("en.csv"), "item,你好,hello\n");
         Context context = TestCtx.newLangSwitchContext(source, "table item[id] { id:int; name:str; desc:text; }",
                 Map.of("item", "id,name,desc\nid,name,desc\n1,Alice,你好\n2,Bob,你好\n"), texts, "zh_cn");
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("initial"))).generate(context);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("initial"))).generate(context, new CachedFiles());
         Files.writeString(source.resolve("item.csv"), "id,name,desc\nid,name,desc\n1,Alice,你好\n");
-        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + root.resolve("pack"))).generate(new Context(context.contextCfg()));
+        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + root.resolve("pack"))).generate(new Context(context.contextCfg()), new CachedFiles());
         writeMalformedVariants();
         Path project = Files.createDirectories(root.resolve("project"));
         if (language.equals("ts")) {
-            new TsCodeGenerator(new ParameterParser("ts,dir:" + project + (server ? ",serverText" : ""))).generate(context);
+            new TsCodeGenerator(new ParameterParser("ts,dir:" + project + (server ? ",serverText" : ""))).generate(context, new CachedFiles());
             if (server) assertFalse(Files.readString(project.resolve("Config.ts")).contains("ReadTextsInPool()"));
             compileTypeScript(project, "Config.ts", "ConfigUtil.ts");
             String script = """
@@ -132,7 +134,7 @@ class OtherBytesRuntimeTest {
             Files.writeString(project.resolve("test.cjs"), script);
             run(project, List.of("node", "test.cjs"));
         } else {
-            new GoCodeGenerator(new ParameterParser("go,dir:" + project + (server ? ",serverText" : ""))).generate(context);
+            new GoCodeGenerator(new ParameterParser("go,dir:" + project + (server ? ",serverText" : ""))).generate(context, new CachedFiles());
             if (server) assertFalse(Files.readString(project.resolve("config/Text.go")).contains("ReadTextsInPool()"));
             Files.writeString(project.resolve("go.mod"), "module fixture\n\ngo 1.22\n");
             String script = """

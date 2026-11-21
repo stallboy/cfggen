@@ -48,8 +48,8 @@ public class BytesGenerator extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
-        outputFiles = ctx.outputFiles();
+    public void generate(Context ctx, CachedFiles outputs) throws IOException {
+        outputFiles = outputs;
         PackageBuilder.Result build = ctx.isFixedSchema() || !requires.isEmpty() || !dependencies.isEmpty()
                 ? PackageBuilder.build(ctx, tag, dependencies, pack, requires) : null;
         CfgValue cfgValue = build == null ? ctx.makeValue(tag) : build.own();

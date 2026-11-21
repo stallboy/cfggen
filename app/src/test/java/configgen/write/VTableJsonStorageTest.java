@@ -71,14 +71,14 @@ class VTableJsonStorageTest {
         // Permit in-place writes while preventing removal or replacement of the path.
         try (var channel = FileChannel.open(target, StandardOpenOption.READ, ExtendedOpenOption.NOSHARE_DELETE)) {
             assertThrows(IOException.class, () -> VTableJsonStorage.addOrUpdateRecord(
-                    record, "target", "1", tempDir, context.sourceStructure(), context.outputFiles()));
+                    record, "target", "1", tempDir, context.sourceStructure()));
             assertEquals(old, Files.readString(target));
         }
         try (var paths = Files.list(dir)) {
             assertEquals(List.of(target), paths.toList());
         }
         assertEquals(Path.of("_target", "1.json"), VTableJsonStorage.addOrUpdateRecord(
-                record, "target", "1", tempDir, context.sourceStructure(), context.outputFiles()));
+                record, "target", "1", tempDir, context.sourceStructure()));
         assertNotEquals(old, Files.readString(target));
     }
 

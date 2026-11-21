@@ -1,5 +1,7 @@
 package configgen.mcpserver;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import com.github.codeboyzhou.mcp.declarative.McpServers;
@@ -40,7 +42,7 @@ public class CfgMcpServer extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         if (INSTANCE.get() != null) {
             Logger.log("CfgMcpServer instance already exists! ignore this");
             return;

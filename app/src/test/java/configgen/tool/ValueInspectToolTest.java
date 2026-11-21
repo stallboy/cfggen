@@ -1,5 +1,7 @@
 package configgen.tool;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
@@ -35,7 +37,7 @@ class ValueInspectToolTest {
             Locale.setDefault(Locale.Category.FORMAT, Locale.forLanguageTag("ar-EG"));
             new ValueInspectTool(new ParameterParser("search,to=" + output
                     + ",q=\u3000INT\u20031 0x100000001 -9223372036854775808 9223372036854775807 010\u3000"))
-                    .generate(ctx);
+                    .generate(ctx, new CachedFiles());
             assertEquals("""
                     t[7], n, 4294967297
                     t[8], id, 8
@@ -62,7 +64,7 @@ class ValueInspectToolTest {
         };
         try {
             System.setIn(input);
-            new ValueInspectTool(new ParameterParser("search,to=" + output + ",q=\u3000")).generate(ctx);
+            new ValueInspectTool(new ParameterParser("search,to=" + output + ",q=\u3000")).generate(ctx, new CachedFiles());
             assertEquals(List.of("\uFEFFUsage: ref <refTable[key]> [ignoredTable1]...",
                     "t[7], n, 4294967297"), Files.readString(output).lines().toList());
         } finally {
@@ -97,7 +99,7 @@ class ValueInspectToolTest {
         try {
             System.setIn(input);
             assertThrows(IllegalStateException.class,
-                    () -> new ValueInspectTool(new ParameterParser("search,to=" + output)).generate(ctx));
+                    () -> new ValueInspectTool(new ParameterParser("search,to=" + output)).generate(ctx, new CachedFiles()));
             assertEquals("\uFEFFt[7], id, 7" + System.lineSeparator(), Files.readString(output));
         } finally {
             System.setIn(saved);

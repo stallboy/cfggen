@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import configgen.util.CachedFiles;
+
 import configgen.ctx.Context;
 import org.jspecify.annotations.Nullable;
 
@@ -23,7 +25,7 @@ public abstract class Generator {
         this.parameter = parameter;
     }
 
-    public abstract void generate(Context ctx) throws IOException;
+    public abstract void generate(Context ctx, CachedFiles outputFiles) throws IOException;
 
     /**
      * invokeAll 提交全部任务并逐个 get 等待完成，结果按提交顺序返回；

@@ -1,5 +1,7 @@
 package configgen.genbyai;
 
+import configgen.util.CachedFiles;
+
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
@@ -34,7 +36,7 @@ public class TsSchemaGenerator extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         if (table.isEmpty()) {
             return;
         }
@@ -49,7 +51,7 @@ public class TsSchemaGenerator extends GeneratorWithTag {
             Logger.log("ignore gen ts: table=%s not found!", table);
             return;
         }
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstPath.resolve(table + ".ts"), encoding, ctx.outputFiles())) {
+        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstPath.resolve(table + ".ts"), encoding, outputFiles)) {
             String generate = new SchemaToTs(cfgValue, vTable.schema(), refTables, false).generate();
             ps.println(generate);
         }

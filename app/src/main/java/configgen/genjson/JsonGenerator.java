@@ -20,8 +20,6 @@ import java.util.Map;
 import static configgen.value.CfgValue.*;
 
 public class JsonGenerator extends GeneratorWithTag {
-    // 标记整个 dst 由 JSON 导出独占，允许清理本次未生成的文件。
-    private static final String MARKER = ".cfggen-json-export";
     private final String tables;
     private final String dst;
 
@@ -32,7 +30,7 @@ public class JsonGenerator extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles batchOutputs) throws IOException {
         if (tables.isBlank()) {
             return;
         }
@@ -44,20 +42,19 @@ public class JsonGenerator extends GeneratorWithTag {
             Logger.log("gen json with tag=%s, be careful!!!", tag);
         }
 
-        exportTables(ctx, ctx.makeValue(tag), tableNames, Path.of(dst).toAbsolutePath().normalize());
+        exportTables(ctx, ctx.makeValue(tag), tableNames, Path.of(dst).toAbsolutePath().normalize(), batchOutputs);
     }
 
     private record Export(String table, Map<Path, VStruct> records) {}
 
     private static synchronized void exportTables(Context ctx, CfgValue cfgValue, String[] tableNames,
-                                                   Path destination) throws IOException {
+                                                   Path destination, CachedFiles outputFiles) throws IOException {
         Path outputDirectory = resolveOutputDirectory(destination);
         Path dataDirectory = ctx.rootDir().toRealPath();
         if (outputDirectory.startsWith(dataDirectory) || dataDirectory.startsWith(outputDirectory)) {
             throw new IOException("JSON export directory " + outputDirectory + " overlaps the data directory "
                     + dataDirectory + ". Set dst outside the data directory.");
         }
-        checkOutputDirectory(outputDirectory);
 
         Map<Path, Export> exports = new LinkedHashMap<>();
         for (String table : tableNames) {
@@ -88,15 +85,12 @@ public class JsonGenerator extends GeneratorWithTag {
         if (exports.isEmpty()) {
             return;
         }
-        CachedFiles outputFiles = new CachedFiles();
-        outputFiles.writeFileReplacement(outputDirectory.resolve(MARKER), new byte[0]);
+        outputFiles.prepareOutputDirectory(outputDirectory);
         for (Export export : exports.values()) {
             for (Map.Entry<Path, VStruct> entry : export.records().entrySet()) {
                 VTableJsonStorage.writeRecord(entry.getValue(), entry.getKey(), outputFiles);
             }
         }
-        outputFiles.deleteOtherFiles(outputDirectory.toFile());
-        outputFiles.finalizeRun();
     }
 
     private static Path outputTableDirectory(String table) {
@@ -128,17 +122,6 @@ public class JsonGenerator extends GeneratorWithTag {
             }
         }
         return records;
-    }
-
-    private static void checkOutputDirectory(Path directory) throws IOException {
-        if (Files.notExists(directory) || Files.isRegularFile(directory.resolve(MARKER), LinkOption.NOFOLLOW_LINKS)) {
-            return;
-        }
-        try (var entries = Files.list(directory)) {
-            if (entries.findAny().isPresent()) {
-                throw new IOException("JSON export directory is not empty and has no export marker: " + directory);
-            }
-        }
     }
 
     private static IOException directoryConflict(Path directory, String owner, String table) {

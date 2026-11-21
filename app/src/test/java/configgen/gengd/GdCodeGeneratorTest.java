@@ -1,5 +1,7 @@
 package configgen.gengd;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import configgen.TestCtx;
@@ -54,7 +56,7 @@ class GdCodeGeneratorTest {
 
         Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("user", csv));
         Path outDir = tempDir.resolve("gdout");
-        new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx);
+        new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx, new CachedFiles());
 
         Path userGd = findFileContaining(outDir, "user");
         assertNotNull(userGd, "应生成user相关的.gd文件");
@@ -82,7 +84,7 @@ class GdCodeGeneratorTest {
 
         Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("ability", csv));
         Path outDir = tempDir.resolve("gdout_enum");
-        new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx);
+        new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx, new CachedFiles());
 
         Path abilityGd = findFileContaining(outDir, "ability");
         assertNotNull(abilityGd, "应生成ability相关的.gd文件");
@@ -126,7 +128,7 @@ class GdCodeGeneratorTest {
         Path outDir = tempDir.resolve("gdout_composite");
         // 复合键应提前报清表名并给出处理办法，而不是渲染中途抛裸异常栈
         CliException e = assertThrows(CliException.class,
-                () -> new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx));
+                () -> new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir)).generate(ctx, new CachedFiles()));
         String message = requireNonNull(e.getMessage());
         assertTrue(message.contains("pair"), "错误信息应包含表名，实际: " + message);
         assertTrue(e.getMessage().contains("nogd"), "错误信息应给出nogd处理提示，实际: " + e.getMessage());
@@ -150,6 +152,6 @@ class GdCodeGeneratorTest {
         Path outDir = tempDir.resolve("gdout_composite_filtered");
         // 标了 (nogd) 并用 own:-nogd 过滤后，复合键表被排除，生成应成功
         assertDoesNotThrow(() ->
-                new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir + ",own:-nogd")).generate(ctx));
+                new GdCodeGenerator(new ParameterParser("gd,dir:" + outDir + ",own:-nogd")).generate(ctx, new CachedFiles()));
     }
 }

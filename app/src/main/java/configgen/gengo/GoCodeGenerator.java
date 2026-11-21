@@ -1,5 +1,7 @@
 package configgen.gengo;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -48,9 +50,10 @@ public class GoCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputs) throws IOException {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        outputFiles = ctx.outputFiles();
+        outputs.prepareOutputDirectory(dstDir);
+        outputFiles = outputs;
         CfgValue cfgValue = ctx.makeValue(tag);
         CfgSchema cfgSchema = cfgValue.schema();
         reverseFields.clear();
@@ -113,7 +116,6 @@ public class GoCodeGenerator extends GeneratorWithTag {
             generateText(java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()));
         }
 
-        outputFiles.deleteOtherFiles(dstDir.toFile());
     }
 
     private CachedIndentPrinter createCode(String fn) {

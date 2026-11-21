@@ -1,3 +1,5 @@
+call "%~dp0..\require_output_marker.bat" "config" || exit /b 1
+
 if exist "config\ConfigPackage.gd" del /q "config\ConfigPackage.gd"
 if exist "config\ConfigStream.gd" del /q "config\ConfigStream.gd"
 if exist "config\ConfigLoader.gd" del /q "config\ConfigLoader.gd"

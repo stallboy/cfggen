@@ -81,13 +81,14 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputs) throws IOException {
         aCtx = new AContext(pkg, ctx.nullableTranslationBundle(), useSharedEmptyTable, useShared,
                 packBool, noStr, rForOldShared);
         isLangSwitch = aCtx.nullableLangSwitchSupport() != null;
 
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        outputFiles = ctx.outputFiles();
+        outputs.prepareOutputDirectory(dstDir, ".meta", ".uid");
+        outputFiles = outputs;
 
         cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
@@ -144,7 +145,6 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             }
         }
 
-        outputFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
 
     private CachedIndentPrinter createCode(String fn) {
@@ -429,7 +429,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
         int extraFileCnt;
         {
-            ///////////////////////////////////// 正常模式
+            // 正常模式
             extraFileCnt = ps.enableCache(extraSplit, vTable.valueList().size());
 
             boolean hasLangSwitchAndText = aCtx.nullableLangSwitchSupport() != null &&

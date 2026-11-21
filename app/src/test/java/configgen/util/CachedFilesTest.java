@@ -5,6 +5,7 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -19,6 +20,9 @@ class CachedFilesTest {
     @Test
     void keepsMetadataWithLegacySuffixCasingAndMatchesWholePathSegments() throws Exception {
         Path root = Files.createDirectory(tempDir.resolve("root"));
+        CachedFiles files = new CachedFiles();
+        files.prepareOutputDirectory(root, ".meta", ".uid", ".custom");
+        assertEquals(0, Files.size(root.resolve(".cfggen-output")));
         Path asset = Files.createDirectory(root.resolve("Asset"));
         Path similar = Files.createDirectory(root.resolve("AssetExtra"));
         Path directoryMetadata = Files.createFile(root.resolve("Asset.META"));
@@ -28,21 +32,62 @@ class CachedFilesTest {
         Path generatedMetadata = Files.createFile(asset.resolve("data.lua.UID"));
         Path similarlyNamed = Files.createFile(similar.resolve("data.lua"));
 
-        CachedFiles files = new CachedFiles();
+        Path customMetadata = Files.createFile(asset.resolve("data.lua.CUSTOM"));
+        Path unknownMetadata = Files.createFile(asset.resolve("data.lua.unknown"));
         files.keepFile(generated);
         files.keepFile(similarlyNamed);
-        files.keepMetaAndDeleteOtherFiles(root.toFile());
         files.finalizeRun();
 
         assertTrue(Files.exists(directoryMetadata));
         assertTrue(Files.exists(generatedMetadata));
         assertFalse(Files.exists(orphanMetadata));
+        assertTrue(Files.exists(customMetadata));
+        assertFalse(Files.exists(unknownMetadata));
+    }
+
+    @Test
+    void requiresRegularMarkerBeforeWritingAndBeforeCleanup() throws IOException {
+        Path root = Files.createDirectory(tempDir.resolve("root"));
+        Path stale = Files.writeString(root.resolve("stale.txt"), "old");
+        CachedFiles files = new CachedFiles();
+        assertThrows(IOException.class, () -> files.prepareOutputDirectory(root));
+        Path marker = root.resolve(".cfggen-output");
+        Files.createDirectory(marker);
+        assertThrows(IOException.class, () -> files.prepareOutputDirectory(root));
+        Files.delete(marker);
+        Files.createFile(marker);
+
+        files.prepareOutputDirectory(root);
+        Files.delete(marker);
+        files.finalizeRun();
+
+        assertEquals("old", Files.readString(stale));
+    }
+
+    @Test
+    void preservesNestedManagedDirectoriesAndRejectsOverlappingRegistrations() throws IOException {
+        Path root = tempDir.resolve("root");
+        Path nested = root.resolve("nested");
+        CachedFiles files = new CachedFiles();
+        files.prepareOutputDirectory(root);
+        Path stale = Files.writeString(root.resolve("stale.txt"), "old");
+        assertThrows(IOException.class, () -> files.prepareOutputDirectory(nested));
+
+        CachedFiles nestedFiles = new CachedFiles();
+        nestedFiles.prepareOutputDirectory(nested);
+        Path nestedOutput = Files.writeString(nested.resolve("keep.go"), "nested");
+        files.finalizeRun();
+
+        assertFalse(Files.exists(stale));
+        assertEquals("nested", Files.readString(nestedOutput));
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     void doesNotTraverseDirectoryJunctionDuringCleanup() throws Exception {
         Path root = Files.createDirectory(tempDir.resolve("root"));
+        CachedFiles files = new CachedFiles();
+        files.prepareOutputDirectory(root);
         Path outside = Files.createDirectory(tempDir.resolve("outside"));
         Path sentinel = Files.writeString(outside.resolve("keep.txt"), "keep");
         Path link = root.resolve("junction");
@@ -52,8 +97,6 @@ class CachedFilesTest {
         assumeTrue(mklink.waitFor() == 0, () -> new String(output));
         try {
             assertTrue(Files.isDirectory(link, LinkOption.NOFOLLOW_LINKS));
-            CachedFiles files = new CachedFiles();
-            files.deleteOtherFiles(root.toFile());
             files.finalizeRun();
             assertEquals("keep", Files.readString(sentinel));
         } finally {

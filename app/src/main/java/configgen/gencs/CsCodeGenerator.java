@@ -1,5 +1,7 @@
 package configgen.gencs;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -59,12 +61,13 @@ public class CsCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputs) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
         CfgSchema cfgSchema = cfgValue.schema();
 
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        outputFiles = ctx.outputFiles();
+        outputs.prepareOutputDirectory(dstDir, ".meta", ".uid");
+        outputFiles = outputs;
 
         var translationBundle = ctx.nullableTranslationBundle();
         isLangSwitch = translationBundle != null;
@@ -126,7 +129,6 @@ public class CsCodeGenerator extends GeneratorWithTag {
             generateText(translationBundle);
         }
 
-        outputFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
 
     private void generateInterface(InterfaceSchema sInterface) {

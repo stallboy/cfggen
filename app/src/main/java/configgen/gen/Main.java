@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.*;
@@ -270,18 +272,19 @@ public final class Main {
         // 登记为当前代：server类generator（无论是否开watch）的编辑写路径统一经WatchAndPostRun取当前代并互斥
         WatchAndPostRun.INSTANCE.initContext(context);
 
+        CachedFiles outputs = new CachedFiles();
         for (NamedGenerator ng : generators) {
             Logger.verbose("-----generate %s", ng.gen.parameter.toString());
             try {
-                ng.gen.generate(context);
+                ng.gen.generate(context, outputs);
             } catch (IOException e) {
                 throw new RuntimeException("generate " + ng.name + " failed", e);
             }
             Logger.profile("generate " + ng.name);
         }
 
-        // 清理生成目录中未登记的文件：作用域到本次run（context持有登记册），并发run互不影响
-        context.outputFiles().finalizeRun();
+        // 清理生成目录中未登记的文件：每批生成使用独立登记
+        outputs.finalizeRun();
         Logger.profile("end");
         return 0;
     }

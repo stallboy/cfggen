@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import configgen.util.CachedFiles;
+
 import configgen.JavaTestClasspath;
 
 import configgen.TestCtx;
@@ -62,10 +64,10 @@ class RuntimeExtensionTest {
                 """, Map.of("monster", "id,attack,tags,rank\nid,attack,tags,rank\n1,10,a|b,10\n", "rank", "id,name,multiplier\nid,name,multiplier\n10,Green,2\n"));
         Path generated = root.resolve("generated");
         Files.writeString(root.resolve("builders.txt"), "monster\n");
-        new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",configgenDir:" + generated + ",pkg:config,builders:" + root.resolve("builders.txt") + (sealed ? "" : ",noSealed"))).generate(ctx);
+        new JavaCodeGenerator(new ParameterParser("java,dir:" + generated + ",configgenDir:" + generated + ",pkg:config,builders:" + root.resolve("builders.txt") + (sealed ? "" : ",noSealed"))).generate(ctx, new CachedFiles());
         assertFalse(Files.exists(generated.resolve("config/ConfigNode.java")));
         assertFalse(Files.exists(generated.resolve("config/ConfigLoader.java")));
-        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("bytes"))).generate(ctx);
+        new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("bytes"))).generate(ctx, new CachedFiles());
         Files.createDirectories(generated.resolve("hand"));
         Files.writeString(generated.resolve("hand/MonsterBase.java"), """
                 package hand;
@@ -148,12 +150,12 @@ class RuntimeExtensionTest {
             @SuppressWarnings("unchecked") var tags = (List<String>) monster.getMethod("getTags").invoke(rowA);
             assertThrows(UnsupportedOperationException.class, () -> tags.add("mutate"));
 
-            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("base") + ",pack:base")).generate(ctx);
+            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("base") + ",pack:base")).generate(ctx, new CachedFiles());
             Files.createDirectories(root.resolve("moddata"));
             writeHolder(root.resolve("moddata"));
             Context mod = TestCtx.newContext(root.resolve("moddata"), ctx.cfgSchema().stringify(),
                     Map.of("monster", "id,attack,tags,rank\nid,attack,tags,rank\n1,30,new,10\n2,50,extra,10\n", "rank", "id,name,multiplier\nid,name,multiplier\n10,Green,3\n"));
-            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("mod") + ",pack:map,requires:base,deps:" + root.resolve("base/base.bytes"))).generate(mod);
+            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("mod") + ",pack:map,requires:base,deps:" + root.resolve("base/base.bytes"))).generate(mod, new CachedFiles());
             ConfigPackage basePack = ConfigPackage.read(root.resolve("base/base.bytes"));
             ConfigPackage modPack = ConfigPackage.read(root.resolve("mod/map.bytes"));
             var duplicate = duplicatePairRow(modPack);
@@ -275,7 +277,7 @@ class RuntimeExtensionTest {
 
             Files.writeString(root.resolve("moddata/step.csv"), "id,name\nid,name\n0,zero\n1,one\n2,two\n3,three\n");
             Context complete = new Context(mod.contextCfg(), ctx.cfgSchema());
-            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("replacement"))).generate(complete);
+            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("replacement"))).generate(complete, new CachedFiles());
             var replacementPack = ConfigPackage.read(root.resolve("replacement/base.bytes"));
             Object rebuilt = loading.getMethod("loadPackages", ConfigPackage[].class).invoke(null, (Object) new ConfigPackage[]{replacementPack});
             mgr.getMethod("setMgr", mgr).invoke(null, rebuilt);
@@ -286,7 +288,7 @@ class RuntimeExtensionTest {
 
             Files.writeString(root.resolve("moddata/monster.csv"), "id,attack,tags,rank\nid,attack,tags,rank\n1,-1,bad,10\n");
             Context invalidCache = new Context(mod.contextCfg(), ctx.cfgSchema());
-            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("fail") + ",pack:broken,requires:base,deps:" + root.resolve("base/base.bytes"))).generate(invalidCache);
+            new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("fail") + ",pack:broken,requires:base,deps:" + root.resolve("base/base.bytes"))).generate(invalidCache, new CachedFiles());
             var broken = ConfigPackage.read(root.resolve("fail/broken.bytes"));
             Object published = mgr.getMethod("getMgr").invoke(null);
             var failure = assertThrows(java.lang.reflect.InvocationTargetException.class, () -> loading.getMethod("loadPackagesAndSetMgr", ConfigPackage[].class)

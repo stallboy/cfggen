@@ -1,8 +1,9 @@
 package configgen.genlua;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
-import configgen.gen.Parameter;
 import configgen.gen.ParameterParser;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
@@ -55,7 +56,7 @@ class LuaCodeGeneratorTest {
 
         Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("t", csv));
         Path outDir = tempDir.resolve("luaout");
-        new LuaCodeGenerator(new ParameterParser("lua,dir:" + outDir + ",pkg:cfgdata")).generate(ctx);
+        new LuaCodeGenerator(new ParameterParser("lua,dir:" + outDir + ",pkg:cfgdata")).generate(ctx, new CachedFiles());
 
         String content = Files.readString(outDir.resolve("cfgdata/t.lua"));
 
@@ -86,7 +87,7 @@ class LuaCodeGeneratorTest {
 
         Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("t", csv));
         Path outDir = tempDir.resolve("luaout2");
-        new LuaCodeGenerator(new ParameterParser("lua,dir:" + outDir + ",pkg:cfgdata")).generate(ctx);
+        new LuaCodeGenerator(new ParameterParser("lua,dir:" + outDir + ",pkg:cfgdata")).generate(ctx, new CachedFiles());
 
         String content = Files.readString(outDir.resolve("cfgdata/t.lua"));
         assertTrue(content.contains("\"say \\\"hi\\\"\\\\path\""), "字符串值应正确转义引号与反斜杠");
@@ -98,7 +99,7 @@ class LuaCodeGeneratorTest {
                 table t[id] { id:int; items:list<int> (sep='|'); flags:map<str,int> (pack); }
                 """, Map.of("t", "id,items,flags\nid,items,flags\n1,2|3,\"ready,4\"\n"));
         Path outDir = tempDir.resolve("oldshared");
-        new LuaCodeGenerator(new ParameterParser("lua,rForOldShared,dir:" + outDir)).generate(ctx);
+        new LuaCodeGenerator(new ParameterParser("lua,rForOldShared,dir:" + outDir)).generate(ctx, new CachedFiles());
 
         String content = Files.readString(outDir.resolve("cfg/t.lua"));
         assertTrue(content.contains("mk(1, R({2, 3}), R({ready = 4}))"));
@@ -113,7 +114,7 @@ class LuaCodeGeneratorTest {
         Locale saved = Locale.getDefault(Locale.Category.FORMAT);
         try {
             Locale.setDefault(Locale.Category.FORMAT, Locale.forLanguageTag("ar-EG"));
-            new LuaCodeGenerator(new ParameterParser("lua,shared,dir:" + outDir)).generate(ctx);
+            new LuaCodeGenerator(new ParameterParser("lua,shared,dir:" + outDir)).generate(ctx, new CachedFiles());
             String content = Files.readString(outDir.resolve("cfg/t.lua"));
             assertTrue(content.contains("A[1]"), content);
             assertFalse(content.contains("A[١]"), content);
@@ -133,7 +134,7 @@ class LuaCodeGeneratorTest {
                 2,2|3,"ready,4"
                 """));
         Path outDir = tempDir.resolve("oldshared");
-        new LuaCodeGenerator(new ParameterParser("lua,shared,rForOldShared,dir:" + outDir)).generate(ctx);
+        new LuaCodeGenerator(new ParameterParser("lua,shared,rForOldShared,dir:" + outDir)).generate(ctx, new CachedFiles());
 
         String content = Files.readString(outDir.resolve("cfg/t.lua"));
         assertTrue(content.contains(" = R({2, 3})"), content);
@@ -157,7 +158,7 @@ class LuaCodeGeneratorTest {
                 """;
         Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("t", csv));
         Path outDir = tempDir.resolve("luaout3");
-        new LuaCodeGenerator(new ParameterParser("lua,dir:" + outDir + ",pkg:cfgdata")).generate(ctx);
+        new LuaCodeGenerator(new ParameterParser("lua,dir:" + outDir + ",pkg:cfgdata")).generate(ctx, new CachedFiles());
 
         assertTrue(Files.exists(outDir.resolve("cfgdata/_cfgs.lua")), "应生成_cfgs.lua");
         assertTrue(Files.exists(outDir.resolve("cfgdata/_beans.lua")), "应生成_beans.lua");

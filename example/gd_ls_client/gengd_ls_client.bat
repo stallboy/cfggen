@@ -1,3 +1,5 @@
+call "%~dp0..\require_output_marker.bat" "config" || exit /b 1
+
 if exist "config\ConfigPackage.gd" del /q "config\ConfigPackage.gd"
 REM 删除通过 copyFileIfNotExist 复制的支持文件
 if exist "config\ConfigStream.gd" del /q "config\ConfigStream.gd"

@@ -1,5 +1,7 @@
 package configgen.gengo;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.gen.ParameterParser;
 import configgen.genbytes.BytesGenerator;
@@ -35,8 +37,8 @@ class GoStructKeyTest {
         configgen.JsonRecordFixture.write(root.resolve("data"), "uses", "{\"id\":1,\"key\":" + key + "}");
         var context = TestCtx.newContext(root.resolve("data"), schema, Map.of());
         Path project = Files.createDirectories(root.resolve("project"));
-        new GoCodeGenerator(new ParameterParser("go,dir:" + project)).generate(context);
-        new BytesGenerator(new ParameterParser("bytes,dir:" + project)).generate(context);
+        new GoCodeGenerator(new ParameterParser("go,dir:" + project)).generate(context, new CachedFiles());
+        new BytesGenerator(new ParameterParser("bytes,dir:" + project)).generate(context, new CachedFiles());
         Files.writeString(project.resolve("go.mod"), "module fixture\n\ngo 1.23\n");
         Files.writeString(project.resolve("config/keys_test.go"), """
                 package config

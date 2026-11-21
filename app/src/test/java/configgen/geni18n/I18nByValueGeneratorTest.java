@@ -1,5 +1,7 @@
 package configgen.geni18n;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.Parameter;
@@ -53,7 +55,7 @@ class I18nByValueGeneratorTest {
         Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("user", csv));
         Path outFile = tempDir.resolve("i18nout/en.csv");
         Files.createDirectories(outFile.getParent());
-        new I18nByValueGenerator(new ParameterParser("i18n,file:" + outFile)).generate(ctx);
+        new I18nByValueGenerator(new ParameterParser("i18n,file:" + outFile)).generate(ctx, new CachedFiles());
 
         assertTrue(Files.exists(outFile), "应生成翻译csv");
         String content = Files.readString(outFile);

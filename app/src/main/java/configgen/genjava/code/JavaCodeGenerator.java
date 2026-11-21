@@ -1,5 +1,7 @@
 package configgen.genjava.code;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -98,11 +100,11 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         CfgData cfgData = ctx.cfgData();
         Path dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        CachedFiles outputFiles = ctx.outputFiles();
+        outputFiles.prepareOutputDirectory(dstDir);
         Set<String> generatedPackagePaths = ConcurrentHashMap.newKeySet();
         Function<String, CachedIndentPrinter> openCode = filename -> {
             if (jspecify) {
@@ -200,7 +202,6 @@ public class JavaCodeGenerator extends GeneratorWithTag {
                         packageInfo(packageName).getBytes(charset));
             }
         }
-        outputFiles.deleteOtherFiles(dstDir.toFile());
 
         copyConfigGenSourcesIfNeed(outputFiles);
     }

@@ -1,5 +1,7 @@
 package configgen.gengo;
 
+import configgen.util.CachedFiles;
+
 import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.Parameter;
@@ -39,7 +41,7 @@ class GoCodeGeneratorTest {
                 table key_test_cfg[id] { id:int; }
                 """, Map.of("key_test", "id\nid\n1\n", "key_test_cfg", "id\nid\n2\n"));
         Path output = tempDir.resolve("output");
-        new GoCodeGenerator(new ParameterParser("go,dir:" + output)).generate(context);
+        new GoCodeGenerator(new ParameterParser("go,dir:" + output)).generate(context, new CachedFiles());
         try (var files = Files.list(output.resolve("config"))) {
             assertTrue(files.noneMatch(path -> path.getFileName().toString().endsWith("_test.go")),
                     "Generated tables must be included in ordinary Go builds");
@@ -75,7 +77,7 @@ class GoCodeGeneratorTest {
         Context ctx = TestCtx.newContext(tempDir, cfgStr, Map.of("user", csv));
         Path outDir = tempDir.resolve("goout");
         // 不传encoding，验证默认值为UTF-8
-        new GoCodeGenerator(new ParameterParser("go,dir:" + outDir + ",pkg:config")).generate(ctx);
+        new GoCodeGenerator(new ParameterParser("go,dir:" + outDir + ",pkg:config")).generate(ctx, new CachedFiles());
 
         Path userGo;
         try (Stream<Path> files = Files.walk(outDir)) {
@@ -122,7 +124,7 @@ class GoCodeGeneratorTest {
         Context ctx = TestCtx.newLangSwitchContext(tempDir, cfgStr, Map.of("t", csv), langsDir, "zh_cn");
 
         Path outDir = tempDir.resolve("goout_ls");
-        new GoCodeGenerator(new ParameterParser("go,dir:" + outDir + ",pkg:config")).generate(ctx);
+        new GoCodeGenerator(new ParameterParser("go,dir:" + outDir + ",pkg:config")).generate(ctx, new CachedFiles());
 
         String content = Files.readString(outDir.resolve("config/t.go"));
         assertEquals("[]*Text", declaredTypeOf(content, "names"), "list<text>字段的声明类型");

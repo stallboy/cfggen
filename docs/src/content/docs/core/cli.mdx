@@ -161,8 +161,8 @@ Parameters can be in any order, but -datadir is required when using generators.
         tables=              表名，;分割
         dst=.                JSON 文件输出目录，实际输出路径须在数据目录（-datadir）之外
                              例如表 a.b 固定输出到 dst 下的 a/_b/ 目录
-                             dst 必须为空，或包含 .cfggen-json-export 标记
-                             每次导出会清理整个 dst 中本次未生成的内容，需要共用 dst 的表写在同一个 tables 参数中
+                             dst 必须为空，或包含 .cfggen-output 普通标记文件
+                             同一批次内向 dst 生成的文件都会保留，批次成功后清理其余旧文件
     -gen server      为cfgeditor编辑器提供server
         own=null
         port=3456            为cfgeditor.exe提供服务的端口

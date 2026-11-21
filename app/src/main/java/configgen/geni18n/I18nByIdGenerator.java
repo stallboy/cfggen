@@ -1,5 +1,7 @@
 package configgen.geni18n;
 
+import configgen.util.CachedFiles;
+
 import configgen.i18n.TodoFile;
 
 import configgen.ctx.Context;
@@ -51,7 +53,7 @@ public final class I18nByIdGenerator extends Generator {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         CfgValue cfgValue = ctx.makeValue();
 
 

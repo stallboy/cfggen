@@ -1,3 +1,5 @@
+call "%~dp0..\require_output_marker.bat" "config" || exit /b 1
+
 if exist "configgen\genjava\*.java" del /q "configgen\genjava\*.java"
 
 call %~dp0..\cfggen_common.bat

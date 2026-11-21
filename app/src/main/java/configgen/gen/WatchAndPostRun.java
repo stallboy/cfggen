@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -267,13 +269,14 @@ public enum WatchAndPostRun {
                 }
                 if (genPrefix != null) {
                     Context runCtx = java.util.Objects.requireNonNull(coordinator.state());
+                    CachedFiles outputs = new CachedFiles();
                     for (String line : Files.readAllLines(Path.of(postRun))) {
                         if (line.startsWith(genPrefix)) {
                             String parameter = line.substring(genPrefix.length());
                             Generator generator = Generators.create(parameter);
                             if (generator != null) {
                                 Logger.log("-gen " + parameter);
-                                generator.generate(runCtx);
+                                generator.generate(runCtx, outputs);
                             }
                         } else {
                             break;
@@ -281,7 +284,7 @@ public enum WatchAndPostRun {
                     }
                     // bat内进程生成的清理收口：原先只登记目录、无人finalize，悬空靠外部bat子进程兜底；
                     // 在外部进程启动前完成，删除的陈旧文件子进程会重生成
-                    runCtx.outputFiles().finalizeRun();
+                    outputs.finalizeRun();
                 }
 
                 Process process = new ProcessBuilder(postRun).redirectErrorStream(true).start();

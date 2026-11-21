@@ -1,5 +1,7 @@
 package configgen.gents;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import configgen.naming.GenNaming;
@@ -35,8 +37,8 @@ public class TsCodeGenerator extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
-        // 注意：ts 不做 deleteOtherFiles/keepMetaAndDeleteOtherFiles 收尾清理，这是目录语义决定的、不是遗漏：
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
+        // 注意：ts 不做 输出目录登记和收尾清理，这是目录语义决定的、不是遗漏：
         // 1. dstDir 默认就是用户项目根（不传 dir 时为 "."），Config.ts 与 main.ts/package.json 等
         //    用户文件同目录，任何清理都会误删它们；cs/lua 的清理作用在 dir.resolve(pkg) 的
         //    生成器独占子目录，gd 依赖调用方显式传独占目录（dir:config），ts 没有独占目录。
@@ -45,14 +47,14 @@ public class TsCodeGenerator extends GeneratorWithTag {
         cfgSchema = cfgValue.schema();
         nullableTranslationBundle = ctx.nullableTranslationBundle();
 
-        try (var ps = new CachedIndentPrinter(dstDir.resolve("Config.ts"), encoding, ctx.outputFiles())) {
+        try (var ps = new CachedIndentPrinter(dstDir.resolve("Config.ts"), encoding, outputFiles)) {
             JteEngine.render("ts/Config.jte", this, ps);
         }
 
         FileUtil.copyFileIfNotExist("/support/ts/ConfigUtil.ts",
                 "src/main/resources/support/ts/ConfigUtil.ts",
                 dstDir.resolve("ConfigUtil.ts"),
-                encoding, ctx.outputFiles());
+                encoding, outputFiles);
 
     }
 

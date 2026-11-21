@@ -13,7 +13,9 @@ import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFileAttributeView;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class FileUtil {
@@ -52,6 +54,29 @@ public class FileUtil {
     @FunctionalInterface
     public interface StagedFileWriter {
         void write(Path stagingFile) throws IOException;
+    }
+
+    public static void writeIfChanged(Path path, byte[] data) throws IOException {
+        writeChanged(path, data, target -> Files.write(target, data, StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING));
+    }
+
+    public static void replaceIfChanged(Path path, byte[] data) throws IOException {
+        writeChanged(path, data, target -> writeReplacement(target, staged -> Files.write(staged, data)));
+    }
+
+    private static void writeChanged(Path path, byte[] data, StagedFileWriter writer) throws IOException {
+        File file = path.toFile();
+        if (file.exists()) {
+            if (file.length() == data.length && Arrays.equals(Files.readAllBytes(path), data)) {
+                return;
+            }
+            Logger.log("modify file: " + path);
+        } else {
+            Logger.log("create file: " + path);
+            Files.createDirectories(path.toAbsolutePath().getParent());
+        }
+        writer.write(path);
     }
 
     public static void writeReplacement(Path path, StagedFileWriter writer) throws IOException {

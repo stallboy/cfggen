@@ -8,6 +8,8 @@ if not exist "%CFGGEN_JAR%" (
     exit /b 1
 )
 
+call "%~dp0..\require_output_marker.bat" "config" || exit /b 1
+
 rem Refresh this example's generated support sources when upgrading the generator.
 if exist "configgen\genjava\*.java" del /q "configgen\genjava\*.java"
 rem bytes defaults to the versioned blocks format and pack=base.

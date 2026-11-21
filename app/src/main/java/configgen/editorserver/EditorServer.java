@@ -1,5 +1,7 @@
 package configgen.editorserver;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import com.alibaba.fastjson2.JSON;
@@ -71,7 +73,7 @@ public class EditorServer extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
         initFromCtx(ctx);
 

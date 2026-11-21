@@ -1,5 +1,7 @@
 package configgen.tool;
 
+import configgen.util.CachedFiles;
+
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
@@ -25,7 +27,7 @@ public class ValueInspectTool extends GeneratorWithTag {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         CfgValue value = ctx.makeValue(tag);
         try (ValueInspector searcher = new ValueInspector(value, searchTo)) {
             if (query.isEmpty()) {

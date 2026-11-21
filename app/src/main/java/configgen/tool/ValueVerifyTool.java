@@ -1,5 +1,7 @@
 package configgen.tool;
 
+import configgen.util.CachedFiles;
+
 import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
@@ -26,7 +28,7 @@ public class ValueVerifyTool extends Generator {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         CfgValue value = ctx.makeValue();
 
         if (printUnreferenced) {

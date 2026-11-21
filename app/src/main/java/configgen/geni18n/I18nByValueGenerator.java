@@ -1,5 +1,7 @@
 package configgen.geni18n;
 
+import configgen.util.CachedFiles;
+
 import configgen.ctx.Context;
 import configgen.gen.*;
 import configgen.schema.HasText;
@@ -23,7 +25,7 @@ public final class I18nByValueGenerator extends Generator {
     }
 
     @Override
-    public void generate(Context ctx) throws IOException {
+    public void generate(Context ctx, CachedFiles outputFiles) throws IOException {
         CfgValue cfgValue = ctx.makeValue();
 
         data = new ArrayList<>(64 * 1024);
