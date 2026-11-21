@@ -1,30 +1,27 @@
 package configgen.genjson;
 
-import com.alibaba.fastjson2.JSON;
 import configgen.ctx.Context;
-import configgen.data.Source.DFile;
+import configgen.data.DataUtil;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.schema.HasMap;
+import configgen.util.CachedFiles;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
 import configgen.write.VTableJsonStorage;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static configgen.value.CfgValue.*;
 
 public class JsonGenerator extends GeneratorWithTag {
-    private static final String MANIFEST = ".cfggen-json-files";
+    // 标记整个 dst 由 JSON 导出独占，允许清理本次未生成的文件。
+    private static final String MARKER = ".cfggen-json-export";
     private final String tables;
     private final String dst;
 
@@ -36,6 +33,9 @@ public class JsonGenerator extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx) throws IOException {
+        if (tables.isBlank()) {
+            return;
+        }
         String[] tableNames = tables.split(";");
         if (tableNames.length == 0) {
             return;
@@ -44,8 +44,22 @@ public class JsonGenerator extends GeneratorWithTag {
             Logger.log("gen json with tag=%s, be careful!!!", tag);
         }
 
-        CfgValue cfgValue = ctx.makeValue(tag);
+        exportTables(ctx, ctx.makeValue(tag), tableNames, Path.of(dst).toAbsolutePath().normalize());
+    }
 
+    private record Export(String table, Map<Path, VStruct> records) {}
+
+    private static synchronized void exportTables(Context ctx, CfgValue cfgValue, String[] tableNames,
+                                                   Path destination) throws IOException {
+        Path outputDirectory = resolveOutputDirectory(destination);
+        Path dataDirectory = ctx.rootDir().toRealPath();
+        if (outputDirectory.startsWith(dataDirectory) || dataDirectory.startsWith(outputDirectory)) {
+            throw new IOException("JSON export directory " + outputDirectory + " overlaps the data directory "
+                    + dataDirectory + ". Set dst outside the data directory.");
+        }
+        checkOutputDirectory(outputDirectory);
+
+        Map<Path, Export> exports = new LinkedHashMap<>();
         for (String table : tableNames) {
             VTable vTable = cfgValue.getTable(table);
             if (vTable == null) {
@@ -58,75 +72,77 @@ public class JsonGenerator extends GeneratorWithTag {
                 continue;
             }
 
-            exportTable(ctx, vTable, Path.of(dst).toAbsolutePath().normalize());
-        }
-    }
-
-    private static synchronized void exportTable(Context ctx, VTable table, Path destination) throws IOException {
-        Path directory = destination.resolve(VTableJsonStorage.relativeTableDirectory(
-                table.name(), destination, ctx.sourceStructure()));
-        Path source = ctx.sourceStructure().getJsonTableDir(table.name());
-        if (table.schema().isJson() && source != null && Files.isDirectory(ctx.rootDir().resolve(source))
-                && Files.isDirectory(directory)
-                && Files.isSameFile(directory, ctx.rootDir().resolve(source))) {
-            for (VStruct record : table.primaryKeyMap().values()) {
-                DFile file = (DFile) record.source();
-                VTableJsonStorage.writeRecord(record, ctx.rootDir().resolve(file.fileName()), ctx.outputFiles());
+            Path directory = outputDirectory.resolve(outputTableDirectory(table));
+            if (!resolveOutputDirectory(directory).equals(directory)) {
+                throw new IOException("JSON export table directory must not redirect to another path: " + directory);
             }
+            Export previous = exports.get(directory);
+            if (previous != null) {
+                if (!previous.table().equals(table)) {
+                    throw directoryConflict(directory, previous.table(), table);
+                }
+                continue;
+            }
+            exports.put(directory, new Export(table, planRecords(vTable, directory)));
+        }
+        if (exports.isEmpty()) {
             return;
         }
-
-        Path manifest = directory.resolve(MANIFEST);
-        Set<String> previous = new LinkedHashSet<>();
-        if (Files.exists(manifest)) {
-            previous.addAll(JSON.parseArray(Files.readString(manifest), String.class));
+        CachedFiles outputFiles = new CachedFiles();
+        outputFiles.writeFileReplacement(outputDirectory.resolve(MARKER), new byte[0]);
+        for (Export export : exports.values()) {
+            for (Map.Entry<Path, VStruct> entry : export.records().entrySet()) {
+                VTableJsonStorage.writeRecord(entry.getValue(), entry.getKey(), outputFiles);
+            }
         }
+        outputFiles.deleteOtherFiles(outputDirectory.toFile());
+        outputFiles.finalizeRun();
+    }
 
-        Set<String> written = new LinkedHashSet<>();
-        try {
-            for (Map.Entry<Value, VStruct> entry : table.primaryKeyMap().entrySet()) {
-                Path path = VTableJsonStorage.addOrUpdateRecord(entry.getValue(), table.name(), entry.getKey().packStr(),
-                        destination, ctx.sourceStructure(), ctx.outputFiles());
-                written.add(path.getFileName().toString());
+    private static Path outputTableDirectory(String table) {
+        Path name = Path.of(table.replace('.', '/'));
+        return name.resolveSibling("_" + name.getFileName());
+    }
+
+    private static Path resolveOutputDirectory(Path path) throws IOException {
+        if (Files.exists(path, LinkOption.NOFOLLOW_LINKS) || path.getParent() == null) {
+            Path directory = path.toRealPath();
+            if (!Files.isDirectory(directory)) {
+                throw new IOException("JSON export needs a directory, but the path is occupied by a file: " + path);
             }
-            Set<Path> retained = written.stream().map(directory::resolve).collect(Collectors.toSet());
-            for (String name : previous) {
-                if (isRecordFileName(name)) {
-                    Path stale = directory.resolve(name);
-                    if (!retained.contains(stale) && !Files.isDirectory(stale, LinkOption.NOFOLLOW_LINKS)) {
-                        Files.deleteIfExists(stale);
-                    }
-                }
+            return directory;
+        }
+        return resolveOutputDirectory(path.getParent()).resolve(path.getFileName());
+    }
+
+    private static Map<Path, VStruct> planRecords(VTable table, Path directory) throws IOException {
+        Map<Path, VStruct> records = new LinkedHashMap<>();
+        for (Map.Entry<Value, VStruct> entry : table.primaryKeyMap().entrySet()) {
+            Path fileName = DataUtil.jsonRecordFileName(entry.getKey().packStr(), directory.getFileSystem());
+            Path path = directory.resolve(fileName);
+            if (Files.exists(path, LinkOption.NOFOLLOW_LINKS) && !Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
+                throw new IOException("JSON export needs a regular file at " + path);
             }
-            if (!written.isEmpty() || Files.exists(manifest)) {
-                writeManifest(ctx, manifest, written);
+            if (records.putIfAbsent(path, entry.getValue()) != null) {
+                throw new IOException("Multiple records in table " + table.name() + " export to " + path);
             }
-        } catch (IOException | RuntimeException failure) {
-            if (!written.isEmpty()) {
-                previous.addAll(written);
-                try {
-                    writeManifest(ctx, manifest, previous);
-                } catch (IOException | RuntimeException manifestFailure) {
-                    failure.addSuppressed(manifestFailure);
-                }
+        }
+        return records;
+    }
+
+    private static void checkOutputDirectory(Path directory) throws IOException {
+        if (Files.notExists(directory) || Files.isRegularFile(directory.resolve(MARKER), LinkOption.NOFOLLOW_LINKS)) {
+            return;
+        }
+        try (var entries = Files.list(directory)) {
+            if (entries.findAny().isPresent()) {
+                throw new IOException("JSON export directory is not empty and has no export marker: " + directory);
             }
-            throw failure;
         }
     }
 
-    private static boolean isRecordFileName(String name) {
-        if (name == null || !name.endsWith(".json") || name.contains("/") || name.contains("\\")) {
-            return false;
-        }
-        try {
-            return Path.of(name).getRoot() == null;
-        } catch (InvalidPathException e) {
-            return false;
-        }
-    }
-
-    private static void writeManifest(Context context, Path manifest, Set<String> files) throws IOException {
-        context.outputFiles().writeFileReplacement(manifest,
-                JSON.toJSONString(files).getBytes(StandardCharsets.UTF_8));
+    private static IOException directoryConflict(Path directory, String owner, String table) {
+        return new IOException("JSON export directory " + directory + " is shared by tables " + owner + " and " + table
+                + ". Export the tables to different directories.");
     }
 }

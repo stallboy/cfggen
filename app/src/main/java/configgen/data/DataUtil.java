@@ -4,6 +4,9 @@ import org.jspecify.annotations.Nullable;
 
 import configgen.util.FileNameUtil;
 
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +97,21 @@ public class DataUtil {
 
     public static String getJsonTableDirName(String tableName) {
         return "_" + tableName.replace(".", "_");
+    }
+
+    public static Path jsonRecordFileName(String id, FileSystem fileSystem) throws IOException {
+        if (id.contains("/") || id.contains("\\") || id.contains("..")) {
+            throw new IOException("invalid record id (path separator or '..' not allowed): " + id);
+        }
+        try {
+            Path fileName = fileSystem.getPath(id + ".json");
+            if (fileName.getRoot() != null) {
+                throw new IOException("Invalid JSON record filename for id: " + id);
+            }
+            return fileName;
+        } catch (InvalidPathException e) {
+            throw new IOException("Invalid JSON record filename for id: " + id, e);
+        }
     }
 
     /// 从 "_" 开头的 JSON 目录名提取子表名。

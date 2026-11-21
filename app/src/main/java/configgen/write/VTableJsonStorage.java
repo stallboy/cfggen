@@ -63,11 +63,11 @@ public class VTableJsonStorage {
 
     private static Path recordPath(String table, String id, Path dataDir,
                                    DirectoryStructure directoryStructure) throws IOException {
-        validateId(id);
-        return relativeTableDirectory(table, dataDir, directoryStructure).resolve(id + ".json");
+        Path directory = relativeTableDirectory(table, dataDir, directoryStructure);
+        return directory.resolve(DataUtil.jsonRecordFileName(id, directory.getFileSystem()));
     }
 
-    public static Path relativeTableDirectory(String table, Path dataDir, DirectoryStructure directoryStructure) {
+    private static Path relativeTableDirectory(String table, Path dataDir, DirectoryStructure directoryStructure) {
         Path existingDir = directoryStructure.getJsonTableDir(table);
         return existingDir != null ? existingDir : resolveJsonDirRelativePath(table, dataDir);
     }
@@ -75,14 +75,6 @@ public class VTableJsonStorage {
     public static void writeRecord(VStruct record, Path path, CachedFiles cachedFiles) throws IOException {
         byte[] json = ValueToJson.toJsonStr(record).getBytes(StandardCharsets.UTF_8);
         cachedFiles.writeFileReplacement(path, json);
-    }
-
-    /// 校验记录 id 不包含路径分隔符和 ".."，防止写到表目录之外。
-    /// 拒绝时抛 IOException，由外层 Service 转换为错误返回。
-    private static void validateId(String id) throws IOException {
-        if (id.contains("/") || id.contains("\\") || id.contains("..")) {
-            throw new IOException("invalid record id (path separator or '..' not allowed): " + id);
-        }
     }
 
     /// 根据表名和数据目录，解析 JSON 表目录的相对路径。
