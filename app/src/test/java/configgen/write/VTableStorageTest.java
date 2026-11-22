@@ -57,7 +57,7 @@ class VTableStorageTest {
         Resources.addTempFileFromText("config.cfg", tempDir, "table t[id] { id:int; }");
         Path source = tempDir.resolve("t.csv");
         Files.writeString(source, "ignored,ID\n,id\ncomment,1\nkeep,2\n");
-        Context context = new Context(tempDir);
+        Context context = Context.load(tempDir);
 
         var result = DeleteService.deleteRecord(context, context.makeValue(), "t", "1");
 
@@ -98,10 +98,10 @@ class VTableStorageTest {
         }
 
         if (xlsx) {
-            Context context = new Context(tempDir);
+            Context context = Context.load(tempDir);
             var result = DeleteService.deleteRecord(context, context.makeValue(), "t", "1");
             assertEquals(DeleteService.DeleteErrorCode.OK, result.errorCode());
-            assertEquals(1, requireNonNull(new Context(tempDir).makeValue().getTable("t")).primaryKeyMap().size());
+            assertEquals(1, requireNonNull(Context.load(tempDir).makeValue().getTable("t")).primaryKeyMap().size());
         } else {
             // Context's default FastExcel reader only supports OOXML.
             try (TableFile file = columnMode
@@ -155,7 +155,7 @@ class VTableStorageTest {
         Path source = tempDir.resolve("t.csv");
         CSVUtil.writeToFile(source.toFile(), List.of(List.of("ID", "Values"),
                 List.of("id", "values"), List.of("1", ";legacy;;")));
-        Context context = new Context(tempDir);
+        Context context = Context.load(tempDir);
         CfgValue initial = context.makeValue();
         assertEquals(List.of("legacy"), firstStringList(initial));
 
@@ -165,7 +165,7 @@ class VTableStorageTest {
 
         assertEquals(AddOrUpdateService.AddOrUpdateErrorCode.UpdateOK, result.errorCode());
         assertEquals(expected,
-                firstStringList(new Context(tempDir).makeValue()));
+                firstStringList(Context.load(tempDir).makeValue()));
     }
 
     private static List<String> firstStringList(CfgValue value) {
@@ -208,7 +208,7 @@ class VTableStorageTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable vTable = requireNonNull(cfgValue.getTable("t"));
         DTable dTable = requireNonNull(ctx.cfgData().getDTable("t"));

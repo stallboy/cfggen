@@ -57,7 +57,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
@@ -100,7 +100,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
@@ -144,7 +144,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
@@ -184,7 +184,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
@@ -224,7 +224,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
@@ -265,7 +265,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("config.csv", tempDir, configCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
@@ -318,7 +318,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("config.csv", tempDir, configCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         UnreferencedRecordCollector.Unreferenced result =
@@ -351,7 +351,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("type.csv", tempDir, typeCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
@@ -399,7 +399,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("config.csv", tempDir, configCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
@@ -453,7 +453,7 @@ class UnreferencedRecordCollectorTest {
 
         Logger.setPrinter(Logger.Printer.outPrinter);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         UnreferencedRecordCollector.Unreferenced result =
@@ -503,7 +503,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("root2.csv", tempDir, root2Csv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         UnreferencedRecordCollector.Unreferenced result =
@@ -565,7 +565,7 @@ class UnreferencedRecordCollectorTest {
                 """;
         Resources.addTempFileFromText("player.csv", tempDir, playerCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         UnreferencedRecordCollector.Unreferenced result =

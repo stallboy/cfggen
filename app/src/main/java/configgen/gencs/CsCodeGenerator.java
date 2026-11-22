@@ -65,7 +65,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         outputs.prepareOutputDirectory(destination, ".meta", ".uid");
         outputFiles = outputs;
 
-        var translationBundle = ctx.nullableTranslationBundle();
+        var translationBundle = ctx.translationBundle();
         isLangSwitch = translationBundle != null;
         // 普通和 Unity 模式共用 C#9 兼容的运行库。
         FileUtil.copyFileIfNotExist("/support/cs/Loader.cs",

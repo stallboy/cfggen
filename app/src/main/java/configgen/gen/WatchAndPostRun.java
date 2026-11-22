@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import configgen.ctx.Context;
 import configgen.ctx.DirectoryStructure;
 import configgen.ctx.StateCoordinator;
+import configgen.ctx.StateCoordinator.EditOutcome;
 import configgen.ctx.WaitWatcher;
 import configgen.ctx.Watcher;
 
@@ -65,16 +66,15 @@ public enum WatchAndPostRun {
      * 与reload换代、与其他写操作互斥；临界区内先执行编辑（写文件+context.updateDataAndValue），
      * 随后统一刷新所有注册快照，保证同进程所有server立刻看到新值。
      */
-    public <T> T runEdit(Function<Context, T> edit) {
+    public <T> T runEdit(Function<Context, EditOutcome<T>> edit) {
         return coordinator.runEdit(ctx -> {
-            long revision = ctx.editRevision();
-            T result = edit.apply(ctx);
+            EditOutcome<T> outcome = edit.apply(ctx);
             Watcher activeWatcher = watcher;
-            if (activeWatcher != null && !postRunBats.isEmpty() && ctx.editRevision() != revision) {
+            if (outcome.committed() && activeWatcher != null && !postRunBats.isEmpty()) {
                 editPendingPostRun = true;
                 activeWatcher.signalChange();
             }
-            return result;
+            return outcome;
         });
     }
 
@@ -153,8 +153,8 @@ public enum WatchAndPostRun {
     public synchronized void registerServer(Context context, StateCoordinator.Refresher<Context> refresher) throws IOException {
         Context current = coordinator.state();
         if (current != null && (!current.contextCfg().equals(context.contextCfg())
-                || current.isFixedSchema() != context.isFixedSchema()
-                || (current.isFixedSchema() && current.cfgSchema() != context.cfgSchema()))) {
+                || current.usesSharedSchema() != context.usesSharedSchema()
+                || (current.usesSharedSchema() && current.cfgSchema() != context.cfgSchema()))) {
             throw new IOException("A server is already registered with a different configuration context: "
                     + current.rootDir());
         }
@@ -206,17 +206,17 @@ public enum WatchAndPostRun {
             return null;
         }
 
-        Context loaded = current.reloadFrom(discovered);
-        if (!loaded.lastLoadDidAutoFix()) {
+        Context.LoadResult loaded = current.reloadFrom(discovered);
+        if (!loaded.schemaRewritten()) {
             consecutiveAutoFixReloads.set(0);
             editPendingPostRun = false;
-            return loaded;
+            return loaded.context();
         }
 
         int reloads = consecutiveAutoFixReloads.incrementAndGet();
         if (reloads < MAX_CONSECUTIVE_AUTO_FIX_RELOADS) {
             editPendingPostRun = false;
-            return loaded;
+            return loaded.context();
         }
         Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.AutoFixLoopDetected",
                 "reload触发autoFix写回config.cfg已连续{0}次，疑似对齐不稳定导致写-触发循环，停止watch（保留当前内存状态）",

@@ -28,6 +28,9 @@ public class DeleteService {
     public record DeleteRecordResult(DeleteErrorCode errorCode,
                                      @Nullable CfgValue newCfgValue,
                                      List<String> errorMessages) {
+        public boolean committed() {
+            return newCfgValue != null;
+        }
     }
 
     public static DeleteRecordResult deleteRecord(Context context,

@@ -81,7 +81,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx, CachedFiles outputs) throws IOException {
-        aCtx = new AContext(pkg, ctx.nullableTranslationBundle(), useSharedEmptyTable, useShared,
+        aCtx = new AContext(pkg, ctx.translationBundle(), useSharedEmptyTable, useShared,
                 packBool, noStr, rForOldShared);
         isLangSwitch = aCtx.nullableLangSwitchSupport() != null;
 

@@ -39,7 +39,7 @@ class SchemaToCsvHeaderTest {
         assertEquals(List.of(List.of("ID", "id"), List.of("范围", "bounds._min"), List.of("", "_max")),
                 CSVUtil.readAndNormalize(dir.resolve("vertical.csv"), "UTF-8"));
 
-        Context ctx = new Context(dir);
+        Context ctx = Context.load(dir);
         for (String table : List.of("horizontal", "vertical")) {
             assertEquals(List.of("id", "bounds", "_max"), requireNonNull(ctx.cfgData().getDTable(table))
                     .fields().stream().map(DField::name).toList());

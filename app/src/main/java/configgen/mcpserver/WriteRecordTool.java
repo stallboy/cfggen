@@ -6,6 +6,7 @@ import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
 import com.github.codeboyzhou.mcp.declarative.server.McpStructuredContent;
 import configgen.gen.WatchAndPostRun;
+import configgen.ctx.StateCoordinator.EditOutcome;
 import configgen.write.AddOrUpdateService;
 import configgen.write.DeleteService;
 
@@ -35,7 +36,9 @@ public class WriteRecordTool {
             AddOrUpdateService.AddOrUpdateRecordResult ar =
                     AddOrUpdateService.addOrUpdateRecord(ctx, value, tableName, recordJsonStr);
 
-            return new AddOrUpdateRecordResult(ar.errorCode(), tableName, ar.recordId(), ar.errorMessages());
+            return new EditOutcome<>(
+                    new AddOrUpdateRecordResult(ar.errorCode(), tableName, ar.recordId(), ar.errorMessages()),
+                    ar.committed());
         });
     }
 
@@ -56,7 +59,9 @@ public class WriteRecordTool {
             DeleteService.DeleteRecordResult dr =
                     DeleteService.deleteRecord(ctx, value, tableName, recordId);
 
-            return new DeleteRecordResult(dr.errorCode(), tableName, recordId, dr.errorMessages());
+            return new EditOutcome<>(
+                    new DeleteRecordResult(dr.errorCode(), tableName, recordId, dr.errorMessages()),
+                    dr.committed());
         });
     }
 }

@@ -39,13 +39,13 @@ class VTableJsonStorageTest {
         Files.writeString(tempDir.resolve("config.cfg"), "table t[id] (json) { id:int; score:int; }");
         Path record = Files.createDirectory(tempDir.resolve("_t")).resolve("custom.json");
         Files.writeString(record, "{\"id\":1,\"score\":10}");
-        var context = new Context(tempDir);
+        var context = Context.load(tempDir);
 
         var update = AddOrUpdateService.addOrUpdateRecord(
                 context, context.makeValue(), "t", "{\"id\":1,\"score\":20}");
         assertEquals(AddOrUpdateService.AddOrUpdateErrorCode.UpdateOK, update.errorCode());
         assertFalse(Files.exists(record.resolveSibling("1.json")));
-        var reloaded = new Context(tempDir).makeValue();
+        var reloaded = Context.load(tempDir).makeValue();
         var score = (configgen.value.CfgValue.VInt) reloaded.getTable("t").valueList().getFirst().values().get(1);
         assertEquals(20, score.value());
 
@@ -59,7 +59,7 @@ class VTableJsonStorageTest {
     void failedJsonReplacementLeavesOldRecordAndRemovesStagingFile() throws IOException {
         Files.writeString(tempDir.resolve("config.cfg"), "table t[id] { id:int; }");
         Files.writeString(tempDir.resolve("t.csv"), "ID\nid\n1\n");
-        var context = new Context(tempDir);
+        var context = Context.load(tempDir);
         var table = context.makeValue().getTable("t");
         assertNotNull(table);
         var record = table.primaryKeyMap().values().iterator().next();

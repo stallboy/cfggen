@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
 import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
 import configgen.ctx.*;
+import configgen.ctx.StateCoordinator.EditOutcome;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.WatchAndPostRun;
 import configgen.gen.Parameter;
@@ -262,8 +263,8 @@ public class EditorServer extends GeneratorWithTag {
      * WatchAndPostRun的editLock内，与reload、其他写（含同进程McpServer的写工具）互斥；
      * 编辑完成后由统一刷新重建State。所有写接口必须经此进入，不得自行取快照。
      */
-    private RecordEditResult editRecord(BiFunction<Context, CfgValue, RecordEditService.ResultWithNewCfgValue> editCall) {
-        return WatchAndPostRun.INSTANCE.runEdit(ctx -> editCall.apply(ctx, ctx.makeValue(tag, true)).result());
+    private RecordEditResult editRecord(BiFunction<Context, CfgValue, EditOutcome<RecordEditResult>> editCall) {
+        return WatchAndPostRun.INSTANCE.runEdit(ctx -> editCall.apply(ctx, ctx.makeValue(tag, true)));
     }
 
 

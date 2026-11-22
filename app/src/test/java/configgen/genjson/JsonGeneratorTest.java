@@ -83,7 +83,7 @@ class JsonGeneratorTest {
         assertTrue(Files.exists(out.resolve("a/_b/2.json")));
 
         Files.writeString(context.rootDir().resolve("a/b.csv"), "id\nid\n3\n");
-        generateAndFinalize(generator, new Context(context.rootDir()));
+        generateAndFinalize(generator, Context.load(context.rootDir()));
         assertTrue(Files.exists(out.resolve("_a_b/1.json")));
         assertTrue(Files.exists(out.resolve("a/_b/3.json")));
         assertFalse(Files.exists(out.resolve("a/_b/2.json")));

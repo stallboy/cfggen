@@ -85,8 +85,8 @@ public class GdCodeGenerator extends GeneratorWithTag {
         outputs.prepareOutputDirectory(destination, ".meta", ".uid");
         outputFiles = outputs;
 
-        isLangSwitch = ctx.nullableTranslationBundle() != null;
-        languageNames = isLangSwitch ? java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()).languages() : List.of();
+        isLangSwitch = ctx.translationBundle() != null;
+        languageNames = isLangSwitch ? java.util.Objects.requireNonNull(ctx.translationBundle()).languages() : List.of();
 
         List<String> needCopyFiles = new ArrayList<>(4);
         needCopyFiles.addAll(COPY_FILES);

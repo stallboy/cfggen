@@ -52,7 +52,7 @@ class RecordBlockMapperTest {
         Resources.addTempFileFromText("simple.csv", tempDir, csvData);
 
         // When: Parse and map to block
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = requireNonNull(cfgValue.getTable("simple"));
         CfgValue.VStruct record = table.valueList().get(0);
@@ -96,7 +96,7 @@ class RecordBlockMapperTest {
         Resources.addTempFileFromText("entity.csv", tempDir, csvData);
 
         // When: Parse and map to block
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = requireNonNull(cfgValue.getTable("entity"));
         CfgValue.VStruct record = (CfgValue.VStruct) table.valueList().get(0);
@@ -139,7 +139,7 @@ class RecordBlockMapperTest {
         Resources.addTempFileFromText("entity.csv", tempDir, csvData);
 
         // When: Parse and map to block
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = requireNonNull(cfgValue.getTable("entity"));
         CfgValue.VStruct record = table.valueList().get(0);
@@ -175,7 +175,7 @@ class RecordBlockMapperTest {
         Resources.addTempFileFromText("item.csv", tempDir, csvData);
 
         // When: Parse and map to block
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = requireNonNull(cfgValue.getTable("item"));
         CfgValue.VStruct record = table.valueList().get(0);
@@ -211,7 +211,7 @@ class RecordBlockMapperTest {
         Resources.addTempFileFromText("item.csv", tempDir, csvData);
 
         // When: Parse and map to block
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = requireNonNull(cfgValue.getTable("item"));
         CfgValue.VStruct record = table.valueList().get(0);
@@ -251,7 +251,7 @@ class RecordBlockMapperTest {
         Resources.addTempFileFromText("item.csv", tempDir, csvData);
 
         // When: Parse and map to block
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = requireNonNull(cfgValue.getTable("item"));
         CfgValue.VStruct record = table.valueList().get(0);

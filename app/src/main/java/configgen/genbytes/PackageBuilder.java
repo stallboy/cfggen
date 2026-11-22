@@ -67,7 +67,7 @@ final class PackageBuilder {
         errors.checkErrors("package fields", false);
         Map<String, LinkedHashMap<Value, VStruct>> merged = new LinkedHashMap<>();
         for (String table : schema.tableMap().keySet()) merged.put(table, new LinkedHashMap<>());
-        var translationBundle = ctx.nullableTranslationBundle();
+        var translationBundle = ctx.translationBundle();
         String[] languages = translationBundle == null ? new String[0] : new String[]{translationBundle.defaultLang()};
         for (var pack : packs) {
             for (String block : pack.blockNames()) {

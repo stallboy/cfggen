@@ -71,7 +71,7 @@ class DefaultLanguageRuntimeTest {
         Path modData = Files.createDirectories(root.resolve("mod-data"));
         Files.writeString(modData.resolve("item.csv"), "id,name,desc\nid,name,desc\n2,Bob,new\n");
         new BytesGenerator(new ParameterParser("bytes,pack:mod,requires:base,deps:" + root.resolve("localized.bytes")
-                + ",dir:" + root.resolve("mod"))).generate(new Context(Context.ContextCfg.of(modData), context.cfgSchema()), new CachedFiles());
+                + ",dir:" + root.resolve("mod"))).generate(Context.load(Context.ContextCfg.of(modData), context.cfgSchema()), new CachedFiles());
         Files.writeString(project.resolve("Check.java"), """
                 import config.*;
                 import configgen.genjava.*;

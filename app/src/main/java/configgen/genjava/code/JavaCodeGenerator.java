@@ -114,7 +114,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
         // 一次生成的固定配置：不可变、随调用链显式传递，替代原先散落在 Name/TypeStr/NameableName 的
         // static 字段（并发生成时会互相踩踏）
-        var translationBundle = ctx.nullableTranslationBundle();
+        var translationBundle = ctx.translationBundle();
         GenCfg cfg = new GenCfg(pkg, sealed, beautifulName, translationBundle == null ? 0 : translationBundle.languageCount(),
                 prefix, jspecify);
 

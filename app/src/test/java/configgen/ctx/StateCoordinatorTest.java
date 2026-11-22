@@ -1,5 +1,6 @@
 package configgen.ctx;
 
+import configgen.ctx.StateCoordinator.EditOutcome;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -29,12 +30,22 @@ class StateCoordinatorTest {
         c.addRefresher(seen1::add);
         c.addRefresher(seen2::add);
 
-        String result = c.runEdit(s -> s + "!");
+        String result = c.runEdit(s -> new EditOutcome<>(s + "!", true));
 
         assertEquals("a!", result);
         assertEquals("a", c.state(), "编辑函数只应通过换代/install改变状态，runEdit本身不改");
         assertEquals(List.of("a"), seen1);
         assertEquals(List.of("a"), seen2);
+    }
+
+    @Test
+    void uncommittedEditReturnsResultWithoutRefreshingSubscribers() {
+        StateCoordinator<String> c = new StateCoordinator<>("a");
+        List<String> seen = new ArrayList<>();
+        c.addRefresher(seen::add);
+
+        assertEquals("rejected", c.runEdit(s -> new EditOutcome<>("rejected", false)));
+        assertTrue(seen.isEmpty());
     }
 
     @Test
@@ -73,7 +84,7 @@ class StateCoordinatorTest {
         Thread editor = Thread.startVirtualThread(() -> coordinator.runEdit(current -> {
             editedState.set(current);
             editing.countDown();
-            return null;
+            return new EditOutcome<>(null, true);
         }));
         try {
             assertFalse(editing.await(100, TimeUnit.MILLISECONDS));
@@ -98,7 +109,7 @@ class StateCoordinatorTest {
         assertEquals(List.of("initial", "reloaded"), first);
         assertEquals(List.of("reloaded"), second);
 
-        c.runEdit(state -> null);
+        c.runEdit(state -> new EditOutcome<>(null, true));
         assertEquals(List.of("initial", "reloaded", "reloaded"), first);
         assertEquals(List.of("reloaded", "reloaded"), second);
     }
@@ -120,7 +131,7 @@ class StateCoordinatorTest {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                return s + "-edited";
+                return new EditOutcome<>(s + "-edited", true);
             });
         });
         editor.start();
@@ -158,7 +169,7 @@ class StateCoordinatorTest {
                 for (int j = 0; j < perThread; j++) {
                     c.runEdit(s -> {
                         counter[0]++;
-                        return counter[0];
+                        return new EditOutcome<>(counter[0], true);
                     });
                 }
             });

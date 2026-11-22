@@ -1,7 +1,5 @@
 package configgen.value;
 
-import configgen.value.ValueEnv;
-
 import configgen.Resources;
 import configgen.ctx.Context;
 import configgen.data.CfgData;
@@ -45,7 +43,7 @@ class RefValidatorTest {
                 2,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), envOf(ctx), valueErrs);
         clientValueParser.parseCfgValue();
@@ -76,7 +74,7 @@ class RefValidatorTest {
                 2,3""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), envOf(ctx), valueErrs);
         clientValueParser.parseCfgValue();
@@ -110,7 +108,7 @@ class RefValidatorTest {
                 2,3""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), envOf(ctx), valueErrs);
         clientValueParser.parseCfgValue();
@@ -141,7 +139,7 @@ class RefValidatorTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), envOf(ctx), valueErrs);
         clientValueParser.parseCfgValue();
@@ -173,7 +171,7 @@ class RefValidatorTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), envOf(ctx), valueErrs);
         clientValueParser.parseCfgValue();
@@ -216,7 +214,7 @@ class RefValidatorTest {
                 2,Bob,"""; // 外键为空
         Resources.addTempFileFromText("employee.csv", tempDir, empCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), envOf(ctx), valueErrs);
         clientValueParser.parseCfgValue();
@@ -257,7 +255,7 @@ class RefValidatorTest {
                 2,Bob,999"""; // 引用不存在的部门
         Resources.addTempFileFromText("employee.csv", tempDir, empCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), envOf(ctx), valueErrs);
         clientValueParser.parseCfgValue();
@@ -275,7 +273,7 @@ class RefValidatorTest {
 
     private static ValueEnv envOf(Context ctx) {
         return new ValueEnv(ctx.cfgSchema(), ctx.cfgData(), ctx.contextCfg().headRow(),
-                ctx.nullableTranslationCatalog(), ctx.sourceStructure());
+                ctx.translationCatalog(), ctx.sourceStructure());
     }
 
 }

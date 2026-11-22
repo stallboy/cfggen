@@ -62,8 +62,8 @@ public class GoCodeGenerator extends GeneratorWithTag {
             }
         }, cfgSchema);
 
-        isLangSwitch = ctx.nullableTranslationBundle() != null;
-        languageNames = isLangSwitch ? java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()).languages() : List.of();
+        isLangSwitch = ctx.translationBundle() != null;
+        languageNames = isLangSwitch ? java.util.Objects.requireNonNull(ctx.translationBundle()).languages() : List.of();
 
         for (String fn : COPY_FILES) {
             FileUtil.copyFileIfNotExist("/support/go/" + fn,
@@ -109,7 +109,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
         }
 
         if (isLangSwitch) {
-            generateText(java.util.Objects.requireNonNull(ctx.nullableTranslationBundle()));
+            generateText(java.util.Objects.requireNonNull(ctx.translationBundle()));
         }
 
     }

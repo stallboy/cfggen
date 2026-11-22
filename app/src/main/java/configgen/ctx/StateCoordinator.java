@@ -20,7 +20,7 @@ import java.util.function.Function;
  * <ul>
  *   <li>{@link #installState}：reload 换代；</li>
  *   <li>{@link #runEdit}：编辑写操作（EditorServer 的 record 写接口、McpServer 的 WriteRecordTool 都必须经此进入），
- *       编辑完成后统一刷新快照——写路径会更新共享状态的lastModified抑制watch reload，
+ *       编辑提交后统一刷新快照——写路径会更新共享状态的lastModified抑制watch reload，
  *       其他持有者只能靠这里的刷新看到新值。</li>
  * </ul>
  * 锁内回调只做内存快照构建（makeValue 在写后命中缓存），不做文件IO，持有时间可控。
@@ -28,6 +28,8 @@ import java.util.function.Function;
  * @param <T> 状态类型
  */
 public final class StateCoordinator<T> {
+
+    public record EditOutcome<R>(R result, boolean committed) {}
 
     public interface Refresher<T> {
         void refresh(T state);
@@ -91,13 +93,15 @@ public final class StateCoordinator<T> {
 
     /**
      * 编辑写操作的统一临界区：与 {@link #installState}、其他 { @link #runEdit } 互斥。
-     * 编辑（写文件 + 就地更新状态）完成后统一刷新所有订阅者快照。编辑抛异常则直接传播、不刷新（状态未变）。
+     * 编辑提交（写文件 + 就地更新状态）后统一刷新所有订阅者快照。
      */
-    public <R> R runEdit(Function<T, R> edit) {
+    public <R> R runEdit(Function<T, EditOutcome<R>> edit) {
         synchronized (editLock) {
-            R result = edit.apply(java.util.Objects.requireNonNull(state));
-            refreshAll();
-            return result;
+            EditOutcome<R> outcome = edit.apply(java.util.Objects.requireNonNull(state));
+            if (outcome.committed()) {
+                refreshAll();
+            }
+            return outcome.result();
         }
     }
 

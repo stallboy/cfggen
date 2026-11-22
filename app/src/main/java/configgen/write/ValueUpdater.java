@@ -43,7 +43,7 @@ public class ValueUpdater {
         VTableParser parser = new VTableParser(vTable.schema(), java.util.Objects.requireNonNull(newCfgData.getDTable(vTable.name())),
                 vTable.schema(), context.contextCfg().headRow(), errs);
         VTable newVTable = parser.parseTable();
-        TextValue.setTranslatedForTable(newVTable, context.nullableTranslationCatalog());
+        TextValue.setTranslatedForTable(newVTable, context.translationCatalog());
 
         Map<String, VTable> newTables = new LinkedHashMap<>(cfgValue.vTableMap());
         newTables.put(newVTable.name(), newVTable);
@@ -112,7 +112,7 @@ public class ValueUpdater {
         CfgValueErrs errs = CfgValueErrs.of();
         VTableCreator creator = new VTableCreator(vTable.schema(), errs);
         VTable newVTable = creator.create(newRecordList);
-        TextValue.setTranslatedForTable(newVTable, context.nullableTranslationCatalog());
+        TextValue.setTranslatedForTable(newVTable, context.translationCatalog());
 
         Map<String, VTable> newTables = new LinkedHashMap<>(cfgValue.vTableMap());
         newTables.put(newVTable.name(), newVTable);

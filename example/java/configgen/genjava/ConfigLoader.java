@@ -15,11 +15,8 @@ public final class ConfigLoader<K, T> {
     private Map<K, T> rows = new LinkedHashMap<>();
     private Map<K, List<String>> origins = new HashMap<>();
 
-    public ConfigLoader(String table, LoadValueErrs errors,
-                        Function<ConfigInput, T> decode,
-                        Function<T, K> key,
-                        Consumer<Map<K, T>> index,
-                        @Nullable Consumer<T> resolve) {
+    public ConfigLoader(String table, LoadValueErrs errors, Function<ConfigInput, T> decode, Function<T, K> key,
+                        Consumer<Map<K, T>> index, @Nullable Consumer<T> resolve) {
         this.table = table;
         this.errors = errors;
         this.decode = decode;
@@ -34,6 +31,7 @@ public final class ConfigLoader<K, T> {
         for (int i = 0; i < count; i++) {
             T row = decode.apply(input);
             K id = key.apply(row);
+            //noinspection ConstantValue
             boolean duplicate = rows.put(id, row) != null;
             if (!base) {
                 var chain = origins.computeIfAbsent(id, ignored -> new ArrayList<>(2));
@@ -54,7 +52,7 @@ public final class ConfigLoader<K, T> {
     }
 
     public void index() {
-        origins.replaceAll((id, packs) -> List.copyOf(packs));
+        origins.replaceAll((_, packs) -> List.copyOf(packs));
         origins = Collections.unmodifiableMap(origins);
         rows = Collections.unmodifiableMap(rows);
         index.accept(rows);

@@ -262,8 +262,8 @@ public final class Main {
         }
         var contextCfg = new Context.ContextCfg(dataDirPath, explicitDir, headRow, csvDefaultEncoding,
                 i18n, allowValueErr);
-        Context context = sharedSchema == null ? new Context(contextCfg)
-                : new Context(contextCfg, configgen.schema.CfgSchemas.readFromRoot(Path.of(sharedSchema)));
+        Context context = sharedSchema == null ? Context.load(contextCfg)
+                : Context.load(contextCfg, configgen.schema.CfgSchemas.readFromRoot(Path.of(sharedSchema)));
         GenerationBatch.run(context, generators);
         Logger.profile("end");
         return 0;

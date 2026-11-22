@@ -57,7 +57,7 @@ public final class I18nByIdGenerator extends Generator {
         CfgValue cfgValue = ctx.makeValue();
 
 
-        var translationBundle = ctx.nullableTranslationBundle();
+        var translationBundle = ctx.translationBundle();
         if (translationBundle != null) {
             // -langSwitchDir 对应的outputDir是单一语言的上层目录
             for (var e : translationBundle.langMap().entrySet()) {

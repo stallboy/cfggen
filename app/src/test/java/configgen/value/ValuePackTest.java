@@ -1,7 +1,5 @@
 package configgen.value;
 
-import configgen.value.ValueEnv;
-
 import configgen.Resources;
 import configgen.ctx.Context;
 import configgen.data.CfgData;
@@ -214,12 +212,12 @@ class ValuePackTest {
                     id:int;
                     item2CntList:list<ItemToCnt> (pack);
                 }
-                
+
                 table t2[id] {
                     id:int;
                     oneReward:Reward (pack);
                 }
-                
+
                 table t3[id] {
                     id:int;
                     rewardList:list<Reward> (pack);
@@ -248,7 +246,7 @@ class ValuePackTest {
                 """;
         Resources.addTempFileFromText("t3.csv", tempDir, csv3Str);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         {
             VTable tVTable = requireNonNull(cfgValue.getTable("t1"));
@@ -300,10 +298,10 @@ class ValuePackTest {
                 """;
         Resources.addTempFileFromText("t3.csv", tempDir, csv3Str);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser parser = new CfgValueParser(ctx.cfgSchema(),
-                new ValueEnv(ctx.cfgSchema(), ctx.cfgData(), ctx.contextCfg().headRow(), ctx.nullableTranslationCatalog(), ctx.sourceStructure()), valueErrs);
+                new ValueEnv(ctx.cfgSchema(), ctx.cfgData(), ctx.contextCfg().headRow(), ctx.translationCatalog(), ctx.sourceStructure()), valueErrs);
         CfgValue cfgValue = parser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());

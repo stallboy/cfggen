@@ -276,7 +276,7 @@ class RuntimeExtensionTest {
             assertThrows(UnsupportedOperationException.class, sources::clear);
 
             Files.writeString(root.resolve("moddata/step.csv"), "id,name\nid,name\n0,zero\n1,one\n2,two\n3,three\n");
-            Context complete = new Context(mod.contextCfg(), ctx.cfgSchema());
+            Context complete = Context.load(mod.contextCfg(), ctx.cfgSchema());
             new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("replacement"))).generate(complete, new CachedFiles());
             var replacementPack = ConfigPackage.read(root.resolve("replacement/base.bytes"));
             Object rebuilt = loading.getMethod("loadPackages", ConfigPackage[].class).invoke(null, (Object) new ConfigPackage[]{replacementPack});
@@ -287,7 +287,7 @@ class RuntimeExtensionTest {
             assertEquals(60, monster.getMethod("power").invoke(reloaded));
 
             Files.writeString(root.resolve("moddata/monster.csv"), "id,attack,tags,rank\nid,attack,tags,rank\n1,-1,bad,10\n");
-            Context invalidCache = new Context(mod.contextCfg(), ctx.cfgSchema());
+            Context invalidCache = Context.load(mod.contextCfg(), ctx.cfgSchema());
             new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("fail") + ",pack:broken,requires:base,deps:" + root.resolve("base/base.bytes"))).generate(invalidCache, new CachedFiles());
             var broken = ConfigPackage.read(root.resolve("fail/broken.bytes"));
             Object published = mgr.getMethod("getMgr").invoke(null);

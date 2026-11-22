@@ -50,7 +50,7 @@ class LangTextTest {
                 "table item[id] (lang='label') { id:int; label:text; }",
                 Map.of("item", "id,label\nid,label\n1,Original\n"), languages, "zh_cn");
         var value = context.makeValue();
-        var catalogs = context.nullableTranslationBundle().langMap();
+        var catalogs = context.translationBundle().langMap();
         var english = extractRecord(value, catalogs.get("en"));
         assertEquals("Translated", english.texts().getFirst().translated());
         assertEquals("Translated", english.description());

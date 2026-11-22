@@ -85,7 +85,7 @@ class ValueParserConversionTest {
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
         // When: 解析值
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         // Then: 验证转换正确
@@ -150,7 +150,7 @@ class ValueParserConversionTest {
         Resources.addTempFileFromText("employee.csv", tempDir, empCsv);
 
         // When: 验证引用
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         // Then: 验证引用完整性
@@ -211,7 +211,7 @@ class ValueParserConversionTest {
         Resources.addTempFileFromText("product.csv", tempDir, csvData);
 
         // When: 处理值
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         // Then: 验证正确处理
@@ -290,7 +290,7 @@ class ValueParserConversionTest {
         Resources.addTempFileFromText("customer.csv", tempDir, csvData);
 
         // When: 解析值
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         // Then: 验证嵌套结构转换正确
@@ -369,7 +369,7 @@ class ValueParserConversionTest {
         Resources.addTempFileFromText("order.csv", tempDir, orderCsv);
 
         // When: 解析值
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         // Then: 验证枚举值转换正确
@@ -430,7 +430,7 @@ class ValueParserConversionTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = requireNonNull(cfgValue.getTable("t"));
 
@@ -480,7 +480,7 @@ class ValueParserConversionTest {
                 """;
         Resources.addTempFileFromText("user.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable userTable = requireNonNull(cfgValue.getTable("user"));
 

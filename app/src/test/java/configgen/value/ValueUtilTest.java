@@ -129,7 +129,7 @@ class ValueUtilTest {
                 id,rank,rankName""";
         Resources.addTempFileFromText("test.csv", tempDir, testStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         List<ForeignKeySchema> fks = requireNonNull(ctx.cfgSchema().findTable("test")).foreignKeys();
         CfgValue cfgValue = ctx.makeValue();
         VTable rank = requireNonNull(cfgValue.getTable("rank"));

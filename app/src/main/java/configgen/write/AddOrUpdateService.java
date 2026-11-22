@@ -29,6 +29,9 @@ public class AddOrUpdateService {
                                           @Nullable String recordId,
                                           @Nullable CfgValue newCfgValue,
                                           List<String> errorMessages) {
+        public boolean committed() {
+            return newCfgValue != null;
+        }
     }
 
     public static AddOrUpdateRecordResult addOrUpdateRecord(Context context,

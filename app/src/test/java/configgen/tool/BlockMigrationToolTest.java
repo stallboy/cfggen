@@ -60,7 +60,7 @@ class BlockMigrationToolTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         BlockMigrationTool.MigrationReport report = BlockMigrationTool.compare(ctx);
 
         assertEquals(1, report.scannedTableCount());
@@ -114,7 +114,7 @@ class BlockMigrationToolTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         BlockMigrationTool.MigrationReport report = BlockMigrationTool.compare(ctx);
 
         assertEquals(1, report.scannedTableCount());

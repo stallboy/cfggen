@@ -29,7 +29,7 @@ class MultiLanguagePackageTest {
         Files.writeString(languages.resolve("zh_cn.csv"), "t,你好,不应覆盖原文\n");
         var ctx = TestCtx.newLangSwitchContext(data, "table t[id] { id:int; text:text; }",
                 Map.of("t", "id,text\nid,text\n1,你好\n"), languages, "zh_cn");
-        assertEquals(List.of("zh_cn", "en"), ctx.nullableTranslationBundle().languages());
+        assertEquals(List.of("zh_cn", "en"), ctx.translationBundle().languages());
         Path out = root.resolve("out");
         new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + out)).generate(ctx, new CachedFiles());
         assertFalse(Files.exists(out.resolve("base_zh_cn.bytes")));

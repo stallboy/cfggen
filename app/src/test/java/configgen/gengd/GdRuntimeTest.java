@@ -31,7 +31,7 @@ class GdRuntimeTest {
                 Map.of("item", "id,name,desc,target\nid,name,desc,target\n1,Alice,你好,1\n2,Bob,你好,1\n", "target", "id,power\nid,power\n1,10\n", "variant", "id,choice\nid,choice\n1,Known()\n"), texts, "zh_cn");
         new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("initial"))).generate(context, new CachedFiles());
         Files.writeString(source.resolve("item.csv"), "id,name,desc,target\nid,name,desc,target\n1,Alice,你好,1\n");
-        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + root.resolve("pack"))).generate(new Context(context.contextCfg()), new CachedFiles());
+        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + root.resolve("pack"))).generate(Context.load(context.contextCfg()), new CachedFiles());
         var initial = configgen.genjava.ConfigPackage.read(root.resolve("initial/base.bytes"));
         var blocks = new java.util.LinkedHashMap<String, byte[]>();
         for (String block : initial.blockNames()) {

@@ -547,7 +547,7 @@ class JavaCodeGeneratorTest {
      * @return 输出目录
      */
     private File generateJavaCode(String outputDirName, String pkg, String extraParams) throws IOException {
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         File outputDir = tempDir.resolve(outputDirName).toFile();
         String parameterStr = String.format("javacode,dir:%s,pkg:%s%s",
                 outputDir.getAbsolutePath(), pkg, extraParams);

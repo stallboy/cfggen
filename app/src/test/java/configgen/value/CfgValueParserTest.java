@@ -8,7 +8,6 @@ import configgen.schema.TableSchema;
 import configgen.util.Logger;
 import configgen.value.CfgValue.*;
 import configgen.value.CfgValueErrs.*;
-import configgen.value.ValueEnv;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -48,7 +47,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromResourceFile("rank.csv", tempDir);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable rank = requireNonNull(cfgValue.getTable("rank"));
         TableSchema rankSchema = ctx.cfgSchema().findTable("rank");
@@ -90,7 +89,7 @@ class CfgValueParserTest {
                 2,中文A,中文B,,,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -142,7 +141,7 @@ class CfgValueParserTest {
                 2,333,444""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -193,7 +192,7 @@ class CfgValueParserTest {
                 2,talk,111,hello world!""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -237,7 +236,7 @@ class CfgValueParserTest {
                 2,333,444,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -282,7 +281,7 @@ class CfgValueParserTest {
 
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -333,7 +332,7 @@ class CfgValueParserTest {
                 2,123,,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -385,7 +384,7 @@ class CfgValueParserTest {
                 ,1003,3""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable t = requireNonNull(cfgValue.getTable("t"));
         assertEquals(1, t.valueList().size());
@@ -437,7 +436,7 @@ class CfgValueParserTest {
                 ,,,30022,彩虹刻面""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = requireNonNull(cfgValue.getTable("t"));
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -520,7 +519,7 @@ class CfgValueParserTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable t = requireNonNull(cfgValue.getTable("t"));
         assertEquals(1, t.valueList().size());
@@ -567,7 +566,7 @@ class CfgValueParserTest {
                 1,notExistAction,,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = parserOf(ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -607,7 +606,7 @@ class CfgValueParserTest {
                 1,talk(123)""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = parserOf(ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -638,7 +637,7 @@ class CfgValueParserTest {
                 1,111,abc""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = parserOf(ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -665,7 +664,7 @@ class CfgValueParserTest {
                 1,111,abc,111,efg""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = parserOf(ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -693,7 +692,7 @@ class CfgValueParserTest {
                 1,efg""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = parserOf(ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -722,7 +721,7 @@ class CfgValueParserTest {
                 2,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = parserOf(ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -753,7 +752,7 @@ class CfgValueParserTest {
                 2,light blue""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = parserOf(ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -783,7 +782,7 @@ class CfgValueParserTest {
                 2,red""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = parserOf(ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -818,7 +817,7 @@ class CfgValueParserTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = requireNonNull(cfgValue.getTable("t"));
 
@@ -835,7 +834,7 @@ class CfgValueParserTest {
 
     private static CfgValueParser parserOf(Context ctx, CfgValueErrs errs) {
         ValueEnv env = new ValueEnv(ctx.cfgSchema(), ctx.cfgData(), ctx.contextCfg().headRow(),
-                ctx.nullableTranslationCatalog(), ctx.sourceStructure());
+                ctx.translationCatalog(), ctx.sourceStructure());
         return new CfgValueParser(ctx.cfgSchema(), env, errs);
     }
 

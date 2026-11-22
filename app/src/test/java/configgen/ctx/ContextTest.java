@@ -53,15 +53,34 @@ class ContextTest {
     void reloadKeepsTheResolvedSharedSchemaForSparseData() throws Exception {
         var schema = CfgReader.parse("table user[id] { id:int; } table other[id] { id:int; }");
         schema.resolve().checkErrors();
-        var context = new Context(Context.ContextCfg.of(tempDir), schema);
+        var context = Context.load(Context.ContextCfg.of(tempDir), schema);
         Files.writeString(tempDir.resolve("user.csv"), "ID\nid\n1\n");
 
-        Context reloaded = context.reloadFrom(context.sourceStructure().reload());
+        Context.LoadResult load = context.reloadFrom(context.sourceStructure().reload());
+        assertFalse(load.schemaRewritten());
+        Context reloaded = load.context();
 
-        assertTrue(reloaded.isFixedSchema());
+        assertTrue(reloaded.usesSharedSchema());
         assertSame(schema, reloaded.cfgSchema());
         assertEquals(1, requireNonNull(reloaded.makeValue().getTable("user")).valueList().size());
         assertFalse(Files.exists(tempDir.resolve("config.cfg")));
+    }
+
+    @Test
+    void reloadReportsSchemaRewriteOnlyForTheLoadThatPerformedIt() throws Exception {
+        Path schema = tempDir.resolve("config.cfg");
+        Path csv = tempDir.resolve("user.csv");
+        Files.writeString(schema, "table user[id] { id:int; }");
+        Files.writeString(csv, "ID\nid\n1\n");
+        Context context = Context.load(tempDir);
+
+        Files.writeString(csv, "Identifier\nid\n1\n");
+        Context.LoadResult fixed = context.reloadFrom(context.sourceStructure().reload());
+
+        assertTrue(fixed.schemaRewritten());
+        assertTrue(Files.readString(schema).contains("Identifier"));
+        Context reloaded = fixed.context();
+        assertFalse(reloaded.reloadFrom(reloaded.sourceStructure().reload()).schemaRewritten());
     }
 
     @Test
@@ -87,7 +106,7 @@ class ContextTest {
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
         // When: 创建Context并生成配置值
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         // Then: 验证配置值正确生成
@@ -105,7 +124,7 @@ class ContextTest {
         // Given: 空目录
 
         // When: 创建Context
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
 
         // Then: Context应该成功创建，但Schema和Data可能为空
         assertNotNull(ctx);
@@ -135,7 +154,7 @@ class ContextTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
 
         // When: 使用相同tag多次生成配置值
         String tag = "test-tag";
@@ -167,7 +186,7 @@ class ContextTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
 
         // When: 使用不同tag生成配置值
         CfgValue value1 = ctx.makeValue("tag1");
@@ -198,7 +217,7 @@ class ContextTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
 
         // When: 使用null tag生成配置值
         CfgValue nullTagValue = ctx.makeValue(null);
@@ -232,7 +251,7 @@ class ContextTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
 
         // When & Then: 使用空字符串作为tag应该抛出异常
         assertThrows(IllegalArgumentException.class, () -> {
@@ -262,7 +281,7 @@ class ContextTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("user.csv", tempDir, invalidCsvData);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
 
         // When: 使用allowErr=true生成配置值
         CfgValue cfgValue = ctx.makeValue(null, true);
@@ -293,7 +312,7 @@ class ContextTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
 
         String tag = "editor";
 
@@ -330,11 +349,11 @@ class ContextTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
 
         // When & Then: 没有配置国际化时应该返回null
-        assertNull(ctx.nullableTranslationCatalog());
-        assertNull(ctx.nullableTranslationBundle());
+        assertNull(ctx.translationCatalog());
+        assertNull(ctx.translationBundle());
     }
 
     @Test
@@ -358,7 +377,7 @@ class ContextTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
 
         // When: 获取Context配置
         Context.ContextCfg cfg = ctx.contextCfg();
@@ -406,7 +425,7 @@ class ContextTest {
         Resources.addTempFileFromText("employee.csv", tempDir, empCsv);
 
         // When: 创建Context并生成配置值
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         // Then: 验证引用完整性

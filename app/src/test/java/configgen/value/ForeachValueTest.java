@@ -31,7 +31,7 @@ class ForeachValueTest {
                 2,cd""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
@@ -59,7 +59,7 @@ class ForeachValueTest {
                 2,33,44""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
@@ -98,7 +98,7 @@ class ForeachValueTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
@@ -126,7 +126,7 @@ class ForeachValueTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
@@ -154,7 +154,7 @@ class ForeachValueTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();

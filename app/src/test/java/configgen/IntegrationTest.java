@@ -59,7 +59,7 @@ class IntegrationTest {
         resolutionErrors.checkErrors();
 
         // 2. 创建Context并生成值
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         // Then: 验证完整工作流成功
@@ -108,7 +108,7 @@ class IntegrationTest {
         Resources.addTempFileFromText("employee.csv", tempDir, empCsv);
 
         // When: 执行完整工作流
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         // Then: 验证引用完整性

@@ -34,7 +34,7 @@ class LuaFormattingTest {
                  "rank":7,"ranks":[7],"note":"marker  "}
                 """);
         Path output = root.resolve("output");
-        new LuaCodeGenerator(new ParameterParser("lua,emmylua,dir:" + output)).generate(new Context(data), new CachedFiles());
+        new LuaCodeGenerator(new ParameterParser("lua,emmylua,dir:" + output)).generate(Context.load(data), new CachedFiles());
 
         assertTrue(Files.readString(output.resolve("cfg/t.lua")).contains("\"marker  \""), "数据字符串中的空格应保留");
         assertTrue(Files.readString(output.resolve("cfg/_beans.lua")).contains("---@field x number , Horizontal position"), "保留字段类型和注释间的分隔");

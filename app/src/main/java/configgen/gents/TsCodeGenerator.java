@@ -45,7 +45,7 @@ public class TsCodeGenerator extends GeneratorWithTag {
         // 2. ts 产物仅 Config.ts + ConfigUtil.ts 两个固定文件名，不会产生陈旧文件堆积，无清理需求。
         cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
         cfgSchema = cfgValue.schema();
-        nullableTranslationBundle = ctx.nullableTranslationBundle();
+        nullableTranslationBundle = ctx.translationBundle();
 
         try (var ps = new CachedIndentPrinter(dstDir.resolve("Config.ts"), encoding, outputFiles)) {
             JteEngine.render("ts/Config.jte", this, ps);

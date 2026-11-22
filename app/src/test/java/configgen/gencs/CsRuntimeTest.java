@@ -275,7 +275,7 @@ class CsRuntimeTest {
         });
         new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("basepack") + ",pack:base,langSeparated")).generate(a, new CachedFiles());
         Files.writeString(bDir.resolve("step.csv"), "id,name\nid,name\n3,three\n2,two\n");
-        Context mod = new Context(b.contextCfg(), a.cfgSchema());
+        Context mod = Context.load(b.contextCfg(), a.cfgSchema());
         new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("modpack") + ",pack:map,langSeparated,requires:base,deps:" + root.resolve("basepack/base.bytes"))).generate(mod, new CachedFiles());
         Files.writeString(project.resolve("runtime.csproj"), """
                 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>

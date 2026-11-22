@@ -55,7 +55,7 @@ class ValueRefInCollectorTest {
                 npc/a.prefab,npc
                 """;
         Resources.addTempFileFromText("assets.csv", tempDir, assetStr);
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
@@ -103,7 +103,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
@@ -152,7 +152,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
@@ -192,7 +192,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
@@ -220,7 +220,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("type.csv", tempDir, typeCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
@@ -259,7 +259,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
@@ -300,7 +300,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("config.csv", tempDir, configCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
@@ -341,7 +341,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable typeTable = requireNonNull(cfgValue.getTable("type"));
@@ -390,7 +390,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("drop.csv", tempDir, dropCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable itemTable = requireNonNull(cfgValue.getTable("item"));
@@ -443,7 +443,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("login_history.csv", tempDir, loginHistoryCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable playerTable = requireNonNull(cfgValue.getTable("player"));
@@ -491,7 +491,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("lootitem.csv", tempDir, lootitemCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable lootTable = requireNonNull(cfgValue.getTable("loot"));
@@ -545,7 +545,7 @@ class ValueRefInCollectorTest {
                 """;
         Resources.addTempFileFromText("shop.csv", tempDir, shopCsv);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
         CfgValue.VTable itemTable = requireNonNull(cfgValue.getTable("item"));

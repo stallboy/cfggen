@@ -32,7 +32,7 @@ class ValueRefCollectorTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         var records = requireNonNull(cfgValue.getTable("t")).valueList();
         CfgValue.VStruct firstRecord = records.get(0);
@@ -74,7 +74,7 @@ class ValueRefCollectorTest {
         Resources.addTempFileFromText("item.csv", tempDir, "ID,Code\nid,code\n7,sword\n");
         Resources.addTempFileFromText("source.csv", tempDir, "ID,Code\nid,itemCode\n1,sword\n");
 
-        CfgValue data = new Context(tempDir).makeValue();
+        CfgValue data = Context.load(tempDir).makeValue();
         var source = requireNonNull(data.getTable("source")).valueList().getFirst();
         var item = requireNonNull(data.getTable("item")).valueList().getFirst();
         List<ValueRefCollector.FieldRef> fieldRefs = new ArrayList<>();
@@ -106,7 +106,7 @@ class ValueRefCollectorTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         var records = requireNonNull(cfgValue.getTable("t")).valueList();
         CfgValue.VStruct firstRecord = records.get(0);

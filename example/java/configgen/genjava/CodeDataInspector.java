@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static configgen.genjava.JsonValue.*;
@@ -85,7 +86,7 @@ public class CodeDataInspector {
     public JsonValue queryJson(@Nullable String recordMatch, @Nullable String tableMatch) {
         final int perTableCap = 50;
         final int totalCap = 200;
-        String needle = recordMatch == null ? "" : recordMatch.toLowerCase();
+        String needle = recordMatch == null ? "" : recordMatch.toLowerCase(Locale.ROOT);
 
         List<JsonValue> records = new ArrayList<>();
         int totalShown = 0;
@@ -114,7 +115,7 @@ public class CodeDataInspector {
     }
 
     /** 把一条记录组装成 {@code Obj(表名, 字段)}，便于渲染为 {@code 表名{...}}。 */
-    private JsonValue recordToJson(Object record, SchemaBean schema, String tableName) {
+    private JsonValue recordToJson(@Nullable Object record, SchemaBean schema, String tableName) {
         if (record == null) {
             return new Null();
         }
@@ -169,7 +170,7 @@ public class CodeDataInspector {
     }
 
     private @Nullable TableData findTable(String table) {
-        if (table == null || table.isEmpty()) {
+        if (table.isEmpty()) {
             return null;
         }
         TableData contains = null;
@@ -191,7 +192,7 @@ public class CodeDataInspector {
         if (match == null || match.isEmpty()) {
             return true;
         }
-        return name.toLowerCase().contains(match.toLowerCase());
+        return name.toLowerCase(Locale.ROOT).contains(match.toLowerCase(Locale.ROOT));
     }
 
     // ==================== 取记录 ====================
@@ -217,6 +218,9 @@ public class CodeDataInspector {
             return null;
         }
         Object sampleKey = map.keySet().iterator().next();
+        if (sampleKey instanceof String) {
+            return map.containsKey(keyStr) ? map.get(keyStr) : map.get(keyStr.trim());
+        }
         Object key;
         try {
             key = buildKey(sampleKey.getClass(), keyStr);
@@ -226,13 +230,11 @@ public class CodeDataInspector {
         if (key == null) {
             return null;
         }
-        @SuppressWarnings("unchecked")
-        Map<Object, ?> raw = (Map<Object, ?>) map;
-        return raw.get(key);
+        return map.get(key);
     }
 
     /**
-     * 按位置式 key 构造：单值（无逗号）的原始/字符串 key 直接转换，绕开反射构造器；
+     * 按位置式 key 构造：单值（无逗号）的原始类型 key 直接转换，绕开反射构造器；
      * 复合 "3,5" 或单字段 record 走反射构造器按形参强转；枚举走 valueOf。
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -243,7 +245,7 @@ public class CodeDataInspector {
                 return single;
             }
         }
-        String[] parts = keyStr.split(",");
+        String[] parts = keyStr.split(",", -1);
         for (int i = 0; i < parts.length; i++) {
             parts[i] = parts[i].trim();
         }
@@ -290,7 +292,13 @@ public class CodeDataInspector {
             return Double.parseDouble(s);
         }
         if (keyClass == Boolean.class || keyClass == boolean.class) {
-            return Boolean.parseBoolean(s);
+            if ("true".equalsIgnoreCase(s)) {
+                return true;
+            }
+            if ("false".equalsIgnoreCase(s)) {
+                return false;
+            }
+            throw new IllegalArgumentException("Invalid boolean key: " + s);
         }
         return null;
     }
@@ -302,8 +310,8 @@ public class CodeDataInspector {
 
     // ==================== 记录遍历 / 匹配 ====================
 
-    private static Iterable<Object> iterRecords(TableData td) {
-        List<Object> list = new ArrayList<>();
+    private static Iterable<@Nullable Object> iterRecords(TableData td) {
+        List<@Nullable Object> list = new ArrayList<>();
         if (td.isArray) {
             int len = Array.getLength(td.data);
             for (int i = 0; i < len; i++) {
@@ -321,7 +329,7 @@ public class CodeDataInspector {
     private static boolean flatContains(JsonValue v, String lowerNeedle) {
         StringBuilder sb = new StringBuilder();
         appendFlat(v, sb);
-        return sb.toString().toLowerCase().contains(lowerNeedle);
+        return sb.toString().toLowerCase(Locale.ROOT).contains(lowerNeedle);
     }
 
     /** 对领域无关的 {@link JsonValue} 拍平：只收集叶子值/键/类型名，与 {@link #valueToJson} 共用同一棵翻译树。 */

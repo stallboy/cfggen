@@ -51,7 +51,7 @@ class ForeachFinderTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.Value> list = new ArrayList<>();
@@ -81,7 +81,7 @@ class ForeachFinderTest {
                 2,33,44""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<Integer> list = new ArrayList<>();
@@ -121,7 +121,7 @@ class ForeachFinderTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        Context ctx = new Context(tempDir);
+        Context ctx = Context.load(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         InterfaceSchema action = requireNonNull((InterfaceSchema) ctx.cfgSchema().findItem("action"));
 

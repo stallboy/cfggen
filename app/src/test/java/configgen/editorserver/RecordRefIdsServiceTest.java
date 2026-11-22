@@ -26,7 +26,7 @@ class RecordRefIdsServiceTest {
         JsonRecordFixture.write(data, "b", "{\"id\":1,\"a\":1,\"c\":1}");
         JsonRecordFixture.write(data, "c", "{\"id\":1}");
 
-        var value = new Context(Context.ContextCfg.of(data), schema).makeValue();
+        var value = Context.load(Context.ContextCfg.of(data), schema).makeValue();
         var graph = new TableSchemaRefGraph(value.schema());
         var refs = new RecordRefIdsService(value, graph, "a", "1", 1, 2, 3).retrieve().recordRefIds();
         assertEquals(List.of("a:0", "b:-1", "c:2"),

@@ -3,6 +3,7 @@ package configgen.editorserver;
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
+import configgen.ctx.StateCoordinator.EditOutcome;
 import configgen.value.*;
 import configgen.write.AddOrUpdateService;
 import configgen.write.AddOrUpdateService.AddOrUpdateRecordResult;
@@ -36,21 +37,14 @@ public final class RecordEditService {
                                    List<String> valueErrs) {// 即使有错，也更新，只是这里提示
     }
 
-    public record ResultWithNewCfgValue(RecordEditResult result,
-                                        @Nullable CfgValue newCfgValue) {
-    }
-
-
-    public static ResultWithNewCfgValue addOrUpdateRecord(Context context,
-                                                          CfgValue cfgValue,
-                                                          @Nullable String table,
-                                                          String jsonStr) {
-
-
+    public static EditOutcome<RecordEditResult> addOrUpdateRecord(Context context,
+                                                                 CfgValue cfgValue,
+                                                                 @Nullable String table,
+                                                                 String jsonStr) {
         if (table == null) {
-            return new ResultWithNewCfgValue(
+            return new EditOutcome<>(
                     new RecordEditResult(tableNotSet, "", "", List.of()),
-                    null);
+                    false);
         }
 
         CfgValue.VTable vTable = cfgValue.getTable(table);
@@ -58,7 +52,7 @@ public final class RecordEditService {
             try {
                 jsonStr = EditorValueJson.decode(vTable.schema(), jsonStr);
             } catch (IllegalArgumentException e) {
-                return new ResultWithNewCfgValue(new RecordEditResult(jsonParseErr, table, "", List.of(e.getMessage())), null);
+                return new EditOutcome<>(new RecordEditResult(jsonParseErr, table, "", List.of(e.getMessage())), false);
             }
         }
         AddOrUpdateRecordResult ar = AddOrUpdateService.addOrUpdateRecord(context, cfgValue, table, jsonStr);
@@ -71,26 +65,26 @@ public final class RecordEditService {
             case IOException -> storeErr;
         };
 
-        return new ResultWithNewCfgValue(
+        return new EditOutcome<>(
                 new RecordEditResult(resultCode, table, ar.recordId(), ar.errorMessages()),
-                ar.newCfgValue());
+                ar.committed());
     }
 
 
-    public static ResultWithNewCfgValue deleteRecord(Context context,
-                                                     CfgValue cfgValue,
-                                                     @Nullable String table,
-                                                     @Nullable String id) {
+    public static EditOutcome<RecordEditResult> deleteRecord(Context context,
+                                                            CfgValue cfgValue,
+                                                            @Nullable String table,
+                                                            @Nullable String id) {
         if (table == null) {
-            return new ResultWithNewCfgValue(
+            return new EditOutcome<>(
                     new RecordEditResult(tableNotSet, "", "", List.of()),
-                    null);
+                    false);
         }
 
         if (id == null) {
-            return new ResultWithNewCfgValue(
+            return new EditOutcome<>(
                     new RecordEditResult(idNotSet, table, "", List.of()),
-                    null);
+                    false);
         }
 
         DeleteRecordResult dr = DeleteService.deleteRecord(context, cfgValue, table, id);
@@ -102,9 +96,9 @@ public final class RecordEditService {
             case RecordIdNotFound -> idNotFound;
             case IOException -> storeErr;
         };
-        return new ResultWithNewCfgValue(
+        return new EditOutcome<>(
                 new RecordEditResult(resultCode, table, id, dr.errorMessages()),
-                dr.newCfgValue());
+                dr.committed());
     }
 
 }

@@ -50,10 +50,10 @@ public class BytesGenerator extends GeneratorWithTag {
     @Override
     public void generate(Context ctx, CachedFiles outputs) throws IOException {
         outputFiles = outputs;
-        PackageBuilder.Result build = ctx.isFixedSchema() || !requires.isEmpty() || !dependencies.isEmpty()
+        PackageBuilder.Result build = ctx.usesSharedSchema() || !requires.isEmpty() || !dependencies.isEmpty()
                 ? PackageBuilder.build(ctx, tag, dependencies, pack, requires) : null;
         CfgValue cfgValue = build == null ? ctx.makeValue(tag) : build.own();
-        TranslationBundle translationBundle = ctx.nullableTranslationBundle();
+        TranslationBundle translationBundle = ctx.translationBundle();
 
         TableTranslationLookup tableTranslationLookup = null;
         LangTextPool langTextPool;
@@ -67,6 +67,7 @@ public class BytesGenerator extends GeneratorWithTag {
 
         writePackage(cfgValue, build == null ? cfgValue : build.effective(), translationBundle, tableTranslationLookup, langTextPool);
     }
+
     private void writePackage(CfgValue value, CfgValue schemaValue, @Nullable TranslationBundle translationBundle,
                               @Nullable TableTranslationLookup tableTranslationLookup, LangTextPool texts) {
         Map<String, String> metadata = new LinkedHashMap<>();
@@ -92,12 +93,16 @@ public class BytesGenerator extends GeneratorWithTag {
             }
         }
         entries.putAll(tables);
-        try (ConfigOutput out = createConfigOutput(pack + ".bytes")) { PackageSerializer.write(out, metadata, entries); }
+        try (ConfigOutput out = createConfigOutput(pack + ".bytes")) {
+            PackageSerializer.write(out, metadata, entries);
+        }
     }
 
     private static byte[] encode(Consumer<ConfigOutput> writer) {
         var stream = new ByteArrayOutputStream();
-        try (ConfigOutput out = new ConfigOutput(stream)) { writer.accept(out); }
+        try (ConfigOutput out = new ConfigOutput(stream)) {
+            writer.accept(out);
+        }
         return stream.toByteArray();
     }
 

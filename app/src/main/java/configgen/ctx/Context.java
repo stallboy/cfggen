@@ -67,86 +67,104 @@ public class Context {
     }
 
     private final ContextCfg contextCfg;
-    private final boolean fixedSchema;
+    private final boolean usesSharedSchema;
     private final I18nState i18nState;
 
-    private DirectoryStructure sourceStructure;
+    private final DirectoryStructure sourceStructure;
 
     private final ExcelReader excelReader;
     private final ReadCsv csvReader;
     private final CfgSchema cfgSchema;
     private volatile CfgData cfgData;
-    // 本次加载是否触发了autoFix写回config.cfg（供watch层检测写-触发循环）
-    private boolean lastLoadDidAutoFix;
+    // 由 makeValue 和 updateDataAndValue 共用的 this 锁保护。
+    private @Nullable CachedValue cachedValue;
 
-    /**
-     * 优化，避免gen多次时，重复生成value
-     */
-    private volatile @Nullable CfgValue lastCfgValue;
-    private volatile @Nullable String lastCfgValueTag;
-    // 缓存键的一部分：见 makeValue 的说明，allowErr 必须参与缓存命中判断
-    private volatile boolean lastCfgValueAllowErr;
-
-    public Context(Path dataDir) {
-        this(ContextCfg.of(dataDir));
+    private record CachedValue(@Nullable String tag, CfgValue value, boolean strictlyValidated) {
+        boolean canServe(@Nullable String requestedTag, boolean allowValueErr) {
+            return Objects.equals(tag, requestedTag) && (strictlyValidated || allowValueErr);
+        }
     }
 
-    public Context(ContextCfg cfg) {
-        this(cfg, new DirectoryStructure(cfg.dataDir, cfg.explicitDir));
+    public record LoadResult(Context context, boolean schemaRewritten) {}
+
+    public static Context load(Path dataDir) {
+        return load(ContextCfg.of(dataDir));
     }
 
-    public Context(ContextCfg cfg, DirectoryStructure sourceStructure) {
-        this(cfg, sourceStructure, null);
+    public static Context load(ContextCfg cfg) {
+        return load(cfg, new DirectoryStructure(cfg.dataDir, cfg.explicitDir), null).context();
     }
 
     /** Read sparse package data without aligning or writing the shared schema. */
-    public Context(ContextCfg cfg, CfgSchema schema) {
-        this(cfg, new DirectoryStructure(cfg.dataDir, cfg.explicitDir), schema);
+    public static Context load(ContextCfg cfg, CfgSchema sharedSchema) {
+        return load(cfg, new DirectoryStructure(cfg.dataDir, cfg.explicitDir), sharedSchema).context();
     }
 
-    private Context(ContextCfg cfg, DirectoryStructure sourceStructure, @Nullable CfgSchema fixed) {
+    private Context(ContextCfg cfg, DirectoryStructure sourceStructure, I18nState i18nState,
+                    ReadCsv csvReader, CfgSchema schema, CfgData data, boolean usesSharedSchema) {
         this.contextCfg = cfg;
-        this.fixedSchema = fixed != null;
+        this.usesSharedSchema = usesSharedSchema;
         this.sourceStructure = sourceStructure;
+        this.i18nState = i18nState;
+        this.excelReader = ReadByFastExcel.INSTANCE;
+        this.csvReader = csvReader;
+        this.cfgSchema = schema;
+        this.cfgData = data;
+    }
 
-        i18nState = switch (cfg.i18n) {
+    private static LoadResult load(ContextCfg cfg, DirectoryStructure sourceStructure, @Nullable CfgSchema sharedSchema) {
+        I18nState i18nState = switch (cfg.i18n) {
             case I18nCfg.Disabled _ -> I18nState.Disabled.INSTANCE;
             case I18nCfg.Replace replace -> new I18nState.Replace(TranslationCatalog.read(replace.path()));
             case I18nCfg.Switchable switchable ->
                     new I18nState.Switchable(TranslationBundle.read(switchable.dir(), switchable.defaultLang()));
         };
 
-        excelReader = ReadByFastExcel.INSTANCE;
-        csvReader = new ReadCsv(cfg.csvOrTsvDefaultEncoding);
-        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, csvReader, excelReader);
-        if (fixed != null) {
-            fixed.requireResolved();
-            this.cfgSchema = fixed;
+        ReadCsv csvReader = new ReadCsv(cfg.csvOrTsvDefaultEncoding);
+        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, csvReader, ReadByFastExcel.INSTANCE);
+        if (sharedSchema != null) {
+            sharedSchema.requireResolved();
             CfgSchemaErrs errs = CfgSchemaErrs.of();
-            this.cfgData = dataReader.readCfgData(sourceStructure.getExcelFiles(), fixed, errs);
+            CfgData cfgData = dataReader.readCfgData(sourceStructure.getExcelFiles(), sharedSchema, errs);
             errs.checkErrors("fixed schema data");
             for (String table : cfgData.tables().keySet()) {
-                var tableSchema = fixed.findTable(table);
+                var tableSchema = sharedSchema.findTable(table);
                 if (tableSchema == null) throw new IllegalArgumentException("Unknown table outside shared schema: " + table);
                 if (tableSchema.meta().isJson()) throw new IllegalArgumentException("JSON table cannot also use CSV/Excel data: " + table);
             }
             for (String table : sourceStructure.jsonTableNames()) {
-                var tableSchema = fixed.findTable(table);
+                var tableSchema = sharedSchema.findTable(table);
                 if (!sourceStructure.jsonFilesOf(table).isEmpty() && (tableSchema == null || !tableSchema.meta().isJson())) throw new IllegalArgumentException("Unknown JSON table outside shared schema: " + table);
             }
-            return;
+            Context context = new Context(cfg, sourceStructure, i18nState, csvReader, sharedSchema, cfgData, true);
+            return new LoadResult(context, false);
         }
-        SchemaAndData loaded = readSchemaAndData(dataReader, true);
-        if (loaded == null) {
-            loaded = java.util.Objects.requireNonNull(readSchemaAndData(dataReader, false));
+        SchemaAndData loaded = readSchemaAndData(cfg, sourceStructure, dataReader);
+        boolean schemaRewritten = !loaded.isAligned();
+        if (schemaRewritten) {
+            Logger.profile("schema aligned by data");
+            CfgSchemas.writeToDir(sourceStructure.getRootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME),
+                    loaded.alignedSchema());
+            sourceStructure = sourceStructure.reload();
+            Logger.profile("schema write");
+            loaded = readSchemaAndData(cfg, sourceStructure, dataReader);
+            if (!loaded.isAligned()) {
+                loaded.schema().printDiff(loaded.alignedSchema());
+                throw new RuntimeException("schema align failed");
+            }
         }
-        cfgSchema = loaded.schema();
-        cfgData = loaded.data();
+        Context context = new Context(cfg, sourceStructure, i18nState, csvReader, loaded.schema(), loaded.data(), false);
+        return new LoadResult(context, schemaRewritten);
     }
 
-    private record SchemaAndData(CfgSchema schema, CfgData data) {}
+    private record SchemaAndData(CfgSchema schema, CfgData data, CfgSchema alignedSchema) {
+        boolean isAligned() {
+            return schema.equals(alignedSchema);
+        }
+    }
 
-    private @Nullable SchemaAndData readSchemaAndData(CfgDataReader dataReader, boolean autoFix) {
+    private static SchemaAndData readSchemaAndData(ContextCfg cfg, DirectoryStructure sourceStructure,
+                                                  CfgDataReader dataReader) {
         CfgSchema schema = CfgSchemas.readFromDir(sourceStructure.getCfgFiles());
         Logger.profile("schema read");
 
@@ -159,37 +177,23 @@ public class Context {
         CfgSchemaErrs alignErr = CfgSchemaErrs.of();
         CfgData data = dataReader.readCfgData(sourceStructure.getExcelFiles(), schema, alignErr);
         data.verbosePrintStat();
-        CfgSchema alignedSchema = new CfgSchemaAlignToData(contextCfg.headRow()).align(schema, data, alignErr);
+        CfgSchema alignedSchema = new CfgSchemaAlignToData(cfg.headRow()).align(schema, data, alignErr);
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
         alignErr.checkErrors("aligned schema");
 
 
-        if (schema.equals(alignedSchema)) {
-            return new SchemaAndData(schema, data);
-        } else if (autoFix) {
-            Logger.profile("schema aligned by data");
-            // schema.printDiff(alignedSchema);
-            CfgSchemas.writeToDir(rootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME),
-                    alignedSchema);
-            sourceStructure = sourceStructure.reload();
-            Logger.profile("schema write");
-            lastLoadDidAutoFix = true;
-            return null;
-        } else {
-            schema.printDiff(alignedSchema);
-            throw new RuntimeException("schema align failed");
-        }
+        return new SchemaAndData(schema, data, alignedSchema);
     }
 
-    public Context reloadFrom(DirectoryStructure structure) {
-        return new Context(contextCfg, structure, fixedSchema ? cfgSchema : null);
+    public LoadResult reloadFrom(DirectoryStructure structure) {
+        return load(contextCfg, structure, usesSharedSchema ? cfgSchema : null);
     }
 
     public ContextCfg contextCfg() {
         return contextCfg;
     }
 
-    public boolean isFixedSchema() { return fixedSchema; }
+    public boolean usesSharedSchema() { return usesSharedSchema; }
 
     public DirectoryStructure sourceStructure() {
         return sourceStructure;
@@ -221,21 +225,17 @@ public class Context {
         return cfgData;
     }
 
-    public boolean lastLoadDidAutoFix() {
-        return lastLoadDidAutoFix;
-    }
-
     /**
      * 直接国际化,直接改成对应国家语言
      */
-    public @Nullable TranslationCatalog nullableTranslationCatalog() {
+    public @Nullable TranslationCatalog translationCatalog() {
         return i18nState instanceof I18nState.Replace(TranslationCatalog catalog) ? catalog : null;
     }
 
     /**
      * 这个是要实现客户端可在多国语言间切换语言，所以客户端服务器都需要完整的多国语言信息，而不能如i18n那样直接替换
      */
-    public @Nullable TranslationBundle nullableTranslationBundle() {
+    public @Nullable TranslationBundle translationBundle() {
         return i18nState instanceof I18nState.Switchable(TranslationBundle translationBundle) ? translationBundle : null;
     }
 
@@ -252,19 +252,11 @@ public class Context {
             throw new IllegalArgumentException("tag不能为空");
         }
 
-        // allowErr 不进入 cfgValue 内容，只控制下方 checkErrors 是否抛异常。缓存命中按"值是否可能带错"判断：
-        //   - lastCfgValueAllowErr=false：严格校验过、保证无错（有错会在 checkErrors 抛出、走不到写缓存），可服务任意 allowErr 请求；
-        //   - lastCfgValueAllowErr=true ：可能带错，只能服务 allowErr=true 的宽松请求；allowErr=false 必须重算以重新校验。
-        // 关键是堵住宽松→严格方向：否则 EditorServer 的 makeValue(tag,true) 缓存的带错值会被生成器 makeValue(tag) 复用、跳过 checkErrors。
-        // synchronized：check-then-act（读缓存→解析→写缓存）非原子，且 updateDataAndValue 也会写这几个字段，
-        // 编辑器 handler 线程与 reload 线程可能并发，必须互斥。
-        if (lastCfgValue != null
-                && Objects.equals(tag, lastCfgValueTag)
-                && (!lastCfgValueAllowErr || allowValueErr)) {
-            //noinspection DataFlowIssue
-            return lastCfgValue;
+        CachedValue cached = cachedValue;
+        if (cached != null && cached.canServe(tag, allowValueErr)) {
+            return cached.value();
         }
-        lastCfgValue = null; //让它可以被尽快gc
+        cachedValue = null; // 让旧值可以尽快回收
 
         CfgSchema tagSchema;
         if (tag != null) {
@@ -278,32 +270,19 @@ public class Context {
         }
 
         CfgValueErrs valueErrs = CfgValueErrs.of();
-        ValueEnv env = new ValueEnv(cfgSchema, cfgData, contextCfg.headRow(), nullableTranslationCatalog(), sourceStructure);
+        ValueEnv env = new ValueEnv(cfgSchema, cfgData, contextCfg.headRow(), translationCatalog(), sourceStructure);
         CfgValueParser clientValueParser = new CfgValueParser(tagSchema, env, valueErrs);
         CfgValue cfgValue = clientValueParser.parseCfgValue();
         String prefix = tag == null ? "value" : String.format("[%s] filtered value", tag);
         valueErrs.checkErrors(prefix, allowValueErr);
 
-        lastCfgValue = cfgValue;
-        lastCfgValueTag = tag;
-        lastCfgValueAllowErr = allowValueErr;
+        cachedValue = new CachedValue(tag, cfgValue, !allowValueErr);
         return cfgValue;
     }
 
-    private long editRevision;
-
-    public synchronized long editRevision() {
-        return editRevision;
-    }
-
-    // 与 makeValue 共用 this 锁：二者都读写 lastCfgValue/lastCfgValueTag/lastCfgValueAllowErr，
-    // 编辑器 handler 线程调 updateDataAndValue、reload 线程调 makeValue，必须互斥。
     // 增量校验不会重新解析未编辑的表。严格调用须重新校验整份配置。
     public synchronized void updateDataAndValue(CfgData cfgData, CfgValue cfgValue) {
         this.cfgData = cfgData;
-        this.lastCfgValue = cfgValue;
-        this.lastCfgValueTag = null;
-        this.lastCfgValueAllowErr = true;
-        editRevision++;
+        this.cachedValue = new CachedValue(null, cfgValue, false);
     }
 }
