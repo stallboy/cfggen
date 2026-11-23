@@ -1,7 +1,6 @@
 package configgen.genbytes;
 
 import org.jspecify.annotations.Nullable;
-
 import configgen.ctx.Context;
 import configgen.data.Source;
 import configgen.genjava.*;
@@ -16,7 +15,8 @@ import static configgen.value.CfgValue.*;
 
 /** Parse local records first; dependencies and this layer are validated as one effective data set. */
 final class PackageBuilder {
-    record Result(CfgValue own, CfgValue effective) {}
+    record Result(CfgValue own, CfgValue effective) {
+    }
 
     static Result build(Context ctx, @Nullable String tag, List<Path> paths, String name, String requires) throws IOException {
         CfgSchema schema = ctx.cfgSchema();
@@ -47,9 +47,11 @@ final class PackageBuilder {
         var pending = new ArrayDeque<>(declared);
         while (!pending.isEmpty()) {
             String dependency = pending.removeFirst();
-            if (reachable.add(dependency)) pending.addAll(java.util.Objects.requireNonNull(available.get(dependency)).dependencies());
+            if (reachable.add(dependency))
+                pending.addAll(java.util.Objects.requireNonNull(available.get(dependency)).dependencies());
         }
-        if (!reachable.containsAll(available.keySet())) throw new ConfigErr("Build inputs include undeclared dependencies");
+        if (!reachable.containsAll(available.keySet()))
+            throw new ConfigErr("Build inputs include undeclared dependencies");
 
         var errors = CfgValueErrs.of();
         Map<String, List<VStruct>> local = new LinkedHashMap<>();
@@ -82,12 +84,14 @@ final class PackageBuilder {
                 var input = pack.block(block, languages);
                 int count = input.readCount(1);
                 var rows = new ArrayList<VStruct>(count);
-                for (int i = 0; i < count; i++) rows.add(readStruct(table, input, Source.DFile.of(pack.name(), tableName).child(Integer.toString(i))));
+                for (int i = 0; i < count; i++)
+                    rows.add(readStruct(table, input, Source.DFile.of(pack.name(), tableName).child(Integer.toString(i))));
                 input.requireEnd();
                 merge(table, java.util.Objects.requireNonNull(merged.get(tableName)), rows);
             }
         }
-        for (var entry : local.entrySet()) merge(java.util.Objects.requireNonNull(schema.findTable(entry.getKey())), java.util.Objects.requireNonNull(merged.get(entry.getKey())), entry.getValue());
+        for (var entry : local.entrySet())
+            merge(java.util.Objects.requireNonNull(schema.findTable(entry.getKey())), java.util.Objects.requireNonNull(merged.get(entry.getKey())), entry.getValue());
         CfgValue effective = CfgValue.of(schema);
         CfgValue own = CfgValue.of(schema);
         for (TableSchema table : schema.tableMap().values()) {
@@ -105,14 +109,16 @@ final class PackageBuilder {
                 if (table.meta().getEnumValues() instanceof Metadata.MetaEnumValues.OfAssigned) {
                     int idIndex = FindFieldIndex.findFieldIndex(table, java.util.Objects.requireNonNull(table.findField("id")));
                     for (var fixedRow : fixed.primaryKeyMap().entrySet()) {
-                        if (!fixedRow.getValue().values().get(idIndex).equals(java.util.Objects.requireNonNull(all.primaryKeyMap().get(fixedRow.getKey())).values().get(idIndex))) throw new ConfigErr("Fixed schema enum ID changed: " + table.name() + "." + fixedRow.getKey());
+                        if (!fixedRow.getValue().values().get(idIndex).equals(java.util.Objects.requireNonNull(all.primaryKeyMap().get(fixedRow.getKey())).values().get(idIndex)))
+                            throw new ConfigErr("Fixed schema enum ID changed: " + table.name() + "." + fixedRow.getKey());
                     }
                 }
             }
             effective.vTableMap().put(table.name(), all);
             if (local.containsKey(table.name())) {
                 var ownKeys = new LinkedHashMap<Value, VStruct>();
-                for (VStruct row : local.get(table.name())) ownKeys.put(ValueUtil.extractPrimaryKeyValue(row, table), row);
+                for (VStruct row : local.get(table.name()))
+                    ownKeys.put(ValueUtil.extractPrimaryKeyValue(row, table), row);
                 own.vTableMap().put(table.name(), new VTable(table, local.get(table.name()), ownKeys,
                         new LinkedHashMap<>(), all.enumNames(), all.enumNameToIntegerValueMap()));
             }
@@ -122,8 +128,10 @@ final class PackageBuilder {
         var expected = SchemaParser.parsePackage(effective, translationBundle);
         for (var pack : packs) {
             var input = pack.block("schema");
-            Schema actual = SchemaDeserializer.deserialize(input); input.requireEnd();
-            if (!expected.compatible(actual) || !actual.compatible(expected)) throw new ConfigErr("Schema or fixed symbols differ in dependency " + pack.name());
+            Schema actual = SchemaDeserializer.deserialize(input);
+            input.requireEnd();
+            if (!expected.compatible(actual) || !actual.compatible(expected))
+                throw new ConfigErr("Schema or fixed symbols differ in dependency " + pack.name());
         }
         return new Result(own, effective);
     }
@@ -132,7 +140,8 @@ final class PackageBuilder {
         var seen = new HashSet<Value>();
         for (VStruct row : rows) {
             Value key = ValueUtil.extractPrimaryKeyValue(row, table);
-            if (!seen.add(key)) throw new ConfigErr("Duplicate primary key in package table " + table.name() + ": " + key);
+            if (!seen.add(key))
+                throw new ConfigErr("Duplicate primary key in package table " + table.name() + ": " + key);
             target.put(key, row);
         }
     }
@@ -176,8 +185,8 @@ final class PackageBuilder {
                 for (int i = 0; i < count; i++) {
                     SimpleValue key = (SimpleValue) read(map.key(), input, source);
                     SimpleValue value = (SimpleValue) read(map.value(), input, source);
-                    //noinspection ConstantValue
-                    if (values.putIfAbsent(key, value) != null) throw new ConfigErr("Duplicate map key");
+                    if (values.putIfAbsent(key, value) != null)
+                        throw new ConfigErr("Duplicate map key");
                 }
                 yield new VMap(values, source);
             }

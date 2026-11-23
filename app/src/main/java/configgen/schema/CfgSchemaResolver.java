@@ -111,7 +111,6 @@ public final class CfgSchemaResolver {
                         }
                         // 同理，同一interface内impl之间名也不能忽略大小写相同，否则也会互相覆盖
                         String first = implLowerToName.putIfAbsent(impl.name().toLowerCase(Locale.ROOT), impl.name());
-                        //noinspection ConstantValue
                         if (first != null) {
                             errs.addErr(new ImplNameConflict(interfaceSchema.name(), first, impl.name()));
                         }

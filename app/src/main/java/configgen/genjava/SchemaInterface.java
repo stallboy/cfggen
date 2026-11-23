@@ -17,7 +17,6 @@ public final class SchemaInterface implements Schema {
 
     public void addImp(String name, Schema schema) {
         Schema old = implementations.put(name, schema);
-        //noinspection ConstantValue
         if (old != null) {
             throw new IllegalStateException("implementation duplicate " + name);
         }

@@ -138,9 +138,7 @@ public class Span {
             fieldFrontiers.clear();
             for (Nameable nameable : needChecks.values()) {
                 Nameable old = collectedNeedSpans.put(nameable.fullName(), nameable);
-                //noinspection ConstantValue
                 boolean notCheckedBefore = (old == null);
-                //noinspection ConstantValue
                 if (notCheckedBefore) {
                     switch (nameable) {
                         case InterfaceSchema interfaceSchema -> {

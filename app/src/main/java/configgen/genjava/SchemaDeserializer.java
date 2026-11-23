@@ -92,7 +92,6 @@ public final class SchemaDeserializer {
         for (int i = 0; i < size; i++) {
             String name = input.readString();
             Schema schema = deserialize();
-            //noinspection ConstantValue
             if (interfaceSchema.implementations.putIfAbsent(name, schema) != null) {
                 input.errors().duplicateKey("schema implementation", name);
             }

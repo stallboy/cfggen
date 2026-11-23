@@ -48,7 +48,7 @@ public class NoteEditService {
                 if (row.getFieldCount() == 2) {
                     noteMap.put(row.getField(0), row.getField(1));
                 } else {
-                    Logger.log(row.toString() + " field count not 2, ignore!");
+                    Logger.log(row + " field count not 2, ignore!");
                 }
             }
         }
@@ -78,7 +78,6 @@ public class NoteEditService {
                 code = ResultCode.deleteOk;
             } else {
                 String old = updated.put(key, note);
-                //noinspection ConstantValue
                 code = old != null ? ResultCode.updateOk : ResultCode.addOk;
             }
             writeNoteMap(updated);

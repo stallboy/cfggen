@@ -22,7 +22,6 @@ public class LangStat {
         OneT old = accumulate.putIfAbsent(orig, newT);
         textCount++;
 
-        //noinspection ConstantValue
         if (old != null) {
             sameOriginalCount++;
             if (!newT.translatedText.trim().equals(old.translatedText.trim())) {

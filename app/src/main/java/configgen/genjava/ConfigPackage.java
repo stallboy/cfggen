@@ -39,7 +39,6 @@ public final class ConfigPackage {
         Map<String, String> metadata = LinkedHashMap.newLinkedHashMap(count);
         for (int i = 0; i < count; i++) {
             String key = input.readString();
-            //noinspection ConstantValue
             if (metadata.putIfAbsent(key, input.readString()) != null) {
                 errors.duplicateKey("metadata", key);
             }
@@ -49,7 +48,6 @@ public final class ConfigPackage {
         for (int i = 0; i < count; i++) {
             String name = input.readString();
             ConfigInput block = input.slice(input.readInt());
-            //noinspection ConstantValue
             if (blocks.putIfAbsent(name, block) != null) {
                 errors.duplicateKey("block", name);
             }
@@ -109,7 +107,6 @@ public final class ConfigPackage {
                 if (!name.startsWith("text/")) {
                     errors.unexpectedLanguageBlock(name);
                 }
-                //noinspection ConstantValue
                 if (combined.putIfAbsent(name, block) != null) {
                     errors.duplicateKey("language", name);
                 }

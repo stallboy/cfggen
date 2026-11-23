@@ -31,7 +31,6 @@ public final class ConfigLoader<K, T> {
         for (int i = 0; i < count; i++) {
             T row = decode.apply(input);
             K id = key.apply(row);
-            //noinspection ConstantValue
             boolean duplicate = rows.put(id, row) != null;
             if (!base) {
                 var chain = origins.computeIfAbsent(id, ignored -> new ArrayList<>(2));
