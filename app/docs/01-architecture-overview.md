@@ -37,7 +37,8 @@ flowchart TD
 | 关注点 | 主所在包 | 入口符号 |
 |---|---|---|
 | 命令行 / 插件注册 | `gen` | `Main`、`Tools`、`Generators` |
-| 上下文 / 协调 / 缓存 | `ctx` | `Context`、`DirectoryStructure` |
+| 上下文 / 协调 / 缓存 | `ctx` | `Context`、`Watcher` |
+| 配置目录 / 文件命名 / 文件索引 | `layout` | `DirectoryStructure`、`SchemaLayout`、`JsonLayout` |
 | Schema 模型与解析 | `schema` | `CfgSchemas`、`CfgSchema`、`CfgSchemaResolver` |
 | Schema ↔ 数据对齐 | `schema` | `CfgSchemaAlignToData`、`CfgSchemaFilterByTag` |
 | CFG 文法（.cfg 读写） | `schema.cfg` | `Cfg.g4`、`CfgReader`、`CfgWriter` |
@@ -69,6 +70,8 @@ flowchart TD
 - **Data** 是原始单元格，只关心文件格式（Excel / CSV / JSON），不做类型解释；
 - **Value** 是类型化、外键已解析的运行时模型；
 - **Generate** 是消费方。
+
+`layout` 提供配置文件路径、命名规则和目录索引。各层都可以使用它，`layout` 不依赖 `configgen` 的其他包。
 
 分层让三种变化各自独立：换数据源只动 `data`；换目标语言只加一个 `gen*`；换校验策略只动 `value` / `tool`。
 

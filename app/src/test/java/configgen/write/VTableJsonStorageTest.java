@@ -1,5 +1,6 @@
 package configgen.write;
 
+import configgen.layout.JsonLayout;
 import com.sun.nio.file.ExtendedOpenOption;
 import configgen.ctx.Context;
 import configgen.util.Logger;
@@ -88,7 +89,7 @@ class VTableJsonStorageTest {
         Files.createDirectories(tempDir.resolve("buff"));
 
         // When
-        Path result = VTableJsonStorage.resolveJsonDirRelativePath("buff.skill", tempDir);
+        Path result = JsonLayout.newTableDirectory("buff.skill", tempDir);
 
         // Then: buff/_skill
         assertEquals(Path.of("buff").resolve("_skill"), result);
@@ -100,7 +101,7 @@ class VTableJsonStorageTest {
         Files.createDirectories(tempDir.resolve("skill_技能"));
 
         // When
-        Path result = VTableJsonStorage.resolveJsonDirRelativePath("skill.buff", tempDir);
+        Path result = JsonLayout.newTableDirectory("skill.buff", tempDir);
 
         // Then: "skill_技能/_buff"
         assertEquals(Path.of("skill_技能").resolve("_buff"), result);
@@ -111,7 +112,7 @@ class VTableJsonStorageTest {
         // Given: 没有模块目录
 
         // When
-        Path result = VTableJsonStorage.resolveJsonDirRelativePath("buff.skill", tempDir);
+        Path result = JsonLayout.newTableDirectory("buff.skill", tempDir);
 
         // Then: 回退旧格式 _buff_skill
         assertEquals(Path.of("_buff_skill"), result);
@@ -123,7 +124,7 @@ class VTableJsonStorageTest {
         Files.createDirectories(tempDir.resolve("a").resolve("b"));
 
         // When
-        Path result = VTableJsonStorage.resolveJsonDirRelativePath("a.b.c", tempDir);
+        Path result = JsonLayout.newTableDirectory("a.b.c", tempDir);
 
         // Then: a/b/_c
         assertEquals(Path.of("a").resolve("b").resolve("_c"), result);
@@ -135,7 +136,7 @@ class VTableJsonStorageTest {
         Files.createDirectories(tempDir.resolve("a"));
 
         // When
-        Path result = VTableJsonStorage.resolveJsonDirRelativePath("a.b.c", tempDir);
+        Path result = JsonLayout.newTableDirectory("a.b.c", tempDir);
 
         // Then: 链不完整，回退 _a_b_c
         assertEquals(Path.of("_a_b_c"), result);
@@ -146,7 +147,7 @@ class VTableJsonStorageTest {
         // Given: 表名没有点号
 
         // When
-        Path result = VTableJsonStorage.resolveJsonDirRelativePath("simpletable", tempDir);
+        Path result = JsonLayout.newTableDirectory("simpletable", tempDir);
 
         // Then: 回退 _simpletable
         assertEquals(Path.of("_simpletable"), result);
@@ -158,7 +159,7 @@ class VTableJsonStorageTest {
         Files.createDirectories(tempDir.resolve("a").resolve("b_数据"));
 
         // When
-        Path result = VTableJsonStorage.resolveJsonDirRelativePath("a.b.c", tempDir);
+        Path result = JsonLayout.newTableDirectory("a.b.c", tempDir);
 
         // Then: a/b_数据/_c
         assertEquals(Path.of("a").resolve("b_数据").resolve("_c"), result);

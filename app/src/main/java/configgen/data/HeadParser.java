@@ -95,10 +95,6 @@ public final class HeadParser {
         List<Integer> fieldIndices = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             String name = names.get(i);
-            if (name == null) {
-                stat.ignoredColumnCount++;
-                continue;
-            }
             name = getColumnName(name);
             if (name.isEmpty()) {
                 stat.ignoredColumnCount++;
@@ -123,15 +119,11 @@ public final class HeadParser {
         String comment = "";
         if (i < comments.size()) {
             comment = comments.get(i);
-            if (comment == null) {
-                comment = "";
-            } else {
-                comment = comment.replaceAll("\r\n|\r|\n", "--");
-                if (i == 0 && comment.startsWith("#")) { // 第一列是注释列
-                    comment = comment.substring(1);
-                }
-                comment = comment.trim();
+            comment = comment.replaceAll("\r\n|\r|\n", "--");
+            if (i == 0 && comment.startsWith("#")) { // 第一列是注释列
+                comment = comment.substring(1);
             }
+            comment = comment.trim();
         }
         if (comment.equalsIgnoreCase(name)) { // 忽略重复信息
             comment = "";

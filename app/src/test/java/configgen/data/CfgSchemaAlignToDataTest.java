@@ -1,7 +1,7 @@
 package configgen.data;
 
 import configgen.Resources;
-import configgen.ctx.DirectoryStructure;
+import configgen.layout.DirectoryStructure;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
 import configgen.util.Logger;

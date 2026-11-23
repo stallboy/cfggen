@@ -1,7 +1,7 @@
 package configgen.data;
 
 import configgen.Resources;
-import configgen.ctx.DirectoryStructure;
+import configgen.layout.DirectoryStructure;
 import configgen.schema.CfgSchemaErrs;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;

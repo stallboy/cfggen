@@ -1,5 +1,6 @@
 package configgen.data;
 
+import configgen.layout.TableFileName;
 import org.jspecify.annotations.Nullable;
 
 import configgen.util.Logger;
@@ -25,7 +26,7 @@ public enum ReadByFastExcel implements ExcelReader {
                 new ReadingOptions(true, false))) {
             for (Sheet sheet : wb.getSheets().toList()) {
                 String sheetName = sheet.getName().trim();
-                DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
+                TableFileName.TableNameIndex ti = TableFileName.getTableNameIndex(relativePath, sheetName);
                 if (ti == null) {
                     Logger.verbose2("%s [%s] 名字不符合规范，ignore！", path, sheetName);
                     stat.ignoredSheetCount++;

@@ -1,9 +1,9 @@
 package configgen.genjson;
 
 import configgen.ctx.Context;
-import configgen.data.DataUtil;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
+import configgen.layout.JsonLayout;
 import configgen.schema.HasMap;
 import configgen.util.CachedFiles;
 import configgen.util.Logger;
@@ -72,7 +72,7 @@ public class JsonGenerator extends GeneratorWithTag {
                 Logger.log("ignore gen json: table=%s has map!", table);
                 continue;
             }
-            Path directory = destination.resolve(outputTableDirectory(table));
+            Path directory = destination.resolve(JsonLayout.exportTableDirectory(table));
             if (!resolveOutputDirectory(directory).equals(directory)) {
                 throw new IOException("JSON export table directory must not redirect to another path: " + directory);
             }
@@ -96,11 +96,6 @@ public class JsonGenerator extends GeneratorWithTag {
         }
     }
 
-    private static Path outputTableDirectory(String table) {
-        Path name = Path.of(table.replace('.', '/'));
-        return name.resolveSibling("_" + name.getFileName());
-    }
-
     private static Path resolveOutputDirectory(Path path) throws IOException {
         if (Files.exists(path, LinkOption.NOFOLLOW_LINKS) || path.getParent() == null) {
             Path directory = path.toRealPath();
@@ -115,7 +110,7 @@ public class JsonGenerator extends GeneratorWithTag {
     private static Map<Path, VStruct> planRecords(VTable table, Path directory) throws IOException {
         Map<Path, VStruct> records = new LinkedHashMap<>();
         for (Map.Entry<Value, VStruct> entry : table.primaryKeyMap().entrySet()) {
-            Path fileName = DataUtil.jsonRecordFileName(entry.getKey().packStr(), directory.getFileSystem());
+            Path fileName = JsonLayout.jsonRecordFileName(entry.getKey().packStr(), directory.getFileSystem());
             Path path = directory.resolve(fileName);
             if (Files.exists(path, LinkOption.NOFOLLOW_LINKS) && !Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
                 throw new IOException("JSON export needs a regular file at " + path);

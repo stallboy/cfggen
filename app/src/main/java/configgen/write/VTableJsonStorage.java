@@ -2,10 +2,9 @@ package configgen.write;
 
 import org.jspecify.annotations.Nullable;
 
-import configgen.ctx.DirectoryStructure;
-import configgen.data.DataUtil;
 import configgen.data.Source.DFile;
-import configgen.util.FileNameUtil;
+import configgen.layout.DirectoryStructure;
+import configgen.layout.JsonLayout;
 import configgen.util.FileUtil;
 import configgen.util.CachedFiles;
 import configgen.value.CfgValue.VStruct;
@@ -15,7 +14,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Stream;
 
 /**
  * 对json类别的table做add、update、delete
@@ -63,12 +61,12 @@ public class VTableJsonStorage {
     private static Path recordPath(String table, String id, Path dataDir,
                                    DirectoryStructure directoryStructure) throws IOException {
         Path directory = relativeTableDirectory(table, dataDir, directoryStructure);
-        return directory.resolve(DataUtil.jsonRecordFileName(id, directory.getFileSystem()));
+        return directory.resolve(JsonLayout.jsonRecordFileName(id, directory.getFileSystem()));
     }
 
     private static Path relativeTableDirectory(String table, Path dataDir, DirectoryStructure directoryStructure) {
         Path existingDir = directoryStructure.getJsonTableDir(table);
-        return existingDir != null ? existingDir : resolveJsonDirRelativePath(table, dataDir);
+        return existingDir != null ? existingDir : JsonLayout.newTableDirectory(table, dataDir);
     }
 
     public static void writeRecord(VStruct record, Path path, CachedFiles cachedFiles) throws IOException {
@@ -78,55 +76,4 @@ public class VTableJsonStorage {
     private static byte[] recordBytes(VStruct record) {
         return ValueToJson.toJsonStr(record).getBytes(StandardCharsets.UTF_8);
     }
-
-    /// 根据表名和数据目录，解析 JSON 表目录的相对路径。
-    /// 优先使用嵌套路径（如 buff/_skill 或 a/b/_c），回退到旧格式（如 _buff_skill）。
-    /// 递归查找模块目录链：表名 a.b.c → 找 a/ 目录 → 在其中找 b/ → 拼接 _c
-    static Path resolveJsonDirRelativePath(String table, Path dataDir) {
-        int lastDotIdx = table.lastIndexOf('.');
-        if (lastDotIdx >= 0) {
-            String[] moduleParts = table.substring(0, lastDotIdx).split("\\.");
-            String subPart = table.substring(lastDotIdx + 1);
-
-            // 递归查找模块目录链
-            Path currentDir = dataDir;
-            Path relativePath = Path.of("");
-            boolean found = true;
-
-            for (String modulePart : moduleParts) {
-                String matchedDirName = findModuleDirName(currentDir, modulePart);
-                if (matchedDirName == null) {
-                    found = false;
-                    break;
-                }
-                relativePath = relativePath.resolve(matchedDirName);
-                currentDir = dataDir.resolve(relativePath);
-            }
-
-            if (found) {
-                return relativePath.resolve("_" + subPart);
-            }
-        }
-
-        // 回退旧格式：_module_sub
-        return Path.of(DataUtil.getJsonTableDirName(table));
-    }
-
-    /// 在目录中查找 codeName 匹配的子目录的实际目录名
-    private static @Nullable String findModuleDirName(Path dir, String modulePart) {
-        try (Stream<Path> paths = Files.list(dir)) {
-            for (Path p : paths.toList()) {
-                if (!Files.isDirectory(p)) {
-                    continue;
-                }
-                String codeName = FileNameUtil.getCodeName(p.getFileName().toString());
-                if (modulePart.equals(codeName)) {
-                    return p.getFileName().toString();
-                }
-            }
-        } catch (IOException ignored) {
-        }
-        return null;
-    }
-
 }

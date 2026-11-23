@@ -66,8 +66,8 @@ public record CfgValueParser(CfgSchema subSchema,
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
-                            env.jsonTableFiles(), table, errs, cfgValue.valueStat());
-                    VTable vTable = parser.parseTable();
+                            errs, cfgValue.valueStat());
+                    VTable vTable = parser.parseTable(env.jsonFilesByTable().apply(name));
                     TextValue.setTranslatedForTable(vTable, env.nullableTranslationCatalog());
                     if (Logger.isProfileEnabled()) {
                         Logger.log("%40s: %d", name, System.currentTimeMillis() - start);

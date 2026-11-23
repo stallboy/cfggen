@@ -1,7 +1,7 @@
 package configgen.data;
 
 import configgen.Resources;
-import configgen.ctx.DirectoryStructure;
+import configgen.layout.DirectoryStructure;
 import configgen.schema.CfgSchemaErrs;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

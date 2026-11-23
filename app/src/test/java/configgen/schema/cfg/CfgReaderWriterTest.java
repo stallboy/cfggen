@@ -1,6 +1,8 @@
 package configgen.schema.cfg;
 
 import configgen.Resources;
+import configgen.layout.DirectoryStructure;
+import configgen.layout.SchemaLayout;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemas;
 import configgen.util.Logger;
@@ -73,6 +75,40 @@ class CfgReaderWriterTest {
 
         assertEquals("// Root notes\n", Files.readString(root));
         assertEquals("// Module notes\n", Files.readString(module));
+    }
+
+    @Test
+    void discoversModuleWithoutRootSchemaInAnOrdinaryDirectory(@TempDir Path dir) throws IOException {
+        Path module = Files.createDirectory(dir.resolve("skill")).resolve("skill.cfg");
+        Files.writeString(module, "struct Buff { id:int; }");
+
+        DirectoryStructure structure = new DirectoryStructure(dir);
+        assertEquals(module, structure.getCfgFilePathByPkgName("skill"));
+        assertEquals("skill.Buff", CfgSchemas.readFromDir(structure.getCfgFiles()).items().getFirst().fullName());
+        assertThrows(IllegalArgumentException.class, () -> CfgSchemas.readFromRoot(dir));
+    }
+
+    @Test
+    void writesNestedModulesBackToDirectoriesWithChineseSuffixes(@TempDir Path dir) throws IOException {
+        Path root = SchemaLayout.cfgRootFile(dir);
+        Files.writeString(root, "//Root notes\n");
+        Path parent = Files.createDirectory(dir.resolve("skill_技能"));
+        Path outerModule = parent.resolve("skill.cfg");
+        Files.writeString(outerModule, "//Skill notes\n");
+        Path innerModule = Files.createDirectory(parent.resolve("buff_效果")).resolve("buff.cfg");
+        Files.writeString(innerModule, "//Buff notes\n");
+
+        DirectoryStructure structure = new DirectoryStructure(dir);
+        assertEquals(outerModule, structure.getCfgFilePathByPkgName("skill"));
+        assertEquals(innerModule, structure.getCfgFilePathByPkgName("skill.buff"));
+        CfgSchema schema = CfgSchemas.readFromDir(structure.getCfgFiles());
+        CfgSchemas.writeToDir(root, schema);
+
+        assertEquals("// Skill notes\n", Files.readString(outerModule));
+        assertEquals("// Buff notes\n", Files.readString(innerModule));
+        assertFalse(Files.exists(dir.resolve("skill")));
+        assertFalse(Files.exists(parent.resolve("buff")));
+        assertEquals(schema.fileEndComments(), CfgSchemas.readFromRoot(dir).fileEndComments());
     }
 
     @Test

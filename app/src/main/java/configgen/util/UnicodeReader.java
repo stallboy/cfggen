@@ -70,12 +70,7 @@ public class UnicodeReader extends Reader {
         }
 
         // Use given encoding
-        if (encoding == null) {
-            internalInputStreamReader = new InputStreamReader(pushbackStream);
-        } else {
-            internalInputStreamReader = new InputStreamReader(pushbackStream,
-                    encoding);
-        }
+        internalInputStreamReader = new InputStreamReader(pushbackStream, encoding);
     }
 
     public Charset getDefaultEncoding() {

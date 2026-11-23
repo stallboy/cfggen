@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
@@ -15,6 +16,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  *
  *   gen（含各语言生成器、write、editorserver、mcpserver、tool）
  *     -&gt; ctx -&gt; value -&gt; data -&gt; schema -&gt; util
+ *     layout 可被各层使用，且不依赖 configgen 的其他包
  *     value 也可依赖 i18n（i18n 与 data 平级，仅依赖 schema/util）
  *     naming 仅依赖 schema/util（跨语言生成命名契约），位于 schema 之上，
  *     可被各 gen* 与 value 使用
@@ -45,7 +47,15 @@ class ArchitectureTest {
     }
 
     @Test
-    void schema是最底层_不得依赖其他任何业务包() {
+    void layout不依赖其他configgen包() {
+        noClasses().that().resideInAPackage("configgen.layout")
+                .should().dependOnClassesThat(resideInAnyPackage("configgen..")
+                        .and(resideInAnyPackage("configgen.layout").negate()))
+                .check(CLASSES);
+    }
+
+    @Test
+    void schema不得依赖上层业务包() {
         noClasses().that().resideInAPackage("..configgen.schema..")
                 .should().dependOnClassesThat().resideInAnyPackage(
                         pkgs("..configgen.data..", "..configgen.i18n..", "..configgen.value..", "..configgen.ctx.."))

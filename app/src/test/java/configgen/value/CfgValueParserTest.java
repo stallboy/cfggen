@@ -834,7 +834,7 @@ class CfgValueParserTest {
 
     private static CfgValueParser parserOf(Context ctx, CfgValueErrs errs) {
         ValueEnv env = new ValueEnv(ctx.cfgSchema(), ctx.cfgData(), ctx.contextCfg().headRow(),
-                ctx.translationCatalog(), ctx.sourceStructure());
+                ctx.translationCatalog(), ctx.sourceStructure()::getJsonFilesByTable);
         return new CfgValueParser(ctx.cfgSchema(), env, errs);
     }
 

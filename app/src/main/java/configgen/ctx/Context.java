@@ -3,6 +3,8 @@ package configgen.ctx;
 import org.jspecify.annotations.Nullable;
 import configgen.data.*;
 import configgen.i18n.*;
+import configgen.layout.DirectoryStructure;
+import configgen.layout.SchemaLayout;
 import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.CfgSchemas;
@@ -137,7 +139,7 @@ public class Context {
             }
             for (String table : sourceStructure.jsonTableNames()) {
                 var tableSchema = sharedSchema.findTable(table);
-                if (!sourceStructure.jsonFilesOf(table).isEmpty() && (tableSchema == null || !tableSchema.meta().isJson()))
+                if (!sourceStructure.getJsonFilesByTable(table).isEmpty() && (tableSchema == null || !tableSchema.meta().isJson()))
                     throw new IllegalArgumentException("Unknown JSON table outside shared schema: " + table);
             }
             Context context = new Context(cfg, sourceStructure, i18nState, csvReader, sharedSchema, cfgData, true);
@@ -147,7 +149,7 @@ public class Context {
         boolean schemaRewritten = !loaded.isAligned();
         if (schemaRewritten) {
             Logger.profile("schema aligned by data");
-            CfgSchemas.writeToDir(sourceStructure.getRootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME),
+            CfgSchemas.writeToDir(SchemaLayout.cfgRootFile(sourceStructure.getRootDir()),
                     loaded.alignedSchema());
             sourceStructure = sourceStructure.reload();
             Logger.profile("schema write");
@@ -277,7 +279,8 @@ public class Context {
         }
 
         CfgValueErrs valueErrs = CfgValueErrs.of();
-        ValueEnv env = new ValueEnv(cfgSchema, cfgData, contextCfg.headRow(), translationCatalog(), sourceStructure);
+        ValueEnv env = new ValueEnv(cfgSchema, cfgData, contextCfg.headRow(), translationCatalog(),
+                sourceStructure::getJsonFilesByTable);
         CfgValueParser clientValueParser = new CfgValueParser(tagSchema, env, valueErrs);
         CfgValue cfgValue = clientValueParser.parseCfgValue();
         String prefix = tag == null ? "value" : String.format("[%s] filtered value", tag);

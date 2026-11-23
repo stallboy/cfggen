@@ -1,5 +1,6 @@
 package configgen.write;
 
+import configgen.layout.FileFormat;
 import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.data.CfgData.DRowId;
@@ -7,7 +8,6 @@ import configgen.data.Source;
 import configgen.value.CfgValue.VStruct;
 
 import java.nio.file.Path;
-import java.util.Locale;
 
 /**
  * 表格文件定位工具类
@@ -58,8 +58,8 @@ public class TableFileLocator {
         Path filePath = dataDir.resolve(fileName);
 
         // 根据文件扩展名判断文件类型
-        String toLowerFileName = fileName.toLowerCase(Locale.ROOT);
-        if (toLowerFileName.endsWith(".xlsx") || toLowerFileName.endsWith(".xls")) {
+        FileFormat format = FileFormat.getFileFormat(fileName);
+        if (format == FileFormat.EXCEL) {
             try {
                 if (isColumnMode) {
                     return new ColumnModeExcelTableFile(filePath, sheetName, headRow);
@@ -69,7 +69,7 @@ public class TableFileLocator {
             } catch (Exception e) {
                 throw new RuntimeException("Failed to create ExcelTableFile: " + filePath, e);
             }
-        } else if (toLowerFileName.endsWith(".csv")) {
+        } else if (format == FileFormat.CSV) {
             try {
                 String encoding = context.contextCfg().csvDefaultEncoding();
                 if (isColumnMode) {

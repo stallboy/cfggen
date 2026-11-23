@@ -1,16 +1,15 @@
-package configgen.data;
+package configgen.layout;
 
-import configgen.util.FileNameUtil;
-import configgen.data.DataUtil.TableNameIndex;
+import configgen.layout.TableFileName.TableNameIndex;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 
-import static configgen.data.DataUtil.getFileFormat;
-import static configgen.data.DataUtil.getTableNameIndex;
+import static configgen.layout.FileFormat.getFileFormat;
+import static configgen.layout.TableFileName.getTableNameIndex;
 import static org.junit.jupiter.api.Assertions.*;
 
-class DataUtilTest {
+class LayoutNamingTest {
 
     @Test
     public void getCodeName_IgnoreFirstChineseCharAndAfter() {
@@ -85,10 +84,10 @@ class DataUtilTest {
 
     @Test
     void getFileFormat_normal() {
-        assertEquals(DataUtil.FileFmt.EXCEL, getFileFormat(Path.of("../n/m/item.xlsx")));
-        assertEquals(DataUtil.FileFmt.EXCEL, getFileFormat(Path.of("aa.xls")));
+        assertEquals(FileFormat.EXCEL, getFileFormat(Path.of("../n/m/item.xlsx")));
+        assertEquals(FileFormat.EXCEL, getFileFormat(Path.of("aa.xls")));
 
-        assertEquals(DataUtil.FileFmt.CSV, getFileFormat(Path.of("../n/m/item.csv")));
+        assertEquals(FileFormat.CSV, getFileFormat(Path.of("../n/m/item.csv")));
 
         assertNull(getFileFormat(Path.of("aa.txt")));
     }
@@ -98,35 +97,37 @@ class DataUtilTest {
         assertNull(getFileFormat(Path.of("aa.bin")));
     }
 
-    // --- getSubTableNameIfJsonSubDir ---
+    // --- tableNameForDirectory ---
 
     @Test
-    void getSubTableNameIfJsonSubDir_normal() {
-        assertEquals("buff", DataUtil.getSubTableNameIfJsonSubDir("_buff"));
-        assertEquals("skill", DataUtil.getSubTableNameIfJsonSubDir("_skill"));
-        assertEquals("instancelogic", DataUtil.getSubTableNameIfJsonSubDir("_instancelogic"));
+    void tableNameForDirectory_normal() {
+        assertEquals("buff", JsonLayout.tableNameForDirectory("", "_buff"));
+        assertEquals("skill", JsonLayout.tableNameForDirectory("", "_skill"));
+        assertEquals("instancelogic", JsonLayout.tableNameForDirectory("", "_instancelogic"));
+        assertEquals("skill.buff.over_time", JsonLayout.tableNameForDirectory("skill.buff.", "_over_time"));
+        assertEquals("skill.buff.over.time", JsonLayout.tableNameForDirectory("", "_skill_buff_over_time"));
     }
 
     @Test
-    void getSubTableNameIfJsonSubDir_null_whenNoUnderscorePrefix() {
-        assertNull(DataUtil.getSubTableNameIfJsonSubDir("buff"));
-        assertNull(DataUtil.getSubTableNameIfJsonSubDir("skill"));
+    void tableNameForDirectory_null_whenNoUnderscorePrefix() {
+        assertNull(JsonLayout.tableNameForDirectory("", "buff"));
+        assertNull(JsonLayout.tableNameForDirectory("", "skill"));
     }
 
     @Test
-    void getSubTableNameIfJsonSubDir_null_whenEmptyAfterUnderscore() {
-        assertNull(DataUtil.getSubTableNameIfJsonSubDir("_"));
+    void tableNameForDirectory_null_whenEmptyAfterUnderscore() {
+        assertNull(JsonLayout.tableNameForDirectory("", "_"));
     }
 
     @Test
-    void getSubTableNameIfJsonSubDir_null_whenNotStartWithAz() {
-        assertNull(DataUtil.getSubTableNameIfJsonSubDir("_1buff"));
-        assertNull(DataUtil.getSubTableNameIfJsonSubDir("_中name"));
+    void tableNameForDirectory_null_whenNotStartWithAz() {
+        assertNull(JsonLayout.tableNameForDirectory("", "_1buff"));
+        assertNull(JsonLayout.tableNameForDirectory("", "_中name"));
     }
 
     @Test
-    void getSubTableNameIfJsonSubDir_null_whenContainsChinese() {
-        assertNull(DataUtil.getSubTableNameIfJsonSubDir("_buff技能"));
+    void tableNameForDirectory_null_whenContainsChinese() {
+        assertNull(JsonLayout.tableNameForDirectory("", "_buff技能"));
     }
 
 }

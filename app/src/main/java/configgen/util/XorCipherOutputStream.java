@@ -13,7 +13,7 @@ public class XorCipherOutputStream extends FilterOutputStream {
 
     public XorCipherOutputStream(OutputStream out, String cipher) {
         super(out);
-        if (cipher == null || cipher.isEmpty()) {
+        if (cipher.isEmpty()) {
             throw new IllegalArgumentException("Cipher cannot be null or empty");
         }
         this.cipherBytes = cipher.getBytes(StandardCharsets.UTF_8);

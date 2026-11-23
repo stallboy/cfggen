@@ -1,8 +1,9 @@
 package configgen.data;
 
+import configgen.layout.ExcelFileInfo;
 import org.jspecify.annotations.Nullable;
 
-import configgen.data.DataUtil.TableNameIndex;
+import configgen.layout.TableFileName.TableNameIndex;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemaErrs;
 import configgen.schema.SchemaUtil;
@@ -19,7 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static configgen.data.CfgData.DRawSheet;
-import static configgen.data.DataUtil.getTableNameIndex;
+import static configgen.layout.TableFileName.getTableNameIndex;
 
 
 public record CfgDataReader(HeadRow headRow,

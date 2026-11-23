@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import configgen.layout.CfgFileInfo;
+import configgen.layout.SchemaLayout;
 import configgen.schema.cfg.CfgReader;
 import configgen.schema.cfg.CfgUtil;
 import configgen.schema.cfg.CfgWriter;
@@ -7,6 +9,7 @@ import configgen.util.FileUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,11 +25,13 @@ public class CfgSchemas {
 
     public static CfgSchema readFromRoot(Path fileOrDirectory) {
         Path file = fileOrDirectory.toAbsolutePath().normalize();
-        if (java.nio.file.Files.isDirectory(file)) file = file.resolve("config.cfg");
-        if (!java.nio.file.Files.isRegularFile(file)) throw new IllegalArgumentException("Shared schema does not exist: " + file);
-        Map<String, CfgFileInfo> files = new java.util.LinkedHashMap<>();
-        CfgUtil.findConfigFilesRecursively(file, "cfg", "", java.util.Objects.requireNonNull(file.getParent()), files);
-        CfgSchema schema = readFromDir(files.values());
+        if (Files.isDirectory(file)) {
+            file = SchemaLayout.cfgRootFile(file);
+        }
+        if (!Files.isRegularFile(file)) {
+            throw new IllegalArgumentException("Shared schema does not exist: " + file);
+        }
+        CfgSchema schema = readFromDir(SchemaLayout.findCfgFiles(file));
         schema.resolve().checkErrors("shared schema");
         return schema;
     }
@@ -63,7 +68,7 @@ public class CfgSchemas {
         for (Map.Entry<String, CfgSchema> entry : modules.entrySet()) {
             String ns = entry.getKey();
             CfgSchema cfg = entry.getValue();
-            Path dst = CfgUtil.getCfgFilePathByNamespace(ns, absoluteDst);
+            Path dst = SchemaLayout.cfgFileForNamespace(ns, absoluteDst);
             writeToOneFile(dst, cfg);
         }
     }

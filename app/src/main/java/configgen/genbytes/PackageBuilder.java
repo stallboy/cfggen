@@ -57,9 +57,13 @@ final class PackageBuilder {
             var source = ctx.cfgData().getDTable(table.name());
             if (source != null) {
                 local.put(table.name(), new VTableParser(table, source, java.util.Objects.requireNonNull(ctx.cfgSchema().findTable(table.name())), ctx.contextCfg().headRow(), errors).parseRecords());
-            } else if (!ctx.sourceStructure().jsonFilesOf(table.name()).isEmpty()) {
-                local.put(table.name(), new VTableJsonParser(table, schema.isPartial(), ctx.sourceStructure(),
-                        java.util.Objects.requireNonNull(ctx.cfgSchema().findTable(table.name())), errors, new CfgValueStat()).parseRecords());
+                continue;
+            }
+
+            var jsonFiles = ctx.sourceStructure().getJsonFilesByTable(table.name());
+            if (!jsonFiles.isEmpty()) {
+                var parser = new VTableJsonParser(table, schema.isPartial(), errors, new CfgValueStat());
+                local.put(table.name(), parser.parseRecords(jsonFiles));
             } else if (packs.isEmpty() && table.meta().getEnumValues() != null) {
                 local.put(table.name(), new VTableCreator(table, errors).create(List.of()).valueList());
             }

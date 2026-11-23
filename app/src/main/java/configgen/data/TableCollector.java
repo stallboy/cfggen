@@ -1,5 +1,7 @@
 package configgen.data;
 
+import configgen.layout.ExcelFileInfo;
+import configgen.layout.TableFileName;
 import org.dhatim.fastexcel.reader.ReadableWorkbook;
 import org.dhatim.fastexcel.reader.ReadingOptions;
 import org.dhatim.fastexcel.reader.Sheet;
@@ -16,7 +18,7 @@ public class TableCollector {
         for (ExcelFileInfo df : excelFiles) {
             switch (df.fmt()) {
                 case CSV -> {
-                    DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(df.relativePath());
+                    TableFileName.TableNameIndex ti = TableFileName.getTableNameIndex(df.relativePath());
                     if (ti != null) {
                         tableSet.add(ti.tableName());
                     }
@@ -27,7 +29,7 @@ public class TableCollector {
                             new ReadingOptions(true, false))) {
                         for (Sheet sheet : wb.getSheets().toList()) {
                             String sheetName = sheet.getName().trim();
-                            DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(df.relativePath(), sheetName);
+                            TableFileName.TableNameIndex ti = TableFileName.getTableNameIndex(df.relativePath(), sheetName);
                             if (ti != null) {
                                 tableSet.add(ti.tableName());
                             }

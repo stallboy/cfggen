@@ -2,6 +2,7 @@ package configgen.ctx;
 
 import org.jspecify.annotations.Nullable;
 
+import configgen.layout.FileFormat;
 import configgen.util.Logger;
 
 import java.io.IOException;
@@ -13,8 +14,10 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static configgen.data.DataUtil.*;
-import static configgen.util.FileNameUtil.getCodeName;
+import static configgen.layout.FileFormat.getFileFormat;
+import static configgen.layout.FileNameUtil.getCodeName;
+import static configgen.layout.FileNameUtil.isFileIgnored;
+import static configgen.layout.JsonLayout.isTableDirForJson;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 /**
@@ -243,12 +246,12 @@ public class Watcher {
         }
 
         Path fileName = relativePath.getFileName();
-        FileFmt fmt = getFileFormat(fileName);
+        FileFormat fmt = getFileFormat(fileName);
         if (fmt == null) {
             return;
         }
 
-        if (fmt == FileFmt.JSON) {
+        if (fmt == FileFormat.JSON) {
             Path parent = relativePath.getParent();
             if (parent == null || !isTableDirForJson(parent.getFileName().toString())) {
                 return;

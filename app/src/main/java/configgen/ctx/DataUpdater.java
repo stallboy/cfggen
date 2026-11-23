@@ -1,12 +1,12 @@
 package configgen.ctx;
 
+import configgen.layout.FileFormat;
 import configgen.data.CfgData;
 import configgen.data.CfgData.DRawSheet;
 import configgen.data.CfgData.DTable;
 import configgen.data.CellParser;
 import configgen.data.CfgDataStat;
-import configgen.data.DataUtil;
-import configgen.data.DataUtil.TableNameIndex;
+import configgen.layout.TableFileName.TableNameIndex;
 import configgen.data.HeadParser;
 import configgen.data.HeadRow;
 import configgen.data.ReadResult;
@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-import static configgen.data.DataUtil.getTableNameIndex;
+import static configgen.layout.TableFileName.getTableNameIndex;
 
 public class DataUpdater {
 
@@ -35,7 +35,7 @@ public class DataUpdater {
         for (DRawSheet sheet : dTable.rawSheets()) {
             Path path = rootDir.resolve(sheet.relativeFilePath());
             Path relativePath = Path.of(sheet.relativeFilePath());
-            DataUtil.FileFmt fmt = DataUtil.getFileFormat(path);
+            FileFormat fmt = FileFormat.getFileFormat(path);
             if (fmt == null) {
                 throw new IllegalArgumentException("Unknown file: " + relativePath);
             }

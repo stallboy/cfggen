@@ -1,9 +1,9 @@
 package configgen.tool;
 
-
-import configgen.ctx.DirectoryStructure;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
+import configgen.layout.DirectoryStructure;
+import configgen.layout.SchemaLayout;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemas;
 import configgen.schema.cfg.XmlReader;
@@ -22,7 +22,7 @@ public class XmlToCfgTool extends Tool {
     @Override
     public void call() {
         CfgSchema cfg = XmlReader.readFromDir(dataDir);
-        Path cfgPath = dataDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME);
+        Path cfgPath = SchemaLayout.cfgRootFile(dataDir);
         CfgSchemas.writeToDir(cfgPath, cfg);
 
         DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);

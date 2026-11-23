@@ -1,5 +1,7 @@
 package configgen.ctx;
 
+import configgen.layout.SchemaLayout;
+import configgen.layout.DirectoryStructure;
 import configgen.util.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -62,7 +64,7 @@ class WatcherBehaviorTest {
 
     @Test
     void detectsRootSchemaChange() throws IOException, InterruptedException {
-        Path schema = Files.writeString(tempDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME), "");
+        Path schema = Files.writeString(SchemaLayout.cfgRootFile(tempDir), "");
         Watcher watcher = new Watcher(tempDir);
         watcher.start();
         try {

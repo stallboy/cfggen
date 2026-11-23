@@ -1,4 +1,4 @@
-package configgen.data;
+package configgen.layout;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -6,7 +6,7 @@ import java.util.Objects;
 public record ExcelFileInfo(long lastModified,
                             Path path,
                             Path relativePath,
-                            DataUtil.FileFmt fmt) {
+                            FileFormat fmt) {
     public ExcelFileInfo {
         Objects.requireNonNull(path);
         Objects.requireNonNull(relativePath);

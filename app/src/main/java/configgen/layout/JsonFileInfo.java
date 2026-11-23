@@ -1,4 +1,4 @@
-package configgen.data;
+package configgen.layout;
 
 import java.nio.file.Path;
 
@@ -13,7 +13,7 @@ public record JsonFileInfo(long lastModified,
         int id = -1;
         boolean isIntegerId = false;
         try {
-            id = Integer.parseInt(fn.substring(0, fn.length() - 5));
+            id = Integer.parseInt(JsonLayout.recordId(fn));
             isIntegerId = true;
         } catch (NumberFormatException ignored) {
         }

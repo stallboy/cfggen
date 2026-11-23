@@ -1,5 +1,7 @@
 package configgen.data;
 
+import configgen.layout.FileFormat;
+import configgen.layout.ExcelFileInfo;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -66,7 +68,7 @@ class RawRowContractTest {
 
         var reader = new CfgDataReader(HeadRows.A2_Default, new ReadCsv("UTF-8"), ReadByFastExcel.INSTANCE);
         var data = reader.readCfgData(List.of(new ExcelFileInfo(0, file, file.getFileName(),
-                DataUtil.FileFmt.EXCEL)), null, configgen.schema.CfgSchemaErrs.of());
+                FileFormat.EXCEL)), null, configgen.schema.CfgSchemaErrs.of());
         var table = data.tables().get("empty");
 
         assertNotNull(table);

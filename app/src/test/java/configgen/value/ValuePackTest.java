@@ -301,7 +301,7 @@ class ValuePackTest {
         Context ctx = Context.load(tempDir);
         CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser parser = new CfgValueParser(ctx.cfgSchema(),
-                new ValueEnv(ctx.cfgSchema(), ctx.cfgData(), ctx.contextCfg().headRow(), ctx.translationCatalog(), ctx.sourceStructure()), valueErrs);
+                new ValueEnv(ctx.cfgSchema(), ctx.cfgData(), ctx.contextCfg().headRow(), ctx.translationCatalog(), ctx.sourceStructure()::getJsonFilesByTable), valueErrs);
         CfgValue cfgValue = parser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());

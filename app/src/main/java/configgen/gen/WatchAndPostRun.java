@@ -3,7 +3,7 @@ package configgen.gen;
 import org.jspecify.annotations.Nullable;
 
 import configgen.ctx.Context;
-import configgen.ctx.DirectoryStructure;
+import configgen.layout.DirectoryStructure;
 import configgen.ctx.StateCoordinator;
 import configgen.ctx.StateCoordinator.EditOutcome;
 import configgen.ctx.WaitWatcher;

@@ -1,5 +1,6 @@
 package configgen.data;
 
+import configgen.layout.TableFileName;
 import org.jspecify.annotations.Nullable;
 
 import configgen.data.ReadResult.OneSheet;
@@ -32,7 +33,7 @@ public enum ReadByPoi implements ExcelReader {
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
             for (org.apache.poi.ss.usermodel.Sheet sheet : workbook) {
                 String sheetName = sheet.getSheetName().trim();
-                DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
+                TableFileName.TableNameIndex ti = TableFileName.getTableNameIndex(relativePath, sheetName);
                 if (ti == null) {
                     Logger.verbose2("%s [%s] 名字不符合规范，ignore！", path, sheetName);
                     stat.ignoredSheetCount++;

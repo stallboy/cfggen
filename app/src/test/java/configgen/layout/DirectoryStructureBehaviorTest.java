@@ -1,10 +1,8 @@
-package configgen.ctx;
+package configgen.layout;
 
 import configgen.Resources;
 import configgen.TestCtx;
-import configgen.data.ExcelFileInfo;
-import configgen.data.JsonFileInfo;
-import configgen.schema.CfgFileInfo;
+import configgen.ctx.Context;
 import configgen.util.Logger;
 import configgen.write.AddOrUpdateService;
 import org.junit.jupiter.api.AfterAll;
@@ -160,12 +158,16 @@ class DirectoryStructureBehaviorTest {
 
         DirectoryStructure structure = new DirectoryStructure(tempDir);
 
+        var previousFiles = structure.getJsonFilesByTable("user");
+
         // When: 移除 JSON 文件
         structure.removeJsonFile("user", relativePath);
 
         // Then: 应该成功移除 JSON 文件
         Collection<JsonFileInfo> jsonFiles = structure.getJsonFilesByTable("user");
         assertTrue(jsonFiles.isEmpty(), "移除后应该返回空集合");
+        assertEquals(relativePath, previousFiles.getFirst().relativePath());
+        assertEquals(Path.of("_user"), structure.getJsonTableDir("user"));
     }
 
     @Test

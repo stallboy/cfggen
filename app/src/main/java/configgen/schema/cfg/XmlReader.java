@@ -2,7 +2,8 @@ package configgen.schema.cfg;
 
 import org.jspecify.annotations.Nullable;
 
-import configgen.schema.CfgFileInfo;
+import configgen.layout.CfgFileInfo;
+import configgen.layout.SchemaLayout;
 import configgen.schema.CommentData;
 import configgen.util.Logger;
 import configgen.schema.*;
@@ -24,11 +25,7 @@ public enum XmlReader {
 
     public static CfgSchema readFromDir(Path rootDir) {
         CfgSchema destination = CfgSchema.of();
-        Map<String, CfgFileInfo> allXmlFiles = new LinkedHashMap<>();
-        CfgUtil.findConfigFilesRecursively(rootDir.resolve("config.xml"),
-                "xml", "", rootDir, allXmlFiles);
-
-        for (CfgFileInfo c : allXmlFiles.values()) {
+        for (CfgFileInfo c : SchemaLayout.findXmlFiles(rootDir)) {
             INSTANCE.readTo(destination, c.path(), c.pkgNameDot());
         }
         return destination;

@@ -41,7 +41,7 @@ flowchart TD
     end
 ```
 
-- **阶段 1**：遍历数据文件，csv 走 `ReadCsv`、excel 走 `ExcelReader`，并发读出 `DRawSheet`，按表名合并进 `DTable`。文件名 / sheet 名不符合命名规范（`DataUtil.getTableNameIndex` 解析不出表名）的**直接忽略**并计入统计。
+- **阶段 1**：遍历数据文件，csv 走 `ReadCsv`、excel 走 `ExcelReader`，并发读出 `DRawSheet`，按表名合并进 `DTable`。文件名 / sheet 名不符合命名规范（`TableFileName.getTableNameIndex` 解析不出表名）的**直接忽略**并计入统计。
 - **阶段 2**：对每张表并发跑 `HeadParser`（建表头）+ `CellParser`（建单元格行）。是否列模式（`isColumnMode`）从 schema 查。
 
 两阶段都用同一个工作窃取线程池 + `invokeAll`（保合并顺序）。

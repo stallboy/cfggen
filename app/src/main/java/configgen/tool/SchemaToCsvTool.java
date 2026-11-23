@@ -1,9 +1,10 @@
 package configgen.tool;
 
-import configgen.ctx.DirectoryStructure;
 import configgen.data.TableCollector;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
+import configgen.layout.DirectoryStructure;
+import configgen.layout.TableFileName;
 import configgen.schema.*;
 import configgen.util.CSVUtil;
 import configgen.util.Logger;
@@ -47,7 +48,7 @@ public class SchemaToCsvTool extends Tool {
                 continue;
             }
 
-            Path csvPath = java.util.Objects.requireNonNull(Path.of(fromCfgFilepath).getParent()).resolve(table.lastName() + ".csv");
+            Path csvPath = java.util.Objects.requireNonNull(Path.of(fromCfgFilepath).getParent()).resolve(TableFileName.csvFileName(table.lastName()));
             SchemaToCsvHeader headerGen = new SchemaToCsvHeader();
             headerGen.flattenFields(table.fields());
 

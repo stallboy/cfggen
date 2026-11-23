@@ -1,6 +1,6 @@
 package configgen.tool;
 
-import configgen.ctx.DirectoryStructure;
+import configgen.layout.DirectoryStructure;
 import configgen.data.*;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;

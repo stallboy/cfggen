@@ -1,4 +1,4 @@
-package configgen.schema;
+package configgen.layout;
 
 import java.nio.file.Path;
 
