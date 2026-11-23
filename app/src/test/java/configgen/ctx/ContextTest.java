@@ -2,6 +2,8 @@ package configgen.ctx;
 
 import configgen.Resources;
 import configgen.TestCtx;
+import configgen.schema.CfgSchemaErrs;
+import configgen.schema.CfgSchemaException;
 import configgen.schema.cfg.CfgReader;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
@@ -67,12 +70,34 @@ class ContextTest {
     }
 
     @Test
+    void loadAndReloadKeepTheSchemaAsWrittenWhenHeadersDiffer() throws Exception {
+        String schemaText = "table user[id] { id:int; }";
+        Path schema = tempDir.resolve("config.cfg");
+        Path csv = tempDir.resolve("user.csv");
+        Files.writeString(schema, schemaText);
+        Files.writeString(csv, "ID,Extra\nid,extra\n1,ignored\n");
+
+        Context context = Context.load(tempDir);
+        assertFalse(context.usesSharedSchema());
+        assertEquals(List.of("id"), requireNonNull(context.cfgSchema().findTable("user"))
+                .fields().stream().map(field -> field.name()).toList());
+        assertEquals(schemaText, Files.readString(schema));
+
+        Files.writeString(csv, "Identifier,Extra\nid,extra\n1,ignored\n2,also ignored\n");
+        Context.LoadResult reloaded = context.reloadFrom(context.sourceStructure().reload());
+        assertFalse(reloaded.schemaRewritten());
+        assertEquals(context.cfgSchema(), reloaded.context().cfgSchema());
+        assertEquals(2, requireNonNull(reloaded.context().cfgData().getDTable("user")).rows().size());
+        assertEquals(schemaText, Files.readString(schema));
+    }
+
+    @Test
     void reloadReportsSchemaRewriteOnlyForTheLoadThatPerformedIt() throws Exception {
         Path schema = tempDir.resolve("config.cfg");
         Path csv = tempDir.resolve("user.csv");
         Files.writeString(schema, "table user[id] { id:int; }");
         Files.writeString(csv, "ID\nid\n1\n");
-        Context context = Context.load(tempDir);
+        Context context = Context.loadAndAlignSchema(Context.ContextCfg.of(tempDir));
 
         Files.writeString(csv, "Identifier\nid\n1\n");
         Context.LoadResult fixed = context.reloadFrom(context.sourceStructure().reload());
@@ -81,6 +106,43 @@ class ContextTest {
         assertTrue(Files.readString(schema).contains("Identifier"));
         Context reloaded = fixed.context();
         assertFalse(reloaded.reloadFrom(reloaded.sourceStructure().reload()).schemaRewritten());
+    }
+
+    @Test
+    void fixedSchemaReportsHeaderAndDataSourceErrorsTogether() throws Exception {
+        String schemaText = """
+                table normal[id] { id:int; }
+                table jsononly[id] (json) { id:int; }
+                """;
+        var schema = CfgReader.parse(schemaText);
+        schema.resolve().checkErrors();
+        Files.writeString(tempDir.resolve("normal.csv"), "ID\nid\n1\n");
+        Files.writeString(tempDir.resolve("normal_1.csv"), "Other\nother\n2\n");
+        Files.writeString(tempDir.resolve("unknown.csv"), "ID\nid\n1\n");
+        Files.writeString(tempDir.resolve("jsononly.csv"), "ID\nid\n1\n");
+        for (String table : List.of("normal", "undeclared")) {
+            Path dir = Files.createDirectory(tempDir.resolve("_" + table));
+            Files.writeString(dir.resolve("1.json"), "{\"id\":1}");
+        }
+        Files.createDirectory(tempDir.resolve("_empty"));
+
+        var failure = assertThrows(CfgSchemaException.class,
+                () -> Context.load(Context.ContextCfg.of(tempDir), schema));
+        var errs = failure.getErrs().errs();
+        assertEquals(5, errs.size());
+        assertTrue(errs.stream().anyMatch(CfgSchemaErrs.SplitDataHeaderNotEqual.class::isInstance));
+        assertTrue(errs.contains(new CfgSchemaErrs.DataTableNotInSchema("unknown",
+                List.of("unknown.csv"))));
+        assertTrue(errs.contains(new CfgSchemaErrs.JsonTableNotSupportExcel("jsononly",
+                List.of("jsononly.csv"))));
+        assertTrue(errs.contains(new CfgSchemaErrs.DataTableNotMarkedJson("normal",
+                List.of(Path.of("_normal", "1.json").toString()))));
+        assertTrue(errs.contains(new CfgSchemaErrs.DataTableNotInSchema("undeclared",
+                List.of(Path.of("_undeclared", "1.json").toString()))));
+
+        Files.writeString(tempDir.resolve("config.cfg"), schemaText);
+        var localFailure = assertThrows(CfgSchemaException.class, () -> Context.load(tempDir));
+        assertEquals(errs, localFailure.getErrs().errs());
     }
 
     @Test

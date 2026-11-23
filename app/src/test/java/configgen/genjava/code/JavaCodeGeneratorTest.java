@@ -369,20 +369,20 @@ class JavaCodeGeneratorTest {
                     x:int;
                     y:int;
                 }
-                
+
                 interface Shape {
                     struct Circle {
                         radius:float;
                         center:Position;
                     }
-                
+
                     struct Rectangle {
                         width:float;
                         height:float;
                         pos:Position;
                     }
                 }
-                
+
                 table shapes[id] {
                     id:int;
                     shape:Shape;

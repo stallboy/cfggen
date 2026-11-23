@@ -6,7 +6,6 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import configgen.TestCtx;
 import configgen.ctx.Context;
-import configgen.gen.Parameter;
 import configgen.gen.ParameterParser;
 import configgen.gengo.GoCodeGenerator;
 import configgen.util.Logger;

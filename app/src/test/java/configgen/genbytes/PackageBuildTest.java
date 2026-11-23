@@ -6,11 +6,14 @@ import configgen.TestCtx;
 import configgen.ctx.Context;
 import configgen.gen.ParameterParser;
 import configgen.genjava.ConfigPackage;
+import configgen.schema.CfgSchemaErrs;
+import configgen.schema.CfgSchemaException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
@@ -57,8 +60,10 @@ class PackageBuildTest {
                 .generate(Context.load(Context.ContextCfg.of(modDir), base.cfgSchema()), new CachedFiles()), "A seq mod is sparse before merging");
 
         Files.writeString(modDir.resolve("monsetr.csv"), "id\nid\n1\n");
-        var failure = assertThrows(IllegalArgumentException.class, () -> Context.load(Context.ContextCfg.of(modDir), base.cfgSchema()));
-        assertTrue(requireNonNull(failure.getMessage()).contains("monsetr"));
+        var failure = assertThrows(CfgSchemaException.class,
+                () -> Context.load(Context.ContextCfg.of(modDir), base.cfgSchema()));
+        assertEquals(List.of(new CfgSchemaErrs.DataTableNotInSchema("monsetr", List.of("monsetr.csv"))),
+                failure.getErrs().errs());
     }
 
     @Test

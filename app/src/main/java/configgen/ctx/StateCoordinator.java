@@ -57,7 +57,8 @@ public final class StateCoordinator<T> {
      */
     public void addRefresher(T initial, Refresher<T> refresher) {
         synchronized (editLock) {
-            T current = state == null ? initial : state;
+            T st = state;
+            T current = st == null ? initial : st;
             refresher.refresh(current);
             state = current;
             refreshers.add(refresher);

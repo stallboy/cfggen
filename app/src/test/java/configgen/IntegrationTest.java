@@ -80,7 +80,7 @@ class IntegrationTest {
                     id:int;
                     name:str;
                 }
-                
+
                 table employee[id] {
                     id:int;
                     name:str;

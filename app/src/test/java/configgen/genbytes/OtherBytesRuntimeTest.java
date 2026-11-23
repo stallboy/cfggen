@@ -98,7 +98,7 @@ class OtherBytesRuntimeTest {
                 Map.of("item", "id,name,desc\nid,name,desc\n1,Alice,你好\n2,Bob,你好\n"), texts, "zh_cn");
         new BytesGenerator(new ParameterParser("bytes,dir:" + root.resolve("initial"))).generate(context, new CachedFiles());
         Files.writeString(source.resolve("item.csv"), "id,name,desc\nid,name,desc\n1,Alice,你好\n");
-        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + root.resolve("pack"))).generate(Context.load(context.contextCfg()), new CachedFiles());
+        new BytesGenerator(new ParameterParser("bytes,pack:base,langSeparated,dir:" + root.resolve("pack"))).generate(Context.loadAndAlignSchema(context.contextCfg()), new CachedFiles());
         writeMalformedVariants();
         Path project = Files.createDirectories(root.resolve("project"));
         if (language.equals("ts")) {

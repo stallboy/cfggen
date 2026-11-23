@@ -1,7 +1,7 @@
 package configgen.gen;
 
+import configgen.schema.CfgSchemas;
 import org.jspecify.annotations.Nullable;
-
 import configgen.ctx.Context;
 import configgen.ctx.Context.I18nCfg;
 import configgen.data.HeadRow;
@@ -254,8 +254,8 @@ public final class Main {
         }
         var contextCfg = new Context.ContextCfg(dataDirPath, headRow, csvDefaultEncoding,
                 i18n, allowValueErr);
-        Context context = sharedSchema == null ? Context.load(contextCfg)
-                : Context.load(contextCfg, configgen.schema.CfgSchemas.readFromRoot(Path.of(sharedSchema)));
+        Context context = sharedSchema == null ? Context.loadAndAlignSchema(contextCfg)
+                : Context.load(contextCfg, CfgSchemas.readFromRoot(Path.of(sharedSchema)));
         GenerationBatch.run(context, generators);
         Logger.profile("end");
         return 0;

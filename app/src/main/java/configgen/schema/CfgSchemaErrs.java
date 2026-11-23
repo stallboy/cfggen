@@ -403,6 +403,12 @@ public record CfgSchemaErrs(List<Err> errs,
                                           List<String> header2) implements Err {
     }
 
+    public record DataTableNotInSchema(String table, List<String> files) implements Err {
+    }
+
+    public record DataTableNotMarkedJson(String table, List<String> files) implements Err {
+    }
+
     /**
      * 标记了json的table不能有对应的excel文件
      */

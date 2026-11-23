@@ -3,12 +3,9 @@ package configgen.value;
 import configgen.Resources;
 import configgen.TestCtx;
 import configgen.ctx.Context;
-import configgen.data.CfgData;
 import configgen.data.Source;
-import configgen.schema.TableSchema;
 import configgen.util.Logger;
 import configgen.value.CfgValue.*;
-import configgen.value.CfgValueErrs.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -118,7 +115,7 @@ class ValueParserConversionTest {
                     id:int;
                     name:str;
                 }
-                
+
                 table employee[id] {
                     id:int;
                     name:str;
@@ -264,13 +261,13 @@ class ValueParserConversionTest {
                     street:str;
                     city:str;
                 }
-                
+
                 struct contact {
                     phone:str;
                     email:str;
                     addr:address;
                 }
-                
+
                 table customer[id] {
                     id:int;
                     name:str;
@@ -334,7 +331,7 @@ class ValueParserConversionTest {
                     description:text;
                     color:str (nullable);
                 }
-                
+
                 table order[order_id] {
                     order_id:int;
                     customer_name:str;
@@ -471,12 +468,12 @@ class ValueParserConversionTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
 
         String csvStr = """
-                ,,,,,
-                id,name,contact.phone,contact.email,contact.address.street,contact.address.city,tags
-                1,Alice,123-456,a@test.com,Main St,City1,"tag1,tag2"
-                2,Bob,,,,,
-                3,Charlie,789-012,,Third St,,
-                4,David,,,,,
+                ,,,,,,,
+                id,name,contact.phone,contact.email,contact.address.street,contact.address.city,contact.address.zip,tags
+                1,Alice,123-456,a@test.com,Main St,City1,,"tag1,tag2"
+                2,Bob,,,,,,
+                3,Charlie,789-012,,Third St,,,
+                4,David,,,,,,
                 """;
         Resources.addTempFileFromText("user.csv", tempDir, csvStr);
 

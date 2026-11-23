@@ -7,7 +7,9 @@ import configgen.layout.DirectoryStructure;
 import configgen.layout.SchemaLayout;
 import configgen.util.Logger;
 import configgen.schema.*;
-import configgen.schema.CfgSchemas;
+import configgen.schema.CfgSchemaErrs.JsonTableNotSupportExcel;
+import configgen.schema.CfgSchemaErrs.DataTableNotInSchema;
+import configgen.schema.CfgSchemaErrs.DataTableNotMarkedJson;
 import configgen.value.CfgValue;
 import configgen.value.ValueEnv;
 import configgen.value.CfgValueParser;
@@ -72,6 +74,7 @@ public class Context {
     private final I18nState i18nState;
 
     private final DirectoryStructure sourceStructure;
+    private final boolean alignSchemaOnReload;
     private final boolean usesSharedSchema;
 
     private final ExcelReader excelReader;
@@ -95,17 +98,24 @@ public class Context {
     }
 
     public static Context load(ContextCfg cfg) {
-        return load(cfg, new DirectoryStructure(cfg.dataDir), null).context();
+        DirectoryStructure structure = new DirectoryStructure(cfg.dataDir);
+        return loadFixedSchema(cfg, structure, readSchema(structure), false);
     }
 
-    /** Read sparse package data without aligning or writing the shared schema. */
     public static Context load(ContextCfg cfg, CfgSchema sharedSchema) {
-        return load(cfg, new DirectoryStructure(cfg.dataDir), sharedSchema).context();
+        Objects.requireNonNull(sharedSchema);
+        return loadFixedSchema(cfg, new DirectoryStructure(cfg.dataDir), sharedSchema, true);
+    }
+
+    public static Context loadAndAlignSchema(ContextCfg cfg) {
+        return loadAndAlignSchema(cfg, new DirectoryStructure(cfg.dataDir)).context();
     }
 
     private Context(ContextCfg cfg, DirectoryStructure sourceStructure, I18nState i18nState,
-                    ReadCsv csvReader, CfgSchema schema, CfgData data, boolean usesSharedSchema) {
+                    ReadCsv csvReader, CfgSchema schema, CfgData data,
+                    boolean alignSchemaOnReload, boolean usesSharedSchema) {
         this.contextCfg = cfg;
+        this.alignSchemaOnReload = alignSchemaOnReload;
         this.usesSharedSchema = usesSharedSchema;
         this.sourceStructure = sourceStructure;
         this.i18nState = i18nState;
@@ -115,52 +125,78 @@ public class Context {
         this.cfgData = data;
     }
 
-    private static LoadResult load(ContextCfg cfg, DirectoryStructure sourceStructure, @Nullable CfgSchema sharedSchema) {
-        I18nState i18nState = switch (cfg.i18n) {
+    private static I18nState loadI18n(I18nCfg i18n) {
+        return switch (i18n) {
             case I18nCfg.Disabled _ -> I18nState.Disabled.INSTANCE;
             case I18nCfg.Replace replace -> new I18nState.Replace(TranslationCatalog.read(replace.path()));
             case I18nCfg.Switchable switchable ->
                     new I18nState.Switchable(TranslationBundle.read(switchable.dir(), switchable.defaultLang()));
         };
+    }
 
-        ReadCsv csvReader = new ReadCsv(cfg.csvDefaultEncoding);
-        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, csvReader, ReadByFastExcel.INSTANCE);
-        if (sharedSchema != null) {
-            sharedSchema.requireResolved();
-            CfgSchemaErrs errs = CfgSchemaErrs.of();
-            CfgData cfgData = dataReader.readCfgData(sourceStructure.getExcelFiles(), sharedSchema, errs);
-            errs.checkErrors("fixed schema data");
-            for (String table : cfgData.tables().keySet()) {
-                var tableSchema = sharedSchema.findTable(table);
-                if (tableSchema == null)
-                    throw new IllegalArgumentException("Unknown table outside shared schema: " + table);
-                if (tableSchema.meta().isJson())
-                    throw new IllegalArgumentException("JSON table cannot also use CSV/Excel data: " + table);
+    private static CfgDataReader createDataReader(ContextCfg cfg) {
+        return new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding),
+                ReadByFastExcel.INSTANCE);
+    }
+
+    private static Context loadFixedSchema(ContextCfg cfg, DirectoryStructure sourceStructure,
+                                           CfgSchema schema, boolean usesSharedSchema) {
+        I18nState i18nState = loadI18n(cfg.i18n);
+        CfgDataReader dataReader = createDataReader(cfg);
+        schema.requireResolved();
+        CfgSchemaErrs errs = CfgSchemaErrs.of();
+        CfgData data = dataReader.readCfgData(sourceStructure.getExcelFiles(), schema, errs);
+        data.verbosePrintStat();
+        for (CfgData.DTable table : data.tables().values()) {
+            TableSchema tableSchema = schema.findTable(table.tableName());
+            if (tableSchema == null) {
+                errs.addErr(new DataTableNotInSchema(table.tableName(),
+                        table.rawSheets().stream().map(CfgData.DRawSheet::id).toList()));
+            } else if (tableSchema.isJson()) {
+                errs.addErr(new JsonTableNotSupportExcel(table.tableName(),
+                        table.rawSheets().stream().map(CfgData.DRawSheet::id).toList()));
             }
-            for (String table : sourceStructure.jsonTableNames()) {
-                var tableSchema = sharedSchema.findTable(table);
-                if (!sourceStructure.getJsonFilesByTable(table).isEmpty() && (tableSchema == null || !tableSchema.meta().isJson()))
-                    throw new IllegalArgumentException("Unknown JSON table outside shared schema: " + table);
+        }
+        for (String table : sourceStructure.jsonTableNames().stream().sorted().toList()) {
+            var files = sourceStructure.getJsonFilesByTable(table);
+            if (files.isEmpty()) {
+                continue;
             }
-            Context context = new Context(cfg, sourceStructure, i18nState, csvReader, sharedSchema, cfgData, true);
+            TableSchema tableSchema = schema.findTable(table);
+            if (tableSchema == null || !tableSchema.isJson()) {
+                var paths = files.stream().map(file -> file.relativePath().toString()).toList();
+                errs.addErr(tableSchema == null ? new DataTableNotInSchema(table, paths)
+                        : new DataTableNotMarkedJson(table, paths));
+            }
+        }
+        errs.checkErrors("fixed schema data");
+        return new Context(cfg, sourceStructure, i18nState, dataReader.csvReader(), schema, data,
+                false, usesSharedSchema);
+    }
+
+    private static LoadResult loadAndAlignSchema(ContextCfg cfg, DirectoryStructure sourceStructure) {
+        I18nState i18nState = loadI18n(cfg.i18n);
+        CfgDataReader dataReader = createDataReader(cfg);
+        SchemaAndData loaded = readSchemaAndData(sourceStructure, dataReader);
+        if (loaded.isAligned()) {
+            Context context = new Context(cfg, sourceStructure, i18nState, dataReader.csvReader(),
+                    loaded.schema(), loaded.data(), true, false);
             return new LoadResult(context, false);
         }
-        SchemaAndData loaded = readSchemaAndData(cfg, sourceStructure, dataReader);
-        boolean schemaRewritten = !loaded.isAligned();
-        if (schemaRewritten) {
-            Logger.profile("schema aligned by data");
-            CfgSchemas.writeToDir(SchemaLayout.cfgRootFile(sourceStructure.getRootDir()),
-                    loaded.alignedSchema());
-            sourceStructure = sourceStructure.reload();
-            Logger.profile("schema write");
-            loaded = readSchemaAndData(cfg, sourceStructure, dataReader);
-            if (!loaded.isAligned()) {
-                loaded.schema().printDiff(loaded.alignedSchema());
-                throw new RuntimeException("schema align failed");
-            }
+
+        Logger.profile("schema aligned by data");
+        CfgSchemas.writeToDir(SchemaLayout.cfgRootFile(sourceStructure.getRootDir()), loaded.alignedSchema());
+        DirectoryStructure rewrittenStructure = sourceStructure.reload();
+        Logger.profile("schema write");
+
+        SchemaAndData rewritten = readSchemaAndData(rewrittenStructure, dataReader);
+        if (!rewritten.isAligned()) {
+            rewritten.schema().printDiff(rewritten.alignedSchema());
+            throw new RuntimeException("schema align failed");
         }
-        Context context = new Context(cfg, sourceStructure, i18nState, csvReader, loaded.schema(), loaded.data(), false);
-        return new LoadResult(context, schemaRewritten);
+        Context context = new Context(cfg, rewrittenStructure, i18nState, dataReader.csvReader(),
+                rewritten.schema(), rewritten.data(), true, false);
+        return new LoadResult(context, true);
     }
 
     private record SchemaAndData(CfgSchema schema, CfgData data, CfgSchema alignedSchema) {
@@ -169,35 +205,40 @@ public class Context {
         }
     }
 
-    private static SchemaAndData readSchemaAndData(ContextCfg cfg, DirectoryStructure sourceStructure,
-                                                   CfgDataReader dataReader) {
+    private static CfgSchema readSchema(DirectoryStructure sourceStructure) {
         CfgSchema schema = CfgSchemas.readFromDir(sourceStructure.getCfgFiles());
         Logger.profile("schema read");
 
-        CfgSchemaErrs errs = schema.resolve();
-        errs.checkErrors("schema");
+        schema.resolve().checkErrors("schema");
         schema.verbosePrintStat();
         Logger.profile("schema resolve");
+        return schema;
+    }
 
+    private static SchemaAndData readSchemaAndData(DirectoryStructure sourceStructure, CfgDataReader dataReader) {
+        CfgSchema schema = readSchema(sourceStructure);
         CfgSchemaErrs alignErr = CfgSchemaErrs.of();
         CfgData data = dataReader.readCfgData(sourceStructure.getExcelFiles(), schema, alignErr);
         data.verbosePrintStat();
         CfgSchema alignedSchema = new CfgSchemaAlignToData().align(schema, data, alignErr);
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
         alignErr.checkErrors("aligned schema");
-
-
         return new SchemaAndData(schema, data, alignedSchema);
     }
 
     public LoadResult reloadFrom(DirectoryStructure structure) {
-        return load(contextCfg, structure, usesSharedSchema ? cfgSchema : null);
+        if (alignSchemaOnReload) {
+            return loadAndAlignSchema(contextCfg, structure);
+        }
+        CfgSchema schema = usesSharedSchema ? cfgSchema : readSchema(structure);
+        return new LoadResult(loadFixedSchema(contextCfg, structure, schema, usesSharedSchema), false);
     }
 
     public ContextCfg contextCfg() {
         return contextCfg;
     }
 
+    /** Whether the caller supplied the schema for this context. */
     public boolean usesSharedSchema() {
         return usesSharedSchema;
     }
