@@ -69,7 +69,7 @@ java -jar cfggen.jar -gui                              # GUI 可视化拼命令
 java -jar cfggen.jar -datadir <dir> -gen <name>[,k=v...]
 java -jar cfggen.jar -datadir <dir> -tool <name>[,k=v...]
 ```
-`-gen` 时 `-datadir` 必填（须含 `config.cfg`）。常用选项：`-locale`、`-v`/`-vv`、`-p`/`-pp`、`-nowarn`/`-weakwarn`、`-headrow`(默认 2)、`-encoding`(默认 GBK，带 BOM 的 UTF-8 自动识别)、`-asroot`/`-exceldirs`/`-jsondirs`、`-i18nfile`/`-langswitchdir`/`-defaultlang`（前两者互斥，默认语言默认 `zh_cn`）。参数顺序任意；子参数用 `,` 分隔、`=` 或 `:` 赋值。
+`-gen` 时 `-datadir` 必填（须含 `config.cfg`）。常用选项：`-locale`、`-v`/`-vv`、`-p`/`-pp`、`-nowarn`/`-weakwarn`、`-headrow`(默认 2)、`-encoding`(默认 GBK，带 BOM 的 UTF-8 自动识别)、`-i18nfile`/`-langswitchdir`/`-defaultlang`（前两者互斥，默认语言默认 `zh_cn`）。参数顺序任意；子参数用 `,` 分隔、`=` 或 `:` 赋值。
 
 ## 配置 Schema
 自定义 CFG 格式：struct / interface / table / enum、list / map、外键 `->`(单值) / `=>`(多值 list)、tag。**语法**见用户站点 [`../docs/src/content/docs/core/schema.mdx`](../docs/src/content/docs/core/schema.mdx)；**解析器内部**见 [`docs/02-schema-and-cfg.md`](docs/02-schema-and-cfg.md)。

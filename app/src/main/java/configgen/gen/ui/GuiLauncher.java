@@ -26,9 +26,6 @@ public class GuiLauncher {
     JTextField datadirField = createTextField();
     JTextField encodingField = new JTextField(UIConstants.DEFAULT_ENCODING);
     JTextField headRowField = new JTextField(UIConstants.DEFAULT_HEAD_ROW);
-    JTextField asRootField = createTextField();
-    JTextField excelDirsField = createTextField();
-    JTextField jsonDirsField = createTextField();
     JTextField i18nfileField = createTextField();
     JTextField langSwitchDirField = createTextField();
     JTextField defaultLangField = new JTextField(UIConstants.DEFAULT_LANG);
@@ -124,51 +121,6 @@ public class GuiLauncher {
             toggleButton.setText(prefix + LocaleUtil.getLocaleString(localeKey, defaultText));
         });
         return toggleButton;
-    }
-
-    private JPanel createAdvancedDirPanel() {
-        JPanel content = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = UIConstants.PANEL_INSETS;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        int row = 0;
-
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.AsRoot", "As Root:")), gbc);
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        content.add(asRootField, gbc);
-        row++;
-
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.weightx = 0;
-        content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.ExcelDirs", "Excel Dirs:")), gbc);
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        content.add(excelDirsField, gbc);
-        row++;
-
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.weightx = 0;
-        content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.JsonDirs", "Json Dirs:")), gbc);
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        content.add(jsonDirsField, gbc);
-
-        JButton toggleButton = createCollapseToggleButton(
-                "GuiLauncher.AdvancedDirectories", "Advanced Directories", content);
-
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.add(toggleButton, BorderLayout.NORTH);
-        wrapper.add(content, BorderLayout.CENTER);
-        content.setVisible(false);
-
-        return wrapper;
     }
 
     private JPanel createI18nPanel() {
@@ -281,9 +233,6 @@ public class GuiLauncher {
         headRowField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         headRowPanel.add(headRowField);
         panel.add(headRowPanel);
-        panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_MEDIUM));
-        panel.add(createAdvancedDirPanel());
-
         panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_MEDIUM));
         panel.add(createI18nPanel());
 

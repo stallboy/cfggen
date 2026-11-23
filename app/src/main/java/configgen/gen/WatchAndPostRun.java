@@ -98,7 +98,7 @@ public enum WatchAndPostRun {
         }
         Context context = Objects.requireNonNull(coordinator.state());
         DirectoryStructure ss = context.sourceStructure();
-        Watcher newWatcher = new Watcher(ss.getRootDir(), ss.getExplicitDir());
+        Watcher newWatcher = new Watcher(ss.getRootDir());
         WaitWatcher newWaitWatcher = new WaitWatcher(newWatcher, this::reloadData,
                 Math.multiplyExact(waitSecondsAfterWatchEvt, 1000));
         consecutiveAutoFixReloads.set(0);

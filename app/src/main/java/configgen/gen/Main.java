@@ -2,7 +2,7 @@ package configgen.gen;
 
 import org.jspecify.annotations.Nullable;
 
-import configgen.ctx.*;
+import configgen.ctx.Context;
 import configgen.ctx.Context.I18nCfg;
 import configgen.data.HeadRow;
 import configgen.data.HeadRows;
@@ -147,9 +147,6 @@ public final class Main {
         String sharedSchema = null;
         String headRowId = System.getProperty("configgen.headrow");
         String csvDefaultEncoding = "GBK";
-        String asRoot = null;
-        String excelDirs = null;
-        String jsonDirs = null;
 
         String i18nfile = null;
         String langSwitchDir = null;
@@ -205,10 +202,6 @@ public final class Main {
                 case "-headrow" -> headRowId = nextArg(args, paramType, ++i);
                 case "-encoding" -> csvDefaultEncoding = nextArg(args, paramType, ++i);
 
-                case "-asroot" -> asRoot = nextArg(args, paramType, ++i);
-                case "-exceldirs" -> excelDirs = nextArg(args, paramType, ++i);
-                case "-jsondirs" -> jsonDirs = nextArg(args, paramType, ++i);
-
                 case "-i18nfile" -> i18nfile = nextArg(args, paramType, ++i);
                 case "-langswitchdir" -> langSwitchDir = nextArg(args, paramType, ++i);
                 case "-defaultlang" -> langSwitchDefaultLang = nextArg(args, paramType, ++i);
@@ -229,7 +222,7 @@ public final class Main {
 
         // 参数组合校验必须先于任何执行（tools/generators都有副作用）
         if (i18nfile != null && langSwitchDir != null) {
-            return help("-不能同时配置-i18nFile和-langSwitchDir");
+            return help("-i18nfile and -langswitchdir cannot be used together");
         }
         if (dataDir == null && !generators.isEmpty()) {
             return help("-datadir is required");
@@ -250,7 +243,6 @@ public final class Main {
         }
         HeadRow headRow = HeadRows.getById(headRowId);
 
-        ExplicitDir explicitDir = ExplicitDir.parse(asRoot, excelDirs, jsonDirs);
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
 
@@ -260,7 +252,7 @@ public final class Main {
         } else if (langSwitchDir != null) {
             i18n = new I18nCfg.Switchable(Path.of(langSwitchDir), langSwitchDefaultLang);
         }
-        var contextCfg = new Context.ContextCfg(dataDirPath, explicitDir, headRow, csvDefaultEncoding,
+        var contextCfg = new Context.ContextCfg(dataDirPath, headRow, csvDefaultEncoding,
                 i18n, allowValueErr);
         Context context = sharedSchema == null ? Context.load(contextCfg)
                 : Context.load(contextCfg, configgen.schema.CfgSchemas.readFromRoot(Path.of(sharedSchema)));

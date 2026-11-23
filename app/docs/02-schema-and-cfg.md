@@ -134,7 +134,7 @@ metadata    : ( key(=value)? | -key )* ;                   // tag / -tag / 键�
 | 情况 | 处理 |
 |---|---|
 | 数据列 ↔ schema 字段都有 | 保留 **schema 的类型**（类型以 schema 为准），用数据更新注释 |
-| 数据有、schema 无 | **新增字段**，类型从表头 `suggestedType` 推断，默认 `STRING` |
+| 数据有、schema 无 | **新增字段**，类型为 `STRING` |
 | schema 有、数据无 | **删除字段**（记日志） |
 | 多列字段 | 按 `Span`（结构/list/map 占几列）对齐 |
 | 数据里有整张表、schema 无 | **新增表**，纯从表头推断 |

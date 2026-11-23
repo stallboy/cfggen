@@ -97,7 +97,7 @@ public enum ReadByPoi implements ExcelReader {
             throw new RuntimeException(e);
         }
 
-        return new ReadResult(sheets, stat, null);
+        return new ReadResult(sheets, stat);
     }
 
 

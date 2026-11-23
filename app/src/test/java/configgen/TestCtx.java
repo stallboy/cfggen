@@ -27,7 +27,7 @@ public final class TestCtx {
                                                Path langsDir, String defaultLang) {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         csvByName.forEach((name, csv) -> Resources.addTempFileFromText(name + ".csv", tempDir, csv));
-        return Context.load(new Context.ContextCfg(tempDir, null, HeadRows.A2_Default, "UTF-8",
+        return Context.load(new Context.ContextCfg(tempDir, HeadRows.A2_Default, "UTF-8",
                 new I18nCfg.Switchable(langsDir, defaultLang), false));
     }
 }

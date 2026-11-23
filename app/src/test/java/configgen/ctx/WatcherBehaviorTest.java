@@ -47,7 +47,7 @@ class WatcherBehaviorTest {
     @Test
     void canRetryAfterRegistrationFails() throws IOException, InterruptedException {
         Path root = tempDir.resolve("data");
-        Watcher watcher = new Watcher(root, null);
+        Watcher watcher = new Watcher(root);
         assertThrows(java.io.UncheckedIOException.class, watcher::start);
 
         Files.createDirectory(root);
@@ -61,10 +61,9 @@ class WatcherBehaviorTest {
     }
 
     @Test
-    void detectsRootSchemaChangeWithExplicitDataDirectories() throws IOException, InterruptedException {
+    void detectsRootSchemaChange() throws IOException, InterruptedException {
         Path schema = Files.writeString(tempDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME), "");
-        var explicit = new ExplicitDir(java.util.Map.of(), java.util.Set.of("data"), java.util.Set.of());
-        Watcher watcher = new Watcher(tempDir, explicit);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
         try {
             Files.writeString(schema, "table user[id] { id:int; }");
@@ -75,10 +74,9 @@ class WatcherBehaviorTest {
     }
 
     @Test
-    void detectsJsonEditsInExplicitNestedDirectory() throws IOException, InterruptedException {
+    void detectsJsonEditsInNestedDirectory() throws IOException, InterruptedException {
         Path table = Files.createDirectories(tempDir.resolve("data/_user"));
-        var explicit = new ExplicitDir(java.util.Map.of(), java.util.Set.of(), java.util.Set.of("data/_user"));
-        Watcher watcher = new Watcher(tempDir, explicit);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
         try {
             Files.writeString(table.resolve("1.json"), "{}");
@@ -94,7 +92,7 @@ class WatcherBehaviorTest {
         Path table = Files.createDirectory(root.resolve("_user"));
         Files.writeString(table.resolve("1.json"), "{}");
         DirectoryStructure before = new DirectoryStructure(root);
-        Watcher watcher = new Watcher(root, null);
+        Watcher watcher = new Watcher(root);
         watcher.start();
         try {
             Files.move(table, tempDir.resolve("_user"));
@@ -108,7 +106,7 @@ class WatcherBehaviorTest {
     @Test
     void shouldDetectFileCreatedImmediatelyAfterStart() throws IOException, InterruptedException {
         // start()在调用线程内同步完成目录注册，返回后立即创建的文件也必须被捕获（回归：注册竞态）
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
         try {
             Files.writeString(tempDir.resolve("instant.csv"), "no sleep before this write");
@@ -121,7 +119,7 @@ class WatcherBehaviorTest {
     @Test
     void shouldDetectFileCreationWhenNewFileIsCreatedInWatchedDirectory() throws IOException, InterruptedException {
         // Given: 启动的 Watcher
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         try {
@@ -142,7 +140,7 @@ class WatcherBehaviorTest {
         Path existingFile = tempDir.resolve("existing.csv");
         Files.writeString(existingFile, "initial content");
 
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         try {
@@ -162,7 +160,7 @@ class WatcherBehaviorTest {
         Path fileToDelete = tempDir.resolve("to_delete.csv");
         Files.writeString(fileToDelete, "content");
 
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         try {
@@ -179,7 +177,7 @@ class WatcherBehaviorTest {
     @Test
     void shouldFindLastEventTimeEqualWhenGetLastEventSecCalledMultipleTimes() throws IOException, InterruptedException {
         // Given: 有事件的 Watcher
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         try {
@@ -202,7 +200,7 @@ class WatcherBehaviorTest {
     @Test
     void shouldIgnoreHiddenFilesWhenDetectingFileChanges() throws IOException, InterruptedException {
         // Given: 启动的 Watcher
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         try {
@@ -221,7 +219,7 @@ class WatcherBehaviorTest {
     @Test
     void shouldDetectDirectoryCreationWhenNewDirectoryIsCreated() throws IOException, InterruptedException {
         // Given: 启动的 Watcher
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         try {
@@ -237,39 +235,9 @@ class WatcherBehaviorTest {
     }
 
     @Test
-    void shouldFilterFilesBasedOnExplicitDirectoryConfiguration() throws IOException, InterruptedException {
-        // Given: 显式目录配置和启动的 Watcher
-        Path includedDir = tempDir.resolve("included");
-        Files.createDirectories(includedDir);
-
-        ExplicitDir explicitDir = new ExplicitDir(
-                java.util.Map.of(),
-                java.util.Set.of("included"),
-                java.util.Set.of()
-        );
-
-        Watcher watcher = new Watcher(tempDir, explicitDir);
-        watcher.start();
-
-        try {
-            // When: 在包含的目录中创建文件
-            Path includedFile = includedDir.resolve("test.csv");
-            Files.writeString(includedFile, "included content");
-
-            // Then: 应该只检测包含目录中的文件
-            awaitEventDetected(watcher);
-
-            // 注意：由于文件系统事件的异步性，我们无法精确测试排除的文件是否被忽略
-            // 但显式目录配置应该影响监控器的行为
-        } finally {
-            watcher.stop();
-        }
-    }
-
-    @Test
     void shouldHandleMultipleFileOperationsSequentially() throws IOException, InterruptedException {
         // Given: 启动的 Watcher
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         try {
@@ -292,7 +260,7 @@ class WatcherBehaviorTest {
     @Test
     void shouldReturnZeroWhenNoEventsHaveOccurred() throws InterruptedException {
         // Given: 没有事件的 Watcher
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
         try {
             Thread.sleep(100);
@@ -304,20 +272,5 @@ class WatcherBehaviorTest {
         } finally {
             watcher.stop();
         }
-    }
-
-    @Test
-    void shouldHandleNullExplicitDirectoryConfiguration() {
-        // Given: null 显式目录配置
-
-        // When: 创建 Watcher
-        Watcher watcher = new Watcher(tempDir, null);
-
-        // Then: 应该成功创建
-        assertNotNull(watcher, "应该成功创建带有 null 显式目录的 Watcher");
-
-        // 启动和停止线程
-        watcher.start();
-        watcher.stop();
     }
 }

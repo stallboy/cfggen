@@ -1,7 +1,5 @@
 package configgen.schema.cfg;
 
-import org.jspecify.annotations.Nullable;
-
 import configgen.schema.CfgFileInfo;
 import configgen.util.FileNameUtil;
 import configgen.schema.CfgSchema;
@@ -13,7 +11,6 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -82,7 +79,6 @@ public class CfgUtil {
     }
 
     public static void findConfigFilesRecursively(Path source,
-                                                  @Nullable Set<String> nullableWhiteListSubDirs,
                                                   String ext,
                                                   String pkgNameDot,
                                                   Path rootDir,
@@ -99,11 +95,6 @@ public class CfgUtil {
                         continue;
                     }
 
-                    if (nullableWhiteListSubDirs != null &&
-                            !nullableWhiteListSubDirs.contains(path.getFileName().toString())) {
-                        continue;
-                    }
-
                     String lastDir = path.getFileName().toString().toLowerCase(Locale.ROOT);
                     String subPkgName = FileNameUtil.getCodeName(lastDir);
                     if (subPkgName == null) {
@@ -111,7 +102,7 @@ public class CfgUtil {
                     }
                     Path subSource = path.resolve(subPkgName + "." + ext);
                     String subPkgNameDot = pkgNameDot + subPkgName + ".";
-                    findConfigFilesRecursively(subSource, null, ext, subPkgNameDot,
+                    findConfigFilesRecursively(subSource, ext, subPkgNameDot,
                             rootDir, cfgFiles);
                 }
             }

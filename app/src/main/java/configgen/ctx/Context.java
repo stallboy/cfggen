@@ -1,7 +1,6 @@
 package configgen.ctx;
 
 import org.jspecify.annotations.Nullable;
-
 import configgen.data.*;
 import configgen.i18n.*;
 import configgen.util.Logger;
@@ -18,21 +17,20 @@ import java.util.Objects;
 
 public class Context {
     public record ContextCfg(Path dataDir,
-                             @Nullable ExplicitDir explicitDir,
                              HeadRow headRow,
-                             String csvOrTsvDefaultEncoding,
+                             String csvDefaultEncoding,
                              I18nCfg i18n,
                              boolean allowValueErr) {
 
         public ContextCfg {
             Objects.requireNonNull(dataDir);
             Objects.requireNonNull(headRow);
-            Objects.requireNonNull(csvOrTsvDefaultEncoding);
+            Objects.requireNonNull(csvDefaultEncoding);
             Objects.requireNonNull(i18n);
         }
 
         public static ContextCfg of(Path dataDir) {
-            return new ContextCfg(dataDir, null, HeadRows.A2_Default, "UTF-8",
+            return new ContextCfg(dataDir, HeadRows.A2_Default, "UTF-8",
                     I18nCfg.Disabled.INSTANCE, false);
         }
     }
@@ -61,16 +59,18 @@ public class Context {
             INSTANCE
         }
 
-        record Replace(TranslationCatalog catalog) implements I18nState {}
+        record Replace(TranslationCatalog catalog) implements I18nState {
+        }
 
-        record Switchable(TranslationBundle translationBundle) implements I18nState {}
+        record Switchable(TranslationBundle translationBundle) implements I18nState {
+        }
     }
 
     private final ContextCfg contextCfg;
-    private final boolean usesSharedSchema;
     private final I18nState i18nState;
 
     private final DirectoryStructure sourceStructure;
+    private final boolean usesSharedSchema;
 
     private final ExcelReader excelReader;
     private final ReadCsv csvReader;
@@ -85,19 +85,20 @@ public class Context {
         }
     }
 
-    public record LoadResult(Context context, boolean schemaRewritten) {}
+    public record LoadResult(Context context, boolean schemaRewritten) {
+    }
 
     public static Context load(Path dataDir) {
         return load(ContextCfg.of(dataDir));
     }
 
     public static Context load(ContextCfg cfg) {
-        return load(cfg, new DirectoryStructure(cfg.dataDir, cfg.explicitDir), null).context();
+        return load(cfg, new DirectoryStructure(cfg.dataDir), null).context();
     }
 
     /** Read sparse package data without aligning or writing the shared schema. */
     public static Context load(ContextCfg cfg, CfgSchema sharedSchema) {
-        return load(cfg, new DirectoryStructure(cfg.dataDir, cfg.explicitDir), sharedSchema).context();
+        return load(cfg, new DirectoryStructure(cfg.dataDir), sharedSchema).context();
     }
 
     private Context(ContextCfg cfg, DirectoryStructure sourceStructure, I18nState i18nState,
@@ -120,7 +121,7 @@ public class Context {
                     new I18nState.Switchable(TranslationBundle.read(switchable.dir(), switchable.defaultLang()));
         };
 
-        ReadCsv csvReader = new ReadCsv(cfg.csvOrTsvDefaultEncoding);
+        ReadCsv csvReader = new ReadCsv(cfg.csvDefaultEncoding);
         CfgDataReader dataReader = new CfgDataReader(cfg.headRow, csvReader, ReadByFastExcel.INSTANCE);
         if (sharedSchema != null) {
             sharedSchema.requireResolved();
@@ -129,12 +130,15 @@ public class Context {
             errs.checkErrors("fixed schema data");
             for (String table : cfgData.tables().keySet()) {
                 var tableSchema = sharedSchema.findTable(table);
-                if (tableSchema == null) throw new IllegalArgumentException("Unknown table outside shared schema: " + table);
-                if (tableSchema.meta().isJson()) throw new IllegalArgumentException("JSON table cannot also use CSV/Excel data: " + table);
+                if (tableSchema == null)
+                    throw new IllegalArgumentException("Unknown table outside shared schema: " + table);
+                if (tableSchema.meta().isJson())
+                    throw new IllegalArgumentException("JSON table cannot also use CSV/Excel data: " + table);
             }
             for (String table : sourceStructure.jsonTableNames()) {
                 var tableSchema = sharedSchema.findTable(table);
-                if (!sourceStructure.jsonFilesOf(table).isEmpty() && (tableSchema == null || !tableSchema.meta().isJson())) throw new IllegalArgumentException("Unknown JSON table outside shared schema: " + table);
+                if (!sourceStructure.jsonFilesOf(table).isEmpty() && (tableSchema == null || !tableSchema.meta().isJson()))
+                    throw new IllegalArgumentException("Unknown JSON table outside shared schema: " + table);
             }
             Context context = new Context(cfg, sourceStructure, i18nState, csvReader, sharedSchema, cfgData, true);
             return new LoadResult(context, false);
@@ -164,7 +168,7 @@ public class Context {
     }
 
     private static SchemaAndData readSchemaAndData(ContextCfg cfg, DirectoryStructure sourceStructure,
-                                                  CfgDataReader dataReader) {
+                                                   CfgDataReader dataReader) {
         CfgSchema schema = CfgSchemas.readFromDir(sourceStructure.getCfgFiles());
         Logger.profile("schema read");
 
@@ -173,11 +177,10 @@ public class Context {
         schema.verbosePrintStat();
         Logger.profile("schema resolve");
 
-
         CfgSchemaErrs alignErr = CfgSchemaErrs.of();
         CfgData data = dataReader.readCfgData(sourceStructure.getExcelFiles(), schema, alignErr);
         data.verbosePrintStat();
-        CfgSchema alignedSchema = new CfgSchemaAlignToData(cfg.headRow()).align(schema, data, alignErr);
+        CfgSchema alignedSchema = new CfgSchemaAlignToData().align(schema, data, alignErr);
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
         alignErr.checkErrors("aligned schema");
 
@@ -193,7 +196,9 @@ public class Context {
         return contextCfg;
     }
 
-    public boolean usesSharedSchema() { return usesSharedSchema; }
+    public boolean usesSharedSchema() {
+        return usesSharedSchema;
+    }
 
     public DirectoryStructure sourceStructure() {
         return sourceStructure;
@@ -236,7 +241,9 @@ public class Context {
      * 这个是要实现客户端可在多国语言间切换语言，所以客户端服务器都需要完整的多国语言信息，而不能如i18n那样直接替换
      */
     public @Nullable TranslationBundle translationBundle() {
-        return i18nState instanceof I18nState.Switchable(TranslationBundle translationBundle) ? translationBundle : null;
+        return i18nState instanceof I18nState.Switchable(
+                TranslationBundle translationBundle
+        ) ? translationBundle : null;
     }
 
     public CfgValue makeValue() {

@@ -57,7 +57,7 @@ public enum ReadByFastExcel implements ExcelReader {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return new ReadResult(sheets, stat, null);
+        return new ReadResult(sheets, stat);
     }
 
 

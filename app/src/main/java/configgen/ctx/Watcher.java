@@ -22,7 +22,6 @@ import static java.nio.file.StandardWatchEventKinds.*;
  */
 public class Watcher {
     private final Path rootDir;
-    private final @Nullable ExplicitDir explicitDir;
     private volatile long lastEvtMillis;
     private final AtomicInteger eventVersion = new AtomicInteger(0);
     private @Nullable Thread startedThread;
@@ -31,10 +30,9 @@ public class Watcher {
     // ENTRY_CREATE新目录时由轮询线程写入；stop后若旧线程迟迟未退出、实例被重启，存在跨线程访问，用并发map防损坏
     private final Map<WatchKey, Path> keys = new ConcurrentHashMap<>();
 
-    public Watcher(Path rootDir, @Nullable ExplicitDir explicitDir) {
+    public Watcher(Path rootDir) {
         Objects.requireNonNull(rootDir);
         this.rootDir = rootDir;
-        this.explicitDir = explicitDir;
     }
 
     /**
@@ -235,16 +233,7 @@ public class Watcher {
             return false;
         }
         String name = relativePath.getFileName().toString();
-        if (explicitDir == null) {
-            return isTableDirForJson(name) || getCodeName(name) != null;
-        }
-        String topDir = relativePath.getName(0).toString();
-        return (explicitDir.excelFileDirs().contains(topDir)
-                    && getCodeName(name) != null)
-                || explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map().containsKey(relativePath.toString())
-                || explicitDir.jsonFileDirs().stream()
-                        .map(rootDir.getFileSystem()::getPath)
-                        .anyMatch(dir -> dir.normalize().startsWith(relativePath));
+        return isTableDirForJson(name) || getCodeName(name) != null;
     }
 
     private void handleFileEvent(Path relativePath) {
@@ -259,42 +248,10 @@ public class Watcher {
             return;
         }
 
-        switch (fmt) {
-            case CSV, EXCEL, CFG -> {
-                if (explicitDir != null
-                        && !relativePath.equals(rootDir.getFileSystem().getPath(DirectoryStructure.ROOT_CONFIG_FILENAME))) {
-                    Path topDir = relativePath.getName(0);
-                    String dirName = topDir.getFileName().toString();
-                    if (!explicitDir.excelFileDirs().contains(dirName)) {
-                        return;
-                    }
-                }
-            }
-            case JSON -> {
-                Path parent = relativePath.getParent();
-                if (parent == null)
-                    return;
-                String dirName = parent.getFileName().toString();
-                if (!isTableDirForJson(dirName)) {
-                    return;
-                }
-                if (explicitDir != null && explicitDir.jsonFileDirs().stream()
-                        .map(rootDir.getFileSystem()::getPath)
-                        .noneMatch(dir -> dir.normalize().equals(parent))) {
-                    return;
-                }
-            }
-            case TXT_AS_TSV -> {
-                if (explicitDir == null) {
-                    return;
-                }
-                Path parent = relativePath.getParent();
-                if (parent == null)
-                    return;
-                String dirName = parent.getFileName().toString();
-                if (!explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map().containsKey(dirName)) {
-                    return;
-                }
+        if (fmt == FileFmt.JSON) {
+            Path parent = relativePath.getParent();
+            if (parent == null || !isTableDirForJson(parent.getFileName().toString())) {
+                return;
             }
         }
 

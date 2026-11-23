@@ -121,6 +121,10 @@ table levelup[id] {
   - `[表名]_[索引]`
   - `[表名]`
 
+### 自定义表头
+
+CSV 和 Excel 可以通过 `-headrow` 指定表头行数，可选 `2` 或 `3`，默认 `2`。
+
 ### JSON文件
 
 - **目录命名**（两种格式，优先使用嵌套格式）：
@@ -270,47 +274,6 @@ config/
         0.json
         1,2.json
 ```
-
-## 高级功能
-
-支持兼容旧的表格结构，也可用于只读取`datadir`目录下的特定子目录。
-
-### 配置参数
-
-- **`-asroot`**
-
-  ```
-  兼容旧版目录结构（ClientTables、PublicTables、ServerTables目录）
-  配置格式：'ClientTables:noserver,PublicTables,ServerTables:noclient'
-  配合gen的own参数使用：
-  - own:-noclient 提取客户端数据
-  - own:-noserver 提取服务器数据
-  ```
-
-- **`-exceldirs`**
-
-  ```
-  指定Excel目录，多个目录以逗号分隔
-  ```
-
-- **`-jsondirs`**
-
-  ```
-  指定JSON目录，多个目录以逗号分隔
-  注意：一旦配置了-asroot、-exceldirs或-jsondirs任一参数，
-  系统将只使用-datadir下的指定目录，而不是全部目录
-  ```
-
-- **`-headrow`**
-
-  ```
-  旧版TSV文件配置（.txt后缀）
-  表头为4行结构：
-  第1行：程序用字段名
-  第2行：数据类型（INT, SHORT, BYTE, INT64, FLOAT, BOOL, STRING）
-  第3行：其他信息
-  第4行：中文描述
-  ```
 
 ##  快速参考
 

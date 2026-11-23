@@ -291,37 +291,6 @@ class DirectoryStructureBehaviorTest {
         assertFalse(cfgFiles.isEmpty(), "应该发现配置文件");
     }
 
-    @Test
-    void shouldHandleExplicitDirectoryConfigurationWhenExplicitDirIsProvided() throws IOException {
-        // Given: 显式目录配置
-        Path excelDir = tempDir.resolve("excel_files");
-        Files.createDirectories(excelDir);
-
-        String csvData = """
-                用户ID,姓名
-                id,name
-                1,Alice
-                """;
-        Resources.addTempFileFromText("user.csv", excelDir, csvData);
-
-        ExplicitDir explicitDir = new ExplicitDir(
-                java.util.Map.of(),
-                java.util.Set.of("excel_files"),
-                java.util.Set.of()
-        );
-
-        // When: 使用显式目录配置创建 DirectoryStructure
-        DirectoryStructure structure = new DirectoryStructure(tempDir, explicitDir);
-
-        // Then: 应该只发现显式目录中的文件
-        Collection<ExcelFileInfo> excelFiles = structure.getExcelFiles();
-        assertEquals(1, excelFiles.size(), "应该发现显式目录中的文件");
-
-        ExcelFileInfo excelFile = excelFiles.iterator().next();
-        assertTrue(excelFile.relativePath().toString().endsWith("excel_files/user.csv") ||
-                   excelFile.relativePath().toString().endsWith("excel_files\\user.csv"));
-    }
-
     // --- 嵌套 JSON 目录测试 ---
 
     @Test

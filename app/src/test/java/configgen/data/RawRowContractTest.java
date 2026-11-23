@@ -37,7 +37,7 @@ class RawRowContractTest {
         }
         ReadResult result = excel
                 ? ReadByFastExcel.INSTANCE.readExcels(file, file.getFileName(), null)
-                : new ReadCsv("UTF-8").readCsv(file, file.getFileName(), "t", 0, ',', null);
+                : new ReadCsv("UTF-8").readCsv(file, file.getFileName(), "t", 0);
         var sheet = result.sheets().getFirst().sheet();
         assertEquals(cells.length, sheet.rows().size());
         for (int r = 0; r < cells.length; r++) {
@@ -66,7 +66,7 @@ class RawRowContractTest {
 
         var reader = new CfgDataReader(HeadRows.A2_Default, new ReadCsv("UTF-8"), ReadByFastExcel.INSTANCE);
         var data = reader.readCfgData(List.of(new ExcelFileInfo(0, file, file.getFileName(),
-                DataUtil.FileFmt.EXCEL, null)), null, configgen.schema.CfgSchemaErrs.of());
+                DataUtil.FileFmt.EXCEL)), null, configgen.schema.CfgSchemaErrs.of());
         var table = data.tables().get("empty");
 
         assertNotNull(table);

@@ -34,13 +34,11 @@ public record CfgData(Map<String, DTable> tables,
      *                  约定表格必须在同一个文件夹下，且名称为 xxx 或者 xxx_0,xxx_1,xxx_2,xxx_3 ...
      *                  比如task表，如果是csv配置，可以拆分成：task.csv(同task_0.csv)，task_1.csv，task_2.csv
      *                  如果是excel配置，excel中的页签名称可以拆分成：task(同task_0)，task_1，task_2
-     * @param nullableAddTag 可选的附加标记，一般是-client，-server，用于提取特定数据
      */
     public record DTable(String tableName,
                          List<DField> fields,       // by HeadParser
                          List<List<DCell>> rows,    // by CellParser
-                         List<DRawSheet> rawSheets, // by CfgDataReader
-                         @Nullable String nullableAddTag) {
+                         List<DRawSheet> rawSheets) { // by CfgDataReader
         public DTable {
             Objects.requireNonNull(tableName);
             Objects.requireNonNull(fields);
@@ -49,11 +47,7 @@ public record CfgData(Map<String, DTable> tables,
         }
 
         public static DTable of(String tableName, List<DRawSheet> rawSheets) {
-            return of(tableName, rawSheets, null);
-        }
-
-        public static DTable of(String tableName, List<DRawSheet> rawSheets, @Nullable String nullableAddTag) {
-            return new DTable(tableName, new ArrayList<>(), new ArrayList<>(), rawSheets, nullableAddTag);
+            return new DTable(tableName, new ArrayList<>(), new ArrayList<>(), rawSheets);
         }
 
         public DRawSheet getSheetByRowId(DRowId rowId) {
@@ -68,13 +62,11 @@ public record CfgData(Map<String, DTable> tables,
     }
 
     public record DField(String name,
-                         String comment,
-                         String suggestedType) {
+                         String comment) {
 
         public DField {
             Objects.requireNonNull(name);
             Objects.requireNonNull(comment);
-            Objects.requireNonNull(suggestedType);
         }
     }
 

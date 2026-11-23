@@ -2,8 +2,6 @@ package configgen.data;
 
 import org.jspecify.annotations.Nullable;
 
-import configgen.schema.FieldType;
-
 import java.util.Locale;
 
 public class HeadRows {
@@ -12,7 +10,6 @@ public class HeadRows {
         return switch (name) {
             case "2" -> A2_Default;
             case "3" -> A3;
-            case "4" -> A4;
             default -> throw new IllegalArgumentException("Unknown HeadRow name: " + name);
         };
     }
@@ -27,16 +24,6 @@ public class HeadRows {
         @Override
         public int nameRow() {
             return 1;
-        }
-
-        @Override
-        public int suggestedTypeRow() {
-            return -1;
-        }
-
-        @Override
-        public @Nullable FieldType parseType(String type) {
-            return FieldType.Primitive.STRING;
         }
 
         @Override
@@ -78,65 +65,6 @@ public class HeadRows {
             return 3;
         }
     };
-
-    public static final HeadRow A4 = new HeadRow() {
-
-        @Override
-        public int rowCount() {
-            return 4;
-        }
-
-        @Override
-        public int commentRow() {
-            return 3;
-        }
-
-        @Override
-        public int nameRow() {
-            return 0;
-        }
-
-        @Override
-        public int suggestedTypeRow() {
-            return 1;
-        }
-
-        @Override
-        public @Nullable FieldType parseType(String type) {
-            switch (type.toUpperCase(Locale.ROOT)) {
-                case "INT", "SHORT", "BYTE" -> {
-                    return FieldType.Primitive.INT;
-                }
-                case "LONG", "INT64" -> {
-                    return FieldType.Primitive.LONG;
-                }
-                case "FLOAT" -> {
-                    return FieldType.Primitive.FLOAT;
-                }
-                case "BOOL" -> {
-                    return FieldType.Primitive.BOOL;
-                }
-                case "STRING", "SLICEBYTE", "HASHID" -> {
-                    return FieldType.Primitive.STRING;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public long parseLong(String str) {
-            return parseLongImpl(str);
-        }
-
-        @Override
-        public ParseBoolResult parseBool(@Nullable String str) {
-            if (str == null || str.isEmpty()) {
-                return ParseBoolResult.FALSE;
-            }
-            return str.equals("0") || str.equalsIgnoreCase("false") ? ParseBoolResult.FALSE : ParseBoolResult.TRUE;
-        }
-    };
-
 
     private static long parseLongImpl(String str) {
         if (str.isEmpty()) {

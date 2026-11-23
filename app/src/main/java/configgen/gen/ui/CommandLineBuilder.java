@@ -120,9 +120,6 @@ public record CommandLineBuilder(GuiLauncher launcher) {
                 UIConstants.DEFAULT_HEAD_ROW, false);
 
         // 目录映射 (对应Main.java: 196-198)
-        addIf(args, "-asroot", launcher.asRootField.getText().trim(), null, true);
-        addIf(args, "-exceldirs", launcher.excelDirsField.getText().trim(), null, true);
-        addIf(args, "-jsondirs", launcher.jsonDirsField.getText().trim(), null, true);
 
         // 国际化 (对应Main.java: 200-202)
         if (launcher.i18nFileRadio.isSelected()) {

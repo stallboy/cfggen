@@ -59,11 +59,8 @@ Parameters can be in any order, but -datadir is required when using generators.
 
 -----schema & data
     -datadir          配表根目录，目录下有文件config.cfg
-    -headrow          csv/Excel文件里数据头行数, 默认为2
+    -headrow          CSV/Excel 表头行数，可选 2 或 3，默认 2
     -encoding         csv编码，默认是GBK，如果文件中含有bom则用bom标记的编码
-    -asroot           兼容之前的目录结构，有ClientTables、PublicTables、ServerTables目录，目录下是.txt后缀的tsv文件。这里可以配置为'ClientTables:noserver,PublicTables,ServerTables:noclient',配合gen的own:-noclient来提取
-    -exceldirs        excel目录，以,分隔
-    -jsondirs         json目录，以,分隔，-asroot、-exceldirs、-jsondirs一旦有一个配置，说明要明确只用-datadir下的部分目录，而不是全部。
 
 -----i18n support
     -i18nfile         国际化需要的文件，如果不用国际化，就不要配置

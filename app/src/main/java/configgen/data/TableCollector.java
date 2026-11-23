@@ -15,7 +15,7 @@ public class TableCollector {
         Set<String> tableSet = new HashSet<>();
         for (ExcelFileInfo df : excelFiles) {
             switch (df.fmt()) {
-                case CSV, TXT_AS_TSV -> {
+                case CSV -> {
                     DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(df.relativePath());
                     if (ti != null) {
                         tableSet.add(ti.tableName());

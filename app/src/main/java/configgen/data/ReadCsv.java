@@ -1,7 +1,5 @@
 package configgen.data;
 
-import org.jspecify.annotations.Nullable;
-
 import configgen.util.CSVUtil;
 import de.siegmar.fastcsv.reader.CsvRecord;
 
@@ -22,19 +20,17 @@ public class ReadCsv {
     public ReadResult readCsv(Path path,
                               Path relativePath,
                               String tableName,
-                              int index,
-                              char fieldSeparator,
-                              @Nullable String nullableAddTag) {
+                              int index) {
         CfgDataStat stat = new CfgDataStat();
         List<DRawRow> rows = new ArrayList<>();
-        List<CsvRecord> read = CSVUtil.read(path, defaultEncoding, fieldSeparator);
+        List<CsvRecord> read = CSVUtil.read(path, defaultEncoding);
         for (CsvRecord csvRow : read) {
             rows.add(new DRawCsvRow(csvRow));
             stat.cellCsvCount += csvRow.getFieldCount();
         }
 
         DRawSheet sheet = new DRawSheet(relativePath.toString(), "", index, rows, new ArrayList<>());
-        return new ReadResult(List.of(new ReadResult.OneSheet(tableName, sheet)), stat, nullableAddTag);
+        return new ReadResult(List.of(new ReadResult.OneSheet(tableName, sheet)), stat);
     }
 
     record DRawCsvRow(CsvRecord row) implements DRawRow {

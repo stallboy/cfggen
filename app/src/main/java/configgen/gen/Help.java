@@ -59,16 +59,9 @@ public class Help {
                 "configuration data directory, must contains file:config.cfg"));
         Logger.log("    -schema           shared config.cfg or schema directory; read fixed schema without aligning or writing it");
         Logger.log("    -headrow          " + LocaleUtil.getLocaleString("Usage.HeadRow",
-                "csv/txt/excel file head row type, default 2"));
+                "CSV/Excel header row count (2 or 3), default 2"));
         Logger.log("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
-                "csv/txt encoding, default GBK, if csv file has BOM head, use that encoding"));
-        //noinspection SpellCheckingInspection
-        Logger.log("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
-                "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:noserver,PublicTables,ServerTables:noclient'"));
-        Logger.log("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
-                "ExplicitDir.excelFileDirs， default null"));
-        Logger.log("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.JsonDirs",
-                "ExplicitDir.jsonFileDirs， default null"));
+                "csv encoding, default GBK, if csv file has BOM head, use that encoding"));
 
         Logger.log("");
         Logger.log("-----i18n support");

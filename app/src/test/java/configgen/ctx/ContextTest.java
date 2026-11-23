@@ -386,7 +386,7 @@ class ContextTest {
         assertNotNull(cfg);
         assertEquals(tempDir, cfg.dataDir());
         assertNotNull(cfg.headRow());
-        assertNotNull(cfg.csvOrTsvDefaultEncoding());
+        assertNotNull(cfg.csvDefaultEncoding());
     }
 
     @Test

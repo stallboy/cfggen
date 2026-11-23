@@ -3,7 +3,6 @@ package configgen.data;
 import configgen.schema.CfgSchemaErrs;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -27,10 +26,7 @@ public final class HeadParser {
         for (DRawSheet sheet : table.rawSheets()) {
             List<String> comments = getLogicRow(sheet, headRow.commentRow(), isColumnMode);
             List<String> curNames = getLogicRow(sheet, headRow.nameRow(), isColumnMode);
-            List<String> suggestedTypes = headRow.suggestedTypeRow() >= 0 ?
-                    getLogicRow(sheet, headRow.suggestedTypeRow(), isColumnMode) : Collections.emptyList();
-
-            List<DField> h = parseFields(sheet, stat, comments, curNames, suggestedTypes);
+            List<DField> h = parseFields(sheet, stat, comments, curNames);
 
             if (header == null) {
                 names = curNames;
@@ -93,8 +89,7 @@ public final class HeadParser {
 
     private static List<DField> parseFields(DRawSheet sheet, CfgDataStat stat,
                                             List<String> comments,
-                                            List<String> names,
-                                            List<String> suggestedTypes) {
+                                            List<String> names) {
         List<DField> fields = new ArrayList<>();
         int size = names.size();
         List<Integer> fieldIndices = new ArrayList<>();
@@ -113,12 +108,7 @@ public final class HeadParser {
 
             String comment = getComment(comments, i, name);
 
-            String suggestedType = "";
-            if (i < suggestedTypes.size()) {
-                suggestedType = suggestedTypes.get(i);
-            }
-
-            DField field = new DField(name, comment, suggestedType);
+            DField field = new DField(name, comment);
             fields.add(field);
             fieldIndices.add(i);
         }

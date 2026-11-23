@@ -2,7 +2,9 @@ package configgen.util;
 
 import org.jspecify.annotations.Nullable;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class ArgParser {
 
@@ -12,20 +14,8 @@ public class ArgParser {
 
     public static IdAndMap parseToIdAndMap(String arg) {
         String[] sp = arg.split(",");
-        return new IdAndMap(sp[0], parseMap(sp, 1));
-    }
-
-    public static Map<String, @Nullable String> parseToMap(@Nullable String arg) {
-        if (arg == null || arg.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        String[] sp = arg.split(",");
-        return parseMap(sp, 0);
-    }
-
-    private static Map<String, @Nullable String> parseMap(String[] sp, int fromIndex) {
         Map<String, @Nullable String> map = new LinkedHashMap<>();
-        for (int i = fromIndex; i < sp.length; i++) {
+        for (int i = 1; i < sp.length; i++) {
             String s = sp[i];
             // 取最先出现的分隔符（':' 或 '='），而不是固定优先 ':'：
             // 否则 name=value 形式且值里含 ':' 时（如 Windows 绝对路径 dst=D:\out）会被 ':' 劈开解析错
@@ -39,16 +29,6 @@ public class ArgParser {
                 map.put(s.substring(0, c).trim().toLowerCase(Locale.ROOT), s.substring(c + 1).trim());
             }
         }
-        return map;
+        return new IdAndMap(sp[0], map);
     }
-
-    public static Set<String> parseToSet(@Nullable String arg) {
-        if (arg == null || arg.isEmpty()) {
-            return Collections.emptySet();
-        }
-        String[] sp = arg.split(",");
-        return new LinkedHashSet<>(Arrays.asList(sp));
-    }
-
-
 }

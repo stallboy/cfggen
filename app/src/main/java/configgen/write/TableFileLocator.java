@@ -71,7 +71,7 @@ public class TableFileLocator {
             }
         } else if (toLowerFileName.endsWith(".csv")) {
             try {
-                String encoding = context.contextCfg().csvOrTsvDefaultEncoding();
+                String encoding = context.contextCfg().csvDefaultEncoding();
                 if (isColumnMode) {
                     return new ColumnModeCsvTableFile(filePath, encoding, headRow);
                 } else {

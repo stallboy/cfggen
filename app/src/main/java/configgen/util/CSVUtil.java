@@ -18,19 +18,15 @@ import java.util.OptionalInt;
 public class CSVUtil {
 
     public static List<CsvRecord> read(Path path) {
-        return read(path, "UTF-8", ',');
+        return read(path, "UTF-8");
     }
 
 
     public static List<CsvRecord> read(Path path, String defaultEncoding) {
-        return read(path, defaultEncoding, ',');
-    }
-
-    public static List<CsvRecord> read(Path path, String defaultEncoding, char fieldSeparator) {
         try (CsvReader<CsvRecord> reader = CsvReader.builder()
                 .skipEmptyLines(false)
                 .commentStrategy(CommentStrategy.NONE)
-                .fieldSeparator(fieldSeparator)
+                .fieldSeparator(',')
                 // 4.x 默认严格(字段数不齐即抛异常)；2.x 宽松放行，readAndNormalize/ReadCsv 也按各行列数处理，故用 IGNORE
                 .extraFieldStrategy(FieldMismatchStrategy.IGNORE)
                 .missingFieldStrategy(FieldMismatchStrategy.IGNORE)

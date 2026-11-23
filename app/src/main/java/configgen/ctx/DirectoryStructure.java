@@ -111,7 +111,6 @@ public class DirectoryStructure implements JsonTableFiles {
 
 
     private final Path rootDir;
-    private final @Nullable ExplicitDir explicitDir;
     /**
      * 配置文件信息
      */
@@ -126,56 +125,19 @@ public class DirectoryStructure implements JsonTableFiles {
     private volatile Map<String, JsonFileList> jsonFiles = new LinkedHashMap<>(); // table -> json file list
 
     public DirectoryStructure(Path rootDir) {
-        this(rootDir, null);
-    }
-
-    public DirectoryStructure(Path rootDir, @Nullable ExplicitDir explicitDir) {
         this.rootDir = rootDir;
-        this.explicitDir = explicitDir;
-
         CfgUtil.findConfigFilesRecursively(rootDir.resolve(ROOT_CONFIG_FILENAME),
-                explicitDir != null ? explicitDir.excelFileDirs() : null,
-                CONFIG_EXT, "",
-                rootDir, cfgFiles);
-
-        if (explicitDir == null) {
-            findExcelFilesRecursively(rootDir);
-        } else {
-            for (Map.Entry<String, String> e : explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map().entrySet()) {
-                Path dir = rootDir.resolve(e.getKey());
-                if (Files.exists(dir) && Files.isDirectory(dir)) {
-                    findTxtAsTsvFiles(dir, e.getValue());
-                }
-            }
-
-            for (String p : explicitDir.excelFileDirs()) {
-                Path dir = rootDir.resolve(p);
-                if (Files.exists(dir) && Files.isDirectory(dir)) {
-                    findExcelFilesRecursively(dir);
-                }
-            }
-        }
-
-        if (explicitDir == null) {
-            findTableToJsonFiles();
-        } else {
-            for (String p : explicitDir.jsonFileDirs()) {
-                findOneTableJsonFilesInDir(rootDir.resolve(p));
-            }
-
-        }
+                CONFIG_EXT, "", rootDir, cfgFiles);
+        findExcelFilesRecursively(rootDir);
+        findTableToJsonFiles();
     }
 
     public DirectoryStructure reload() {
-        return new DirectoryStructure(rootDir, explicitDir);
+        return new DirectoryStructure(rootDir);
     }
 
     public Path getRootDir() {
         return rootDir;
-    }
-
-    public @Nullable ExplicitDir getExplicitDir() {
-        return explicitDir;
     }
 
     public Collection<CfgFileInfo> getCfgFiles() {
@@ -253,42 +215,14 @@ public class DirectoryStructure implements JsonTableFiles {
                                 continue;
                             }
                             excelFiles.put(relativePath.toString(),
-                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, CSV, null));
+                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, CSV));
                         }
                         case EXCEL -> {
                             excelFiles.put(relativePath.toString(),
-                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, EXCEL, null));
+                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, EXCEL));
                         }
                     }
                 }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void findTxtAsTsvFiles(Path dir, @Nullable String nullableAddTag) {
-        try (Stream<Path> paths = Files.list(dir)) {
-            for (Path path : paths.toList()) {
-                if (isFileIgnored(path)) {
-                    continue;
-                }
-                if (Files.isRegularFile(path)) {
-                    FileFmt fmt = getFileFormat(path);
-                    if (fmt != TXT_AS_TSV) {
-                        continue;
-                    }
-                    Path relativePath = path.getFileName();
-                    String lastSeg = relativePath.toString();
-                    String codeName = getCodeName(lastSeg);
-                    if (codeName == null) {
-                        continue;
-                    }
-
-                    excelFiles.put(relativePath.toString(),
-                            new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, TXT_AS_TSV, nullableAddTag));
-                }
-
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -315,7 +249,6 @@ public class DirectoryStructure implements JsonTableFiles {
                 String tableName = getTableNameIfTableDirForJson(dirName);
                 if (tableName != null) {
                     Path existing = discovered.put(tableName, path);
-                    //noinspection ConstantValue
                     if (existing != null) {
                         throw new RuntimeException("JSON table directory conflict for table '%s': both '%s' and '%s' exist"
                                 .formatted(tableName, existing, path));
@@ -356,7 +289,6 @@ public class DirectoryStructure implements JsonTableFiles {
                 if (subTableName != null) {
                     String fullTableName = pkgNameDot + "." + subTableName;
                     Path existing = discovered.put(fullTableName, subPath);
-                    //noinspection ConstantValue
                     if (existing != null) {
                         throw new RuntimeException("JSON table directory conflict for table '%s': both '%s' and '%s' exist"
                                 .formatted(fullTableName, existing, subPath));
@@ -376,25 +308,6 @@ public class DirectoryStructure implements JsonTableFiles {
             throw new RuntimeException(e);
         }
     }
-
-    private void findOneTableJsonFilesInDir(Path path) {
-        if (isFileIgnored(path)) {
-            return;
-        }
-        if (!Files.isDirectory(path)) {
-            return;
-        }
-
-        String dirName = path.getFileName().toString();
-        String tableName = getTableNameIfTableDirForJson(dirName);
-        if (tableName == null) {
-            return;
-        }
-
-        JsonFileList jsonFiles = this.jsonFiles.computeIfAbsent(tableName, (String j) -> new JsonFileList());
-        findOneTableJsonFiles(path, jsonFiles);
-    }
-
 
     private void findOneTableJsonFiles(Path tableDir, JsonFileList list) {
         list.tableDirRelativePath = rootDir.relativize(tableDir);
@@ -466,8 +379,7 @@ public class DirectoryStructure implements JsonTableFiles {
                 oldInfo.path().toFile().lastModified(),
                 oldInfo.path(),
                 relativeExcelPath,
-                oldInfo.fmt(),
-                oldInfo.nullableAddTag()
+                oldInfo.fmt()
         );
         Map<String, ExcelFileInfo> tmp = new LinkedHashMap<>(excelFiles);
         tmp.put(key, newInfo);

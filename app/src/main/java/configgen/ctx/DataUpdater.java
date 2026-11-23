@@ -30,7 +30,7 @@ public class DataUpdater {
     public static NewCfgDataResult updateByReloadTable(Context context,
                                                        DTable dTable) {
 
-        DTable newTable = DTable.of(dTable.tableName(), new ArrayList<>(), dTable.nullableAddTag());
+        DTable newTable = DTable.of(dTable.tableName(), new ArrayList<>());
         Path rootDir = context.rootDir();
         for (DRawSheet sheet : dTable.rawSheets()) {
             Path path = rootDir.resolve(sheet.relativeFilePath());
@@ -41,14 +41,13 @@ public class DataUpdater {
             }
             ReadResult result = null;
             switch (fmt) {
-                case CSV, TXT_AS_TSV -> {
+                case CSV -> {
                     TableNameIndex ti = getTableNameIndex(relativePath);
                     if (ti == null) {
                         throw new IllegalArgumentException("Not legal path: " + relativePath);
                     }
-                    char fieldSeparator = fmt == DataUtil.FileFmt.CSV ? ',' : '\t';
                     result = context.csvReader().readCsv(path, relativePath,
-                            ti.tableName(), ti.index(), fieldSeparator, dTable.nullableAddTag());
+                            ti.tableName(), ti.index());
                 }
 
                 case EXCEL -> result = context.excelReader().readExcels(path, relativePath, sheet.sheetName());

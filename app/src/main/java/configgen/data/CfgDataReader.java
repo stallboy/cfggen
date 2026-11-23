@@ -54,21 +54,18 @@ public record CfgDataReader(HeadRow headRow,
             List<Callable<ReadResult>> tasks = new ArrayList<>();
             for (ExcelFileInfo df : excelFiles) {
                 switch (df.fmt()) {
-                    case CSV, TXT_AS_TSV -> {
+                    case CSV -> {
                         TableNameIndex ti = getTableNameIndex(df.relativePath());
                         if (ti == null) {
                             Logger.verbose2("%s 名字不符合规范，ignore！", df.path());
                             stat.ignoredCsvCount++;
                         } else {
                             stat.csvCount++;
-                            char fieldSeparator = df.fmt() == DataUtil.FileFmt.CSV ? ',' : '\t';
                             tasks.add(() -> {
                                 try {
                                     return csvReader.readCsv(
                                             df.path(), df.relativePath(),
-                                            ti.tableName(), ti.index(),
-                                            fieldSeparator,
-                                            df.nullableAddTag());
+                                            ti.tableName(), ti.index());
                                 } catch (Exception e) {
                                     throw new RuntimeException("read csv failed: " + df.path(), e);
                                 }
@@ -90,7 +87,7 @@ public record CfgDataReader(HeadRow headRow,
             for (Future<ReadResult> future : futures) {
                 ReadResult result = future.get();
                 for (ReadResult.OneSheet sheet : result.sheets()) {
-                    addSheet(data, sheet.tableName(), sheet.sheet(), result.nullableAddTag());
+                    addSheet(data, sheet.tableName(), sheet.sheet());
                 }
                 stat.merge(result.stat());
             }
@@ -126,14 +123,14 @@ public record CfgDataReader(HeadRow headRow,
     }
 
 
-    private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData, @Nullable String nullableAddTag) {
+    private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData) {
         CfgData.DTable dTable = cfgData.getDTable(tableName);
         if (dTable != null) {
             dTable.rawSheets().add(sheetData);
         } else {
             List<DRawSheet> sheets = new ArrayList<>();
             sheets.add(sheetData);
-            CfgData.DTable newTable = CfgData.DTable.of(tableName, sheets, nullableAddTag);
+            CfgData.DTable newTable = CfgData.DTable.of(tableName, sheets);
             cfgData.tables().put(tableName, newTable);
         }
     }

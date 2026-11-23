@@ -11,16 +11,13 @@ data 层把磁盘上的 Excel / CSV 文件变成内存里的**原始单元格模
 | 类型 | 含义 |
 |---|---|
 | `CfgData` | `Map<String, DTable>` + 统计 `CfgDataStat` |
-| `DTable` | 一张逻辑表：`fields`(表头，HeadParser 产) + `rows`(单元格，CellParser 产) + `rawSheets` + 可选 `nullableAddTag` |
-| `DField` | 表头一列：`name` / `comment` / `suggestedType` |
+| `DTable` | 一张逻辑表：`fields`(表头，HeadParser 产) + `rows`(单元格，CellParser 产) + `rawSheets` |
+| `DField` | 表头一列：`name` / `comment` |
 | `DCell` | 一个单元格：已 trim 的 `value` + `rowId` + `col` + `mode` 位标志 |
 | `DRawSheet` | 一个原始 sheet/csv：路径 / sheet名 / `index` / `rows` / `fieldIndices` |
 | `DRawRow` | 行接口（`cell(c)` / `count()`），抽象掉 excel 行与 csv 行的差异 |
 
-两个约定（来自 `DTable` 文档注释）：
-
-- **一张逻辑表可拆成多文件 / 多 sheet**：csv 可拆 `task.csv`(=`task_0.csv`)、`task_1.csv`、`task_2.csv`；excel 可拆 sheet `task`、`task_1`、`task_2`。`index` 决定合并后的顺序。
-- **`nullableAddTag`**：通常是 `-client` / `-server`，给整张表打附加 tag，用于抽取特定端数据。
+一张逻辑表可以拆成多个 CSV 文件或多个 Excel sheet。CSV 可拆成 `task.csv`（等同于 `task_0.csv`）、`task_1.csv`、`task_2.csv`，Excel 可拆成 `task`、`task_1`、`task_2` 三个 sheet。`index` 决定合并后的顺序。
 
 `DCell` 的 `toString()` 会把 `col` 转成 Excel 列字母（`toAZ`，0→A、25→Z、26→AA…），输出形如 `sheet=task[row],row=3,col=B,data=...`——**报错信息能直接指回 Excel 的 A1 位置**。
 
@@ -31,7 +28,7 @@ data 层把磁盘上的 Excel / CSV 文件变成内存里的**原始单元格模
 ```mermaid
 flowchart TD
     subgraph P1["阶段1：读文件 (并发)"]
-        F["遍历 sourceStructure.getExcelFiles"] --> CSV["CSV/TSV → ReadCsv.readCsv"]
+        F["遍历 sourceStructure.getExcelFiles"] --> CSV["CSV → ReadCsv.readCsv"]
         F --> XLS["EXCEL → ExcelReader.readExcels"]
         CSV --> M["合并 DRawSheet 进 DTable"]
         XLS --> M
@@ -63,7 +60,7 @@ FastExcel 实现里两个**非显然**点：
 
 见 `data/HeadParser.java`。
 
-- `HeadRow`（`-headrow` 选，默认 2 行）定义哪几行是 `nameRow` / `commentRow` / `suggestedTypeRow`，以及 `rowCount`。
+- `HeadRow` 定义 `nameRow`、`commentRow` 和 `rowCount`。用 `-headrow` 选择 2 行或 3 行，默认 2 行。
 - **行模式 vs 列模式**：`getLogicRow` 在行模式读一条**横行**，在列模式读一条**竖列**（相当于转置）——同一套逻辑兼容两种排版。
 - 多 sheet 组成的表：表头必须一致，否则 `SplitDataHeaderNotEqual` 报错（但仍按第一个表头继续，数据可能错位）。
 - 列名解析 `name.split("[.,@]", 2)[0]` 去后缀；首列以 `#` 开头视为注释列。
@@ -71,7 +68,7 @@ FastExcel 实现里两个**非显然**点：
 ## 编码 / BOM / 分隔符
 
 - CSV 默认 **GBK** 编码，支持带 BOM 的 UTF-8 自动识别（`ReadCsv` 配合 `util/UnicodeReader`）。
-- CSV 用 `,`、TSV（`.txt`）用 `\t`。
+- CSV 使用逗号分隔字段。
 - `-encoding` 覆盖默认编码。
 
 ## 设计原理

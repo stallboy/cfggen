@@ -51,7 +51,7 @@ class WaitWatcherBehaviorTest {
     @Test
     void shouldTriggerListenerAfterWaitPeriodWhenSingleEventOccurs() throws IOException, InterruptedException {
         // Given: WaitWatcher 和监听器
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
@@ -75,7 +75,7 @@ class WaitWatcherBehaviorTest {
     @Test
     void shouldAggregateMultipleEventsWithinWaitPeriod() throws IOException, InterruptedException {
         // Given: WaitWatcher 和监听器
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
@@ -112,7 +112,7 @@ class WaitWatcherBehaviorTest {
     @Test
     void shouldNotTriggerListenerWhenNoEventsOccur() throws InterruptedException {
         // Given: WaitWatcher 和监听器
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
@@ -134,7 +134,7 @@ class WaitWatcherBehaviorTest {
     @Test
     void shouldTriggerTwice() throws IOException, InterruptedException {
         // Given: WaitWatcher 和监听器
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
@@ -164,7 +164,7 @@ class WaitWatcherBehaviorTest {
     void shouldSupportStopFromListenerThread() throws IOException, InterruptedException {
         // WatchAndPostRun的autoFix循环保护会在reloadData（即listener）里调用stopWatch→waitWatcher.stop()，
         // 即从轮询线程自身调用stop。必须支持：不抛异常、不自join挂死，且轮询循环在本次tick后退出
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
@@ -194,7 +194,7 @@ class WaitWatcherBehaviorTest {
     @Test
     void shouldHandleZeroWaitTimeConfiguration() {
         // Given: 零等待时间的配置
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         AtomicInteger listenerCallCount = new AtomicInteger(0);
 
         // When & Then: 零等待时间应该抛出异常
@@ -206,7 +206,7 @@ class WaitWatcherBehaviorTest {
     @Test
     void shouldThrowExceptionWhenNegativeWaitTimeIsProvided() {
         // Given: 负等待时间
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         AtomicInteger listenerCallCount = new AtomicInteger(0);
 
         // When & Then: 应该抛出 IllegalArgumentException
@@ -219,7 +219,7 @@ class WaitWatcherBehaviorTest {
     @Test
     void shouldHandleNullListenerGracefully() {
         // Given: null 监听器
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
 
         // When & Then: 应该抛出 NullPointerException
         assertThrows(NullPointerException.class, () -> {
@@ -245,7 +245,7 @@ class WaitWatcherBehaviorTest {
     void shouldWaitForAQuietPeriodAfterTheLatestEvent() throws Exception {
         int quietMillis = 400;
         int pollMillis = 10;
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         var firstCallback = new CompletableFuture<Long>();
         WaitWatcher waitWatcher = new WaitWatcher(watcher,
                 () -> firstCallback.complete(System.currentTimeMillis()), quietMillis, pollMillis);
@@ -286,7 +286,7 @@ class WaitWatcherBehaviorTest {
 //    @Test
     void shouldHandleMultipleWaitWatchersIndependently() throws IOException, InterruptedException {
         // Given: 两个独立的 WaitWatcher
-        Watcher watcher = new Watcher(tempDir, null);
+        Watcher watcher = new Watcher(tempDir);
         watcher.start();
 
         AtomicInteger listener1CallCount = new AtomicInteger(0);

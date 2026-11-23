@@ -17,7 +17,6 @@ import static configgen.data.DataUtil.FileFmt.*;
 public class DataUtil {
 
     public enum FileFmt {
-        TXT_AS_TSV,
         CSV,
         EXCEL,
         CFG,
@@ -38,7 +37,6 @@ public class DataUtil {
         }
 
         return switch (ext) {
-            case "txt" -> TXT_AS_TSV; // 之前的tsv文件存成了txt
             case "csv" -> CSV;
             case "xls", "xlsx" -> EXCEL;
             case "cfg" -> CFG;
