@@ -20,6 +20,7 @@ import configgen.value.ComparingBlockParser.BlockDiff;
 import configgen.value.VTableParser;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -36,14 +37,14 @@ import java.util.Map;
 public class BlockMigrationTool extends Tool {
     private final Path dataDir;
     private final HeadRow headRow;
-    private final String encoding;
+    private final Charset encoding;
     private final @Nullable String to;
 
     public BlockMigrationTool(Parameter parameter) {
         super(parameter);
         this.dataDir = Path.of(parameter.get("datadir", "."));
         this.headRow = HeadRows.getById(parameter.get("headrow", "2"));
-        this.encoding = parameter.get("encoding", "GBK");
+        this.encoding = Charset.forName(parameter.get("encoding", "GBK"));
         this.to = parameter.get("to", null);
     }
 

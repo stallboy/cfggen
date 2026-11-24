@@ -7,6 +7,7 @@ import configgen.data.CfgData.DRowId;
 import configgen.data.Source;
 import configgen.value.CfgValue.VStruct;
 
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 /**
@@ -71,7 +72,7 @@ public class TableFileLocator {
             }
         } else if (format == FileFormat.CSV) {
             try {
-                String encoding = context.contextCfg().csvDefaultEncoding();
+                Charset encoding = context.contextCfg().csvDefaultEncoding();
                 if (isColumnMode) {
                     return new ColumnModeCsvTableFile(filePath, encoding, headRow);
                 } else {

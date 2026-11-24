@@ -3,6 +3,7 @@ package configgen.data;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -165,7 +166,7 @@ class CellParserFormatTest {
                 1,"say ""hello"", then leave",C:\\Users\\test
                 2,Price < $100,/home/user/data
                 """);
-        var read = new ReadCsv("UTF-8").readCsv(file, file.getFileName(), "special", 0);
+        var read = new ReadCsv(StandardCharsets.UTF_8).readCsv(file, file.getFileName(), "special", 0);
         var table = CfgData.DTable.of("special", new ArrayList<>(List.of(read.sheets().getFirst().sheet())));
 
         HeadParser.parse(table, read.stat());

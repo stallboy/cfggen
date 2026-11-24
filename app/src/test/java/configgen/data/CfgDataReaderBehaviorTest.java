@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ class CfgDataReaderBehaviorTest {
 
     static CfgData readFile(String fn, Path tempDir) {
         Resources.addTempFileFromResourceFile(fn, tempDir);
-        ReadCsv csvReader = new ReadCsv("GBK");
+        ReadCsv csvReader = new ReadCsv(Charset.forName("GBK"));
         CfgDataReader fastDataReader = new CfgDataReader(HeadRows.A2_Default, csvReader, ReadByFastExcel.INSTANCE);
         return fastDataReader.readCfgData(new DirectoryStructure(tempDir).getExcelFiles(), null, CfgSchemaErrs.of());
     }
@@ -79,7 +80,7 @@ class CfgDataReaderBehaviorTest {
     void shouldHandleEmptyDirectoryGracefully() {
         // Given: 空目录
         DirectoryStructure emptyDir = new DirectoryStructure(tempDir);
-        ReadCsv csvReader = new ReadCsv("GBK");
+        ReadCsv csvReader = new ReadCsv(Charset.forName("GBK"));
         CfgDataReader fastDataReader = new CfgDataReader(HeadRows.A2_Default, csvReader, ReadByFastExcel.INSTANCE);
 
         // When: 读取配置数据
@@ -129,7 +130,7 @@ class CfgDataReaderBehaviorTest {
     void shouldHandleInvalidFilePathsGracefully() {
         // Given: 无效文件路径
         DirectoryStructure dirWithInvalidFiles = new DirectoryStructure(tempDir);
-        ReadCsv csvReader = new ReadCsv("GBK");
+        ReadCsv csvReader = new ReadCsv(Charset.forName("GBK"));
         CfgDataReader fastDataReader = new CfgDataReader(HeadRows.A2_Default, csvReader, ReadByFastExcel.INSTANCE);
 
         // When: 尝试读取不存在的文件

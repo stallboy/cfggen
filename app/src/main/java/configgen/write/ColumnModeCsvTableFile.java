@@ -2,6 +2,7 @@ package configgen.write;
 
 import org.jspecify.annotations.Nullable;
 
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,7 +12,7 @@ import java.util.List;
  * CSV表格文件实现（列模式）
  */
 public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
-    public ColumnModeCsvTableFile(Path filePath, String defaultEncoding, int headRow) {
+    public ColumnModeCsvTableFile(Path filePath, Charset defaultEncoding, int headRow) {
         super(filePath, defaultEncoding, headRow);
     }
 

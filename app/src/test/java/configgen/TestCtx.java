@@ -4,6 +4,7 @@ import configgen.ctx.Context;
 import configgen.ctx.Context.I18nCfg;
 import configgen.data.HeadRows;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -27,7 +28,7 @@ public final class TestCtx {
                                                Path langsDir, String defaultLang) {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         csvByName.forEach((name, csv) -> Resources.addTempFileFromText(name + ".csv", tempDir, csv));
-        return Context.loadAndAlignSchema(new Context.ContextCfg(tempDir, HeadRows.A2_Default, "UTF-8",
+        return Context.loadAndAlignSchema(new Context.ContextCfg(tempDir, HeadRows.A2_Default, StandardCharsets.UTF_8,
                 new I18nCfg.Switchable(langsDir, defaultLang), false));
     }
 }

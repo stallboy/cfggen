@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -27,7 +28,7 @@ class CsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        CsvTableFile tableFile = new CsvTableFile(csvPath, "UTF-8", 2);
+        CsvTableFile tableFile = new CsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         // Test emptyRows
         // Data starts at row 2. Row 2 is "1,A", Row 3 is "2,B"
@@ -61,7 +62,7 @@ class CsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        CsvTableFile tableFile = new CsvTableFile(csvPath, "UTF-8", 2);
+        CsvTableFile tableFile = new CsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         // Test emptyRows
         tableFile.emptyRows(3, 1, List.of(0,2)); // Keep comment cell (index 1)
@@ -89,7 +90,7 @@ class CsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        CsvTableFile tableFile = new CsvTableFile(csvPath, "UTF-8", 2);
+        CsvTableFile tableFile = new CsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         RecordBlock block = new RecordBlock(2);
         block.setCell(0, 0, "2");
@@ -130,7 +131,7 @@ class CsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        CsvTableFile tableFile = new CsvTableFile(csvPath, "UTF-8", 2);
+        CsvTableFile tableFile = new CsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         RecordBlock block = new RecordBlock(2);
         block.setCell(0, 0, "2");
@@ -167,7 +168,7 @@ class CsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        CsvTableFile tableFile = new CsvTableFile(csvPath, "UTF-8", 2);
+        CsvTableFile tableFile = new CsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         RecordBlock block = new RecordBlock(2);
         block.setCell(0, 0, "2");

@@ -2,6 +2,7 @@ package configgen.write;
 
 import org.jspecify.annotations.Nullable;
 
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,7 +14,7 @@ import java.util.List;
 public class CsvTableFile extends AbstractCsvTableFile {
     private final int fixedMaxColumnCount;
 
-    public CsvTableFile(Path filePath, String defaultEncoding, int headRow) {
+    public CsvTableFile(Path filePath, Charset defaultEncoding, int headRow) {
         super(filePath, defaultEncoding, headRow);
         if (rows.isEmpty()) {
             throw new IllegalArgumentException("CSV file has no data: " + filePath);

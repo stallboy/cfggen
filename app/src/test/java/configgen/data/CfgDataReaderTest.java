@@ -6,6 +6,7 @@ import configgen.schema.CfgSchemaErrs;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -16,7 +17,7 @@ class CfgDataReaderTest {
 
     static CfgData readFile(String fn, Path tempDir) {
         Resources.addTempFileFromResourceFile(fn, tempDir);
-        ReadCsv csvReader = new ReadCsv("GBK");
+        ReadCsv csvReader = new ReadCsv(Charset.forName("GBK"));
         CfgDataReader fastDataReader = new CfgDataReader(HeadRows.A2_Default, csvReader, ReadByFastExcel.INSTANCE);
         return fastDataReader.readCfgData(new DirectoryStructure(tempDir).getExcelFiles(), null, CfgSchemaErrs.of());
     }

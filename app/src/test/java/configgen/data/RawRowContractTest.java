@@ -9,6 +9,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ class RawRowContractTest {
         }
         ReadResult result = excel
                 ? ReadByFastExcel.INSTANCE.readExcels(file, file.getFileName(), null)
-                : new ReadCsv("UTF-8").readCsv(file, file.getFileName(), "t", 0);
+                : new ReadCsv(StandardCharsets.UTF_8).readCsv(file, file.getFileName(), "t", 0);
         var sheet = result.sheets().getFirst().sheet();
         assertEquals(cells.length, sheet.rows().size());
         for (int r = 0; r < cells.length; r++) {
@@ -66,7 +67,7 @@ class RawRowContractTest {
             }
         }
 
-        var reader = new CfgDataReader(HeadRows.A2_Default, new ReadCsv("UTF-8"), ReadByFastExcel.INSTANCE);
+        var reader = new CfgDataReader(HeadRows.A2_Default, new ReadCsv(StandardCharsets.UTF_8), ReadByFastExcel.INSTANCE);
         var data = reader.readCfgData(List.of(new ExcelFileInfo(0, file, file.getFileName(),
                 FileFormat.EXCEL)), null, configgen.schema.CfgSchemaErrs.of());
         var table = data.tables().get("empty");

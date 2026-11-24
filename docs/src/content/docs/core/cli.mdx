@@ -12,6 +12,19 @@ import gencsBat from '~/../../example/cs/gencs.bat?raw';
 import gengoBat from '~/../../example/go/gengo.bat?raw';
 import gentsBat from '~/../../example/ts/gents.bat?raw';
 
+## 数据目录配置
+
+指定 `-datadir` 后，cfggen 会读取该目录下可选的 `.cfggen-data`。这是一个 Properties 文件，无 BOM 时按 UTF-8 读取，有 BOM 时按 BOM 识别 UTF-8、UTF-16 或 UTF-32。把它随配表一起提交，即可在启动命令中省略 `-encoding` 和 `-headrow`。
+
+```properties
+csvEncoding=UTF-8
+headRow=2
+```
+
+- `csvEncoding` 适用于没有 BOM 的 CSV。优先级为 `-encoding` → 目录配置 → `GBK`。
+- `headRow` 是 CSV 和 Excel 的表头行数，可选 `2` 或 `3`。优先级为 `-headrow` → JVM 属性 `configgen.headrow` → 目录配置 → `2`。
+- 内置 GUI 的编码和表头字段留空时沿用上述规则。
+- 文件里的编码或表头值无效时，cfggen 会报出文件路径和错误值并退出。
 
 ```cmd help
 Usage: java -jar cfggen.jar [options] [-tool toolName[,param=value...]] -datadir <dir> [-gen genName[,param=value...]]
@@ -59,8 +72,8 @@ Parameters can be in any order, but -datadir is required when using generators.
 
 -----schema & data
     -datadir          配表根目录，目录下有文件config.cfg
-    -headrow          CSV/Excel 表头行数，可选 2 或 3，默认 2
-    -encoding         csv编码，默认是GBK，如果文件中含有bom则用bom标记的编码
+    -headrow          CSV/Excel 表头行数，可选 2 或 3。覆盖 configgen.headrow 和 .cfggen-data 中的 headRow，内置默认值为 2。
+    -encoding         CSV 编码。覆盖 .cfggen-data 中的 csvEncoding，内置默认值为 GBK。CSV 文件有 BOM 时优先使用 BOM。
 
 -----i18n support
     -i18nfile         国际化需要的文件，如果不用国际化，就不要配置

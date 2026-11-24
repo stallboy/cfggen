@@ -9,19 +9,20 @@ import configgen.schema.CfgSchemaErrs;
 import configgen.schema.CfgSchemas;
 import configgen.util.Logger;
 
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
 public class ExcelReadDiffTool extends Tool {
     private final Path dataDir;
-    private final String csvDefaultEncoding;
+    private final Charset csvDefaultEncoding;
     private final HeadRow headRow;
 
 
     public ExcelReadDiffTool(Parameter parameter) {
         super(parameter);
         dataDir = Path.of(parameter.get("datadir", "."));
-        csvDefaultEncoding = parameter.get("csvencoding", "GBK");
+        csvDefaultEncoding = Charset.forName(parameter.get("csvencoding", "GBK"));
         headRow = HeadRows.getById(parameter.get("headrow", "2"));
 
         parameter.title("compare fastexcel lib read to poi lib read");

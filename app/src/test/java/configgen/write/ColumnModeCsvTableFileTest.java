@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -34,7 +35,7 @@ class ColumnModeCsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, "UTF-8", 2);
+        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         // Test emptyRows - 在列模式下，emptyRows实际上是清空列
         // 清空第2列（从0开始），即清空数据列"1,2"
@@ -69,7 +70,7 @@ class ColumnModeCsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, "UTF-8", 2);
+        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         // 创建RecordBlock（逻辑层按行存储）
         // 要插入的数据：
@@ -117,7 +118,7 @@ class ColumnModeCsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, "UTF-8", 2);
+        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         // 要插入的数据：
         // 逻辑层：行0: ["2", "B"]
@@ -158,7 +159,7 @@ class ColumnModeCsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, "UTF-8", 2);
+        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         // 要插入的多列数据：
         // 逻辑层：
@@ -208,7 +209,7 @@ class ColumnModeCsvTableFileTest {
                 """;
         Files.writeString(csvPath, content);
 
-        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, "UTF-8", 2);
+        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, StandardCharsets.UTF_8, 2);
 
         // Test emptyRows with fieldIndices - 在列模式下，emptyRows实际上是清空列
         // 清空第2列（从0开始），即清空数据列"1,注释1,A"，但只清空第0列（id）和第2列（名字），保留注释列（索引1）

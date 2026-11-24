@@ -15,6 +15,8 @@ import configgen.value.ValueEnv;
 import configgen.value.CfgValueParser;
 import configgen.value.CfgValueErrs;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -22,7 +24,7 @@ import java.util.Objects;
 public class Context {
     public record ContextCfg(Path dataDir,
                              HeadRow headRow,
-                             String csvDefaultEncoding,
+                             Charset csvDefaultEncoding,
                              I18nCfg i18n,
                              boolean allowValueErr) {
 
@@ -34,7 +36,7 @@ public class Context {
         }
 
         public static ContextCfg of(Path dataDir) {
-            return new ContextCfg(dataDir, HeadRows.A2_Default, "UTF-8",
+            return new ContextCfg(dataDir, HeadRows.A2_Default, StandardCharsets.UTF_8,
                     I18nCfg.Disabled.INSTANCE, false);
         }
     }

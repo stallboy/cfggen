@@ -4,8 +4,6 @@ import configgen.schema.CfgSchemas;
 import org.jspecify.annotations.Nullable;
 import configgen.ctx.Context;
 import configgen.ctx.Context.I18nCfg;
-import configgen.data.HeadRow;
-import configgen.data.HeadRows;
 import configgen.editorserver.EditorServer;
 import configgen.gen.ui.GuiLauncher;
 import configgen.genbytes.BytesGenerator;
@@ -30,7 +28,6 @@ import configgen.util.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -145,8 +142,8 @@ public final class Main {
         boolean allowValueErr = false;
         String dataDir = null;
         String sharedSchema = null;
-        String headRowId = System.getProperty("configgen.headrow");
-        String csvDefaultEncoding = "GBK";
+        String headRowId = null;
+        String encodingArg = null;
 
         String i18nfile = null;
         String langSwitchDir = null;
@@ -200,7 +197,7 @@ public final class Main {
                 case "-datadir" -> dataDir = nextArg(args, paramType, ++i);
                 case "-schema" -> sharedSchema = nextArg(args, paramType, ++i);
                 case "-headrow" -> headRowId = nextArg(args, paramType, ++i);
-                case "-encoding" -> csvDefaultEncoding = nextArg(args, paramType, ++i);
+                case "-encoding" -> encodingArg = nextArg(args, paramType, ++i);
 
                 case "-i18nfile" -> i18nfile = nextArg(args, paramType, ++i);
                 case "-langswitchdir" -> langSwitchDir = nextArg(args, paramType, ++i);
@@ -228,21 +225,13 @@ public final class Main {
             return help("-datadir is required");
         }
 
-        for (NamedTool nt : tools) {
-            Logger.verbose("-----tool %s", nt.tool.parameter);
-            nt.tool.call();
-        }
-
         if (dataDir == null) {
+            runTools(tools);
             return 0;
         }
-        Path dataDirPath = Paths.get(dataDir);
-
-        if (headRowId == null) {
-            headRowId = "2";
-        }
-        HeadRow headRow = HeadRows.getById(headRowId);
-
+        Path dataDirPath = Path.of(dataDir);
+        DataReadOptions dataOptions = DataReadOptions.resolve(dataDirPath, headRowId, encodingArg);
+        runTools(tools);
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
 
@@ -252,13 +241,20 @@ public final class Main {
         } else if (langSwitchDir != null) {
             i18n = new I18nCfg.Switchable(Path.of(langSwitchDir), langSwitchDefaultLang);
         }
-        var contextCfg = new Context.ContextCfg(dataDirPath, headRow, csvDefaultEncoding,
+        var contextCfg = new Context.ContextCfg(dataDirPath, dataOptions.headRow(), dataOptions.csvEncoding(),
                 i18n, allowValueErr);
         Context context = sharedSchema == null ? Context.loadAndAlignSchema(contextCfg)
                 : Context.load(contextCfg, CfgSchemas.readFromRoot(Path.of(sharedSchema)));
         GenerationBatch.run(context, generators);
         Logger.profile("end");
         return 0;
+    }
+
+    private static void runTools(List<NamedTool> tools) {
+        for (NamedTool nt : tools) {
+            Logger.verbose("-----tool %s", nt.tool.parameter);
+            nt.tool.call();
+        }
     }
 
     private static String nextArg(String[] args, String paramType, int valueIndex) {

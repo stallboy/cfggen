@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -143,7 +144,7 @@ class HeadParserBoundaryTest {
     void shouldHandleHeadersWithOnlyWhitespace(@TempDir Path root) throws Exception {
         Path file = root.resolve("whitespace.csv");
         Files.writeString(file, "  ,\t,   \t   \nid,name,value\n");
-        var read = new ReadCsv("UTF-8").readCsv(file, file.getFileName(), "whitespace", 0);
+        var read = new ReadCsv(StandardCharsets.UTF_8).readCsv(file, file.getFileName(), "whitespace", 0);
         var sheet = read.sheets().getFirst().sheet();
         CfgData.DTable dt = CfgData.DTable.of("whitespace", new ArrayList<>(List.of(sheet)));
         CfgDataStat ds = read.stat();

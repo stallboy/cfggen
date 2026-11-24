@@ -46,6 +46,21 @@ class GenerationBatchTest {
     }
 
     @Test
+    void readsCsvUsingSettingsFromDataDirectory() throws IOException {
+        Path data = Files.createDirectory(tempDir.resolve("data"));
+        Path output = tempDir.resolve("json");
+        Files.writeString(data.resolve("config.cfg"), "table item[id] { id:int; label:str; }");
+        Files.writeString(data.resolve(".cfggen-data"), "csvEncoding=utf8\nheadRow=3\n");
+        Files.writeString(data.resolve("item.csv"), "编号,名称\nid,label\n2,表头\n1,中文\n");
+
+        Main.registerAllProviders();
+        assertEquals(0, Main.runWithCatch(new String[]{"-datadir", data.toString(),
+                "-gen", "json,tables=item,dst=" + output}));
+        assertTrue(Files.readString(output.resolve("_item/1.json")).contains("中文"));
+        assertFalse(Files.exists(output.resolve("_item/2.json")));
+    }
+
+    @Test
     void refusesToClaimAnUnmarkedDirectoryWithExistingFiles() throws IOException {
         Context context = newContext();
         Path project = tempDir.resolve("project");

@@ -24,8 +24,8 @@ public class GuiLauncher {
 
     // 包级私有成员变量，供CommandLineBuilder直接访问
     JTextField datadirField = createTextField();
-    JTextField encodingField = new JTextField(UIConstants.DEFAULT_ENCODING);
-    JTextField headRowField = new JTextField(UIConstants.DEFAULT_HEAD_ROW);
+    JTextField encodingField = new JTextField();
+    JTextField headRowField = new JTextField();
     JTextField i18nfileField = createTextField();
     JTextField langSwitchDirField = createTextField();
     JTextField defaultLangField = new JTextField(UIConstants.DEFAULT_LANG);
@@ -222,6 +222,8 @@ public class GuiLauncher {
         JPanel encodingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         encodingPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.Encoding", "Encoding:")));
         encodingField.setPreferredSize(UIConstants.TEXT_FIELD_ENCODING_SIZE);
+        encodingField.setToolTipText(LocaleUtil.getLocaleString("GuiLauncher.DataOptionOverride",
+                "Leave blank to use the data directory settings."));
         encodingField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         encodingPanel.add(encodingField);
         panel.add(encodingPanel);
@@ -230,6 +232,7 @@ public class GuiLauncher {
         JPanel headRowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headRowPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.HeadRow", "Head Row:")));
         headRowField.setPreferredSize(UIConstants.TEXT_FIELD_HEADROW_SIZE);
+        headRowField.setToolTipText(encodingField.getToolTipText());
         headRowField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         headRowPanel.add(headRowField);
         panel.add(headRowPanel);

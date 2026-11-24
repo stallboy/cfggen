@@ -9,6 +9,7 @@ import de.siegmar.fastcsv.reader.FieldMismatchStrategy;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,11 +19,11 @@ import java.util.OptionalInt;
 public class CSVUtil {
 
     public static List<CsvRecord> read(Path path) {
-        return read(path, "UTF-8");
+        return read(path, StandardCharsets.UTF_8);
     }
 
 
-    public static List<CsvRecord> read(Path path, String defaultEncoding) {
+    public static List<CsvRecord> read(Path path, Charset defaultEncoding) {
         try (CsvReader<CsvRecord> reader = CsvReader.builder()
                 .skipEmptyLines(false)
                 .commentStrategy(CommentStrategy.NONE)
@@ -32,7 +33,7 @@ public class CSVUtil {
                 .missingFieldStrategy(FieldMismatchStrategy.IGNORE)
                 // 4.x StrictCsvParser 对引号内含未转义引号等会抛异常；2.x 宽松。开启后自动切换到 RelaxedCsvParser
                 .allowExtraCharsAfterClosingQuote(true)
-                .ofCsvRecord(new UnicodeReader(Files.newInputStream(path), Charset.forName(defaultEncoding)))) {
+                .ofCsvRecord(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
             List<CsvRecord> rows = new ArrayList<>();
             for (CsvRecord csvRecord : reader) {
                 rows.add(csvRecord);
@@ -43,7 +44,7 @@ public class CSVUtil {
         }
     }
 
-    public static List<List<String>> readAndNormalize(Path path, String defaultEncoding) {
+    public static List<List<String>> readAndNormalize(Path path, Charset defaultEncoding) {
         List<CsvRecord> rows = read(path, defaultEncoding);
 
         List<List<String>> result = new ArrayList<>(rows.size());

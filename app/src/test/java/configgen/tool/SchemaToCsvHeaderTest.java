@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -35,9 +36,9 @@ class SchemaToCsvHeaderTest {
         new SchemaToCsvTool(new ParameterParser("schematocsv,datadir=" + dir)).call();
 
         assertEquals(List.of(List.of("ID", "范围", ""), List.of("id", "bounds._min", "_max")),
-                CSVUtil.readAndNormalize(dir.resolve("horizontal.csv"), "UTF-8"));
+                CSVUtil.readAndNormalize(dir.resolve("horizontal.csv"), StandardCharsets.UTF_8));
         assertEquals(List.of(List.of("ID", "id"), List.of("范围", "bounds._min"), List.of("", "_max")),
-                CSVUtil.readAndNormalize(dir.resolve("vertical.csv"), "UTF-8"));
+                CSVUtil.readAndNormalize(dir.resolve("vertical.csv"), StandardCharsets.UTF_8));
 
         Context ctx = Context.load(dir);
         for (String table : List.of("horizontal", "vertical")) {

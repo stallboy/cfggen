@@ -114,10 +114,8 @@ public record CommandLineBuilder(GuiLauncher launcher) {
 
         // 数据相关 (对应Main.java: 192-194)
         addIf(args, "-datadir", launcher.datadirField.getText().trim(), null, true);
-        addIf(args, "-encoding", launcher.encodingField.getText().trim(),
-                UIConstants.DEFAULT_ENCODING, false);
-        addIf(args, "-headrow", launcher.headRowField.getText().trim(),
-                UIConstants.DEFAULT_HEAD_ROW, false);
+        addIf(args, "-encoding", launcher.encodingField.getText().trim(), null, false);
+        addIf(args, "-headrow", launcher.headRowField.getText().trim(), null, false);
 
         // 目录映射 (对应Main.java: 196-198)
 

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -242,7 +243,7 @@ class CfgSchemaAlignToDataTest {
         Resources.addTempFileFromText("span_err.csv", tempDir, csvContent);
 
         // 直接从文件系统读取
-        ReadCsv csvReader = new ReadCsv("UTF-8");
+        ReadCsv csvReader = new ReadCsv(StandardCharsets.UTF_8);
         CfgDataReader fastDataReader = new CfgDataReader(HeadRows.A2_Default, csvReader, ReadByFastExcel.INSTANCE);
         CfgData cfgData = fastDataReader.readCfgData(new DirectoryStructure(tempDir).getExcelFiles(), null, CfgSchemaErrs.of());
 

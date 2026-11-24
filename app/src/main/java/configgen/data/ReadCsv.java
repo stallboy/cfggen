@@ -3,6 +3,7 @@ package configgen.data;
 import configgen.util.CSVUtil;
 import de.siegmar.fastcsv.reader.CsvRecord;
 
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,9 +11,9 @@ import java.util.List;
 import static configgen.data.CfgData.*;
 
 public class ReadCsv {
-    private final String defaultEncoding;
+    private final Charset defaultEncoding;
 
-    public ReadCsv(String defaultEncoding) {
+    public ReadCsv(Charset defaultEncoding) {
         this.defaultEncoding = defaultEncoding;
     }
 

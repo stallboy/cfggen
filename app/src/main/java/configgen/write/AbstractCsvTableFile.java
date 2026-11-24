@@ -6,6 +6,7 @@ import configgen.util.CSVUtil;
 import configgen.write.RecordBlock.RecordBlockTransformed;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public abstract class AbstractCsvTableFile implements TableFile {
     protected boolean modified = false;
 
     public AbstractCsvTableFile(Path filePath,
-                                String defaultEncoding,
+                                Charset defaultEncoding,
                                 int headRow)  {
         if (headRow < 0) {
             throw new IllegalArgumentException("headRow must be non-negative");

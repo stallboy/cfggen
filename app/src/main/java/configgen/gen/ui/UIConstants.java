@@ -44,7 +44,5 @@ public final class UIConstants {
     public static final int VERTICAL_STRUT_MEDIUM = 5;
 
     // 默认值
-    public static final String DEFAULT_ENCODING = "GBK";
-    public static final String DEFAULT_HEAD_ROW = "2";
     public static final String DEFAULT_LANG = "zh_cn";
 }
