@@ -56,7 +56,6 @@ public class ConfigMgrLoader {
         var extensions = new ArrayList<ConfigExtension>();
         java.util.function.Consumer<ConfigExtension> collect = extension -> {
             if (seen.add(extension)) {
-                extension._bind(mgr);
                 extensions.add(extension);
             }
         };
@@ -64,7 +63,7 @@ public class ConfigMgrLoader {
             row._collectExtensions(collect);
         }
         for (var extension : extensions) {
-            extension.onConfigReady();
+            extension.onConfigReady(mgr);
         }
         mgr.markReady();
         return mgr;
@@ -91,7 +90,7 @@ public class ConfigMgrLoader {
         loaders.put("other.ArgCaptureMode", new ConfigLoader<>("other.ArgCaptureMode", errors, config.other.ArgCaptureMode_Detail::_create,
                 config.other.ArgCaptureMode_Detail::getName, rows -> config.other.ArgCaptureMode_Detail._index(mgr, rows, errors), null));
         loaders.put("other.drop", new ConfigLoader<>("other.drop", errors, config.other.Drop::_create,
-                config.other.Drop::getDropid, mgr::_set_other_drop_All, null));
+                config.other.Drop::getDropid, rows -> config.other.Drop._index(mgr, rows, errors), null));
         loaders.put("other.key_test", new ConfigLoader<>("other.key_test", errors, config.other.KeyTest::_create,
                 row -> new config.other.KeyTest.Id1Id2Key(row.getId1(), row.getId2()), rows -> config.other.KeyTest._index(mgr, rows, errors), row -> row._resolve(mgr, errors)));
         loaders.put("other.loot", new ConfigLoader<>("other.loot", errors, config.other.Loot::_create,

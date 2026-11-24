@@ -75,13 +75,16 @@ class RuntimeExtensionTest {
                     public abstract int getAttack();
                     private int power;
                     private int calls;
-                    protected void onConfigReady() {
+                    private config.ConfigMgr owner;
+                    @Override
+                    protected void onConfigReady(config.ConfigMgr _mgr) {
                         if (getAttack() < 0) throw new IllegalArgumentException("cache failed");
+                        owner = _mgr;
                         power = getAttack() * 2; calls++;
                     }
                     public int power() { return power; }
                     public int calls() { return calls; }
-                    public config.ConfigMgr owner() { return _mgr(); }
+                    public config.ConfigMgr owner() { return owner; }
                 }
                 """);
         Files.writeString(generated.resolve("hand/KeyBase.java"), """
@@ -90,7 +93,8 @@ class RuntimeExtensionTest {
                     public abstract config.Rank refRank();
                     public int calls;
                     public int multiplier;
-                    protected void onConfigReady() { multiplier = refRank().ref(_mgr()).getMultiplier(); calls++; }
+                    @Override
+                    protected void onConfigReady(config.ConfigMgr _mgr) { multiplier = refRank().ref(_mgr).getMultiplier(); calls++; }
                 }
                 """);
         Path classes = root.resolve("classes");

@@ -1,6 +1,7 @@
 package demo;
 
 import config.ConfigExtension;
+import config.ConfigMgr;
 import config.other.CfgLoot;
 
 public abstract class MonsterBase extends ConfigExtension {
@@ -9,7 +10,7 @@ public abstract class MonsterBase extends ConfigExtension {
     public abstract CfgLoot refAllLoot();
 
     @Override
-    protected void onConfigReady() {
+    protected void onConfigReady(ConfigMgr _mgr) {
         lootItemCount = refAllLoot().listRefLootid().size();
     }
 

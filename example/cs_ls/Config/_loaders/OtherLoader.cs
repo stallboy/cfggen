@@ -128,13 +128,25 @@ namespace Config.Other
         internal static void InitializeAll(List<DDrop> list, LoadErrors errors, ConfigMgr config)
         {
             int count = list.Count;
-            var s_all = new Dictionary<int, DDrop>(count);
+            var s_all = new DDrop[count];
+            var seq_dropid = new bool[count];
             foreach (var self in list) {
                 var key = PrimaryKey(self);
-                s_all.Add(key, self);
+                {
+                    int seq = self.Dropid;
+                    if (seq < 0 || seq >= count || seq_dropid[seq]) {
+                        errors.InvalidSeq("other.drop", "dropid", key, seq, count, config.Explain("other.drop", key));
+                    }
+                    else {
+                        seq_dropid[seq] = true;
+                    }
+                }
+                if (key >= 0 && key < count) {
+                    s_all[key] = self;
+                }
             }
-            config._other_ddrop_All = new System.Collections.ObjectModel.ReadOnlyDictionary<int, DDrop>(s_all);
-            config._other_ddrop_Rows = list.AsReadOnly();
+            config._other_ddrop_All = s_all;
+            config._other_ddrop_Rows = Array.AsReadOnly(s_all);
         }
 
         internal static DDrop _create(ConfigReader reader)
@@ -195,12 +207,29 @@ namespace Config.Other
         {
             int count = list.Count;
             var s_all = new Dictionary<Id1Id2Key, DKeyTest>(count);
+            var s_id1Map = new DKeyTest[count];
             var s_id1Id3Map = new Dictionary<Id1Id3Key, DKeyTest>(count);
             var s_id2Map = new Dictionary<long, DKeyTest>(count);
             var s_id2Id3Map = new Dictionary<Id2Id3Key, DKeyTest>(count);
+            var seq_id1 = new bool[count];
             foreach (var self in list) {
                 var key = PrimaryKey(self);
+                {
+                    int seq = self.Id1;
+                    if (seq < 0 || seq >= count || seq_id1[seq]) {
+                        errors.InvalidSeq("other.key_test", "id1", key, seq, count, config.Explain("other.key_test", key));
+                    }
+                    else {
+                        seq_id1[seq] = true;
+                    }
+                }
                 s_all.Add(key, self);
+                {
+                    int index = self.Id1;
+                    if (index >= 0 && index < count) {
+                        s_id1Map[index] = self;
+                    }
+                }
                 {
                     var uniqueKey = new Id1Id3Key(self.Id1, self.Id3);
                     if (!s_id1Id3Map.TryAdd(uniqueKey, self)) {
@@ -221,6 +250,7 @@ namespace Config.Other
                 }
             }
             config._other_dkey_utest_All = new System.Collections.ObjectModel.ReadOnlyDictionary<Id1Id2Key, DKeyTest>(s_all);
+            config._other_dkey_utest_Id1Map = s_id1Map;
             config._other_dkey_utest_Id1Id3Map = new System.Collections.ObjectModel.ReadOnlyDictionary<Id1Id3Key, DKeyTest>(s_id1Id3Map);
             config._other_dkey_utest_Id2Map = new System.Collections.ObjectModel.ReadOnlyDictionary<long, DKeyTest>(s_id2Map);
             config._other_dkey_utest_Id2Id3Map = new System.Collections.ObjectModel.ReadOnlyDictionary<Id2Id3Key, DKeyTest>(s_id2Id3Map);

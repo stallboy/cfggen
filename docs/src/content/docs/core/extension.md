@@ -17,38 +17,40 @@ Java 端通过 Schema 的 `javaBase` 属性，让生成的配置类继承你手�
 table skill[id] (javaBase='game.config.SkillBase') {
     id:int;
     baseDamage:int;
-    buffIds:list<int> ->buff;
+    buffIds:list<int> ->buff (sep='|');
+}
+
+table buff[id] {
+    id:int;
+    power:int;
 }
 
 ```
 
 ### 第二步：编写手写基类
 
-继承生成包下的 `ConfigExtension`，重写 `onConfigReady()`：
+继承生成包下的 `ConfigExtension`，重写 `onConfigReady(ConfigMgr _mgr)`。
 
 ```java
 package game.config;
 
+import config.Buff;
 import config.ConfigExtension;
 import config.ConfigMgr;
+
+import java.util.List;
 
 public abstract class SkillBase extends ConfigExtension {
     // 派生缓存字段
     private int totalBuffPower;
 
-    // 声明需要访问的生成字段 getter（或由子类实现）
-    public abstract java.util.List<Integer> getBuffIds();
+    public abstract List<Buff> refBuffIds();
 
     @Override
-    protected void onConfigReady() {
-        // 此时所有表、索引和外键都已就绪，可通过 _mgr() 安全访问当前配置集
-        ConfigMgr mgr = _mgr();
+    protected void onConfigReady(ConfigMgr _mgr) {
         int sum = 0;
-        for (int buffId : getBuffIds()) {
-            var buff = mgr.getBuff(buffId);
-            if (buff != null) {
-                sum += buff.getPower();
-            }
+        for (Buff buff : refBuffIds()) {
+            sum += buff.getPower();
         }
         this.totalBuffPower = sum;
     }
@@ -63,7 +65,7 @@ public abstract class SkillBase extends ConfigExtension {
 加载配置时，`ConfigMgrLoader` 会自动完成两件事：
 
 1. **递归收集**：自动遍历表记录以及嵌套在 `struct`、`interface`、`list`、`map`（键和值）中的所有扩展实例，并按对象身份去重。
-2. **两阶段初始化**：先对全部扩展实例绑定所属的 `ConfigMgr`（`_bind`），再统一调用各自的 `onConfigReady()`。
+2. **初始化回调**：收集完成后，为每个扩展实例调用一次 `onConfigReady(ConfigMgr _mgr)`，传入当前加载的配置集。
 
 ## 2. C# 用法（`IConfigExtension`）
 
@@ -93,6 +95,6 @@ public partial class Skill : IConfigExtension
 ## 3. 使用注意事项
 
 * **执行时机**：`onConfigReady` / `OnConfigReady` 仅在所有表读入、索引构建和外键解析**全部完成后**执行，此时读取任意关联表都是安全的。
-* **禁止依赖全局默认配置**：在初始化回调或自定义方法中访问其他表时，务必使用 `_mgr()`（Java）或回调参数 `_mgr`（C#），**不要**调用静态的 `ConfigMgr.getMgr()` / `ConfigMgr.GetMgr()`。这样可以确保在基础包与多个 Mod 实例并存，或后台预加载新配置时，不会串读到其他实例的数据。
-* **不可重复绑定**：每个扩展实例只绑定一次所属的 `ConfigMgr`，配置加载完成进入只读态后不应再修改其中的业务状态。
+* **访问当前配置集**：优先读取已解析的外键。初始化回调中需要按 key 查其他表时，使用参数 `_mgr`，确保基础包、Mod 或后台预加载的配置实例各自读取本实例的数据。
+* **配置只读**：配置加载完成后保持扩展缓存和业务状态只读。
 

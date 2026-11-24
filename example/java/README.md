@@ -71,7 +71,7 @@ Mod 数据和只重新导出数据、不编译业务代码的命令见 [config_m
 
 旧数据须重新导出；导出器、加载器和查看器仅支持当前版本的容器。
 
-`configgen.genjava.ConfigLoader<K, T>` 是共享 Java 支持类，不在 `config` 包重复生成，仅在加载期间持有合并记录。`ConfigMgr` 不保存输入字节；旧 `copyFrom` / `loadPartialAndSetMgr` 已移除，更新数据时重新构建实例后设置默认实例。没有 `ConfigNode` 接口；生成器仅为包含 `javaBase` 的类型生成扩展收集方法，加载器直接调用 `onConfigReady()`。
+`configgen.genjava.ConfigLoader<K, T>` 是共享 Java 支持类，不在 `config` 包重复生成，仅在加载期间持有合并记录。`ConfigMgr` 不保存输入字节；旧 `copyFrom` / `loadPartialAndSetMgr` 已移除，更新数据时重新构建实例后设置默认实例。没有 `ConfigNode` 接口；生成器仅为包含 `javaBase` 的类型生成扩展收集方法，加载器通过 `onConfigReady(ConfigMgr _mgr)` 传入当前配置集。
 
 每次加载创建普通的 `LoadValueErrs` 对象，无 `ThreadLocal` 或静态错误状态。`Error` 是 sealed interface，具体 record 保存各自参数，例如 `MissingReference(source, field, target, key)`、`DuplicateRecord(table, pack, key)`、`InvalidSeq`、`ChangedSymbolId`。错误直接包含实际参数，无 `Row` 包装或 `at` 上下文，通用 `add/fail` 均为 private。可恢复错误自动聚合；无法继续解码的错误立即中止。加载失败时捕获 `ConfigErr`，通过 `exception.getErrors()` 取得不可变快照，使用 `instanceof` 或模式 switch 处理；无需 `start`、清理或重置。
 

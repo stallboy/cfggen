@@ -138,13 +138,13 @@ public class ConfigMgr {
 
     public java.util.Collection<config.other.ArgCaptureMode_Detail> allOtherArgCaptureMode() { return other_ArgCaptureMode_All.values(); }
 
-    private java.util.Map<Integer, config.other.Drop> other_drop_All;
-    public java.util.Map<Integer, config.other.Drop> _get_other_drop_All() { return other_drop_All; }
-    public void _set_other_drop_All(java.util.Map<Integer, config.other.Drop> rows) { requireBuilding(); other_drop_All = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.List<config.other.Drop> other_drop_All;
+    public java.util.List<config.other.Drop> _get_other_drop_All() { return other_drop_All; }
+    public void _set_other_drop_All(java.util.List<config.other.Drop> rows) { requireBuilding(); other_drop_All = java.util.Collections.unmodifiableList(rows); }
 
-    public config.other.Drop getOtherDrop(int dropid) { return other_drop_All.get(dropid); }
+    public config.other.Drop getOtherDrop(int dropid) { return dropid >= 0 && dropid < other_drop_All.size() ? other_drop_All.get(dropid) : null; }
 
-    public java.util.Collection<config.other.Drop> allOtherDrop() { return other_drop_All.values(); }
+    public java.util.List<config.other.Drop> allOtherDrop() { return other_drop_All; }
 
     private java.util.Map<config.other.KeyTest.Id1Id2Key, config.other.KeyTest> other_key_test_All;
     public java.util.Map<config.other.KeyTest.Id1Id2Key, config.other.KeyTest> _get_other_key_test_All() { return other_key_test_All; }

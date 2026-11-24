@@ -77,7 +77,7 @@ gui.bat    # gui来配置参数和启动
 
 ## 运行时扩展示例
 
-怪物表 `other.monster` 在配置加载完成后缓存所属掉落组的条目数。Java 通过表上的 `javaBase` 继承手写基类 `MonsterBase`，在 `onConfigReady()` 中直接读取 `refAllLoot()` 已解析的掉落组。[单语言示例](java/demo/MonsterBase.java)和[多语言示例](java_ls/demo/MonsterBase.java)各有一份基类。C# 通过 [DMonster 的手写 partial 类](cs/DMonsterExtension.cs) 实现 `IConfigExtension`，使用回调参数 `_mgr` 查询掉落组。
+怪物表 `other.monster` 在配置加载完成后缓存所属掉落组的条目数。Java 通过表上的 `javaBase` 继承手写基类 `MonsterBase`，在 `onConfigReady(ConfigMgr _mgr)` 中直接读取 `refAllLoot()` 已解析的掉落组。[单语言示例](java/demo/MonsterBase.java)和[多语言示例](java_ls/demo/MonsterBase.java)各有一份基类。C# 通过 [DMonster 的手写 partial 类](cs/DMonsterExtension.cs) 实现 `IConfigExtension`，使用回调参数 `_mgr` 查询掉落组。
 
 运行 `java/run.bat`、`java_ls/run.bat` 或 `cs/run.bat` 可看到怪物 1 的掉落组条目数。
 
@@ -99,7 +99,7 @@ genjava.bat         # 生成 Java 代码和数据（关闭 JSpecify）
 run.bat             # 运行 seq 索引示例
 ```
 
-`other.key_test.id1` 是带 `seq` 的唯一键，现有两条记录的值为 `0` 和 `1`。`java_plain/run.bat` 会验证这两个序号均能命中，且查询序号 `2` 返回 `null`。
+`other.drop.dropid` 是 `seq` 主键，表中没有其他唯一键。其记录按 `0` 到 `3` 存入序号索引。`other.key_test.id1` 是 `seq` 唯一键，记录值为 `0` 和 `1`。`java_plain/run.bat` 会验证这两种索引的命中和越界查询。
 
 ### 📜 Lua
 

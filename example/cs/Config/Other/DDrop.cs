@@ -13,7 +13,8 @@ public partial class DDrop
     public static DDrop? Get(ConfigMgr config, int dropid)
     {
         var index = config._other_ddrop_All;
-        return index.TryGetValue(dropid, out var result) ? result : null;
+        var key = dropid;
+        return key >= 0 && key < index.Length ? index[key] : null;
     }
 
     public static IReadOnlyList<DDrop> All()

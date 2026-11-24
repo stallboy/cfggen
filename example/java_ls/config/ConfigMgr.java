@@ -143,13 +143,13 @@ public class ConfigMgr {
 
     public java.util.Collection<config.other.CfgArgCaptureMode_Detail> allOtherArgCaptureMode() { return other_ArgCaptureMode_All.values(); }
 
-    private java.util.Map<Integer, config.other.CfgDrop> other_drop_All;
-    public java.util.Map<Integer, config.other.CfgDrop> _get_other_drop_All() { return other_drop_All; }
-    public void _set_other_drop_All(java.util.Map<Integer, config.other.CfgDrop> rows) { requireBuilding(); other_drop_All = java.util.Collections.unmodifiableMap(rows); }
+    private java.util.List<config.other.CfgDrop> other_drop_All;
+    public java.util.List<config.other.CfgDrop> _get_other_drop_All() { return other_drop_All; }
+    public void _set_other_drop_All(java.util.List<config.other.CfgDrop> rows) { requireBuilding(); other_drop_All = java.util.Collections.unmodifiableList(rows); }
 
-    public config.other.@Nullable CfgDrop getOtherDrop(int dropid) { return other_drop_All.get(dropid); }
+    public config.other.@Nullable CfgDrop getOtherDrop(int dropid) { return dropid >= 0 && dropid < other_drop_All.size() ? other_drop_All.get(dropid) : null; }
 
-    public java.util.Collection<config.other.CfgDrop> allOtherDrop() { return other_drop_All.values(); }
+    public java.util.List<config.other.CfgDrop> allOtherDrop() { return other_drop_All; }
 
     private java.util.Map<config.other.CfgKey_test.Id1Id2Key, config.other.CfgKey_test> other_key_test_All;
     public java.util.Map<config.other.CfgKey_test.Id1Id2Key, config.other.CfgKey_test> _get_other_key_test_All() { return other_key_test_All; }

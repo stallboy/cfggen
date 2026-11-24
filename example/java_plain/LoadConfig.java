@@ -7,6 +7,13 @@ import java.nio.file.Path;
 public class LoadConfig {
     public static void main(String[] args) throws IOException {
         var mgr = ConfigMgrLoader.loadPackages(ConfigPackage.read(Path.of("base.bytes")));
+        var drops = mgr.allOtherDrop();
+        if (drops.size() != 4 || mgr.getOtherDrop(0) != drops.getFirst()
+                || drops.getFirst().getDropid() != 0 || mgr.getOtherDrop(drops.size()) != null) {
+            throw new IllegalStateException("Unexpected drop sequence lookup");
+        }
+        System.out.println("drop seq primary key: " + drops.stream().map(drop -> drop.getDropid()).toList());
+
         var first = mgr.getOtherKeyTestById1(0);
         var second = mgr.getOtherKeyTestById1(1);
         var missing = mgr.getOtherKeyTestById1(2);

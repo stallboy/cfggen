@@ -64,7 +64,6 @@ public class ConfigMgrLoader {
         var extensions = new ArrayList<ConfigExtension>();
         java.util.function.Consumer<ConfigExtension> collect = extension -> {
             if (seen.add(extension)) {
-                extension._bind(mgr);
                 extensions.add(extension);
             }
         };
@@ -74,7 +73,7 @@ public class ConfigMgrLoader {
         }
         @endfor
         for (var extension : extensions) {
-            extension.onConfigReady();
+            extension.onConfigReady(mgr);
         }
         @endif
         mgr.markReady();

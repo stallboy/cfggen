@@ -55,13 +55,13 @@ A[3] = collectitem(11, 1)
 A[4] = position(0, 0, 0)
 A[5] = testnocolumn
 
-mk(1, {38}, 2, conditionand(conditionand(killmonster(1, 0), collectitem(0, 0)), talknpc(0)), 10001, true, "", position(1, 0, 0), {12}, {position(1, 2, 3)}, {constvalue(1234)})
-mk(2, {39, 40}, 3, A[2], 2000, false, "", A[4], E, E, E)
-mk(3, {41, 42}, 0, A[3], 3000, false, "", A[4], E, E, E)
-mk(4, {43, 44}, 0, conditionand(A[1], A[3]), 4000, false, "", A[4], E, E, E)
-mk(5, {45, 46}, 0, conditionand(conditionand(A[1], A[2]), A[3]), 5000, false, "", A[4], E, E, E)
-mk(6, {47, 48}, 0, conditionand(chat("葵花宝典,123"), A[1]), 5000, false, "", A[4], E, E, E)
-mk(7, {49, 50}, 0, A[5], 2000, false, "", A[4], E, E, E)
-mk(8, {51, 52}, 0, A[5], 3000, false, "", A[4], E, E, E)
+mk(1, {39}, 2, conditionand(conditionand(killmonster(1, 0), collectitem(0, 0)), talknpc(0)), 10001, true, "", position(1, 0, 0), {12}, {position(1, 2, 3)}, {constvalue(1234)})
+mk(2, {40, 41}, 3, A[2], 2000, false, "", A[4], E, E, E)
+mk(3, {42, 43}, 0, A[3], 3000, false, "", A[4], E, E, E)
+mk(4, {44, 45}, 0, conditionand(A[1], A[3]), 4000, false, "", A[4], E, E, E)
+mk(5, {46, 47}, 0, conditionand(conditionand(A[1], A[2]), A[3]), 5000, false, "", A[4], E, E, E)
+mk(6, {48, 49}, 0, conditionand(chat("葵花宝典,123"), A[1]), 5000, false, "", A[4], E, E, E)
+mk(7, {50, 51}, 0, A[5], 2000, false, "", A[4], E, E, E)
+mk(8, {52, 53}, 0, A[5], 3000, false, "", A[4], E, E, E)
 
 return this

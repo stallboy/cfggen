@@ -46,10 +46,11 @@ namespace Config
         internal readonly Dictionary<string, List<string>> _other_dArgCaptureMode_Origins = new Dictionary<string, List<string>>();
         internal readonly global::Config.Other.DArgCaptureModeInfo?[] _other_dArgCaptureMode_Symbols = new global::Config.Other.DArgCaptureModeInfo?[2];
         internal IReadOnlyList<global::Config.Other.DDrop> _other_ddrop_Rows = null!;
-        internal IReadOnlyDictionary<int, global::Config.Other.DDrop> _other_ddrop_All = null!;
+        internal global::Config.Other.DDrop[] _other_ddrop_All = null!;
         internal readonly Dictionary<int, List<string>> _other_ddrop_Origins = new Dictionary<int, List<string>>();
         internal IReadOnlyList<global::Config.Other.DKeyTest> _other_dkey_utest_Rows = null!;
         internal IReadOnlyDictionary<Other.DKeyTest.Id1Id2Key, global::Config.Other.DKeyTest> _other_dkey_utest_All = null!;
+        internal global::Config.Other.DKeyTest[] _other_dkey_utest_Id1Map = null!;
         internal IReadOnlyDictionary<Other.DKeyTest.Id1Id3Key, global::Config.Other.DKeyTest> _other_dkey_utest_Id1Id3Map = null!;
         internal IReadOnlyDictionary<long, global::Config.Other.DKeyTest> _other_dkey_utest_Id2Map = null!;
         internal IReadOnlyDictionary<Other.DKeyTest.Id2Id3Key, global::Config.Other.DKeyTest> _other_dkey_utest_Id2Id3Map = null!;

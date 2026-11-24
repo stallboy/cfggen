@@ -1,5 +1,6 @@
 序号,策划随便描述,名字,"掉落概率",掉落物品列表，这个用列表是为了测试block嵌套block,数量下限,数量上线,,测试map block,测试block
 dropid,,name,"items,chance",itemids,countmin,countmax,,testmap,v
+0,,Empty drop,,,,,,,
 1,,测试掉落,100,1001,10,20,,1,11
 ,,,,1002,,,,3,33
 ,,,,1003,,,,5,55
