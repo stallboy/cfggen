@@ -14,7 +14,7 @@ public class XorCipherOutputStreamTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         //noinspection DataFlowIssue
-        assertThrows(IllegalArgumentException.class, () -> new XorCipherOutputStream(out, null));
+        assertThrows(NullPointerException.class, () -> new XorCipherOutputStream(out, null));
         assertThrows(IllegalArgumentException.class, () -> new XorCipherOutputStream(out, ""));
     }
 

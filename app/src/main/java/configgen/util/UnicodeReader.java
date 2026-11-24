@@ -1,5 +1,7 @@
 package configgen.util;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,43 +36,46 @@ public class UnicodeReader extends Reader {
 
         // Read ahead four bytes and check for BOM marks. Extra bytes are unread
         // back to the stream; only BOM bytes are skipped.
-        Charset encoding;
         byte[] bom = new byte[BOM_SIZE];
-        int unread;
-
         PushbackInputStream pushbackStream = new PushbackInputStream(in, BOM_SIZE);
         int n = pushbackStream.readNBytes(bom, 0, bom.length);
-
-        if (n > 3 && (bom[0] == (byte) 0x00) && (bom[1] == (byte) 0x00)
-                && (bom[2] == (byte) 0xFE) && (bom[3] == (byte) 0xFF)) {
-            encoding = Charset.forName("UTF-32BE");
-            unread = n - 4;
-        } else if (n > 3 && (bom[0] == (byte) 0xFF) && (bom[1] == (byte) 0xFE)
-                && (bom[2] == (byte) 0x00) && (bom[3] == (byte) 0x00)) {
-            encoding = Charset.forName("UTF-32LE");
-            unread = n - 4;
-        } else if (n > 2 && (bom[0] == (byte) 0xEF) && (bom[1] == (byte) 0xBB)
-                && (bom[2] == (byte) 0xBF)) {
-            encoding = StandardCharsets.UTF_8;
-            unread = n - 3;
-        } else if ((n > 1 && bom[0] == (byte) 0xFE) && (bom[1] == (byte) 0xFF)) {
-            encoding = StandardCharsets.UTF_16BE;
-            unread = n - 2;
-        } else if ((n > 1 && bom[0] == (byte) 0xFF) && (bom[1] == (byte) 0xFE)) {
-            encoding = StandardCharsets.UTF_16LE;
-            unread = n - 2;
-        } else {
-            // Unicode BOM mark not found, unread all bytes
-            encoding = defaultEnc;
-            unread = n;
-        }
+        int size = bomSize(bom, n);
+        Charset encoding = charsetForBom(bom, size);
+        int unread = n - size;
         if (unread > 0) {
-            pushbackStream.unread(bom, (n - unread), unread);
-
+            pushbackStream.unread(bom, size, unread);
         }
 
         // Use given encoding
-        internalInputStreamReader = new InputStreamReader(pushbackStream, encoding);
+        internalInputStreamReader = new InputStreamReader(pushbackStream, encoding != null ? encoding : defaultEnc);
+    }
+
+    public static @Nullable Charset bomCharset(byte[] bytes) {
+        return charsetForBom(bytes, bomSize(bytes, bytes.length));
+    }
+
+    private static @Nullable Charset charsetForBom(byte[] bytes, int size) {
+        return switch (size) {
+            case 4 -> Charset.forName(bytes[0] == 0 ? "UTF-32BE" : "UTF-32LE");
+            case 3 -> StandardCharsets.UTF_8;
+            case 2 -> bytes[0] == (byte) 0xFE ? StandardCharsets.UTF_16BE : StandardCharsets.UTF_16LE;
+            default -> null;
+        };
+    }
+
+    private static int bomSize(byte[] bytes, int length) {
+        if (length >= 4 && ((bytes[0] == 0 && bytes[1] == 0 && bytes[2] == (byte) 0xFE && bytes[3] == (byte) 0xFF)
+                || (bytes[0] == (byte) 0xFF && bytes[1] == (byte) 0xFE && bytes[2] == 0 && bytes[3] == 0))) {
+            return 4;
+        }
+        if (length >= 3 && bytes[0] == (byte) 0xEF && bytes[1] == (byte) 0xBB && bytes[2] == (byte) 0xBF) {
+            return 3;
+        }
+        if (length >= 2 && ((bytes[0] == (byte) 0xFE && bytes[1] == (byte) 0xFF)
+                || (bytes[0] == (byte) 0xFF && bytes[1] == (byte) 0xFE))) {
+            return 2;
+        }
+        return 0;
     }
 
     public Charset getDefaultEncoding() {

@@ -26,6 +26,23 @@ headRow=2
 - 内置 GUI 的编码和表头字段留空时沿用上述规则。
 - 文件里的编码或表头值无效时，cfggen 会报出文件路径和错误值并退出。
 
+## 检查和修复 CSV 编码
+
+```bat
+java -jar cfggen.jar -tool "csvencoding,datadir=example/config"
+java -jar cfggen.jar -tool "csvencoding,datadir=example/config,to=UTF-8,fix"
+```
+
+`csvencoding` 递归检查 `datadir` 下的 CSV，默认为当前目录。带 UTF-8、UTF-16 或 UTF-32 BOM 的文件直接跳过。无 BOM 的文件会列出与工具尝试的源编码相关的 ICU4J 候选和置信分，例如源编码 GBK 对应的 ICU4J 候选 GB18030。加上 `fix` 才会写回。
+
+目标编码依次取工具参数 `to`、目录 `.cfggen-data` 的 `csvEncoding`、当前 locale 对应的编码，最后回退到 UTF-8。简中使用 GBK，繁中使用 Big5，日文使用 Windows-31J，韩文使用 Windows-949。当前 locale 可用全局 `-locale` 指定。
+
+工具会严格尝试目标编码、UTF-8、GBK 和 locale 对应的编码。只有这些候选得到唯一文本且目标编码能无损表示时，才会转换。如果结果有歧义，可通过工具参数 `source` 指定该目录内无 BOM CSV 的原编码，再运行检查确认结果。
+
+修复前会检查整个目录。所有无 BOM 的 CSV 都能按目标编码无损保存时，修复才会写回并更新或创建 `.cfggen-data` 的 `csvEncoding`。如果有无法判断或无法转换的文件，本次修复会在写入前停止。
+
+`csvEncoding` 已经等价时，工具会保留原配置文件。需要更新时，Java Properties 会保留其他属性的值，并以 UTF-8 重新写出文件，原有注释和排版会随之丢弃。
+
 ```cmd help
 Usage: java -jar cfggen.jar [options] [-tool toolName[,param=value...]] -datadir <dir> [-gen genName[,param=value...]]
 

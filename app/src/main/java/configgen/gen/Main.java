@@ -66,6 +66,7 @@ public final class Main {
         Tools.addProvider("translate", TodoTranslator::new);
         Tools.addProvider("schematocsv", SchemaToCsvTool::new);
         Tools.addProvider("blockmigrate", BlockMigrationTool::new);
+        Tools.addProvider("csvencoding", CsvEncodingTool::new);
 
         Generators.addProvider("verify", ValueVerifyTool::new);
         Generators.addProvider("search", ValueInspectTool::new);
@@ -225,13 +226,12 @@ public final class Main {
             return help("-datadir is required");
         }
 
-        if (dataDir == null) {
-            runTools(tools);
+        Path dataDirPath = dataDir == null ? null : Path.of(dataDir);
+        runTools(tools);
+        if (dataDirPath == null) {
             return 0;
         }
-        Path dataDirPath = Path.of(dataDir);
         DataReadOptions dataOptions = DataReadOptions.resolve(dataDirPath, headRowId, encodingArg);
-        runTools(tools);
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
 
