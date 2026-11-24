@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 
 import configgen.genjava.LoadValueErrs;
 
+@SuppressWarnings("NotNullFieldNotInitialized")
 public class KeyTest {
     private final int id1;
     private final long id2;
@@ -11,9 +12,9 @@ public class KeyTest {
     private final java.util.List<Integer> ids;
     private final String enumTest;
     private final java.util.List<String> enumList;
-    private java.util.@Nullable List<config.other.@Nullable SignIn> RefIds;
-    private config.other.@Nullable ArgCaptureMode RefEnumTest;
-    private java.util.@Nullable List<config.other.@Nullable ArgCaptureMode> RefEnumList;
+    private java.util.List<config.other.SignIn> RefIds;
+    private config.other.ArgCaptureMode RefEnumTest;
+    private java.util.List<config.other.ArgCaptureMode> RefEnumList;
 
     private KeyTest(configgen.genjava.ConfigInput input) {
         this.id1 = input.readInt();
@@ -70,15 +71,15 @@ public class KeyTest {
         return enumList;
     }
 
-    public java.util.@Nullable List<config.other.@Nullable SignIn> refIds() {
+    public java.util.List<config.other.SignIn> refIds() {
         return RefIds;
     }
 
-    public config.other.@Nullable ArgCaptureMode refEnumTest() {
+    public config.other.ArgCaptureMode refEnumTest() {
         return RefEnumTest;
     }
 
-    public java.util.@Nullable List<config.other.@Nullable ArgCaptureMode> refEnumList() {
+    public java.util.List<config.other.ArgCaptureMode> refEnumList() {
         return RefEnumList;
     }
 
@@ -96,14 +97,17 @@ public class KeyTest {
                 var ref = mgr.getOtherSignIn(e);
                 if (ref == null) {
                     errors.missingReference("other.key_test", "ids", "other.sign_in", e);
+                } else {
+                    this.RefIds.add(ref);
                 }
-                this.RefIds.add(ref);
             }
         }
         this.RefIds = java.util.Collections.unmodifiableList(this.RefIds);
-        this.RefEnumTest = config.other.ArgCaptureMode.get(this.enumTest);
-        if (this.RefEnumTest == null) {
+        var refEnumTest = config.other.ArgCaptureMode.get(this.enumTest);
+        if (refEnumTest == null) {
             errors.missingReference("other.key_test", "enumTest", "other.ArgCaptureMode", this.enumTest);
+        } else {
+            this.RefEnumTest = refEnumTest;
         }
         if (this.enumList.isEmpty()) {
             this.RefEnumList = java.util.Collections.emptyList();
@@ -113,8 +117,9 @@ public class KeyTest {
                 var ref = config.other.ArgCaptureMode.get(e);
                 if (ref == null) {
                     errors.missingReference("other.key_test", "enumList", "other.ArgCaptureMode", e);
+                } else {
+                    this.RefEnumList.add(ref);
                 }
-                this.RefEnumList.add(ref);
             }
         }
         this.RefEnumList = java.util.Collections.unmodifiableList(this.RefEnumList);
@@ -156,6 +161,11 @@ public class KeyTest {
     public static @Nullable KeyTest get(int id1, long id2) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.getOtherKeyTest(id1, id2);
+    }
+
+    public static @Nullable KeyTest getById1(int id1) {
+        config.ConfigMgr mgr = config.ConfigMgr.getMgr();
+        return mgr.getOtherKeyTestById1(id1);
     }
 
     public static class Id1Id3Key {
@@ -236,10 +246,23 @@ public class KeyTest {
 
     public static void _index(config.ConfigMgr mgr, java.util.Map<config.other.KeyTest.Id1Id2Key, KeyTest> rows, LoadValueErrs errors) {
         int c = rows.size();
+        boolean validSeq = true;
+        var other_key_test_Id1Map = new KeyTest[c];
         var other_key_test_Id1Id3Map = new java.util.LinkedHashMap<config.other.KeyTest.Id1Id3Key, KeyTest>(c);
         var other_key_test_Id2Map = new java.util.LinkedHashMap<Long, KeyTest>(c);
         var other_key_test_Id2Id3Map = new java.util.LinkedHashMap<config.other.KeyTest.Id2Id3Key, KeyTest>(c);
         for (var self : rows.values()) {
+            {
+                int seq = self.getId1();
+                //noinspection ConstantValue
+                if (seq < 0 || seq >= c || other_key_test_Id1Map[seq] != null) {
+                    var primaryKey = new Id1Id2Key(self.id1, self.id2);
+                    errors.invalidSeq("other.key_test", "id1", primaryKey, seq, c, mgr.explain("other.key_test", primaryKey));
+                    validSeq = false;
+                } else {
+                    other_key_test_Id1Map[seq] = self;
+                }
+            }
             if (other_key_test_Id1Id3Map.putIfAbsent(new Id1Id3Key(self.id1, self.id3), self) != null) {
                 var primaryKey = new Id1Id2Key(self.id1, self.id2);
                 errors.duplicateUniqueKey("other.key_test", "id1,id3", primaryKey, new Id1Id3Key(self.id1, self.id3), mgr.explain("other.key_test", primaryKey));
@@ -253,7 +276,11 @@ public class KeyTest {
                 errors.duplicateUniqueKey("other.key_test", "id2,id3", primaryKey, new Id2Id3Key(self.id2, self.id3), mgr.explain("other.key_test", primaryKey));
             }
         }
+        if (!validSeq) {
+            return;
+        }
         mgr._set_other_key_test_All(rows);
+        mgr._set_other_key_test_Id1Map(java.util.Arrays.asList(other_key_test_Id1Map));
         mgr._set_other_key_test_Id1Id3Map(other_key_test_Id1Id3Map);
         mgr._set_other_key_test_Id2Map(other_key_test_Id2Map);
         mgr._set_other_key_test_Id2Id3Map(other_key_test_Id2Id3Map);

@@ -1,19 +1,20 @@
 package config;
 
-import org.jspecify.annotations.Nullable;
-
-/** Handwritten javaBase classes extend this type. Initialization is driven by the loader. */
+@SuppressWarnings("NotNullFieldNotInitialized")
 public abstract class ConfigExtension {
-    private @Nullable ConfigMgr config;
+    private ConfigMgr _mgr;
 
-    protected final @Nullable ConfigMgr config() { return config; }
+    protected final ConfigMgr _mgr() {
+        return _mgr;
+    }
 
     protected void onConfigReady() {}
 
     final void _bind(ConfigMgr value) {
-        if (config != null) {
+        //noinspection ConstantValue
+        if (_mgr != null) {
             throw new IllegalStateException("Extension is already bound");
         }
-        config = value;
+        _mgr = value;
     }
 }

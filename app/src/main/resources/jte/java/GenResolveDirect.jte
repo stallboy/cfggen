@@ -12,10 +12,16 @@
                     TableSchema refTable = fk.refTableSchema();
                 }
                 @if(firstField.type() instanceof FieldType.SimpleType)
-                    this.${refName} = ${MethodStr.tableGet(cfg, refTable, refSimple, MethodStr.actualParamsKeyRaw(fk.key(), "this."))};
-                    @if(!refSimple.nullable())
-                        if (this.${refName} == null) {
+                    !{ String lookup = MethodStr.tableGet(cfg, refTable, refSimple, MethodStr.actualParamsKeyRaw(fk.key(), "this.")); }
+                    @if(refSimple.nullable())
+                        this.${refName} = ${lookup};
+                    @else
+                        !{ String localRef = StringUtil.lower1(refName); }
+                        var ${localRef} = ${lookup};
+                        if (${localRef} == null) {
                             errors.missingReference("${structural.name()}", "${fk.name()}", "${refTable.name()}", ${MethodStr.referenceKey(fk.key())});
+                        } else {
+                            this.${refName} = ${localRef};
                         }
                     @endif
                 @elseif(firstField.type() instanceof FieldType.FList fList)
@@ -30,8 +36,9 @@
                             var ref = ${MethodStr.tableGet(cfg, refTable, refSimple, "e")};
                             if (ref == null) {
                                 errors.missingReference("${structural.name()}", "${fk.name()}", "${refTable.name()}", e);
+                            } else {
+                                this.${refName}.add(ref);
                             }
-                            this.${refName}.add(ref);
                         }
                     }
                 @elseif(firstField.type() instanceof FieldType.FMap fMap)
@@ -46,8 +53,9 @@
                             var ref = ${MethodStr.tableGet(cfg, refTable, refSimple, "e.getValue()")};
                             if (ref == null) {
                                 errors.missingReference("${structural.name()}", "${fk.name()}", "${refTable.name()}", e.getValue());
+                            } else {
+                                this.${refName}.put(e.getKey(), ref);
                             }
-                            this.${refName}.put(e.getKey(), ref);
                         }
                     }
                 @endif
@@ -65,17 +73,9 @@
                 @elseif(isEnum)
                     for (${refN.fullName} vv : ${refN.fullName}.values()) {
                         ${Name.tableDataFullName(cfg, refTable)} v = vv.ref(mgr);
-                        if (v == null) {
-                            continue;
-                        }
                 @else
                     @if(refTable.primaryKey().fieldSchemas().size() == 1 && refTable.primaryKey().fieldSchemas().getFirst().isSeq())
-                        @if(cfg.jspecify())
-                            for (var row : mgr._get_${refN.containerPrefix}All()) {
-                                var v = java.util.Objects.requireNonNull(row);
-                        @else
                         for (${Name.refType(cfg, refTable)} v : mgr._get_${refN.containerPrefix}All()) {
-                        @endif
                     @else
                         for (${Name.refType(cfg, refTable)} v : mgr._get_${refN.containerPrefix}All().values()) {
                     @endif

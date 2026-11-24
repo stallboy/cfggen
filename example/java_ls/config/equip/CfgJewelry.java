@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import configgen.genjava.LoadValueErrs;
 
 // 来自：equip/jewelry.csv
+@SuppressWarnings("NotNullFieldNotInitialized")
 public class CfgJewelry {
     private final int iD;
     private final String name;
@@ -16,10 +17,10 @@ public class CfgJewelry {
     private final int keyAbilityValue;
     private final int salePrice;
     private final String description;
-    private config.equip.@Nullable CfgJewelry_random RefLvlRank;
-    private config.equip.@Nullable CfgJewelry_type RefJType;
+    private config.equip.CfgJewelry_random RefLvlRank;
+    private config.equip.CfgJewelry_type RefJType;
     private config.equip.@Nullable CfgJewelry_suit NullableRefSuitID;
-    private config.equip.@Nullable CfgAbility RefKeyAbility;
+    private config.equip.CfgAbility RefKeyAbility;
 
     private CfgJewelry(configgen.genjava.ConfigInput input) {
         this.iD = input.readInt();
@@ -104,11 +105,11 @@ public class CfgJewelry {
         return description;
     }
 
-    public config.equip.@Nullable CfgJewelry_random refLvlRank() {
+    public config.equip.CfgJewelry_random refLvlRank() {
         return RefLvlRank;
     }
 
-    public config.equip.@Nullable CfgJewelry_type refJType() {
+    public config.equip.CfgJewelry_type refJType() {
         return RefJType;
     }
 
@@ -116,7 +117,7 @@ public class CfgJewelry {
         return NullableRefSuitID;
     }
 
-    public config.equip.@Nullable CfgAbility refKeyAbility() {
+    public config.equip.CfgAbility refKeyAbility() {
         return RefKeyAbility;
     }
 
@@ -127,18 +128,24 @@ public class CfgJewelry {
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.lvlRank._resolve(mgr, errors);
-        this.RefLvlRank = mgr.getEquipJewelry_random(this.lvlRank);
-        if (this.RefLvlRank == null) {
+        var refLvlRank = mgr.getEquipJewelry_random(this.lvlRank);
+        if (refLvlRank == null) {
             errors.missingReference("equip.jewelry", "LvlRank", "equip.jewelry_random", this.lvlRank);
+        } else {
+            this.RefLvlRank = refLvlRank;
         }
-        this.RefJType = config.equip.CfgJewelry_type.get(this.jType);
-        if (this.RefJType == null) {
+        var refJType = config.equip.CfgJewelry_type.get(this.jType);
+        if (refJType == null) {
             errors.missingReference("equip.jewelry", "JType", "equip.jewelry_type", this.jType);
+        } else {
+            this.RefJType = refJType;
         }
         this.NullableRefSuitID = mgr.getEquipJewelry_suit(this.suitID);
-        this.RefKeyAbility = config.equip.CfgAbility.get(this.keyAbility);
-        if (this.RefKeyAbility == null) {
+        var refKeyAbility = config.equip.CfgAbility.get(this.keyAbility);
+        if (refKeyAbility == null) {
             errors.missingReference("equip.jewelry", "KeyAbility", "equip.ability", this.keyAbility);
+        } else {
+            this.RefKeyAbility = refKeyAbility;
         }
 
     }

@@ -5,13 +5,14 @@ import org.jspecify.annotations.Nullable;
 import configgen.genjava.LoadValueErrs;
 
 // 来自：other/sign_in.csv
+@SuppressWarnings("NotNullFieldNotInitialized")
 public class SignIn {
     private final int id;
     private final java.util.Map<Integer, Integer> item2countMap;
     private final java.util.Map<Integer, Integer> vipitem2vipcountMap;
     private final int viplevel;
     private final String iconFile;
-    private java.util.@Nullable Map<Integer, config.other.@Nullable Loot> RefVipitem2vipcountMap;
+    private java.util.Map<Integer, config.other.Loot> RefVipitem2vipcountMap;
 
     SignIn(SignInBuilder b) {
         this.id = b.id;
@@ -94,7 +95,7 @@ public class SignIn {
         return iconFile;
     }
 
-    public java.util.@Nullable Map<Integer, config.other.@Nullable Loot> refVipitem2vipcountMap() {
+    public java.util.Map<Integer, config.other.Loot> refVipitem2vipcountMap() {
         return RefVipitem2vipcountMap;
     }
 
@@ -112,8 +113,9 @@ public class SignIn {
                 var ref = mgr.getOtherLoot(e.getValue());
                 if (ref == null) {
                     errors.missingReference("other.sign_in", "vipitem2vipcountMap", "other.loot", e.getValue());
+                } else {
+                    this.RefVipitem2vipcountMap.put(e.getKey(), ref);
                 }
-                this.RefVipitem2vipcountMap.put(e.getKey(), ref);
             }
         }
         this.RefVipitem2vipcountMap = java.util.Collections.unmodifiableMap(this.RefVipitem2vipcountMap);

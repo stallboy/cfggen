@@ -18,20 +18,16 @@ public class JewelrySuit_Entry {
 
     private final int index;
 
-    public config.equip.@Nullable JewelrySuit ref() {
+    public config.equip.JewelrySuit ref() {
         return ref(config.ConfigMgr.getMgr());
     }
 
-    public config.equip.@Nullable JewelrySuit ref(config.ConfigMgr mgr) {
+    public config.equip.JewelrySuit ref(config.ConfigMgr mgr) {
         return mgr._get_equip_jewelry_suit_Refs(index);
     }
 
     public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
-        mgr._set_equip_jewelry_suit_Refs(new config.equip.@Nullable JewelrySuit[] {
-            mgr.getEquipJewelrySuit(SPECIAL_SUIT.value),
-        });
-        for (var entry : mgr._get_equip_jewelry_suit_All().values()) {
-            var row = java.util.Objects.requireNonNull(entry);
+        for (var row : mgr._get_equip_jewelry_suit_All().values()) {
             var key = row.getSuitID();
             String symbol = row.getEname();
             if (symbol.isEmpty()) {
@@ -49,8 +45,19 @@ public class JewelrySuit_Entry {
                 errors.changedSymbolId("equip.jewelry_suit", symbol, expected.value, key, mgr.explain("equip.jewelry_suit", key));
             }
         }
-        if (SPECIAL_SUIT.ref(mgr) == null) {
-            errors.missingSymbol("equip.jewelry_suit", "SpecialSuit", SPECIAL_SUIT.value);
+        var refs = new config.equip.JewelrySuit[1];
+        boolean complete = true;
+        {
+            var row = mgr.getEquipJewelrySuit(SPECIAL_SUIT.value);
+            if (row == null) {
+                errors.missingSymbol("equip.jewelry_suit", "SpecialSuit", SPECIAL_SUIT.value);
+                complete = false;
+            } else {
+                refs[SPECIAL_SUIT.index] = row;
+            }
+        }
+        if (complete) {
+            mgr._set_equip_jewelry_suit_Refs(refs);
         }
     }
 

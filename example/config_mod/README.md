@@ -27,14 +27,14 @@
 Java，在 `example/java` 目录执行：
 
 ```powershell
-java --sun-misc-unsafe-memory-access=allow -jar ../../app/build/libs/cfggen.jar -datadir ../config_mod -schema ../config -gen bytes,own:-noserver,pack:demo-mod,requires:base,deps:base.bytes
+java --sun-misc-unsafe-memory-access=allow -jar ../../cfggen.jar -datadir ../config_mod -schema ../config -gen bytes,own:-noserver,pack:demo-mod,requires:base,deps:base.bytes
 java -jar build/libs/java.jar
 ```
 
 C#，在 `example/cs` 目录执行：
 
 ```powershell
-java --sun-misc-unsafe-memory-access=allow -jar ../../app/build/libs/cfggen.jar -datadir ../config_mod -schema ../config -gen bytes,pack:demo-mod,requires:base,deps:obj/base-pack/base.bytes,cipher:xyz
+java --sun-misc-unsafe-memory-access=allow -jar ../../cfggen.jar -datadir ../config_mod -schema ../config -gen bytes,pack:demo-mod,requires:base,deps:obj/base-pack/base.bytes,cipher:xyz
 dotnet run --no-build
 ```
 

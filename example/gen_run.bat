@@ -12,11 +12,7 @@ echo ============================================================
 echo  cfggen example : gen ^& run ALL languages
 echo ============================================================
 
-if not exist "..\cfggen.jar" (
-    echo [FATAL] ..\cfggen.jar not found.
-    echo         Build it first: cd app ^&^& gradlew.bat fatjar
-    goto :summary
-)
+call "%~dp0cfggen_common.bat" || exit /b 1
 
 set /a PASS=0
 set /a FAIL=0
@@ -27,6 +23,7 @@ echo.
 echo ===== GEN PHASE =====
 call :gen java             genjava
 call :gen java_ls          genjava_ls
+call :gen java_plain       genjava
 call :gen cs               gencs
 call :gen cs_ls            gencs_ls
 call :gen cs_ls_client     gencs_ls_client
@@ -47,6 +44,7 @@ echo.
 echo ===== RUN PHASE =====
 call :run java             java
 call :run java_ls          java
+call :run java_plain       java
 call :run cs               dotnet
 call :run cs_ls            dotnet
 call :run cs_ls_client     dotnet

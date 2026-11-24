@@ -92,24 +92,23 @@ public class Name {
     }
 
     public static String refType(GenCfg cfg, ForeignKeySchema fk) {
+        String target = refType(cfg, fk.refTableSchema());
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
-                return cfg.nullable("java.util.List<" + refType(cfg, fk.refTableSchema()) + ">");
+                return "java.util.List<" + target + ">";
             }
-            case RefKey.RefSimple ignored -> {
+            case RefKey.RefSimple ref -> {
                 FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
                 switch (firstLocal.type()) {
 
                     case SimpleType ignored2 -> {
-                        return cfg.nullable(refType(cfg, fk.refTableSchema()));
+                        return ref.nullable() ? cfg.nullable(target) : target;
                     }
                     case FList ignored2 -> {
-                        return cfg.nullable("java.util.List<" + cfg.nullable(refType(cfg, fk.refTableSchema())) + ">");
+                        return "java.util.List<" + target + ">";
                     }
                     case FMap fMap -> {
-                        return cfg.nullable("java.util.Map<"
-                                + TypeStr.boxType(cfg, fMap.key()) + ", "
-                                + cfg.nullable(refType(cfg, fk.refTableSchema())) + ">");
+                        return "java.util.Map<" + TypeStr.boxType(cfg, fMap.key()) + ", " + target + ">";
                     }
                 }
             }

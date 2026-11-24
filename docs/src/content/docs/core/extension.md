@@ -41,8 +41,8 @@ public abstract class SkillBase extends ConfigExtension {
 
     @Override
     protected void onConfigReady() {
-        // 此时所有表、索引和外键都已就绪，可通过 config() 安全访问当前配置集
-        ConfigMgr mgr = config();
+        // 此时所有表、索引和外键都已就绪，可通过 _mgr() 安全访问当前配置集
+        ConfigMgr mgr = _mgr();
         int sum = 0;
         for (int buffId : getBuffIds()) {
             var buff = mgr.getBuff(buffId);
@@ -76,13 +76,13 @@ public partial class Skill : IConfigExtension
 {
     public int TotalBuffPower { get; private set; }
 
-    public void OnConfigReady(ConfigMgr config)
+    public void OnConfigReady(ConfigMgr _mgr)
     {
         // 所有表加载与外键解析完成后自动调用
         int sum = 0;
         foreach (int buffId in BuffIds)
         {
-            // 通过传入的 config 访问当前配置集中的其他表
+            // 通过传入的 _mgr 访问当前配置集中的其他表
         }
         TotalBuffPower = sum;
     }
@@ -93,6 +93,6 @@ public partial class Skill : IConfigExtension
 ## 3. 使用注意事项
 
 * **执行时机**：`onConfigReady` / `OnConfigReady` 仅在所有表读入、索引构建和外键解析**全部完成后**执行，此时读取任意关联表都是安全的。
-* **禁止依赖全局默认配置**：在初始化回调或自定义方法中访问其他表时，务必使用 `config()`（Java）或回调参数 `config`（C#），**不要**调用静态的 `ConfigMgr.getMgr()` / `ConfigMgr.GetMgr()`。这样可以确保在基础包与多个 Mod 实例并存，或后台预加载新配置时，不会串读到其他实例的数据。
+* **禁止依赖全局默认配置**：在初始化回调或自定义方法中访问其他表时，务必使用 `_mgr()`（Java）或回调参数 `_mgr`（C#），**不要**调用静态的 `ConfigMgr.getMgr()` / `ConfigMgr.GetMgr()`。这样可以确保在基础包与多个 Mod 实例并存，或后台预加载新配置时，不会串读到其他实例的数据。
 * **不可重复绑定**：每个扩展实例只绑定一次所属的 `ConfigMgr`，配置加载完成进入只读态后不应再修改其中的业务状态。
 

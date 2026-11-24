@@ -47,10 +47,25 @@ public class ConfigMgrLoader {
         config.equip.JewelrySuit_Entry.setAllRefs(mgr, errors);
         config.equip.Rank.setAllRefs(mgr, errors);
         config.other.ArgCaptureMode.setAllRefs(mgr, errors);
+        errors.checkErrors();
         for (var loader : loaders.values()) {
             loader.resolveAll();
         }
         errors.checkErrors();
+        var seen = Collections.newSetFromMap(new IdentityHashMap<ConfigExtension, Boolean>());
+        var extensions = new ArrayList<ConfigExtension>();
+        java.util.function.Consumer<ConfigExtension> collect = extension -> {
+            if (seen.add(extension)) {
+                extension._bind(mgr);
+                extensions.add(extension);
+            }
+        };
+        for (var row : mgr._get_other_monster_All().values()) {
+            row._collectExtensions(collect);
+        }
+        for (var extension : extensions) {
+            extension.onConfigReady();
+        }
         mgr.markReady();
         return mgr;
     }

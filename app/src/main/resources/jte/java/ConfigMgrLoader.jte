@@ -52,6 +52,9 @@ public class ConfigMgrLoader {
         @for(String fc : model.setAllRefs_FullClassNames)
         ${fc}.setAllRefs(mgr, errors);
         @endfor
+        @if(!model.setAllRefs_FullClassNames.isEmpty())
+        errors.checkErrors();
+        @endif
         for (var loader : loaders.values()) {
             loader.resolveAll();
         }
@@ -67,7 +70,7 @@ public class ConfigMgrLoader {
         };
         @for(String rows : model.extensionRows)
         for (var row : ${rows}) {
-            ${model.cfg.requireNonNull("row")}._collectExtensions(collect);
+            row._collectExtensions(collect);
         }
         @endfor
         for (var extension : extensions) {

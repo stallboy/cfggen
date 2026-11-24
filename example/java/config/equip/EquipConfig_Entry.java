@@ -19,21 +19,16 @@ public class EquipConfig_Entry {
 
     private final int index;
 
-    public config.equip.@Nullable EquipConfig ref() {
+    public config.equip.EquipConfig ref() {
         return ref(config.ConfigMgr.getMgr());
     }
 
-    public config.equip.@Nullable EquipConfig ref(config.ConfigMgr mgr) {
+    public config.equip.EquipConfig ref(config.ConfigMgr mgr) {
         return mgr._get_equip_equip_config_Refs(index);
     }
 
     public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
-        mgr._set_equip_equip_config_Refs(new config.equip.@Nullable EquipConfig[] {
-            mgr.getEquipEquipConfig(INSTANCE.value),
-            mgr.getEquipEquipConfig(INSTANCE2.value),
-        });
-        for (var entry : mgr._get_equip_equip_config_All().values()) {
-            var row = java.util.Objects.requireNonNull(entry);
+        for (var row : mgr._get_equip_equip_config_All().values()) {
             var key = row.getEntry();
             String symbol = row.getEntry();
             if (symbol.isEmpty()) {
@@ -49,11 +44,28 @@ public class EquipConfig_Entry {
                 continue;
             }
         }
-        if (INSTANCE.ref(mgr) == null) {
-            errors.missingSymbol("equip.equip_config", "Instance", INSTANCE.value);
+        var refs = new config.equip.EquipConfig[2];
+        boolean complete = true;
+        {
+            var row = mgr.getEquipEquipConfig(INSTANCE.value);
+            if (row == null) {
+                errors.missingSymbol("equip.equip_config", "Instance", INSTANCE.value);
+                complete = false;
+            } else {
+                refs[INSTANCE.index] = row;
+            }
         }
-        if (INSTANCE2.ref(mgr) == null) {
-            errors.missingSymbol("equip.equip_config", "Instance2", INSTANCE2.value);
+        {
+            var row = mgr.getEquipEquipConfig(INSTANCE2.value);
+            if (row == null) {
+                errors.missingSymbol("equip.equip_config", "Instance2", INSTANCE2.value);
+                complete = false;
+            } else {
+                refs[INSTANCE2.index] = row;
+            }
+        }
+        if (complete) {
+            mgr._set_equip_equip_config_Refs(refs);
         }
     }
 

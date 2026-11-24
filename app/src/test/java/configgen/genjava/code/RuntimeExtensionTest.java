@@ -81,7 +81,7 @@ class RuntimeExtensionTest {
                     }
                     public int power() { return power; }
                     public int calls() { return calls; }
-                    public config.ConfigMgr owner() { return config(); }
+                    public config.ConfigMgr owner() { return _mgr(); }
                 }
                 """);
         Files.writeString(generated.resolve("hand/KeyBase.java"), """
@@ -90,7 +90,7 @@ class RuntimeExtensionTest {
                     public abstract config.Rank refRank();
                     public int calls;
                     public int multiplier;
-                    protected void onConfigReady() { multiplier = refRank().ref(config()).getMultiplier(); calls++; }
+                    protected void onConfigReady() { multiplier = refRank().ref(_mgr()).getMultiplier(); calls++; }
                 }
                 """);
         Path classes = root.resolve("classes");

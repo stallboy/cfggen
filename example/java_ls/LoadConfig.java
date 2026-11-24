@@ -1,6 +1,7 @@
 
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
+import config.other.CfgMonster;
 import config.task.CfgTask;
 import configgen.genjava.ConfigPackage;
 import org.jspecify.annotations.NullMarked;
@@ -62,6 +63,7 @@ public class LoadConfig {
     public static void main(String[] args) throws IOException {
         String fn = "base.bytes";
         load(fn);
+        System.out.println("monster 1 loot items (extension): " + requireNonNull(CfgMonster.get(1)).getLootItemCount());
         System.out.println(CfgTask.get(1));
 //        new BytesInspector(fn).match("eq");
 

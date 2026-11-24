@@ -5,13 +5,14 @@ import org.jspecify.annotations.Nullable;
 import configgen.genjava.LoadValueErrs;
 
 // 来自：other/sign_in.csv
+@SuppressWarnings("NotNullFieldNotInitialized")
 public class CfgSign_in {
     private final int id;
     private final java.util.Map<Integer, Integer> item2countMap;
     private final java.util.Map<Integer, Integer> vipitem2vipcountMap;
     private final int viplevel;
     private final String iconFile;
-    private java.util.@Nullable Map<Integer, config.other.@Nullable CfgLoot> RefVipitem2vipcountMap;
+    private java.util.Map<Integer, config.other.CfgLoot> RefVipitem2vipcountMap;
 
     private CfgSign_in(configgen.genjava.ConfigInput input) {
         this.id = input.readInt();
@@ -86,7 +87,7 @@ public class CfgSign_in {
         return iconFile;
     }
 
-    public java.util.@Nullable Map<Integer, config.other.@Nullable CfgLoot> refVipitem2vipcountMap() {
+    public java.util.Map<Integer, config.other.CfgLoot> refVipitem2vipcountMap() {
         return RefVipitem2vipcountMap;
     }
 
@@ -104,8 +105,9 @@ public class CfgSign_in {
                 var ref = mgr.getOtherLoot(e.getValue());
                 if (ref == null) {
                     errors.missingReference("other.sign_in", "vipitem2vipcountMap", "other.loot", e.getValue());
+                } else {
+                    this.RefVipitem2vipcountMap.put(e.getKey(), ref);
                 }
-                this.RefVipitem2vipcountMap.put(e.getKey(), ref);
             }
         }
         this.RefVipitem2vipcountMap = java.util.Collections.unmodifiableMap(this.RefVipitem2vipcountMap);

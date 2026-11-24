@@ -1,0 +1,22 @@
+plugins {
+    id 'application'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+application {
+    mainClass = 'LoadConfig'
+}
+
+sourceSets.main.java {
+    srcDirs = ['.']
+    exclude 'build/**', 'bin/**', 'out/**', '.gradle/**', '.idea/**'
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+}

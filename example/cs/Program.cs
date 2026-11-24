@@ -34,6 +34,7 @@ static class Program
 
         Console.WriteLine("\n=== Mod example ===");
         Console.WriteLine($"monster 1: base x={DMonster.Get(original, 1)!.PosList[0].X}, mod x={DMonster.Get(1)!.PosList[0].X}");
+        Console.WriteLine($"monster 1 loot items (extension): {DMonster.Get(1)!.LootItemCount}");
         Console.WriteLine($"monster 2 unchanged: x={DMonster.Get(2)!.PosList[0].X}");
         Console.WriteLine($"monster 1001: base={DMonster.Get(original, 1001)?.ToString() ?? "null"}, mod={DMonster.Get(1001)}");
         Console.WriteLine($"green: base={DRank.Green.Info(original).RankShowName}, mod={DRank.Green.Info().RankShowName}");

@@ -43,10 +43,11 @@ public class LoadConfig {
         System.out.println("\n=== Mod example ===");
         System.out.println("monster 1: base x=" + requireNonNull(original.getOtherMonster(1)).getPosList().getFirst().getX()
                 + ", mod x=" + requireNonNull(Monster.get(1)).getPosList().getFirst().getX());
+        System.out.println("monster 1 loot items (extension): " + requireNonNull(Monster.get(1)).getLootItemCount());
         System.out.println("monster 2 unchanged: x=" + requireNonNull(Monster.get(2)).getPosList().getFirst().getX());
         System.out.println("monster 1001: base=" + original.getOtherMonster(1001) + ", mod=" + Monster.get(1001));
-        System.out.println("green: base=" + requireNonNull(Rank.GREEN.ref(original)).getRankShowName() + ", mod=" + Rank.GREEN.getRankShowName());
-        System.out.println("task 1001: " + hunt.getName() + ", target monster=" + requireNonNull(condition.refMonsterid()).getId()
+        System.out.println("green: base=" + Rank.GREEN.ref(original).getRankShowName() + ", mod=" + Rank.GREEN.getRankShowName());
+        System.out.println("task 1001: " + hunt.getName() + ", target monster=" + condition.refMonsterid().getId()
                 + ", exp=" + hunt.getExp());
         System.out.println("monster 1 sources=" + modified.explain("other.monster", 1));
         System.out.println("monster 1001 sources=" + modified.explain("other.monster", 1001));
@@ -80,7 +81,7 @@ public class LoadConfig {
                 StringBuilder sb = new StringBuilder();
                 key.pollEvents().forEach(e ->
                         sb.append("context=").append(e.context()).append(",kind=").append(e.kind()).append(";"));
-                logger.info("auto reload " + watchPath + " " + sb.toString());
+                logger.info("auto reload " + watchPath + " " + sb);
                 callback.run();
                 key.reset();
             }

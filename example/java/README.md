@@ -14,7 +14,7 @@
 .\example\java\run.bat
 ```
 
-`genjava.bat` 使用 `app/build/libs/cfggen.jar`，更新此示例的生成类型和支持源码，导出基础包 `base.bytes`，再从 `../config_mod` 导出增量包 `demo-mod.bytes`。两者使用同一结构与 `own:-noserver` 字段筛选；Mod 只生成数据。
+`genjava.bat` 使用仓库根目录下的 `cfggen.jar`，更新此示例的生成类型和支持源码，导出基础包 `base.bytes`，再从 `../config_mod` 导出增量包 `demo-mod.bytes`。两者使用同一结构与 `own:-noserver` 字段筛选；Mod 只生成数据。
 
 `LoadConfig.java` 的加载入口是：
 

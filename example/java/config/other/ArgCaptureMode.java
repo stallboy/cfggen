@@ -37,28 +37,23 @@ public enum ArgCaptureMode {
     }
 
     public int getId() {
-        return java.util.Objects.requireNonNull(ref()).getId();
+        return ref().getId();
     }
 
     public String getComment() {
-        return java.util.Objects.requireNonNull(ref()).getComment();
+        return ref().getComment();
     }
 
-    public config.other.@Nullable ArgCaptureMode_Detail ref() {
+    public config.other.ArgCaptureMode_Detail ref() {
         return ref(config.ConfigMgr.getMgr());
     }
 
-    public config.other.@Nullable ArgCaptureMode_Detail ref(config.ConfigMgr mgr) {
+    public config.other.ArgCaptureMode_Detail ref(config.ConfigMgr mgr) {
         return mgr._get_other_ArgCaptureMode_Refs(ordinal());
     }
 
     public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
-        mgr._set_other_ArgCaptureMode_Refs(new config.other.@Nullable ArgCaptureMode_Detail[] {
-            mgr.getOtherArgCaptureMode(SNAPSHOT.value),
-            mgr.getOtherArgCaptureMode(DYNAMIC.value),
-        });
-        for (var entry : mgr._get_other_ArgCaptureMode_All().values()) {
-            var row = java.util.Objects.requireNonNull(entry);
+        for (var row : mgr._get_other_ArgCaptureMode_All().values()) {
             var key = row.getName();
             String symbol = row.getName();
             ArgCaptureMode expected = get(symbol);
@@ -70,10 +65,19 @@ public enum ArgCaptureMode {
                 errors.changedSymbolId("other.ArgCaptureMode", symbol, expected.fixedId, row.getId(), mgr.explain("other.ArgCaptureMode", key));
             }
         }
+        var refs = new config.other.ArgCaptureMode_Detail[2];
+        boolean complete = true;
         for (ArgCaptureMode e : map.values()) {
-            if (e.ref(mgr) == null) {
+            var row = mgr.getOtherArgCaptureMode(e.value);
+            if (row == null) {
                 errors.missingSymbol("other.ArgCaptureMode", e.value, e.value);
+                complete = false;
+            } else {
+                refs[e.ordinal()] = row;
             }
+        }
+        if (complete) {
+            mgr._set_other_ArgCaptureMode_Refs(refs);
         }
     }
 

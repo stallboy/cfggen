@@ -54,28 +54,19 @@ public enum CfgRank {
      * 显示名称
      */
     public String getRankShowName() {
-        return java.util.Objects.requireNonNull(ref()).getRankShowName();
+        return ref().getRankShowName();
     }
 
-    public config.equip.@Nullable CfgRank_Detail ref() {
+    public config.equip.CfgRank_Detail ref() {
         return ref(config.ConfigMgr.getMgr());
     }
 
-    public config.equip.@Nullable CfgRank_Detail ref(config.ConfigMgr mgr) {
+    public config.equip.CfgRank_Detail ref(config.ConfigMgr mgr) {
         return mgr._get_equip_rank_Refs(ordinal());
     }
 
     public static void setAllRefs(config.ConfigMgr mgr, LoadValueErrs errors) {
-        mgr._set_equip_rank_Refs(new config.equip.@Nullable CfgRank_Detail[] {
-            mgr.getEquipRank(WHITE.value),
-            mgr.getEquipRank(GREEN.value),
-            mgr.getEquipRank(BLUE.value),
-            mgr.getEquipRank(PURPLE.value),
-            mgr.getEquipRank(YELLOW.value),
-            mgr.getEquipRank(RED.value),
-        });
-        for (var entry : mgr._get_equip_rank_All()) {
-            var row = java.util.Objects.requireNonNull(entry);
+        for (var row : mgr._get_equip_rank_All()) {
             var key = row.getRankID();
             String symbol = row.getRankName();
             CfgRank expected = switch (symbol) {
@@ -95,10 +86,19 @@ public enum CfgRank {
                 errors.changedSymbolId("equip.rank", symbol, expected.value, key, mgr.explain("equip.rank", key));
             }
         }
+        var refs = new config.equip.CfgRank_Detail[6];
+        boolean complete = true;
         for (CfgRank e : map.values()) {
-            if (e.ref(mgr) == null) {
+            var row = mgr.getEquipRank(e.value);
+            if (row == null) {
                 errors.missingSymbol("equip.rank", e.name, e.value);
+                complete = false;
+            } else {
+                refs[e.ordinal()] = row;
             }
+        }
+        if (complete) {
+            mgr._set_equip_rank_Refs(refs);
         }
     }
 

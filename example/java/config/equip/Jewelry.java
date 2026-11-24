@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import configgen.genjava.LoadValueErrs;
 
 // 来自：equip/jewelry.csv
+@SuppressWarnings("NotNullFieldNotInitialized")
 public class Jewelry {
     private final int iD;
     private final String name;
@@ -16,10 +17,10 @@ public class Jewelry {
     private final int keyAbilityValue;
     private final int salePrice;
     private final String description;
-    private config.equip.@Nullable JewelryRandom RefLvlRank;
-    private config.equip.@Nullable JewelryType RefJType;
+    private config.equip.JewelryRandom RefLvlRank;
+    private config.equip.JewelryType RefJType;
     private config.equip.@Nullable JewelrySuit NullableRefSuitID;
-    private config.equip.@Nullable Ability RefKeyAbility;
+    private config.equip.Ability RefKeyAbility;
 
     Jewelry(JewelryBuilder b) {
         this.iD = b.iD;
@@ -117,11 +118,11 @@ public class Jewelry {
         return description;
     }
 
-    public config.equip.@Nullable JewelryRandom refLvlRank() {
+    public config.equip.JewelryRandom refLvlRank() {
         return RefLvlRank;
     }
 
-    public config.equip.@Nullable JewelryType refJType() {
+    public config.equip.JewelryType refJType() {
         return RefJType;
     }
 
@@ -129,7 +130,7 @@ public class Jewelry {
         return NullableRefSuitID;
     }
 
-    public config.equip.@Nullable Ability refKeyAbility() {
+    public config.equip.Ability refKeyAbility() {
         return RefKeyAbility;
     }
 
@@ -140,18 +141,24 @@ public class Jewelry {
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
         this.lvlRank._resolve(mgr, errors);
-        this.RefLvlRank = mgr.getEquipJewelryRandom(this.lvlRank);
-        if (this.RefLvlRank == null) {
+        var refLvlRank = mgr.getEquipJewelryRandom(this.lvlRank);
+        if (refLvlRank == null) {
             errors.missingReference("equip.jewelry", "LvlRank", "equip.jewelry_random", this.lvlRank);
+        } else {
+            this.RefLvlRank = refLvlRank;
         }
-        this.RefJType = config.equip.JewelryType.get(this.jType);
-        if (this.RefJType == null) {
+        var refJType = config.equip.JewelryType.get(this.jType);
+        if (refJType == null) {
             errors.missingReference("equip.jewelry", "JType", "equip.jewelry_type", this.jType);
+        } else {
+            this.RefJType = refJType;
         }
         this.NullableRefSuitID = mgr.getEquipJewelrySuit(this.suitID);
-        this.RefKeyAbility = config.equip.Ability.get(this.keyAbility);
-        if (this.RefKeyAbility == null) {
+        var refKeyAbility = config.equip.Ability.get(this.keyAbility);
+        if (refKeyAbility == null) {
             errors.missingReference("equip.jewelry", "KeyAbility", "equip.ability", this.keyAbility);
+        } else {
+            this.RefKeyAbility = refKeyAbility;
         }
 
     }

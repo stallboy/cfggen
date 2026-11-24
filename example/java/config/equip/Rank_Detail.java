@@ -51,31 +51,32 @@ public class Rank_Detail {
         return mgr.getEquipRank(rankID);
     }
 
-    public static java.util.List<@Nullable Rank_Detail> all() {
+    public static java.util.List<Rank_Detail> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipRank();
     }
 
     public static void _index(config.ConfigMgr mgr, java.util.Map<Integer, Rank_Detail> rows, LoadValueErrs errors) {
         int c = rows.size();
-        var equip_rank_All = new java.util.ArrayList<@Nullable Rank_Detail>(java.util.Collections.nCopies(c, null));
-        var seq_RankID = new boolean[c];
+        boolean validSeq = true;
+        var equip_rank_All = new Rank_Detail[c];
         for (var self : rows.values()) {
             {
                 int seq = self.getRankID();
-                if (seq < 0 || seq >= c || seq_RankID[seq]) {
+                //noinspection ConstantValue
+                if (seq < 0 || seq >= c || equip_rank_All[seq] != null) {
                     var primaryKey = self.rankID;
                     errors.invalidSeq("equip.rank", "RankID", primaryKey, seq, c, mgr.explain("equip.rank", primaryKey));
+                    validSeq = false;
                 } else {
-                    seq_RankID[seq] = true;
+                    equip_rank_All[seq] = self;
                 }
             }
-            int key = self.rankID;
-            if (key >= 0 && key < c) {
-                equip_rank_All.set(key, self);
-            }
         }
-        mgr._set_equip_rank_All(equip_rank_All);
+        if (!validSeq) {
+            return;
+        }
+        mgr._set_equip_rank_All(java.util.Arrays.asList(equip_rank_All));
     }
 
 }

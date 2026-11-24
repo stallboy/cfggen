@@ -5,13 +5,14 @@ import org.jspecify.annotations.Nullable;
 import configgen.genjava.LoadValueErrs;
 
 // 来自：other/loot.csv
+@SuppressWarnings("NotNullFieldNotInitialized")
 public class CfgLoot {
     private final int lootid;
     private final String ename;
     private final config.Text name;
     private final java.util.List<Integer> chanceList;
-    private java.util.@Nullable List<config.other.CfgLoot_item> ListRefLootid;
-    private java.util.@Nullable List<config.other.CfgLoot_item> ListRefAnotherWay;
+    private java.util.List<config.other.CfgLoot_item> ListRefLootid;
+    private java.util.List<config.other.CfgLoot_item> ListRefAnotherWay;
 
     private CfgLoot(configgen.genjava.ConfigInput input) {
         this.lootid = input.readInt();
@@ -56,11 +57,11 @@ public class CfgLoot {
         return chanceList;
     }
 
-    public java.util.@Nullable List<config.other.CfgLoot_item> listRefLootid() {
+    public java.util.List<config.other.CfgLoot_item> listRefLootid() {
         return ListRefLootid;
     }
 
-    public java.util.@Nullable List<config.other.CfgLoot_item> listRefAnotherWay() {
+    public java.util.List<config.other.CfgLoot_item> listRefAnotherWay() {
         return ListRefAnotherWay;
     }
 

@@ -4,10 +4,11 @@ import org.jspecify.annotations.Nullable;
 
 import configgen.genjava.LoadValueErrs;
 
+@SuppressWarnings("NotNullFieldNotInitialized")
 public class CfgLevelRank {
     private final int level;
     private final int rank;
-    private config.equip.@Nullable CfgRank RefRank;
+    private config.equip.CfgRank RefRank;
 
     public CfgLevelRank(int level, int rank) {
         this.level = level;
@@ -33,7 +34,7 @@ public class CfgLevelRank {
         return rank;
     }
 
-    public config.equip.@Nullable CfgRank refRank() {
+    public config.equip.CfgRank refRank() {
         return RefRank;
     }
 
@@ -56,9 +57,11 @@ public class CfgLevelRank {
     }
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
-        this.RefRank = config.equip.CfgRank.get(this.rank);
-        if (this.RefRank == null) {
+        var refRank = config.equip.CfgRank.get(this.rank);
+        if (refRank == null) {
             errors.missingReference("LevelRank", "Rank", "equip.rank", this.rank);
+        } else {
+            this.RefRank = refRank;
         }
 
     }

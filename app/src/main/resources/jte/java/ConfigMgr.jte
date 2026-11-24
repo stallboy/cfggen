@@ -13,9 +13,10 @@ package ${cfg.codeTopPkg()};
 @if(cfg.jspecify())
 import org.jspecify.annotations.Nullable;
 
+@SuppressWarnings("NotNullFieldNotInitialized")
 @endif
 public class ConfigMgr {
-    private static volatile ${cfg.nullable("ConfigMgr")} mgr;
+    private static volatile ConfigMgr mgr;
     private boolean ready;
     private final java.util.Map<String, java.util.Map<?, java.util.List<String>>> origins = new java.util.HashMap<>();
 
@@ -40,11 +41,17 @@ public class ConfigMgr {
     }
 
     public static boolean hasMgr() {
+        @if(cfg.jspecify())
+        //noinspection ConstantValue
+        @endif
         return mgr != null;
     }
 
     public static ConfigMgr getMgr() {
         ConfigMgr current = mgr;
+        @if(cfg.jspecify())
+        //noinspection ConstantValue
+        @endif
         if (current == null) {
             throw new IllegalStateException("Configuration has not been loaded");
         }
@@ -68,24 +75,24 @@ public class ConfigMgr {
         String methodName = Name.GetByKeyFunctionNameInConfigMgr(name.cfg, primaryKey, true, name.nameable);
     }
     @if(table.entry() instanceof EntryType.EntryBase)
-    private ${cfg.nullable(name.fullName)}${cfg.jspecify() ? " @Nullable []" : "[]"} ${name.containerPrefix}Refs;
-    public ${cfg.nullable(name.fullName)} _get_${name.containerPrefix}Refs(int index) { return ${cfg.requireNonNull(name.containerPrefix + "Refs")}[index]; }
-    public void _set_${name.containerPrefix}Refs(${cfg.nullable(name.fullName)}[] refs) { requireBuilding(); ${name.containerPrefix}Refs = refs; }
+    private ${name.fullName}[] ${name.containerPrefix}Refs;
+    public ${name.fullName} _get_${name.containerPrefix}Refs(int index) { return ${name.containerPrefix}Refs[index]; }
+    public void _set_${name.containerPrefix}Refs(${name.fullName}[] refs) { requireBuilding(); ${name.containerPrefix}Refs = refs; }
 
     @endif
     @if(seq)
-    private ${cfg.nullable("java.util.List<" + cfg.nullable(name.fullName) + ">")} ${mapName};
-    public java.util.List<${cfg.nullable(name.fullName)}> _get_${mapName}() { return ${cfg.requireNonNull(mapName)}; }
-    public void _set_${mapName}(java.util.List<${cfg.nullable(name.fullName)}> rows) { requireBuilding(); ${mapName} = java.util.Collections.unmodifiableList(rows); }
+    private java.util.List<${name.fullName}> ${mapName};
+    public java.util.List<${name.fullName}> _get_${mapName}() { return ${mapName}; }
+    public void _set_${mapName}(java.util.List<${name.fullName}> rows) { requireBuilding(); ${mapName} = java.util.Collections.unmodifiableList(rows); }
 
-    public ${cfg.nullable(name.fullName)} ${methodName}(${MethodStr.formalParams(name.cfg, primaryKey.fieldSchemas())}) { return ${MethodStr.actualParamsKeyRaw(primaryKey, "")} >= 0 && ${MethodStr.actualParamsKeyRaw(primaryKey, "")} < ${cfg.jspecify() ? "_get_" + mapName + "()" : mapName}.size() ? ${cfg.jspecify() ? "_get_" + mapName + "()" : mapName}.get(${MethodStr.actualParamsKeyRaw(primaryKey, "")}) : null; }
+    public ${cfg.nullable(name.fullName)} ${methodName}(${MethodStr.formalParams(name.cfg, primaryKey.fieldSchemas())}) { return ${MethodStr.actualParamsKeyRaw(primaryKey, "")} >= 0 && ${MethodStr.actualParamsKeyRaw(primaryKey, "")} < ${mapName}.size() ? ${mapName}.get(${MethodStr.actualParamsKeyRaw(primaryKey, "")}) : null; }
 
     @else
-    private ${cfg.nullable("java.util.Map<" + keyTypeName + ", " + name.fullName + ">")} ${mapName};
-    public java.util.Map<${keyTypeName}, ${name.fullName}> _get_${mapName}() { return ${cfg.requireNonNull(mapName)}; }
+    private java.util.Map<${keyTypeName}, ${name.fullName}> ${mapName};
+    public java.util.Map<${keyTypeName}, ${name.fullName}> _get_${mapName}() { return ${mapName}; }
     public void _set_${mapName}(java.util.Map<${keyTypeName}, ${name.fullName}> rows) { requireBuilding(); ${mapName} = java.util.Collections.unmodifiableMap(rows); }
 
-    public ${cfg.nullable(name.fullName)} ${methodName}(${MethodStr.formalParams(name.cfg, primaryKey.fieldSchemas())}) { return ${cfg.jspecify() ? "_get_" + mapName + "()" : mapName}.get(${MethodStr.actualParamsKey(name.cfg, primaryKey, "", name)}); }
+    public ${cfg.nullable(name.fullName)} ${methodName}(${MethodStr.formalParams(name.cfg, primaryKey.fieldSchemas())}) { return ${mapName}.get(${MethodStr.actualParamsKey(name.cfg, primaryKey, "", name)}); }
 
     @endif
     @for(KeySchema uk : table.uniqueKeys())
@@ -96,18 +103,18 @@ public class ConfigMgr {
             String ukMethodName = Name.GetByKeyFunctionNameInConfigMgr(name.cfg, uk, false, name.nameable);
         }
         @if(ukSeq)
-        private ${cfg.nullable("java.util.List<" + cfg.nullable(name.fullName) + ">")} ${ukMapName};
-        public java.util.List<${cfg.nullable(name.fullName)}> _get_${ukMapName}() { return ${cfg.requireNonNull(ukMapName)}; }
-        public void _set_${ukMapName}(java.util.List<${cfg.nullable(name.fullName)}> rows) { requireBuilding(); ${ukMapName} = java.util.Collections.unmodifiableList(rows); }
+        private java.util.List<${name.fullName}> ${ukMapName};
+        public java.util.List<${name.fullName}> _get_${ukMapName}() { return ${ukMapName}; }
+        public void _set_${ukMapName}(java.util.List<${name.fullName}> rows) { requireBuilding(); ${ukMapName} = java.util.Collections.unmodifiableList(rows); }
 
-        public ${cfg.nullable(name.fullName)} ${ukMethodName}(${MethodStr.formalParams(name.cfg, uk.fieldSchemas())}) { return ${MethodStr.actualParamsKeyRaw(uk, "")} >= 0 && ${MethodStr.actualParamsKeyRaw(uk, "")} < ${cfg.jspecify() ? "_get_" + ukMapName + "()" : ukMapName}.size() ? ${cfg.jspecify() ? "_get_" + ukMapName + "()" : ukMapName}.get(${MethodStr.actualParamsKeyRaw(uk, "")}) : null; }
+        public ${cfg.nullable(name.fullName)} ${ukMethodName}(${MethodStr.formalParams(name.cfg, uk.fieldSchemas())}) { return ${MethodStr.actualParamsKeyRaw(uk, "")} >= 0 && ${MethodStr.actualParamsKeyRaw(uk, "")} < ${ukMapName}.size() ? ${ukMapName}.get(${MethodStr.actualParamsKeyRaw(uk, "")}) : null; }
 
         @else
-        private ${cfg.nullable("java.util.Map<" + ukKeyTypeName + ", " + name.fullName + ">")} ${ukMapName};
-        public java.util.Map<${ukKeyTypeName}, ${name.fullName}> _get_${ukMapName}() { return ${cfg.requireNonNull(ukMapName)}; }
+        private java.util.Map<${ukKeyTypeName}, ${name.fullName}> ${ukMapName};
+        public java.util.Map<${ukKeyTypeName}, ${name.fullName}> _get_${ukMapName}() { return ${ukMapName}; }
         public void _set_${ukMapName}(java.util.Map<${ukKeyTypeName}, ${name.fullName}> rows) { requireBuilding(); ${ukMapName} = java.util.Collections.unmodifiableMap(rows); }
 
-        public ${cfg.nullable(name.fullName)} ${ukMethodName}(${MethodStr.formalParams(name.cfg, uk.fieldSchemas())}) { return ${cfg.jspecify() ? "_get_" + ukMapName + "()" : ukMapName}.get(${MethodStr.actualParamsKey(name.cfg, uk, "", name)}); }
+        public ${cfg.nullable(name.fullName)} ${ukMethodName}(${MethodStr.formalParams(name.cfg, uk.fieldSchemas())}) { return ${ukMapName}.get(${MethodStr.actualParamsKey(name.cfg, uk, "", name)}); }
 
         @endif
     @endfor
@@ -115,10 +122,10 @@ public class ConfigMgr {
         String functionAllName = "all" + Arrays.stream(name.nameable.name().split("\\.")).map(s -> Name.pascalName(name.cfg, s)).collect(Collectors.joining());
     }
     @if(seq)
-    public java.util.List<${cfg.nullable(name.fullName)}> ${functionAllName}() { return ${cfg.requireNonNull(mapName)}; }
+    public java.util.List<${name.fullName}> ${functionAllName}() { return ${mapName}; }
 
     @else
-    public java.util.Collection<${name.fullName}> ${functionAllName}() { return ${cfg.jspecify() ? "_get_" + mapName + "()" : mapName}.values(); }
+    public java.util.Collection<${name.fullName}> ${functionAllName}() { return ${mapName}.values(); }
 
     @endif
     @endfor

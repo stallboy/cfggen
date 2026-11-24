@@ -4,10 +4,11 @@ import org.jspecify.annotations.Nullable;
 
 import configgen.genjava.LoadValueErrs;
 
+@SuppressWarnings("NotNullFieldNotInitialized")
 public final class KillMonster implements config.task.completecondition.Completecondition {
     private final int monsterid;
     private final int count;
-    private config.other.@Nullable Monster RefMonsterid;
+    private config.other.Monster RefMonsterid;
 
     public KillMonster(int monsterid, int count) {
         this.monsterid = monsterid;
@@ -32,7 +33,7 @@ public final class KillMonster implements config.task.completecondition.Complete
         return count;
     }
 
-    public config.other.@Nullable Monster refMonsterid() {
+    public config.other.Monster refMonsterid() {
         return RefMonsterid;
     }
 
@@ -56,9 +57,11 @@ public final class KillMonster implements config.task.completecondition.Complete
 
     @Override
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
-        this.RefMonsterid = mgr.getOtherMonster(this.monsterid);
-        if (this.RefMonsterid == null) {
+        var refMonsterid = mgr.getOtherMonster(this.monsterid);
+        if (refMonsterid == null) {
             errors.missingReference("KillMonster", "monsterid", "other.monster", this.monsterid);
+        } else {
+            this.RefMonsterid = refMonsterid;
         }
 
     }

@@ -9,7 +9,7 @@ namespace Config
 {
     public interface IConfigExtension
     {
-        void OnConfigReady(ConfigMgr config);
+        void OnConfigReady(ConfigMgr _mgr);
     }
 
     public abstract record LoadError

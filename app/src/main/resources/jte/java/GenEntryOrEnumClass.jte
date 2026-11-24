@@ -139,7 +139,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 @elseif(field == model.entryBase.fieldSchema())
                     return name;
                 @else
-                    return ${model.name.cfg.requireNonNull("ref()")}.get${StringUtil.upper1(field.name())}();
+                    return ref().get${StringUtil.upper1(field.name())}();
                 @endif
             }
 
@@ -147,31 +147,23 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
         @for(ForeignKeySchema fk : model.table.foreignKeys())
             public ${model.refType(fk)} ${StringUtil.lower1(Name.refName(fk))}() {
-                return ${model.name.cfg.requireNonNull("ref()")}.${StringUtil.lower1(Name.refName(fk))}();
+                return ref().${StringUtil.lower1(Name.refName(fk))}();
             }
 
         @endfor
     @endif
 
     @if(model.isNeedReadData)
-        public ${model.name.cfg.nullable(model.dataNameFullName)} ref() {
+        public ${model.dataNameFullName} ref() {
             return ref(${model.codeTopPkg}.ConfigMgr.getMgr());
         }
 
-        public ${model.name.cfg.nullable(model.dataNameFullName)} ref(${model.codeTopPkg}.ConfigMgr mgr) {
+        public ${model.dataNameFullName} ref(${model.codeTopPkg}.ConfigMgr mgr) {
             return mgr._get_${model.name.containerPrefix}Refs(${model.isEnum ? "ordinal()" : "index"});
         }
 
         public static void setAllRefs(${model.codeTopPkg}.ConfigMgr mgr, ${errorsClass} errors) {
-            mgr._set_${model.name.containerPrefix}Refs(new ${model.name.cfg.nullable(model.dataNameFullName)}[] {
-                @for(String enumName : model.enumNames)
-                    mgr.${lookup}(${model.enumFieldName(enumName)}.value),
-                @endfor
-            });
-            for (var ${model.name.cfg.jspecify() ? "entry" : "row"} : mgr._get_${model.name.containerPrefix}All()${model.table.primaryKey().fieldSchemas().getFirst().isSeq() ? "" : ".values()"}) {
-                @if(model.name.cfg.jspecify())
-                var row = java.util.Objects.requireNonNull(entry);
-                @endif
+            for (var row : mgr._get_${model.name.containerPrefix}All()${model.table.primaryKey().fieldSchemas().getFirst().isSeq() ? "" : ".values()"}) {
                 var key = row.get${StringUtil.upper1(model.table.primaryKey().fieldSchemas().getFirst().name())}();
                 String symbol = row.get${StringUtil.upper1(model.entryBase.field())}();
                 @if(!model.isEnum)
@@ -204,19 +196,41 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                     }
                 @endif
             }
+            !{
+                int refCount = 0;
+                for (String ignored : model.enumNames) {
+                    refCount++;
+                }
+            }
+            var refs = new ${model.dataNameFullName}[${refCount}];
+            boolean complete = true;
             @if(model.isEnum)
                 for (${model.className} e : map.values()) {
-                    if (e.ref(mgr) == null) {
+                    var row = mgr.${lookup}(e.value);
+                    if (row == null) {
                         errors.missingSymbol("${model.table.name()}", ${model.hasNoIntValue ? "e.value" : "e.name"}, e.value);
+                        complete = false;
+                    } else {
+                        refs[e.ordinal()] = row;
                     }
                 }
             @else
                 @for(String enumName : model.enumNames)
-                    if (${model.enumFieldName(enumName)}.ref(mgr) == null) {
-                        errors.missingSymbol("${model.table.name()}", "${enumName}", ${model.enumFieldName(enumName)}.value);
+                    !{ String constant = model.enumFieldName(enumName); }
+                    {
+                        var row = mgr.${lookup}(${constant}.value);
+                        if (row == null) {
+                            errors.missingSymbol("${model.table.name()}", "${enumName}", ${constant}.value);
+                            complete = false;
+                        } else {
+                            refs[${constant}.index] = row;
+                        }
                     }
                 @endfor
             @endif
+            if (complete) {
+                mgr._set_${model.name.containerPrefix}Refs(refs);
+            }
         }
 
     @endif

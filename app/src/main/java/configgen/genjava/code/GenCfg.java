@@ -21,8 +21,4 @@ public record GenCfg(String codeTopPkg, boolean isSealedInterface, boolean beaut
         int simpleNameStart = 1 + (genericStart < 0 ? type.lastIndexOf('.') : type.lastIndexOf('.', genericStart));
         return type.substring(0, simpleNameStart) + "@Nullable " + type.substring(simpleNameStart);
     }
-
-    public String requireNonNull(String expression) {
-        return jspecify ? "java.util.Objects.requireNonNull(" + expression + ")" : expression;
-    }
 }

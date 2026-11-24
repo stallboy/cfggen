@@ -15,6 +15,7 @@ example/
 │   └── task/            # 任务相关配置
 ├── java/                # 生成的 Java 代码（单语言）
 ├── java_ls/             # 生成的 Java 代码（多语言服务器端）
+├── java_plain/          # 生成的 Java 代码（单语言，关闭 JSpecify）
 ├── cs/                  # 生成的 C# 代码（单语言）
 ├── cs_ls/               # 生成的 C# 代码（多语言服务器端）
 ├── cs_ls_client/        # 生成的 C# 代码（多语言客户端）
@@ -51,7 +52,7 @@ example/
 
 ### 前置条件
 
-- 使用 JDK 25。在仓库根执行 `app\gradlew.bat -p app fatJar`，生成脚本使用 `app/build/libs/cfggen.jar`。
+- 使用 JDK 25。在仓库根执行 `genjar.bat`，示例的生成脚本统一使用仓库根目录的 `cfggen.jar`。
 - 二进制示例统一使用版本化命名块容器；旧数据需重新导出，并同步更新支持源码和加载入口。
 
 ### 查看使用说明
@@ -74,6 +75,12 @@ gui.bat    # gui来配置参数和启动
 
 具体数据及只重新导出 Mod 数据的命令见 [config_mod/README.md](config_mod/README.md)。
 
+## 运行时扩展示例
+
+怪物表 `other.monster` 在配置加载完成后缓存所属掉落组的条目数。Java 通过表上的 `javaBase` 继承手写基类 `MonsterBase`，在 `onConfigReady()` 中直接读取 `refAllLoot()` 已解析的掉落组。[单语言示例](java/demo/MonsterBase.java)和[多语言示例](java_ls/demo/MonsterBase.java)各有一份基类。C# 通过 [DMonster 的手写 partial 类](cs/DMonsterExtension.cs) 实现 `IConfigExtension`，使用回调参数 `_mgr` 查询掉落组。
+
+运行 `java/run.bat`、`java_ls/run.bat` 或 `cs/run.bat` 可看到怪物 1 的掉落组条目数。
+
 ## 多语言代码生成测试
 
 ### ☕ Java
@@ -86,7 +93,13 @@ run.bat             # 构建并运行
 cd ../java_ls
 genjava_ls.bat      # 生成 Java 代码和数据（多语言服务器端）
 run.bat             # 构建并运行
+
+cd ../java_plain
+genjava.bat         # 生成 Java 代码和数据（关闭 JSpecify）
+run.bat             # 运行 seq 索引示例
 ```
+
+`other.key_test.id1` 是带 `seq` 的唯一键，现有两条记录的值为 `0` 和 `1`。`java_plain/run.bat` 会验证这两个序号均能命中，且查询序号 `2` 返回 `null`。
 
 ### 📜 Lua
 

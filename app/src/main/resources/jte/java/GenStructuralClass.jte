@@ -20,6 +20,9 @@ import configgen.genjava.LoadValueErrs;
 @if(!model.sourceComment.isEmpty())
 ${model.sourceComment}
 @endif
+@if(model.cfg.jspecify() && model.structural.foreignKeys().stream().anyMatch(fk -> !(fk.refKey() instanceof RefKey.RefSimple ref && ref.nullable())))
+@SuppressWarnings("NotNullFieldNotInitialized")
+@endif
 @if(model.isImpl)
     public ${model.isSealedInterface?"final ":""}class ${model.className}${model.javaBase.isEmpty() ? "" : " extends " + model.javaBase} implements ${model.nullableInterfaceFullName} {
 @else

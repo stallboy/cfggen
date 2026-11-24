@@ -5,16 +5,17 @@ import org.jspecify.annotations.Nullable;
 import configgen.genjava.LoadValueErrs;
 
 // 来自：other/monster.csv
-public class Monster {
+@SuppressWarnings("NotNullFieldNotInitialized")
+public class Monster extends demo.MonsterBase {
     private final int id;
     private final java.util.List<config.Position> posList;
     private final int lootId;
     private final int lootItemId;
     private final java.util.Map<String, Integer> enumMap1;
     private final java.util.Map<Integer, String> enumMap2;
-    private config.other.@Nullable LootItem RefLoot;
-    private config.other.@Nullable Loot RefAllLoot;
-    private java.util.@Nullable Map<Integer, config.other.@Nullable ArgCaptureMode> RefEnumMap2;
+    private config.other.LootItem RefLoot;
+    private config.other.Loot RefAllLoot;
+    private java.util.Map<Integer, config.other.ArgCaptureMode> RefEnumMap2;
 
     private Monster(configgen.genjava.ConfigInput input) {
         this.id = input.readInt();
@@ -96,15 +97,15 @@ public class Monster {
         return enumMap2;
     }
 
-    public config.other.@Nullable LootItem refLoot() {
+    public config.other.LootItem refLoot() {
         return RefLoot;
     }
 
-    public config.other.@Nullable Loot refAllLoot() {
+    public config.other.Loot refAllLoot() {
         return RefAllLoot;
     }
 
-    public java.util.@Nullable Map<Integer, config.other.@Nullable ArgCaptureMode> refEnumMap2() {
+    public java.util.Map<Integer, config.other.ArgCaptureMode> refEnumMap2() {
         return RefEnumMap2;
     }
 
@@ -114,13 +115,17 @@ public class Monster {
     }
 
     public void _resolve(config.ConfigMgr mgr, LoadValueErrs errors) {
-        this.RefLoot = mgr.getOtherLootItem(this.lootId, this.lootItemId);
-        if (this.RefLoot == null) {
+        var refLoot = mgr.getOtherLootItem(this.lootId, this.lootItemId);
+        if (refLoot == null) {
             errors.missingReference("other.monster", "Loot", "other.loot_item", java.util.List.of(this.lootId, this.lootItemId));
+        } else {
+            this.RefLoot = refLoot;
         }
-        this.RefAllLoot = mgr.getOtherLoot(this.lootId);
-        if (this.RefAllLoot == null) {
+        var refAllLoot = mgr.getOtherLoot(this.lootId);
+        if (refAllLoot == null) {
             errors.missingReference("other.monster", "AllLoot", "other.loot", this.lootId);
+        } else {
+            this.RefAllLoot = refAllLoot;
         }
         if (this.enumMap2.isEmpty()) {
             this.RefEnumMap2 = java.util.Collections.emptyMap();
@@ -130,12 +135,17 @@ public class Monster {
                 var ref = config.other.ArgCaptureMode.get(e.getValue());
                 if (ref == null) {
                     errors.missingReference("other.monster", "enumMap2", "other.ArgCaptureMode", e.getValue());
+                } else {
+                    this.RefEnumMap2.put(e.getKey(), ref);
                 }
-                this.RefEnumMap2.put(e.getKey(), ref);
             }
         }
         this.RefEnumMap2 = java.util.Collections.unmodifiableMap(this.RefEnumMap2);
 
+    }
+
+        public void _collectExtensions(java.util.function.Consumer<config.ConfigExtension> collect) {
+        collect.accept(this);
     }
 
     public static Monster _create(configgen.genjava.ConfigInput input) {
