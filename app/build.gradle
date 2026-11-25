@@ -9,6 +9,13 @@ plugins {
 group = 'cfggen'
 version = '1.0.0'
 
+allprojects {
+    tasks.withType(AbstractArchiveTask).configureEach {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+}
+
 repositories {
     maven { url = uri('https://maven.aliyun.com/repository/central') }
     mavenCentral()
