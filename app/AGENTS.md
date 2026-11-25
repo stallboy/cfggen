@@ -21,7 +21,7 @@ Java 配置生成器（cfggen）：从 Excel/CSV/JSON 读取配置数据，生�
 ```
 
 ### 开发环境
-- **Java 25**，Gradle。主程序主要依赖 FastExcel、FastJSON2、JTE、ANTLR、Simple-OpenAI。POI 在 `cfgdev/cfggen-excel-write` 子项目，MCP SDK 在 `cfgdev/cfggen-tools` 子项目。
+- **Java 25**，Gradle。主程序主要依赖 FastExcel、FastJSON2、JTE、ANTLR。AI 调用使用 JDK HttpClient 和 FastJSON2。POI 在 `cfgdev/cfggen-excel-write` 子项目，MCP SDK 在 `cfgdev/cfggen-tools` 子项目。
 - 默认用 **FastExcel** 读 Excel（性能高于 POI）。
 
 ### 脚本工具

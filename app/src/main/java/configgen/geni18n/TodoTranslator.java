@@ -5,17 +5,15 @@ import org.jspecify.annotations.Nullable;
 import configgen.gen.CliException;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
-import configgen.genbyai.AICfg;
 import configgen.genbyai.ByAIGenerator;
 import configgen.geni18n.TodoEdit.*;
 import configgen.util.CSVUtil;
+import configgen.util.ChatCompletionsClient;
+import configgen.util.ChatCompletionsClient.Message;
 import configgen.util.FileUtil;
 import configgen.util.JteEngine;
 import configgen.util.Logger;
 import configgen.i18n.I18nUtils;
-import io.github.sashirestela.openai.SimpleOpenAI;
-import io.github.sashirestela.openai.domain.chat.ChatMessage;
-import io.github.sashirestela.openai.domain.chat.ChatRequest;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
@@ -23,8 +21,6 @@ import com.alibaba.fastjson2.JSONObject;
 
 import java.nio.file.Path;
 import java.util.*;
-
-import static io.github.sashirestela.openai.domain.chat.ChatMessage.UserMessage;
 
 /**
  * 使用AI翻译TODO文件中的待翻译文本。
@@ -39,7 +35,6 @@ public class TodoTranslator extends Tool {
     private final @Nullable String promptJteFile; // 文件路径或null（使用默认模板）
 
     private final int batch;
-    private AICfg aiCfg;
 
     public TodoTranslator(Parameter parameter) {
         super(parameter);
@@ -65,7 +60,7 @@ public class TodoTranslator extends Tool {
     public void call() {
         FileUtil.assureFileExistIf(promptJteFile);
 
-        aiCfg = AICfg.readFromFile(aiCfgFile);
+        var aiCfg = ChatCompletionsClient.Config.readFromFile(aiCfgFile);
         Logger.log("开始翻译TODO文件: %s", todoFile);
 
 
@@ -102,10 +97,7 @@ public class TodoTranslator extends Tool {
 
 
         // 5. 初始化OpenAI客户端
-        SimpleOpenAI openAI = SimpleOpenAI.builder()
-                .baseUrl(aiCfg.baseUrl())
-                .apiKey(aiCfg.apiKey())
-                .build();
+        ChatCompletionsClient client = new ChatCompletionsClient(aiCfg);
 
         // 6. 处理每个批次
         for (List<TableOriginal> batch : batches) {
@@ -140,7 +132,7 @@ public class TodoTranslator extends Tool {
             // 渲染提示词
             String prompt = JteEngine.renderTryFileFirst(promptJteFile, "translate.jte", model);
             // 调用AI
-            AITranslationResult aiResult = callAI(prompt, openAI);
+            AITranslationResult aiResult = callAI(prompt, client);
 
             todoEdit.useAITranslationResult(aiResult);
             // 更新todo sheet
@@ -178,19 +170,14 @@ public class TodoTranslator extends Tool {
     }
 
 
-    private AITranslationResult callAI(String prompt, SimpleOpenAI openAI) {
+    private AITranslationResult callAI(String prompt, ChatCompletionsClient client) {
         Logger.log("AI请求:\n%s", prompt);
-        List<ChatMessage> messages = List.of(UserMessage.of(prompt));
-        var chatRequest = ChatRequest.builder()
-                .model(aiCfg.model())
-                .messages(messages)
-                .temperature(0.0)
-                .build();
-        var futureChat = openAI.chatCompletions().create(chatRequest);
-        var chatResponse = futureChat.join();
-        String result = chatResponse.firstContent();
+        var completion = client.complete(List.of(new Message("user", prompt)));
+        String result = completion.content();
         Logger.log("AI响应:\n%s", result);
-        Logger.log(chatResponse.getUsage().toString());
+        if (completion.usage() != null) {
+            Logger.log("%s", completion.usage());
+        }
         // 解析结果
         return parseAIResult(result);
     }
@@ -293,7 +280,7 @@ public class TodoTranslator extends Tool {
      * 相似度 = 1 - (编辑距离 / max(len1, len2))
      */
     private static double calculateSimilarity(String str1, String str2) {
-        if (str1 == null || str2 == null || str1.isEmpty() || str2.isEmpty()) {
+        if (str1.isEmpty() || str2.isEmpty()) {
             return 0.0;
         }
 

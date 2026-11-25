@@ -32,10 +32,10 @@ jobs:
         working-directory: app
         run: ./gradlew :test :cfggen-tools:test :cfggen-tools:stageJars --no-daemon
 
-      - name: Verify the main JAR contains no POI
+      - name: Verify the main JAR excludes optional dependencies
         run: |
           jar tf app/build/libs/cfggen.jar > "$RUNNER_TEMP/cfggen-entries.txt"
-          if grep -E '(^|/)org/apache/poi/|META-INF/services/org\.apache\.poi\.' "$RUNNER_TEMP/cfggen-entries.txt"; then
+          if grep -E '(^|/)(org/apache/poi/|com/fasterxml/jackson/|org/slf4j/|io/github/sashirestela/)|META-INF/services/(org\.apache\.poi\.|org\.slf4j\.)' "$RUNNER_TEMP/cfggen-entries.txt"; then
             exit 1
           fi
 

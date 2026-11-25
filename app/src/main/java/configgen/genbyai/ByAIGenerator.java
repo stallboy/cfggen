@@ -12,9 +12,8 @@ import configgen.schema.*;
 import configgen.value.*;
 import configgen.write.VTableJsonStorage;
 import configgen.write.VTableStorage;
-import io.github.sashirestela.openai.SimpleOpenAI;
-import io.github.sashirestela.openai.domain.chat.ChatMessage;
-import io.github.sashirestela.openai.domain.chat.ChatRequest;
+import configgen.util.ChatCompletionsClient;
+import configgen.util.ChatCompletionsClient.Message;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,8 +21,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
 public class ByAIGenerator extends Generator {
     private final String cfgFn;
@@ -46,7 +43,7 @@ public class ByAIGenerator extends Generator {
             throw new RuntimeException("retry must > 0");
         }
 
-        AICfg aiCfg = AICfg.readFromFile(cfgFn);
+        var aiCfg = ChatCompletionsClient.Config.readFromFile(cfgFn);
         Path askFnPath = Path.of(askFn);
         if (!Files.exists(askFnPath)) {
             throw new RuntimeException(askFn + " not exist!");
@@ -67,10 +64,7 @@ public class ByAIGenerator extends Generator {
         System.out.println(prompt.init());
 
         // 调用llm
-        SimpleOpenAI openAI = SimpleOpenAI.builder()
-                .baseUrl(aiCfg.baseUrl())
-                .apiKey(aiCfg.apiKey())
-                .build();
+        ChatCompletionsClient client = new ChatCompletionsClient(aiCfg);
 
         AskStat stat = new AskStat();
         for (String ask : asks) {
@@ -80,13 +74,11 @@ public class ByAIGenerator extends Generator {
 
             System.out.println();
             System.out.printf("## %s%n", ask);
-            List<ChatMessage> messages = List.of(
-                    UserMessage.of(prompt.prompt()),
-                    AssistantMessage.of(prompt.init()),
-                    UserMessage.of(ask));
-            askWithRetry(messages, retryTimes, stat,
-                    ctx, vTable,
-                    openAI, aiCfg.model());
+            List<Message> messages = List.of(
+                    new Message("user", prompt.prompt()),
+                    new Message("assistant", prompt.init()),
+                    new Message("user", ask));
+            askWithRetry(messages, retryTimes, stat, ctx, vTable, client);
         }
         System.out.println(stat);
     }
@@ -106,13 +98,13 @@ public class ByAIGenerator extends Generator {
         }
     }
 
-    private void askWithRetry(List<ChatMessage> messages, int retryTimes, AskStat stat,
+    private void askWithRetry(List<Message> messages, int retryTimes, AskStat stat,
                               Context context, CfgValue.VTable vTable,
-                              SimpleOpenAI openAI, String model) {
+                              ChatCompletionsClient client) {
         stat.ask++;
         TableSchema tableSchema = vTable.schema();
         for (int i = 0; i < retryTimes; i++) {
-            String jsonResult = ask(messages, openAI, model);
+            String jsonResult = ask(messages, client);
             if (i > 0) {
                 stat.retry++;
             }
@@ -148,7 +140,7 @@ public class ByAIGenerator extends Generator {
                     return;
                 } else {
                     messages = new ArrayList<>(messages);
-                    messages.add(UserMessage.of(PromptDefault.FIX_ERROR.formatted(parseErrs.toString())));
+                    messages.add(new Message("user", PromptDefault.FIX_ERROR.formatted(parseErrs.toString())));
 
                     stat.err++;
                 }
@@ -156,17 +148,13 @@ public class ByAIGenerator extends Generator {
         }
     }
 
-    private @Nullable String ask(List<ChatMessage> messages, SimpleOpenAI openAI, String model) {
-        var chatRequest = ChatRequest.builder()
-                .model(model)
-                .messages(messages)
-                .temperature(0.0)
-                .build();
-        var futureChat = openAI.chatCompletions().create(chatRequest);
-        var chatResponse = futureChat.join();
-        String result = chatResponse.firstContent();
+    private @Nullable String ask(List<Message> messages, ChatCompletionsClient client) {
+        var completion = client.complete(messages);
+        String result = completion.content();
         System.out.println(result);
-        System.out.println(chatResponse.getUsage().toString());
+        if (completion.usage() != null) {
+            System.out.println(completion.usage());
+        }
         return extractJson(result);
     }
 
