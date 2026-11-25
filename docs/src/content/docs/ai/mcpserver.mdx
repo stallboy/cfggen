@@ -13,12 +13,14 @@ MCP（Model Context Protocol）服务器为配置系统提供了与AI助手交�
 
 ### 1️⃣ 启动MCP服务器
 
+把配套的 `cfggen-tools.jar` 和 `cfggen.jar` 放在同一个目录。在仓库根目录运行 `genjar.bat` 和 `gentoolsjar.bat` 可以生成这两个 JAR。
+
 ```bash
 # 进入配置目录
 cd /path/to/your/config
 
 # 启动MCP服务器（默认端口3457）
-java -jar cfggen.jar -datadir . -gen mcpserver
+java -jar /path/to/cfggen-tools.jar -datadir . -gen mcpserver
 ```
 
 ### 2️⃣ 配置Claude Code
@@ -72,10 +74,10 @@ claude mcp list
 **示例：**
 ```bash
 # 指定端口
-java -jar cfggen.jar -datadir . -gen mcpserver,port=8080
+java -jar /path/to/cfggen-tools.jar -datadir . -gen mcpserver,port=8080
 
 # 启用文件监视和自动重载（5秒延迟）
-java -jar cfggen.jar -datadir . -gen mcpserver,watch=5,postrun=reload.bat
+java -jar /path/to/cfggen-tools.jar -datadir . -gen mcpserver,watch=5,postrun=reload.bat
 ```
 
 ---

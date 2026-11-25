@@ -49,7 +49,7 @@ flowchart TD
 ## Excel 读取：FastExcel vs POI
 
 - 默认 `ReadByFastExcel`（见 `data/ReadByFastExcel.java`），用 `org.dhatim.fastexcel.reader`。
-- 备选 `ReadByPoi`（Apache POI）。`ExcelReadDiffTool`（`-tool fastexcelcheck`）专门比对两者读取结果，做一致性兜底。
+- [`cfggen-tools`](../../cfgdev/cfggen-tools/README.md) 中的 `ReadByPoi`（Apache POI）供 `-tool fastexcelcheck` 使用，和主程序的 `ReadByFastExcel` 比对读取结果。
 
 FastExcel 实现里两个**非显然**点：
 
@@ -74,7 +74,7 @@ FastExcel 实现里两个**非显然**点：
 ## 设计原理
 
 1. **为何 data 只搬运不解释**：把"文件格式"和"类型语义"彻底解耦。加一种新数据源（比如 YAML）只需加个 reader 产出 `CfgData`，value 层的类型逻辑零改动。这正是四层分离的好处（见 [`01`](01-architecture-overview.md)）。
-2. **为何默认 FastExcel**：性能——POI 重得多。但**保留 POI 实现**作兜底和比对（`fastexcelcheck`），不把鸡蛋放一个篮子。
+2. **为何默认 FastExcel**：读表性能较高。需要排查读取差异时，可用 `cfggen-tools.jar` 的 `fastexcelcheck` 与 POI 比对。
 3. **为何并发 + 工作窃取**：表之间完全独立，读是 IO、解析是 CPU，混合负载；工作窃取池自动平衡。`CfgDataReader` 注释里留有 `FixedThreadPool` / `VirtualThreadPerTaskExecutor` 的尝试痕迹——说明这池子是调过的，不是随手选的。
 4. **为何 `DCell` 要带 `rowId` / `col` / `mode`**：错误信息必须能指回 Excel 的 `sheet[A1]`；而列模式下行列互换，`mode` 里记着 `COLUMN_MODE` 才能在 `toString` 时正确还原显示的行列。
 
@@ -84,11 +84,11 @@ FastExcel 实现里两个**非显然**点：
 |---|---|
 | 读取编排 / 两阶段并发 | `CfgDataReader` |
 | 数据模型 | `CfgData`、`DTable`、`DCell`、`DRawSheet` |
-| Excel 读取 | `ReadByFastExcel`（默认）、`ReadByPoi`、接口 `ExcelReader` |
+| Excel 读取 | `ReadByFastExcel`、接口 `ExcelReader` |
 | CSV 读取 | `ReadCsv` |
 | 表头解析 | `HeadParser` |
 | 单元格解析 | `CellParser` |
-| FastExcel↔POI 比对 | `ExcelReadDiffTool`（在 `tool` 包） |
+| FastExcel↔POI 比对 | `ExcelReadDiffTool`、`ReadByPoi`（在 `cfgdev/cfggen-tools`） |
 
 ## 接下来
 

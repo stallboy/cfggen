@@ -65,10 +65,6 @@ public class ExcelReadDiffTool extends Tool {
             for (int i = 0; i < Math.min(tableByPoi.rows().size(), tableByFastExcel.rows().size()); i++) {
                 List<CfgData.DCell> rowByFastExcel = tableByFastExcel.rows().get(i);
                 List<CfgData.DCell> rowByPoi = tableByPoi.rows().get(i);
-                if (rowByPoi == null) {
-                    Logger.log("table: %s row not found: %d", tableName, i);
-                    continue;
-                }
 
                 for (int j = 0; j < Math.min(rowByFastExcel.size(), rowByPoi.size()); j++) {
                     CfgData.DCell cellByFastExcel = rowByFastExcel.get(j);

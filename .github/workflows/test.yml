@@ -24,13 +24,33 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('app/**/*.gradle', 'app/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('app/**/*.gradle', 'cfgdev/cfggen-tools/build.gradle', 'app/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
       - name: Run tests
         working-directory: app
-        run: ./gradlew test fatJar --no-daemon
+        run: ./gradlew :test :cfggen-tools:test :cfggen-tools:stageJars --no-daemon
+
+      - name: Verify the packaged tools can load cfggen.jar
+        run: |
+          java -jar cfgdev/cfggen-tools/build/jars/cfggen-tools.jar -tool "csvencoding,datadir=example/config"
+          java -jar cfgdev/cfggen-tools/build/jars/cfggen-tools.jar -tool "fastexcelcheck,datadir=example/config"
+
+      - name: Initialize the packaged MCP server
+        run: |
+          log="$RUNNER_TEMP/cfggen-mcp.log"
+          java --sun-misc-unsafe-memory-access=allow -jar cfgdev/cfggen-tools/build/jars/cfggen-tools.jar \
+            -datadir example/config -schema example/config -gen mcpserver,port=13457 >"$log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          if ! response=$(curl --fail --silent --show-error --max-time 10 --retry 15 --retry-delay 1 --retry-connrefused \
+            -H 'Accept: application/json, text/event-stream' -H 'Content-Type: application/json' \
+            --data-binary '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
+            http://127.0.0.1:13457/mcp) || [[ "$response" != *cfg-mcp-server* ]]; then
+            cat "$log"
+            exit 1
+          fi
 
       - name: Regenerate and check the Java example
         working-directory: example/java
@@ -70,5 +90,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: test-results
-          path: app/build/reports/tests/test
+          path: |
+            app/build/reports/tests/test
+            cfgdev/cfggen-tools/build/reports/tests/test
           retention-days: 7

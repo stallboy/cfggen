@@ -17,10 +17,14 @@ repositories {
 // 将版本号统一管理，方便后续升级
 def versions = [
         fastjson2: '2.0.62',
+        jackson  : '2.19.2',
         poi      : '5.5.1',
         fastexcel: '0.19.0',
         antlr    : '4.13.2'
 ]
+ext.poiVersion = versions.poi
+ext.fastjson2Version = versions.fastjson2
+ext.jacksonVersion = versions.jackson
 
 configurations { antlrTool }
 
@@ -56,11 +60,11 @@ dependencies {
     implementation "org.dhatim:fastexcel:${versions.fastexcel}"
     implementation "org.dhatim:fastexcel-reader:${versions.fastexcel}"
     implementation 'de.siegmar:fastcsv:4.3.1' // 4.x：CsvRow→CsvRecord、skipEmptyRows→skipEmptyLines、build→ofCsvRecord
-    implementation 'com.ibm.icu:icu4j:72.1'
     implementation "com.alibaba.fastjson2:fastjson2:${versions.fastjson2}"
 
+    // Share the Jackson version already used by the AI and MCP features before they were packaged separately.
+    implementation platform("com.fasterxml.jackson:jackson-bom:${versions.jackson}")
     implementation 'io.github.sashirestela:simple-openai:3.21.0'
-    implementation 'io.github.codeboyzhou:mcp-declarative-java-sdk:0.9.0'
 
     // 测试依赖
     testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'

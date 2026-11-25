@@ -13,26 +13,25 @@ Java 配置生成器（cfggen）：从 Excel/CSV/JSON 读取配置数据，生�
 ### 构建命令
 ```bash
 ./gradlew.bat build                          # 构建
-./gradlew.bat test                           # 测试
-./gradlew.bat test --tests "完整测试类名"     # 单个测试类
+./gradlew.bat :test                          # 测试主程序
+./gradlew.bat :test --tests "完整测试类名"    # 单个测试类
 ./gradlew.bat jacocoTestReport               # 覆盖率报告
-./gradlew.bat fatJar                         # 可执行 jar → build/libs/cfggen.jar
+./gradlew.bat :fatJar                        # 可执行 jar → build/libs/cfggen.jar
 ./gradlew.bat compileJava / compileTestJava / clean
 ```
 
 ### 开发环境
-- **Java 25**，Gradle。主要依赖：FastExcel、POI、FastJSON2、JTE、ANTLR、Simple-OpenAI、MCP SDK。
+- **Java 25**，Gradle。主要依赖：FastExcel、POI、FastJSON2、JTE、ANTLR、Simple-OpenAI。MCP SDK 在 `cfgdev/cfggen-tools` 子项目。
 - 默认用 **FastExcel** 读 Excel（性能高于 POI）。
 
 ### 脚本工具
-- `genjar.bat`（仓库根）：便捷打包，但 **Windows cmd 语法**（`call`/`copy`/`pause`），**Git Bash 下不工作** → 用 `./gradlew.bat fatjar` 代替。
+- `genjar.bat`（仓库根）：便捷打包，但 **Windows cmd 语法**（`call`/`copy`/`pause`），**Git Bash 下不工作** → 用 `./gradlew.bat :fatJar` 代替。
 - `app/script/mkexe.bat`：生成 Windows 可执行文件。
 
 ### 工具模块（`-tool`）
 | 注册名 | 类 | 说明 |
 |---|---|---|
 | `xmltocfg` | `XmlToCfgTool` | XML 转 CFG |
-| `fastexcelcheck` | `ExcelReadDiffTool` | FastExcel vs POI 读取比对 |
 | `bytesview` | `BytesViewTool` | Bytes 文件查看 |
 | `schematocsv` | `SchemaToCsvTool` | Schema 导出 CSV |
 | `blockmigrate` | `BlockMigrationTool` | block 解析算法迁移检测（parseBlock 层新旧算法对比） |
@@ -40,6 +39,8 @@ Java 配置生成器（cfggen）：从 Excel/CSV/JSON 读取配置数据，生�
 | `translate` | `TodoTranslator` | AI 辅助翻译 |
 
 > `verify`/`search` 在 `tool` 包但通过 `-gen` 注册（见下）。`Help`（`-h`）由 `Main` 内部调用，不在注册表。
+
+`csvencoding`、`fastexcelcheck` 和 `-gen mcpserver` 由 [`cfgdev/cfggen-tools`](../cfgdev/cfggen-tools/README.md) 构建和运行。在 `app/` 执行 `gradlew.bat :cfggen-tools:test :cfggen-tools:stageJars`，将工具包和它依赖的主包放到同一目录。
 
 ## 代码架构
 
@@ -55,12 +56,12 @@ Java 配置生成器（cfggen）：从 Excel/CSV/JSON 读取配置数据，生�
 | `gen*` | 各语言代码生成 | `Generator` 基类 + `genjava`/`gencs`/`gengo`/`genlua`/`gents`/`gengd`/`genjson` |
 | `genbytes` | 二进制格式 | `BytesGenerator`（详见 [`docs/06`](docs/06-bytes-format.md)） |
 | `i18n` / `geni18n` | 国际化 | `TranslationCatalog`、`TranslationBundle`、`I18nBy*Generator` |
-| `write` + `editorserver` + `mcpserver` | 写回管道（编辑器/AI→文件） | `VTableStorage`、`EditorServer`、`CfgMcpServer`（详见 [`docs/07`](docs/07-write-back-and-servers.md)） |
+| `write` + `editorserver` | 写回管道（编辑器/AI→文件），工具包中的 `CfgMcpServer` 也复用它 | `VTableStorage`、`EditorServer`（详见 [`docs/07`](docs/07-write-back-and-servers.md)） |
 | `tool` | 校验 / 检索 | `ValueVerifyTool`、`ValueInspectTool` |
 | `util` | 模板 / 缓存输出 / 日志 | `JteEngine`、`CachedFiles`、`Logger` |
 
 ### 生成器模块（`-gen`，括号内为注册名）
-在 `Main.registerAllProviders` 注册。`java`/`cs`/`ts`/`go`/`lua`/`gd`/`json`/`bytes` 为代码/数据生成；`byai`(AI 辅助)/`tsschema`(导出 TS schema)；`i18n`/`i18nbyid` 国际化；`verify`/`search` 校验检索（概念是工具、注册在 `Generators`）；`server`/`mcpserver` 服务。
+在 `Main.registerAllProviders` 注册。`java`/`cs`/`ts`/`go`/`lua`/`gd`/`json`/`bytes` 为代码和数据生成，`byai` 用于 AI 辅助，`tsschema` 导出 TS schema，`i18n`/`i18nbyid` 用于国际化，`verify`/`search` 用于校验检索，`server` 为编辑器提供服务。`mcpserver` 由工具包的 `ToolsMain` 注册。
 
 ## 使用方式
 ```bash

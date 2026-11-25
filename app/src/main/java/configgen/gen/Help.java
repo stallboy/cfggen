@@ -9,20 +9,27 @@ import configgen.util.Logger;
  * 打印使用帮助信息
  */
 public class Help {
+    static final String CFGGEN_JAR = "cfggen.jar";
 
     public static void printHelp() {
         printHelp(null);
     }
 
     public static void printHelp(@Nullable String reason) {
+        printHelp(reason, CFGGEN_JAR);
+    }
+
+    static void printHelp(@Nullable String reason, String jarName) {
         if (reason != null && !reason.isBlank()) {
             Logger.log(reason);
         }
 
-        Logger.log("Usage: java -jar cfggen.jar [options] [-tool toolName[,param=value...]] -datadir <dir> [-gen genName[,param=value...]]");
+        Logger.log("Usage: java -jar %s [options] [-tool toolName[,param=value...]] -datadir <dir> [-gen genName[,param=value...]]", jarName);
         Logger.log("");
-        Logger.log("   or: java -jar cfggen.jar [-h] (print help)");
-        Logger.log("   or: java -jar cfggen.jar -gui (launch GUI)");
+        Logger.log("   or: java -jar %s [-h] (print help)", jarName);
+        if (CFGGEN_JAR.equals(jarName)) {
+            Logger.log("   or: java -jar %s -gui (launch GUI)", jarName);
+        }
         Logger.log("");
         Logger.log("Parameters can be in any order, but -datadir is required when using generators.");
         Logger.log(LocaleUtil.getLocaleString("Usage.ToolGenStart",
@@ -52,6 +59,9 @@ public class Help {
                     info.print();
                 }
         );
+        if (CFGGEN_JAR.equals(jarName)) {
+            Logger.log("    For csvencoding, fastexcelcheck and mcpserver, use java -jar cfggen-tools.jar -h");
+        }
 
         Logger.log("");
         Logger.log("-----schema & data");

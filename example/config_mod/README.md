@@ -13,7 +13,7 @@
 在仓库根目录首次构建并运行：
 
 ```powershell
-.\app\gradlew.bat -p app fatJar
+.\app\gradlew.bat -p app :fatJar
 .\example\java\genjava.bat
 .\example\java\run.bat
 .\example\cs\gencs.bat

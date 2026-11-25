@@ -8,3 +8,6 @@ pluginManagement {
 
 rootProject.name = 'app'
 
+include 'cfggen-tools'
+project(':cfggen-tools').projectDir = file('../cfgdev/cfggen-tools')
+

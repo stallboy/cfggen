@@ -65,7 +65,7 @@ gen 层消费 `CfgValue`，用模板渲染成各语言的代码与数据文件�
 | `tsschema` | `TsSchemaGenerator` | 导出 TS schema | 供 AI / 前端 |
 | `i18n` / `i18nbyid` | `I18nBy*Generator` | 国际化文件 | 见 [`09`](09-i18n.md) |
 | `verify` / `search` | `ValueVerifyTool` / `ValueInspectTool` | 校验 / 检索 | 见 [`08`](08-errors-and-validation.md) |
-| `server` / `mcpserver` | `EditorServer` / `CfgMcpServer` | 服务 | 见 [`07`](07-write-back-and-servers.md) |
+| `server` / `mcpserver` | `EditorServer` / 工具包的 `CfgMcpServer` | 服务 | 见 [`07`](07-write-back-and-servers.md) |
 
 ### 收尾清理（过期文件删除）的目录语义差异
 

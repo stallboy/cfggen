@@ -3,7 +3,7 @@
 在仓库根目录执行：
 
 ```powershell
-.\app\gradlew.bat -p app fatJar
+.\app\gradlew.bat -p app :fatJar
 .\example\cs\gencs.bat
 .\example\cs\run.bat
 ```

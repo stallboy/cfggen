@@ -21,7 +21,6 @@ import configgen.geni18n.TodoTermListerAndChecker;
 import configgen.geni18n.I18nByValueGenerator;
 import configgen.geni18n.I18nByIdGenerator;
 import configgen.geni18n.TodoTranslator;
-import configgen.mcpserver.CfgMcpServer;
 import configgen.tool.*;
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
@@ -35,8 +34,8 @@ import java.util.Locale;
 public final class Main {
     private static final int MAX_EXCEPTION_DEPTH = 30;
 
-    private static int help(@Nullable String reason) {
-        Help.printHelp(reason);
+    private static int help(String jarName, @Nullable String reason) {
+        Help.printHelp(reason, jarName);
         return 1;
     }
 
@@ -60,13 +59,11 @@ public final class Main {
     @SuppressWarnings("SpellCheckingInspection")
     public static void registerAllProviders() {
         Tools.addProvider("xmltocfg", XmlToCfgTool::new);
-        Tools.addProvider("fastexcelcheck", ExcelReadDiffTool::new);
         Tools.addProvider("bytesview", BytesViewTool::new);
         Tools.addProvider("term", TodoTermListerAndChecker::new);
         Tools.addProvider("translate", TodoTranslator::new);
         Tools.addProvider("schematocsv", SchemaToCsvTool::new);
         Tools.addProvider("blockmigrate", BlockMigrationTool::new);
-        Tools.addProvider("csvencoding", CsvEncodingTool::new);
 
         Generators.addProvider("verify", ValueVerifyTool::new);
         Generators.addProvider("search", ValueInspectTool::new);
@@ -84,16 +81,19 @@ public final class Main {
         Generators.addProvider("json", JsonGenerator::new);
 
         Generators.addProvider("server", EditorServer::new);
-        Generators.addProvider("mcpserver", CfgMcpServer::new);
         Generators.addProvider("byai", ByAIGenerator::new);
     }
 
     public static int runWithCatch(String[] args) {
+        return runWithCatch(args, Help.CFGGEN_JAR);
+    }
+
+    public static int runWithCatch(String[] args, String jarName) {
         try {
-            return run(args);
+            return run(args, jarName);
         } catch (CliException e) {
             // 命令行使用错误：打印简短原因和usage，不打印堆栈
-            return help(e.getMessage());
+            return help(jarName, e.getMessage());
         } catch (Throwable t) {
             System.err.print(formatException(t));
             return 1;
@@ -139,7 +139,7 @@ public final class Main {
         return sb.toString();
     }
 
-    private static int run(String[] args) throws IOException {
+    private static int run(String[] args, String jarName) throws IOException {
         boolean allowValueErr = false;
         String dataDir = null;
         String sharedSchema = null;
@@ -168,11 +168,14 @@ public final class Main {
                 }
 
                 case "-gui" -> {
+                    if (!Help.CFGGEN_JAR.equals(jarName)) {
+                        return help(jarName, "Run java -jar cfggen.jar -gui to launch the GUI");
+                    }
                     GuiLauncher.launch();
                     return 0;
                 }
-                case "-h" -> {
-                    Help.printHelp();
+                case "-h", "--help" -> {
+                    Help.printHelp(null, jarName);
                     return 0;
                 }
                 case "-v" -> Logger.setVerboseLevel(1);
@@ -190,7 +193,7 @@ public final class Main {
                     String name = nextArg(args, paramType, ++i);
                     Tool tool = Tools.create(name);
                     if (tool == null) {
-                        return help("-tool " + name + " UNKNOWN");
+                        return help(jarName, "-tool " + name + " UNKNOWN");
                     }
                     tools.add(new NamedTool(name, tool));
                 }
@@ -208,22 +211,22 @@ public final class Main {
                     String name = nextArg(args, paramType, ++i);
                     Generator generator = Generators.create(name);
                     if (generator == null) {
-                        return help("-gen " + name + " UNKNOWN");
+                        return help(jarName, "-gen " + name + " UNKNOWN");
                     }
                     generators.add(generator);
                 }
                 default -> {
-                    return help("unknown args " + args[i]);
+                    return help(jarName, "unknown args " + args[i]);
                 }
             }
         }
 
         // 参数组合校验必须先于任何执行（tools/generators都有副作用）
         if (i18nfile != null && langSwitchDir != null) {
-            return help("-i18nfile and -langswitchdir cannot be used together");
+            return help(jarName, "-i18nfile and -langswitchdir cannot be used together");
         }
         if (dataDir == null && !generators.isEmpty()) {
-            return help("-datadir is required");
+            return help(jarName, "-datadir is required");
         }
 
         Path dataDirPath = dataDir == null ? null : Path.of(dataDir);

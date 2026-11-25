@@ -49,7 +49,7 @@ flowchart LR
 
 ## `mcpserver`：给 AI 的 MCP 服务
 
-见 `mcpserver/CfgMcpServer.java`。用 codeboyzhou 的声明式 MCP SDK（`@McpServerApplication`），流式 HTTP 端口默认 3457。工具（`@McpTool`）：
+从 `cfggen-tools.jar` 启动，代码位于 [`cfgdev/cfggen-tools`](../../cfgdev/cfggen-tools/README.md) 的 `configgen.mcpserver` 包。用 codeboyzhou 的声明式 MCP SDK（`@McpServerApplication`），流式 HTTP 端口默认 3457。工具（`@McpTool`）：
 
 | 工具 | 作用 |
 |---|---|

@@ -34,9 +34,9 @@ jobs:
           distribution: 'temurin'
           java-version: '25'
 
-      - name: Build fatJar
+      - name: Build the main and tools JARs
         working-directory: app
-        run: ./gradlew.bat fatJar --no-daemon
+        run: ./gradlew.bat :cfggen-tools:stageJars --no-daemon
 
       - name: Copy JAR
         run: Copy-Item app\build\libs\cfggen.jar cfggen.jar
@@ -46,6 +46,13 @@ jobs:
         with:
           name: cfggen-jar
           path: cfggen.jar
+          retention-days: 7
+
+      - name: Upload tools JAR
+        uses: actions/upload-artifact@v7
+        with:
+          name: cfggen-tools-jar
+          path: cfgdev/cfggen-tools/build/jars/cfggen-tools.jar
           retention-days: 7
 
   build-tauri-windows:
@@ -300,6 +307,7 @@ jobs:
           body_path: release_notes.md
           files: |
             artifacts/cfggen-jar/cfggen.jar
+            artifacts/cfggen-tools-jar/cfggen-tools.jar
             artifacts/cfgeditor-windows/cfgeditor.exe
             artifacts/cfgeditor-linux/cfgeditor-linux
             artifacts/cfgeditor-macos/cfgeditor-macos

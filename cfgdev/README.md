@@ -14,3 +14,7 @@ Claude Code 插件 - 根据自然语言描述生成 cfggen schema、数据。包
 
 VSCode 扩展 - 为 `.cfg` 配置文件提供语法高亮、跳转定义、大纲视图等功能。
 
+### 3. [cfggen-tools](./cfggen-tools/)
+
+Java 命令行工具，提供 `csvencoding`、`fastexcelcheck` 和 MCP 服务。运行 `cfggen-tools.jar` 时，把配套的 `cfggen.jar` 放在同一目录。
+

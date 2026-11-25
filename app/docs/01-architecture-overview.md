@@ -48,7 +48,7 @@ flowchart TD
 | 跨语言生成命名契约（外键引用字段名、唯一键名等） | `naming` | `GenNaming` |
 | 二进制格式 | `genbytes` | `BytesGenerator`、各 `*Serializer`、`ConfigOutput`/`ConfigInput` |
 | 国际化 | `i18n` + `geni18n` | `TranslationCatalog`、`TranslationBundle`、`I18nBy*Generator` |
-| 写回（编辑器 / AI → 文件） | `write` + `editorserver` + `mcpserver` | `VTableStorage`、`EditorServer`、`CfgMcpServer` |
+| 写回（编辑器 / AI → 文件） | `write` + `editorserver`，由工具包的 `mcpserver` 复用 | `VTableStorage`、`EditorServer`、`CfgMcpServer` |
 | 校验 / 检索 | `tool` | `ValueVerifyTool`、`ValueInspectTool` |
 | 模板 / 缓存输出 / 日志 | `util` | `JteEngine`、`CachedFiles`、`Logger` |
 

@@ -5,8 +5,8 @@
 ## 构建
 
 - **Java 25** toolchain（见 `../build.gradle`）。
-- 可执行 jar：在 `app/` 下 `./gradlew.bat fatjar` → `build/libs/cfggen.jar`（fat jar，含全部依赖）。
-- 仓库根的 `genjar.bat` 只是个便捷封装：`cd app && call gradlew.bat fatjar && copy cfggen.jar 到根 && pause`。它是 **Windows cmd 语法**（`call` / `copy /B` / `pause`），**在 Git Bash 下不工作**——直接用上面的 `./gradlew.bat fatjar` 即可。
+- 主程序：在 `app/` 下运行 `./gradlew.bat :fatJar`，产物在 `build/libs/cfggen.jar`。在 Windows 命令提示符中运行仓库根的 `genjar.bat` 可同时将产物复制到仓库根目录。
+- 仓库根的 `gentoolsjar.bat` 从源码构建工具包，用现有的 `cfggen.jar` 运行 `-h` 检查启动，通过后更新根目录的 `cfggen-tools.jar`。开发和 CI 可以用 `./gradlew.bat :cfggen-tools:stageJars` 从当前源码构建成对产物，两个 JAR 会放到 `cfgdev/cfggen-tools/build/jars/`。
 
 构建期 `build.gradle` 做三件影响运行时的事：
 
@@ -61,7 +61,7 @@
 | 关注点 | 位置 |
 |---|---|
 | 构建脚本 | `../build.gradle` |
-| 便捷打包（Windows） | `../../genjar.bat`（Git Bash 下用 `./gradlew.bat fatjar`） |
+| 便捷打包（Windows） | 主程序 `../../genjar.bat`，开发工具 `../../gentoolsjar.bat` |
 | 生成 exe | `../script/mkexe.bat`（含 `genexe_step1/2.bat`） |
 | 模板 | `../src/main/resources/jte/` |
 | 日志 / profile | `util/Logger.java` |
