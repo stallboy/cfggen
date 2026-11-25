@@ -1,0 +1,53 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    maven { url = uri('https://maven.aliyun.com/repository/central') }
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly project(':')
+    compileOnly 'org.jspecify:jspecify:1.0.0'
+    api 'org.apache.poi:poi-ooxml:5.5.1'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('jar') {
+    archiveClassifier = 'plain'
+}
+
+// These libraries already ship in cfggen.jar, which also loads the provider.
+def sharedModules = [
+        'org.apache.commons:commons-compress',
+        'org.apache.commons:commons-lang3',
+        'commons-codec:commons-codec',
+        'commons-io:commons-io'
+]
+def bundledPoi = configurations.runtimeClasspath.incoming.artifactView {
+    componentFilter { component ->
+        !(component instanceof ModuleComponentIdentifier &&
+                "${component.group}:${component.module}".toString() in sharedModules)
+    }
+}.files
+
+tasks.register('fatJar', Jar) {
+    description = 'Build the optional Excel write-back JAR with Apache POI'
+    archiveFileName = 'cfggen-excel-write.jar'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from sourceSets.main.output
+    from({ bundledPoi.collect { zipTree(it) } }) {
+        exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+    }
+}

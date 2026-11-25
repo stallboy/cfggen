@@ -4,13 +4,13 @@
 
 ## 构建
 
-在仓库根目录运行 `gentoolsjar.bat`。脚本从当前源码构建工具包，随后把根目录现有的 `cfggen.jar` 加入类路径，运行 `-h` 做启动检查。检查成功后才替换根目录的 `cfggen-tools.jar`。主包缺失或仍包含 MCP 服务时，先用 `genjar.bat` 更新主包。
+在仓库根目录运行 `genjar.bat` 更新主包，再运行 `gentoolsjar.bat` 构建工具包和 Excel 写回包。脚本使用根目录的 `cfggen.jar` 运行 `-h` 做启动检查，检查通过后更新根目录的两个配套 JAR。
 
-工具项目始终依赖当前 `app` 源码。CI 用示例数据实跑两个工具。在 `app/` 运行 `./gradlew :cfggen-tools:test :cfggen-tools:stageJars` 可测试并构建配套的两个 JAR，产物位于 `cfgdev/cfggen-tools/build/jars/`。Windows 下使用 `gradlew.bat`。
+工具项目始终依赖当前 `app` 源码。CI 用示例数据实跑两个工具。在 `app/` 运行 `./gradlew :cfggen-tools:test :cfggen-tools:stageJars` 可测试并构建配套的三个 JAR，产物位于 `cfgdev/cfggen-tools/build/jars/`。Windows 下使用 `gradlew.bat`。
 
 ## 使用
 
-请把一起验证过的 `cfggen.jar` 和 `cfggen-tools.jar` 放在同一个目录。Java 通过工具包清单里的 `Class-Path` 加载 `cfggen.jar`，路径相对于工具包的位置。以下命令从仓库根目录运行。
+请把同版本的 `cfggen.jar`、`cfggen-tools.jar` 和 `cfggen-excel-write.jar` 放在同一个目录。写回包为 `fastexcelcheck` 提供 POI，也支持 MCP 编辑 Excel。只运行 `csvencoding` 时，主包和工具包即可。以下命令从仓库根目录运行。
 
 ```text
 java -jar cfggen-tools.jar -h

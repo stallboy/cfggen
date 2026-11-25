@@ -52,10 +52,11 @@ public abstract class AbstractExcelTableFile implements TableFile {
         }
 
         try {
-            this.sheet = workbook.getSheet(sheetName);
-            if (this.sheet == null) {
+            Sheet selectedSheet = workbook.getSheet(sheetName);
+            if (selectedSheet == null) {
                 throw new IllegalArgumentException("Sheet does not exist: " + sheetName + " in " + filePath);
             }
+            this.sheet = selectedSheet;
             this.formatter = new DataFormatter();
             this.evaluator = workbook.getCreationHelper().createFormulaEvaluator();
         } catch (RuntimeException | Error failure) {

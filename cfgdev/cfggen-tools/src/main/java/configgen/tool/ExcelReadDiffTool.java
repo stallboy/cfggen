@@ -8,10 +8,12 @@ import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemaErrs;
 import configgen.schema.CfgSchemas;
 import configgen.util.Logger;
+import configgen.write.ExcelTableFileProvider;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.ServiceLoader;
 
 public class ExcelReadDiffTool extends Tool {
     private final Path dataDir;
@@ -30,6 +32,9 @@ public class ExcelReadDiffTool extends Tool {
 
     @Override
     public void call() {
+        if (ServiceLoader.load(ExcelTableFileProvider.class).findFirst().isEmpty()) {
+            throw new IllegalStateException(ExcelTableFileProvider.MISSING_MESSAGE);
+        }
         DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);
         CfgSchema schema = CfgSchemas.readFromDir(sourceStructure.getCfgFiles());
         Logger.profile("schema read");

@@ -8,6 +8,7 @@ import configgen.value.SearchService.SearchResult;
 import configgen.value.SearchService.SearchResultItem;
 import configgen.util.CSVUtil;
 import configgen.value.*;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +23,8 @@ public class SearchTool {
     }
 
     public record SearchStringResult(ErrorCode errorCode,
-                                     String q,
-                                     String table,
+                                     @Nullable String q,
+                                     @Nullable String table,
                                      int max,
                                      List<SearchResultItem> items) implements McpStructuredContent {
 
@@ -36,9 +37,9 @@ public class SearchTool {
 
     @McpTool(description = "search string")
     public SearchStringResult searchString(@McpToolParam(name = "q", description = "query", required = true)
-                                           String q,
+                                           @Nullable String q,
                                            @McpToolParam(name = "table", description = "if set, search in table only, otherwise search whole config")
-                                           String table,
+                                           @Nullable String table,
                                            @McpToolParam(name = "maxCount", description = "if not set, default to 100")
                                            int maxCount) {
 
@@ -70,7 +71,7 @@ public class SearchTool {
 
     public record SearchNumberResult(ErrorCode errorCode,
                                      int q,
-                                     String table,
+                                     @Nullable String table,
                                      int max,
                                      List<SearchResultItem> items) implements McpStructuredContent {
         @Override
@@ -84,7 +85,7 @@ public class SearchTool {
     public SearchNumberResult searchNumber(@McpToolParam(name = "q", description = "query", required = true)
                                            int q,
                                            @McpToolParam(name = "table", description = "if set, search in table only, otherwise search whole config")
-                                           String table,
+                                           @Nullable String table,
                                            @McpToolParam(name = "maxCount", description = "if not set, default to 100")
                                            int maxCount) {
         if (maxCount <= 0) {
@@ -109,7 +110,8 @@ public class SearchTool {
     }
 
 
-    private static String format(ErrorCode errorCode, String q, String table, List<SearchResultItem> items, boolean includeValue) {
+    private static String format(ErrorCode errorCode, @Nullable String q, @Nullable String table,
+                                 List<SearchResultItem> items, boolean includeValue) {
         if (errorCode == ErrorCode.qNotSet) {
             return "Query q is not set.";
         } else if (errorCode == ErrorCode.TableNotFound) {

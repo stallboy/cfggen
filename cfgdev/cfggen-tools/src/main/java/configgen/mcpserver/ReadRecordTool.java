@@ -31,7 +31,7 @@ public class ReadRecordTool {
     public ListTableRecordResult listTableRecord(@McpToolParam(name = "table", description = "table full name", required = true)
                                                  String tableName,
                                                  @McpToolParam(name = "extraFields", description = "extra fields to show, use comma to separate")
-                                                 String extraFields,
+                                                 @Nullable String extraFields,
                                                  @McpToolParam(name = "offset", description = "record offset, if not set, default to 0")
                                                  int offset,
                                                  @McpToolParam(name = "limit", description = "record count, if not set, default to 20")

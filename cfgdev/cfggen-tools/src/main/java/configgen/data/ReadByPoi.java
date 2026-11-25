@@ -57,8 +57,8 @@ public enum ReadByPoi implements ExcelReader {
                     int width = Math.max(0, row.getLastCellNum());
                     int cellCount = row.getPhysicalNumberOfCells();
                     // POI iterates cells in column order. Keep a compact index for wide, sparse rows.
-                    int[] columns = width > 4 * cellCount ? new int[cellCount] : null;
-                    String[] cells = new String[columns == null ? width : cellCount];
+                    int @Nullable [] columns = width > 4 * cellCount ? new int[cellCount] : null;
+                    @Nullable String[] cells = new String[columns == null ? width : cellCount];
                     int next = 0;
                     for (org.apache.poi.ss.usermodel.Cell cell : row) {
                         int index = cell.getColumnIndex();
@@ -130,12 +130,16 @@ public enum ReadByPoi implements ExcelReader {
         }
     }
 
-    private record DRawPoiExcelRow(int count, int @Nullable [] columns, String[] cells)
+    private record DRawPoiExcelRow(int count, int @Nullable [] columns, @Nullable String[] cells)
             implements CfgData.DRawRow {
         @Override
         public String cell(int c) {
             int index = columns == null ? c : Arrays.binarySearch(columns, c);
-            return index >= 0 && index < cells.length && cells[index] != null ? cells[index] : "";
+            if (index < 0 || index >= cells.length) {
+                return "";
+            }
+            String value = cells[index];
+            return value == null ? "" : value;
         }
     }
 }

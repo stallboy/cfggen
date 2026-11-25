@@ -6,7 +6,8 @@
 
 - **Java 25** toolchain（见 `../build.gradle`）。
 - 主程序：在 `app/` 下运行 `./gradlew.bat :fatJar`，产物在 `build/libs/cfggen.jar`。在 Windows 命令提示符中运行仓库根的 `genjar.bat` 可同时将产物复制到仓库根目录。
-- 仓库根的 `gentoolsjar.bat` 从源码构建工具包，用现有的 `cfggen.jar` 运行 `-h` 检查启动，通过后更新根目录的 `cfggen-tools.jar`。开发和 CI 可以用 `./gradlew.bat :cfggen-tools:stageJars` 从当前源码构建成对产物，两个 JAR 会放到 `cfgdev/cfggen-tools/build/jars/`。
+- Excel 写回包：在仓库根目录运行 `genexceljar.bat`，生成 `cfggen-excel-write.jar` 并放到主包旁边。
+- 仓库根的 `gentoolsjar.bat` 构建工具包和 Excel 写回包，用现有的 `cfggen.jar` 运行 `-h` 检查启动，检查通过后更新两个配套包。开发和 CI 可在 `app/` 运行 `./gradlew.bat :cfggen-tools:stageJars`，将同版本的三个 JAR 构建到 `cfgdev/cfggen-tools/build/jars/`。
 
 构建期 `build.gradle` 做三件影响运行时的事：
 

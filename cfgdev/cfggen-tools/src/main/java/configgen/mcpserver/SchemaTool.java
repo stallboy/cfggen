@@ -76,7 +76,7 @@ public class SchemaTool {
     @McpTool(description = "list table names in module")
     public ListTableInModuleResult listTable(
             @McpToolParam(name = "inModule", description = "module from <list module names>", required = true)
-            String inModule) {
+            @Nullable String inModule) {
         if (inModule == null) {
             return new ListTableInModuleResult(ListTableInModuleErrorCode.ModuleNotSet, "", List.of(), "", "");
         }

@@ -13,6 +13,8 @@
 
 ## prepare: start backend object data server
 
+To edit Excel files, place the matching `cfggen-excel-write.jar` next to `cfggen.jar`. Download both from the release, or build them with `genjar.bat` and `genexceljar.bat` at the repository root.
+
 ```bash
 java -jar ../cfggen.jar -datadir ../example/config  -gen server
 ```

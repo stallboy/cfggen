@@ -8,6 +8,9 @@ pluginManagement {
 
 rootProject.name = 'app'
 
+include 'cfggen-excel-write'
+project(':cfggen-excel-write').projectDir = file('../cfgdev/cfggen-excel-write')
+
 include 'cfggen-tools'
 project(':cfggen-tools').projectDir = file('../cfgdev/cfggen-tools')
 

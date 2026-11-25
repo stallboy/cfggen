@@ -16,6 +16,7 @@ import configgen.value.CfgValue.VTable;
 import configgen.value.CfgValue.Value;
 import configgen.write.RecordBlock.RecordBlockTransformed;
 
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -29,7 +30,7 @@ public class VTableStorage {
                                               VTable vTable,
                                               DTable dTable,
                                               Value pkValue,
-                                              VStruct newRecord) {
+                                              VStruct newRecord) throws IOException {
         RecordBlock block = RecordBlockMapper.mapToBlock(newRecord);
 
         CfgValue.VStruct oldRecord = vTable.primaryKeyMap().get(pkValue);
@@ -50,7 +51,7 @@ public class VTableStorage {
 
     public static DRawSheet deleteRecord(Context context,
                                          DTable dTable,
-                                         VStruct oldRecord) {
+                                         VStruct oldRecord) throws IOException {
         RecordLoc loc = findRecordLoc(oldRecord);
         DRawSheet sheet = dTable.getSheetByRowId(loc.rowId());
         try (TableFile file = openTableFile(context, sheet, ((TableSchema) oldRecord.schema()).isColumnMode())) {
@@ -60,7 +61,7 @@ public class VTableStorage {
         return sheet;
     }
 
-    private static TableFile openTableFile(Context context, DRawSheet sheet, boolean columnMode) {
+    private static TableFile openTableFile(Context context, DRawSheet sheet, boolean columnMode) throws IOException {
         return TableFileLocator.createTableFile(sheet.relativeFilePath(), sheet.sheetName(), context, columnMode);
     }
 

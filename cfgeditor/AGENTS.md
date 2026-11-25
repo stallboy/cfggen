@@ -23,6 +23,8 @@ pnpm test:run                # 单元测试单次跑（CI 用）
 java -jar ../cfggen.jar -datadir ../example/config -gen server
 ```
 
+编辑 Excel 时，把同版本的 `cfggen-excel-write.jar` 放在 `cfggen.jar` 旁边。
+
 ## 文档索引（详情见 docs/）
 
 > 👉 想理解 cfgeditor 源码与设计，先读 [`docs/README.md`](docs/README.md)——分层地图 + 一条记录的旅程主线 + 六条贯穿红线。

@@ -17,6 +17,8 @@
 
 - 准备工作：启动对象数据服务器
 
+    编辑 Excel 时，把同版本的 `cfggen-excel-write.jar` 放在 `cfggen.jar` 旁边。可从 Release 下载，或在仓库根目录运行 `genjar.bat` 和 `genexceljar.bat` 构建。
+
     ```bash
     java -jar ../cfggen.jar -datadir ../example/config  -gen server,watch=1
     ```

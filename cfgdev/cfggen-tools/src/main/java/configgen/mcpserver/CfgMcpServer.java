@@ -15,6 +15,7 @@ import configgen.util.Logger;
 import configgen.value.CfgValue;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 @McpServerApplication(basePackage = "configgen.mcpserver")
@@ -28,10 +29,10 @@ public class CfgMcpServer extends GeneratorWithTag {
     private final int port;
     private final int waitSecondsAfterWatchEvt;
     private final @Nullable String postRun;
-    private volatile CfgValueWithContext cfgValueWithContext;
+    private volatile @Nullable CfgValueWithContext cfgValueWithContext;
 
     public static CfgMcpServer getInstance() {
-        return java.util.Objects.requireNonNull(INSTANCE.get());
+        return Objects.requireNonNull(INSTANCE.get());
     }
 
     public CfgMcpServer(Parameter parameter) {
@@ -87,6 +88,6 @@ public class CfgMcpServer extends GeneratorWithTag {
     }
 
     public CfgValueWithContext cfgValueWithContext() {
-        return cfgValueWithContext;
+        return Objects.requireNonNull(cfgValueWithContext);
     }
 }

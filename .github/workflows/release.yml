@@ -34,7 +34,7 @@ jobs:
           distribution: 'temurin'
           java-version: '25'
 
-      - name: Build the main and tools JARs
+      - name: Build the main, Excel write-back, and tools JARs
         working-directory: app
         run: ./gradlew.bat :cfggen-tools:stageJars --no-daemon
 
@@ -53,6 +53,13 @@ jobs:
         with:
           name: cfggen-tools-jar
           path: cfgdev/cfggen-tools/build/jars/cfggen-tools.jar
+          retention-days: 7
+
+      - name: Upload Excel write-back JAR
+        uses: actions/upload-artifact@v7
+        with:
+          name: cfggen-excel-write-jar
+          path: cfgdev/cfggen-tools/build/jars/cfggen-excel-write.jar
           retention-days: 7
 
   build-tauri-windows:
@@ -249,6 +256,7 @@ jobs:
           Remove-Item -Path ".git" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path ".github" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "cfggen.jar" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "cfggen-excel-write.jar" -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "cfgeditor.exe" -Force -ErrorAction SilentlyContinue
 
       - name: Pack source
@@ -307,6 +315,7 @@ jobs:
           body_path: release_notes.md
           files: |
             artifacts/cfggen-jar/cfggen.jar
+            artifacts/cfggen-excel-write-jar/cfggen-excel-write.jar
             artifacts/cfggen-tools-jar/cfggen-tools.jar
             artifacts/cfgeditor-windows/cfgeditor.exe
             artifacts/cfgeditor-linux/cfgeditor-linux

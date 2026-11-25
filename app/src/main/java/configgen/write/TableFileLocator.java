@@ -7,8 +7,10 @@ import configgen.data.CfgData.DRowId;
 import configgen.data.Source;
 import configgen.value.CfgValue.VStruct;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.util.ServiceLoader;
 
 /**
  * 表格文件定位工具类
@@ -52,7 +54,7 @@ public class TableFileLocator {
     public static TableFile createTableFile(String fileName,
                                             String sheetName,
                                             Context context,
-                                            boolean isColumnMode) {
+                                            boolean isColumnMode) throws IOException {
         Path dataDir = context.rootDir();
         int headRow = context.contextCfg().headRow().rowCount();
 
@@ -61,12 +63,10 @@ public class TableFileLocator {
         // 根据文件扩展名判断文件类型
         FileFormat format = FileFormat.getFileFormat(fileName);
         if (format == FileFormat.EXCEL) {
+            ExcelTableFileProvider provider = ServiceLoader.load(ExcelTableFileProvider.class)
+                    .findFirst().orElseThrow(() -> new IOException(ExcelTableFileProvider.MISSING_MESSAGE));
             try {
-                if (isColumnMode) {
-                    return new ColumnModeExcelTableFile(filePath, sheetName, headRow);
-                } else {
-                    return new ExcelTableFile(filePath, sheetName, headRow);
-                }
+                return provider.open(filePath, sheetName, headRow, isColumnMode);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to create ExcelTableFile: " + filePath, e);
             }

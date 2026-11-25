@@ -24,7 +24,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('app/**/*.gradle', 'cfgdev/cfggen-tools/build.gradle', 'app/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('app/**/*.gradle', 'cfgdev/cfggen-*/build.gradle', 'app/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
@@ -32,7 +32,14 @@ jobs:
         working-directory: app
         run: ./gradlew :test :cfggen-tools:test :cfggen-tools:stageJars --no-daemon
 
-      - name: Verify the packaged tools can load cfggen.jar
+      - name: Verify the main JAR contains no POI
+        run: |
+          jar tf app/build/libs/cfggen.jar > "$RUNNER_TEMP/cfggen-entries.txt"
+          if grep -E '(^|/)org/apache/poi/|META-INF/services/org\.apache\.poi\.' "$RUNNER_TEMP/cfggen-entries.txt"; then
+            exit 1
+          fi
+
+      - name: Verify the packaged tools can load the main and Excel write-back JARs
         run: |
           java -jar cfgdev/cfggen-tools/build/jars/cfggen-tools.jar -tool "csvencoding,datadir=example/config"
           java -jar cfgdev/cfggen-tools/build/jars/cfggen-tools.jar -tool "fastexcelcheck,datadir=example/config"

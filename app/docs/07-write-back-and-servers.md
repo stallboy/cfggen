@@ -27,6 +27,8 @@ flowchart LR
 
 记录在内存里先经 `RecordBlockMapper.mapToBlock` 转成 `RecordBlock`（单元格表示），再按 `fieldIndices` 变换到文件列。`TableFile` 接口（见 `write/TableFile.java`）抽象掉格式差异：`emptyRows` / `insertRecordBlock`（空行不够时自动插新行） / `saveAndClose`，实现有 `ExcelTableFile` / `CsvTableFile` / `ColumnModeExcelTableFile` / `ColumnModeCsvTableFile`。
 
+Excel 实现在 `cfgdev/cfggen-excel-write`，随 POI 打包为 `cfggen-excel-write.jar`。编辑 Excel 时，主包通过 `ServiceLoader` 加载 `ExcelTableFileProvider`。将同版本的写回包放在 `cfggen.jar` 旁边即可沿用 `java -jar cfggen.jar … -gen server`。主包可单独用于读表、代码生成和 CSV 编辑。
+
 ## `editorserver`：给 cfgeditor 的 REST API
 
 见 `editorserver/EditorServer.java`。基于 `com.sun.net.httpserver`，虚拟线程池执行（`newVirtualThreadPerTaskExecutor`）。主要路由：

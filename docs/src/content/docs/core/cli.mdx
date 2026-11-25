@@ -28,7 +28,7 @@ headRow=2
 
 ## 检查和修复 CSV 编码
 
-在仓库根目录运行 `gentoolsjar.bat`，从源码构建工具包，并用现有的 `cfggen.jar` 做 `-h` 启动检查。检查通过后脚本会更新 `cfggen-tools.jar`。缺少主包时先运行 `genjar.bat`。两个工具在启动时加载同目录的主包。
+在仓库根目录运行 `genjar.bat` 构建主包，再运行 `gentoolsjar.bat`。后者使用主包做 `-h` 启动检查，检查通过后更新 `cfggen-tools.jar` 和 `cfggen-excel-write.jar`。运行 `fastexcelcheck` 或通过 MCP 编辑 Excel 时，三个同版本 JAR 需放在同一目录。
 
 ```bat
 java -jar cfggen-tools.jar -tool "csvencoding,datadir=example/config"
@@ -226,7 +226,8 @@ Parameters can be in any order, but -datadir is required when using generators.
 
 ```bash
 genjar.bat  # 生成cfggen.jar
-gentoolsjar.bat  # 生成 cfggen-tools.jar
+genexceljar.bat  # 生成 cfggen-excel-write.jar
+gentoolsjar.bat  # 生成 cfggen-tools.jar 和 cfggen-excel-write.jar
 ```
 
 

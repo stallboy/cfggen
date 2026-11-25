@@ -21,7 +21,7 @@ Java 配置生成器（cfggen）：从 Excel/CSV/JSON 读取配置数据，生�
 ```
 
 ### 开发环境
-- **Java 25**，Gradle。主要依赖：FastExcel、POI、FastJSON2、JTE、ANTLR、Simple-OpenAI。MCP SDK 在 `cfgdev/cfggen-tools` 子项目。
+- **Java 25**，Gradle。主程序主要依赖 FastExcel、FastJSON2、JTE、ANTLR、Simple-OpenAI。POI 在 `cfgdev/cfggen-excel-write` 子项目，MCP SDK 在 `cfgdev/cfggen-tools` 子项目。
 - 默认用 **FastExcel** 读 Excel（性能高于 POI）。
 
 ### 脚本工具
@@ -40,7 +40,7 @@ Java 配置生成器（cfggen）：从 Excel/CSV/JSON 读取配置数据，生�
 
 > `verify`/`search` 在 `tool` 包但通过 `-gen` 注册（见下）。`Help`（`-h`）由 `Main` 内部调用，不在注册表。
 
-`csvencoding`、`fastexcelcheck` 和 `-gen mcpserver` 由 [`cfgdev/cfggen-tools`](../cfgdev/cfggen-tools/README.md) 构建和运行。在 `app/` 执行 `gradlew.bat :cfggen-tools:test :cfggen-tools:stageJars`，将工具包和它依赖的主包放到同一目录。
+`csvencoding`、`fastexcelcheck` 和 `-gen mcpserver` 由 [`cfgdev/cfggen-tools`](../cfgdev/cfggen-tools/README.md) 构建和运行。在 `app/` 执行 `gradlew.bat :cfggen-tools:test :cfggen-tools:stageJars`，将工具包、主包和 Excel 写回包放到同一目录。编辑器用 `cfggen.jar -gen server` 启动，编辑 Excel 时需要同目录的 `cfggen-excel-write.jar`。
 
 ## 代码架构
 

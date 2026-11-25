@@ -18,11 +18,9 @@ repositories {
 def versions = [
         fastjson2: '2.0.62',
         jackson  : '2.19.2',
-        poi      : '5.5.1',
         fastexcel: '0.19.0',
         antlr    : '4.13.2'
 ]
-ext.poiVersion = versions.poi
 ext.fastjson2Version = versions.fastjson2
 ext.jacksonVersion = versions.jackson
 
@@ -53,8 +51,6 @@ dependencies {
     // 核心业务依赖
     implementation "org.antlr:antlr4-runtime:${versions.antlr}"
     implementation "gg.jte:jte:3.2.1"
-    implementation "org.apache.poi:poi:${versions.poi}"
-    implementation "org.apache.poi:poi-ooxml:${versions.poi}"
     implementation 'org.apache.commons:commons-text:1.15.0'
 
     implementation "org.dhatim:fastexcel:${versions.fastexcel}"
@@ -66,7 +62,16 @@ dependencies {
     implementation platform("com.fasterxml.jackson:jackson-bom:${versions.jackson}")
     implementation 'io.github.sashirestela:simple-openai:3.21.0'
 
+    constraints {
+        // Keep the versions previously selected with POI. The optional Excel JAR
+        // reuses these FastExcel transitive dependencies from cfggen.jar.
+        implementation 'org.apache.commons:commons-compress:1.28.0'
+        implementation 'commons-codec:commons-codec:1.20.0'
+        implementation 'commons-io:commons-io:2.21.0'
+    }
+
     // 测试依赖
+    testImplementation project(':cfggen-excel-write')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
     testImplementation 'com.tngtech.archunit:archunit-junit5:1.5.0'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
@@ -159,6 +164,7 @@ tasks.register('fatJar', Jar) {
     }
 
     manifest.from jar.manifest
+    manifest.attributes 'Class-Path': 'cfggen-excel-write.jar'
 }
 
 /**

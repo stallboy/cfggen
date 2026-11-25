@@ -16,7 +16,9 @@
 /example/cs/obj
 /cfggen.jar
 /cfggen-tools.jar
+/cfggen-excel-write.jar
 /cfgdev/cfggen-tools/build/
+/cfgdev/cfggen-excel-write/build/
 /native-image
 /cfgeditor.exe
 /cfgeditor服务器.bat

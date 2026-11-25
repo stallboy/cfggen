@@ -17,9 +17,8 @@ configurations {
 dependencies {
     implementation project(':')
     implementation 'org.jspecify:jspecify:1.0.0'
-    // The app project supplies POI's transitive dependencies at runtime.
-    implementation("org.apache.poi:poi:${rootProject.poiVersion}") { transitive = false }
-    testCompileOnly("org.apache.poi:poi-ooxml:${rootProject.poiVersion}") { transitive = false }
+    // The Excel write-back JAR supplies POI in the packaged distribution.
+    implementation project(':cfggen-excel-write')
     compileOnly "com.alibaba.fastjson2:fastjson2:${rootProject.fastjson2Version}"
     bundledTools 'com.ibm.icu:icu4j:72.1'
     bundledTools platform("com.fasterxml.jackson:jackson-bom:${rootProject.jacksonVersion}")
@@ -63,15 +62,18 @@ def toolsJar = tasks.register('fatJar', Jar) {
         exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
     }
     manifest {
-        attributes 'Main-Class': application.mainClass.get(), 'Class-Path': 'cfggen.jar'
+        attributes 'Main-Class': application.mainClass.get(),
+                'Class-Path': 'cfggen.jar cfggen-excel-write.jar'
     }
 }
 
 def cfggenJar = rootProject.tasks.named('fatJar', Jar)
+def excelWriteJar = project(':cfggen-excel-write').tasks.named('fatJar', Jar)
 tasks.register('stageJars', Sync) {
     group = 'build'
-    description = 'Put cfggen.jar and cfggen-tools.jar in the same directory'
+    description = 'Stage the main, Excel write-back, and tools JARs together'
     from cfggenJar.flatMap { it.archiveFile }
     from toolsJar.flatMap { it.archiveFile }
+    from excelWriteJar.flatMap { it.archiveFile }
     into layout.buildDirectory.dir('jars')
 }
